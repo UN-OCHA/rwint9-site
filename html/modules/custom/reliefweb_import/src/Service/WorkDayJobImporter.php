@@ -32,11 +32,52 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
   }
 
   /**
+   * Validate settings.
+   */
+  public function validateSettings(): void {
+    $required_settings = [
+      'base_url',
+      'tenant',
+      'client_id',
+      'client_secret',
+      'refresh_token',
+      'source_id',
+      'uid',
+    ];
+
+    $missing_settings = [];
+    foreach ($required_settings as $setting) {
+      if (empty($this->settings[$setting])) {
+        $missing_settings[] = $setting;
+      }
+    }
+
+    if (!empty($missing_settings)) {
+      throw new \InvalidArgumentException('Missing required WorkDay settings: ' . implode(', ', $missing_settings));
+    }
+
+    // Make sure base_url is a valid URL.
+    if (filter_var($this->settings['base_url'], FILTER_VALIDATE_URL) === FALSE) {
+      throw new \InvalidArgumentException('The base_url setting is not a valid URL.');
+    }
+
+    // Make sure uid points to an existing user.
+    if (!$this->entityTypeManager->getStorage('user')->load($this->settings['uid'])) {
+      throw new \InvalidArgumentException('The uid setting is not valid.');
+    }
+
+    // Make sure source_id points to an existing source.
+    if (!$this->entityTypeManager->getStorage('taxonomy_term')->load($this->settings['source_id'])) {
+      throw new \InvalidArgumentException('The source_id setting is not valid.');
+    }
+  }
+
+  /**
    * Get authorization token from WorkDay.
    */
   public function getAuthToken(): string {
     $timeout = $this->settings['timeout'] ?? 10;
-    $base_url = $this->settings['base_url'] ?? '';
+    $base_url = rtrim($this->settings['base_url'] ?? '', '/');
     $tenant = $this->settings['tenant'] ?? '';
     $client_id = $this->settings['client_id'] ?? '';
     $client_secret = $this->settings['client_secret'] ?? '';
@@ -129,10 +170,24 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
       }
 
       $jobs = json_decode($response->getBody()->getContents(), TRUE);
+      if (!isset($jobs['data']) || !is_array($jobs['data'])) {
+        throw new \Exception('Invalid response structure from WorkDay API.');
+      }
+
       foreach ($jobs['data'] as $job) {
         // Skip jobs without title or URL.
         if (empty($job['title']) || empty($job['url'])) {
           continue;
+        }
+
+        // Skip jobs without ID.
+        if (!isset($job['id'])) {
+          continue;
+        }
+
+        $field_country = [];
+        if (!empty($job['primaryLocation']['country']['descriptor'])) {
+          $field_country[] = $job['primaryLocation']['country']['descriptor'];
         }
 
         $documents[] = [
@@ -142,7 +197,7 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
           'company' => $job['company']['descriptor'] ?? '',
           'time_type' => $job['timeType']['descriptor'] ?? '',
           'field_city' => $job['primaryLocation']['descriptor'] ?? '',
-          'field_country' => [$job['primaryLocation']['country']['descriptor'] ?? ''],
+          'field_country' => $field_country,
           'url' => $job['url'] ?? '',
           'title' => $job['title'],
           'body' => $job['jobDescription'] ?? '',
@@ -181,13 +236,15 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
           $this->getLogger()->notice(strtr('Updating job @guid', [
             '@guid' => $guid,
           ]));
+
           $job = $this->loadJobByGuid($guid);
           if (empty($job)) {
             throw new ReliefwebImportExceptionViolation(strtr('Unable to load job @guid', [
               '@guid' => $guid,
             ]));
           }
-          $this->updateJob($job, $item);
+
+          $this->updateJob((object) $job, $item);
         }
         else {
           $this->getLogger()->notice(strtr('Creating new job @guid', [
@@ -313,8 +370,9 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
 
     $hash = hash('sha256', serialize($data_for_hash));
     if ($job->field_import_hash->value === $hash) {
-      $this->getLogger()->notice(strtr('No changes detected for job @guid, skipping.', [
+      $this->getLogger()->notice(strtr('No changes detected for job @guid (@nid), skipping.', [
         '@guid' => $job->field_import_guid->value,
+        '@nid' => $job->id(),
       ]));
     }
     else {

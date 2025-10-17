@@ -86,9 +86,22 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
         '@name' => $config['name'] ?? $name,
       ]));
 
-      $this->workdayJobImporter->setSettings($config);
-      $this->workdayJobImporter->importJobs($limit);
+      try {
+        $this->workdayJobImporter->setSettings($config);
+        $this->workdayJobImporter->validateSettings();
+        $this->workdayJobImporter->importJobs($limit);
+      }
+      catch (\Exception $e) {
+        $this->logger()->error('Import complete: something went wrong.');
+        $this->logger()->error(strtr('WorkDay tenant: @name import failed with error: @message', [
+          '@name' => $config['name'] ?? $name,
+          '@message' => $e->getMessage(),
+        ]));
+        continue;
+      }
     }
+
+    $this->logger()->info('Import complete: job well done.');
   }
 
   /**
