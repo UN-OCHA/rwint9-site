@@ -6,6 +6,41 @@ reliefweb_import.settings:
       type: string
       label: 'The URL of the extract service.'
 
+reliefweb_import.workday.*:
+  type: config_object
+  label: 'ReliefWeb WorkDay job import settings'
+  mapping:
+    name:
+      type: string
+      label: 'The WorkDay tenant name.'
+    enabled:
+      type: boolean
+      label: 'Whether the WorkDay job import is enabled or not.'
+    base_url:
+      type: string
+      label: 'The URL of the WorkDay API.'
+    tenant:
+      type: string
+      label: 'The WorkDay tenant.'
+    client_id:
+      type: string
+      label: 'The WorkDay API client ID.'
+    client_secret:
+      type: string
+      label: 'The WorkDay API client secret.'
+    refresh_token:
+      type: string
+      label: 'The WorkDay API refresh token.'
+    timeout:
+      type: integer
+      label: 'The HTTP request timeout in seconds.'
+    source_id:
+      type: integer
+      label: 'The source ID to assign to imported jobs.'
+    uid:
+      type: integer
+      label: 'The user ID to assign as owner of imported jobs.'
+
 # Importer plugin base settings.
 reliefweb_import.plugin.importer:
   type: mapping

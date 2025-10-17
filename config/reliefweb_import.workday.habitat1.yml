@@ -1,0 +1,10 @@
+name: "Workday Habitat"
+enabled: false
+base_url: "https://impl-services1.wd12.myworkday.com"
+tenant: "habitat1"
+client_id: "MmE3OWI5NmYtOWRkMy00MTExLWJjNmEtNjhjYmVlNDc5NDNm"
+client_secret: "secret"
+refresh_token: "token"
+timeout: 10
+source_id: 757
+uid: 2867792
