@@ -105,7 +105,11 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
 
     try {
       $json = json_decode($response->getBody()->getContents(), TRUE, flags: \JSON_THROW_ON_ERROR);
-      $token = $json['access_token'] ?? '';
+      $token = '';
+      if (is_array($json) && isset($json['access_token'])) {
+        $token = $json['access_token'];
+      }
+
       if (empty($token)) {
         throw new \Exception('Auth token not found in the response.');
       }

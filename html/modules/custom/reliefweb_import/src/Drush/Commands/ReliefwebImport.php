@@ -92,7 +92,6 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
         $this->workdayJobImporter->importJobs($limit);
       }
       catch (\Exception $e) {
-        $this->logger()->error('Import complete: something went wrong.');
         $this->logger()->error(strtr('WorkDay tenant: @name import failed with error: @message', [
           '@name' => $config['name'] ?? $name,
           '@message' => $e->getMessage(),
@@ -100,8 +99,6 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
         continue;
       }
     }
-
-    $this->logger()->info('Import complete: job well done.');
   }
 
   /**
