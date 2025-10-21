@@ -12,3 +12,14 @@ local: true
 file_directory: 'attachments'
 # Name of the directory for the local file previews.
 preview_directory: 'previews'
+
+# Duplicate detection settings.
+duplicate_detection:
+  # Maximum number of documents to search for similarity.
+  max_documents: 10
+  # Maximum number of files to search for similarity.
+  max_files: 20
+  # Minimum similarity threshold for duplicate detection.
+  minimum_should_match: 80%
+  # Whether to skip report access checks.
+  skip_access_check: false

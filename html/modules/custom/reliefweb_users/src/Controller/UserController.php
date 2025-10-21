@@ -172,16 +172,50 @@ class UserController extends ControllerBase {
 
     // Posting rights filter.
     if (isset($filters['job_rights']) || isset($filters['training_rights']) || isset($filters['report_rights'])) {
-      $query->innerJoin('taxonomy_term__field_user_posting_rights', 'fpr', '%alias.field_user_posting_rights_id = u.uid');
+      // Create a subquery to find users with the requested posting rights
+      // from either user posting rights or domain posting rights.
+      $subquery = $this->database->select('users_field_data', 'u2');
+      $subquery->addField('u2', 'uid');
+      $subquery->condition('u2.uid', 1, '>');
+
+      // Join user posting rights.
+      $user_rights_alias = $subquery->leftJoin('taxonomy_term__field_user_posting_rights', 'fpr', '%alias.field_user_posting_rights_id = u2.uid');
+
+      // Join domain posting rights.
+      $domain_rights_alias = $subquery->leftJoin('taxonomy_term__field_domain_posting_rights', 'fdr', '%alias.field_domain_posting_rights_domain = SUBSTRING_INDEX(u2.mail, \'@\', -1)');
+
+      // Create conditions for each right type.
+      $conditions = [];
       if (isset($filters['job_rights'])) {
-        $query->condition('fpr.field_user_posting_rights_job', $rights[$filters['job_rights']], '=');
+        $right_value = $rights[$filters['job_rights']];
+        $conditions[] = $subquery->conditionGroupFactory('OR')
+          ->condition($user_rights_alias . '.field_user_posting_rights_job', $right_value, '=')
+          ->condition($domain_rights_alias . '.field_domain_posting_rights_job', $right_value, '=');
       }
       if (isset($filters['training_rights'])) {
-        $query->condition('fpr.field_user_posting_rights_training', $rights[$filters['training_rights']], '=');
+        $right_value = $rights[$filters['training_rights']];
+        $conditions[] = $subquery->conditionGroupFactory('OR')
+          ->condition($user_rights_alias . '.field_user_posting_rights_training', $right_value, '=')
+          ->condition($domain_rights_alias . '.field_domain_posting_rights_training', $right_value, '=');
       }
       if (isset($filters['report_rights'])) {
-        $query->condition('fpr.field_user_posting_rights_report', $rights[$filters['report_rights']], '=');
+        $right_value = $rights[$filters['report_rights']];
+        $conditions[] = $subquery->conditionGroupFactory('OR')
+          ->condition($user_rights_alias . '.field_user_posting_rights_report', $right_value, '=')
+          ->condition($domain_rights_alias . '.field_domain_posting_rights_report', $right_value, '=');
       }
+
+      // Add all conditions with AND logic.
+      if (!empty($conditions)) {
+        $condition_group = $subquery->conditionGroupFactory('AND');
+        foreach ($conditions as $condition) {
+          $condition_group->condition($condition);
+        }
+        $subquery->condition($condition_group);
+      }
+
+      // Filter main query to only include users found in subquery.
+      $query->condition('u.uid', $subquery, 'IN');
     }
 
     // Set group by.
@@ -226,8 +260,8 @@ class UserController extends ControllerBase {
 
         $rows[$user->uid] = [
           'uid' => $user->uid,
-          'name' => Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)),
-          'mail' => Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)),
+          'name' => !empty($user->name) ? Link::fromTextAndUrl($user->name, URL::fromUserInput('/user/' . $user->uid)) : 'Unknown',
+          'mail' => !empty($user->mail) ? Link::fromTextAndUrl($user->mail, URL::fromUserInput('/user/' . $user->uid)) : 'Unknown',
           'status' => $statuses[empty($user->status) ? 'blocked' : 'active'],
           'role' => !empty($user_roles) ? new FormattableMarkup('<ol><li>' . implode('</li><li>', $user_roles) . '</li></ol>', []) : '',
           'sources' => isset($user->sources) ? new FormattableMarkup($user->sources, []) : '',
@@ -274,45 +308,106 @@ class UserController extends ControllerBase {
    *   will be attached to the objects as html lists.
    */
   public function getUserSources(array &$users) {
-    // Get the list of sources with posting rights for the given user ids.
-    $query = $this->database->select('taxonomy_term__field_user_posting_rights', 'f');
-    $query->innerJoin('taxonomy_term_field_data', 'td', 'td.tid = f.entity_id');
-    $query->leftJoin('taxonomy_term__field_shortname', 'fs', "fs.entity_id = f.entity_id");
-    $query->addField('f', 'field_user_posting_rights_id', 'uid');
-    $query->addField('f', 'field_user_posting_rights_job', 'job');
-    $query->addField('f', 'field_user_posting_rights_training', 'training');
-    $query->addField('f', 'field_user_posting_rights_report', 'report');
-    $query->addField('f', 'entity_id', 'tid');
-    $query->addExpression('COALESCE(fs.field_shortname_value, td.name)', 'name');
-    $query->condition('f.field_user_posting_rights_id', array_keys($users), 'IN');
-    $query->condition('f.bundle', 'source');
-
     $sources = [];
-    foreach ($query->execute() as $record) {
-      $job = $record->job;
-      $training = $record->training;
-      $report = $record->report;
 
-      $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/user-posting-rights', [
-        'attributes' => ['target' => '_blank'],
-      ]));
-      $row = [
-        '<li data-job="' . $job . '" data-training="' . $training . '" data-report="' . $report . '">',
-        $link->toString(),
-        '<span class="posting-rights--wrapper">',
-        '<span data-posting-right="' . $job . '" class="posting-rights posting-rights--job" title="' . $this->getRightsLabel('job', $job) . '">' . $this->getRightsLabel('job', $job) . '</span>',
-        '<span data-posting-right="' . $training . '" class="posting-rights posting-rights--training" title="' . $this->getRightsLabel('training', $training) . '">' . $this->getRightsLabel('training', $training) . '</span>',
-        '<span data-posting-right="' . $report . '" class="posting-rights posting-rights--report" title="' . $this->getRightsLabel('report', $report) . '">' . $this->getRightsLabel('report', $report) . '</span>',
-        '</span>',
-        '</li>',
-      ];
-      $sources[$record->uid][$record->tid] = implode(' ', $row);
+    // Get user posting rights for all users.
+    $user_query = $this->database->select('taxonomy_term__field_user_posting_rights', 'f');
+    $user_query->innerJoin('taxonomy_term_field_data', 'td', 'td.tid = f.entity_id');
+    $user_query->leftJoin('taxonomy_term__field_shortname', 'fs', "fs.entity_id = f.entity_id");
+    $user_query->addField('f', 'field_user_posting_rights_id', 'uid');
+    $user_query->addField('f', 'field_user_posting_rights_job', 'job');
+    $user_query->addField('f', 'field_user_posting_rights_training', 'training');
+    $user_query->addField('f', 'field_user_posting_rights_report', 'report');
+    $user_query->addField('f', 'entity_id', 'tid');
+    $user_query->addExpression('COALESCE(fs.field_shortname_value, td.name)', 'name');
+    $user_query->addExpression('\'user\'', 'rights_type');
+    $user_query->condition('f.field_user_posting_rights_id', array_keys($users), 'IN');
+    $user_query->condition('f.bundle', 'source');
+
+    foreach ($user_query->execute() as $record) {
+      $sources[$record->uid][$record->tid] = $this->formatSourceRow($record, 'user');
+    }
+
+    // Get domain posting rights for all users.
+    // First, collect all users' email domains.
+    $user_domains = [];
+    foreach ($users as $uid => $user) {
+      if (!empty($user->mail)) {
+        $domain = substr(strrchr($user->mail, '@'), 1);
+        if ($domain) {
+          $user_domains[strtolower($domain)][] = $uid;
+        }
+      }
+    }
+
+    if (!empty($user_domains)) {
+      $domain_query = $this->database->select('taxonomy_term__field_domain_posting_rights', 'f');
+      $domain_query->innerJoin('taxonomy_term_field_data', 'td', 'td.tid = f.entity_id');
+      $domain_query->leftJoin('taxonomy_term__field_shortname', 'fs', "fs.entity_id = f.entity_id");
+      $domain_query->addField('f', 'field_domain_posting_rights_domain', 'domain');
+      $domain_query->addField('f', 'field_domain_posting_rights_job', 'job');
+      $domain_query->addField('f', 'field_domain_posting_rights_training', 'training');
+      $domain_query->addField('f', 'field_domain_posting_rights_report', 'report');
+      $domain_query->addField('f', 'entity_id', 'tid');
+      $domain_query->addExpression('COALESCE(fs.field_shortname_value, td.name)', 'name');
+      $domain_query->addExpression('\'domain\'', 'rights_type');
+      $domain_query->condition('f.field_domain_posting_rights_domain', array_keys($user_domains), 'IN');
+      $domain_query->condition('f.bundle', 'source');
+
+      foreach ($domain_query->execute() as $record) {
+        $domain = strtolower($record->domain);
+        if (isset($user_domains[$domain])) {
+          foreach ($user_domains[$domain] as $uid) {
+            // Only add domain rights if user doesn't already have user rights
+            // for this source.
+            if (!isset($sources[$uid][$record->tid])) {
+              $sources[$uid][$record->tid] = $this->formatSourceRow($record, 'domain');
+            }
+          }
+        }
+      }
     }
 
     // Add the formatted list of sources to the user objects.
     foreach ($sources as $uid => $rows) {
       $users[$uid]->sources = '<ol>' . implode('', $rows) . '</ol>';
     }
+  }
+
+  /**
+   * Format a source row for display.
+   *
+   * @param object $record
+   *   The database record.
+   * @param string $rights_type
+   *   Either 'user' or 'domain'.
+   *
+   * @return string
+   *   Formatted HTML row.
+   */
+  protected function formatSourceRow($record, $rights_type) {
+    $job = $record->job;
+    $training = $record->training;
+    $report = $record->report;
+
+    $link = Link::fromTextAndUrl($record->name, URL::fromUserInput('/taxonomy/term/' . $record->tid . '/user-posting-rights', [
+      'attributes' => ['target' => '_blank'],
+    ]));
+
+    $rights_type_class = $rights_type === 'domain' ? ' posting-rights--domain' : '';
+
+    $row = [
+      '<li data-job="' . $job . '" data-training="' . $training . '" data-report="' . $report . '" data-rights-type="' . $rights_type . '">',
+      $link->toString(),
+      '<span class="posting-rights--wrapper">',
+      '<span data-posting-right="' . $job . '" class="posting-rights posting-rights--job' . $rights_type_class . '" title="' . $this->getRightsLabel('job', $job) . '">' . $this->getRightsLabel('job', $job) . '</span>',
+      '<span data-posting-right="' . $training . '" class="posting-rights posting-rights--training' . $rights_type_class . '" title="' . $this->getRightsLabel('training', $training) . '">' . $this->getRightsLabel('training', $training) . '</span>',
+      '<span data-posting-right="' . $report . '" class="posting-rights posting-rights--report' . $rights_type_class . '" title="' . $this->getRightsLabel('report', $report) . '">' . $this->getRightsLabel('report', $report) . '</span>',
+      '</span>',
+      '</li>',
+    ];
+
+    return implode(' ', $row);
   }
 
   /**

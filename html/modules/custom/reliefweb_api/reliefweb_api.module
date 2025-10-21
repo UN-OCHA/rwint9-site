@@ -8,7 +8,6 @@
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Database\Database;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\reliefweb_utility\Helpers\FileHelper;
 use RWAPIIndexer\Bundles;
 use RWAPIIndexer\Manager;
 use RWAPIIndexer\Resource;
@@ -128,6 +127,7 @@ function reliefweb_api_get_indexer_base_options() {
     'website' => $config->get('website') ?? 'https://' . \Drupal::request()->getHost(),
     'replicas' => $config->get('replicas') ?? 0,
     'shards' => $config->get('shards') ?? 1,
+    'log' => $config->get('log') ?? 'echo',
   ];
 
   return $options;
@@ -291,23 +291,18 @@ function reliefweb_api_indexer_available() {
  * @see \RWAPIIndexer\Resource::postProcessItem()
  */
 function reliefweb_api_post_process_item(Resource $resource, array &$item): void {
-  if ($resource->getBundle() !== 'report' || empty($item['file'])) {
-    return;
-  }
+  // Currently no post processing is done.
+  // This function is kept to ease adding post processing in the future.
+}
 
-  $database = \Drupal::database();
-
-  foreach ($item['file'] as $key => $file) {
-    if (isset($file['id'], $file['mimetype'])) {
-      $uri = $database
-        ->select('file_managed', 'f')
-        ->fields('f', ['uri'])
-        ->condition('f.fid', $file['id'])
-        ->execute()
-        ->fetchField();
-
-      $content = FileHelper::extractText($uri, $file['mimetype']);
-      $item['file'][$key]['minhash_content'] = $content;
-    }
+/**
+ * Implements hook_mail().
+ */
+function reliefweb_api_mail(string $key, array &$message, array $params): void {
+  switch ($key) {
+    case 'reindex_notification':
+      $message['subject'] = $params['subject'];
+      $message['body'][] = $params['body'];
+      break;
   }
 }

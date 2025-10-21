@@ -22,17 +22,23 @@ dependencies:
     - taxonomy.vocabulary.disaster
     - taxonomy.vocabulary.source
     - taxonomy.vocabulary.tag
+    - user.role.authenticated
+    - user.role.contributor
+    - user.role.submitter
+    - user.role.topic_editor
   module:
     - book
     - contact
     - filter
     - guidelines
+    - masquerade
     - media
     - node
     - ocha_content_classification
     - path
     - reliefweb_anti_spam
     - reliefweb_bookmarks
+    - reliefweb_entities
     - reliefweb_fields
     - reliefweb_files
     - reliefweb_form
@@ -56,6 +62,7 @@ permissions:
   - 'access content moderation features'
   - 'access editorial guidelines'
   - 'access media overview'
+  - 'access reliefweb domain posting rights field validation'
   - 'access reliefweb failed import records'
   - 'access reliefweb links field validation'
   - 'access reliefweb private files'
@@ -71,6 +78,7 @@ permissions:
   - 'bypass ocha content classification for node report'
   - 'bypass reliefweb anti spam'
   - 'change reliefweb failed import records'
+  - 'check for duplicate files'
   - 'create announcement content'
   - 'create blog_post content'
   - 'create book content'
@@ -134,6 +142,7 @@ permissions:
   - 'edit any report content'
   - 'edit any topic content'
   - 'edit any training content'
+  - 'edit domain posting rights'
   - 'edit homepage headlines'
   - 'edit own announcement content'
   - 'edit own blog_post content'
@@ -153,6 +162,10 @@ permissions:
   - 'edit terms in source'
   - 'edit terms in tag'
   - 'edit user posting rights'
+  - 'masquerade as authenticated'
+  - 'masquerade as contributor'
+  - 'masquerade as submitter'
+  - 'masquerade as topic_editor'
   - 'requeue node job for ocha content classification'
   - 'requeue node report for ocha content classification'
   - 'revert all taxonomy revisions'

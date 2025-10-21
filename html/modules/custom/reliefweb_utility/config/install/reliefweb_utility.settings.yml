@@ -1,0 +1,24 @@
+# Text extraction configuration.
+text_extraction:
+  commands:
+    -
+      mimetype: application/pdf
+      command: /usr/bin/mutool
+      args: 'draw -F txt'
+      options: ''
+      page: true
+      ignore_errors_if_output: true
+    -
+      mimetype: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      command: /usr/bin/antiword
+      args: ''
+      options: ''
+      page: false
+      ignore_errors_if_output: false
+    -
+      mimetype: application/msword
+      command: /usr/bin/pandoc
+      args: '--to=plain'
+      options: ''
+      page: false
+      ignore_errors_if_output: false

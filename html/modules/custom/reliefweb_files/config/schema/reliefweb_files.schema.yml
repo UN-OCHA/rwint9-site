@@ -23,6 +23,22 @@ reliefweb_files.settings:
     preview_directory:
       type: string
       label: 'Name of the directory for the local file previews.'
+    duplicate_detection:
+      type: mapping
+      label: 'Duplicate detection settings.'
+      mapping:
+        max_documents:
+          type: integer
+          label: 'Maximum number of documents to search for similarity.'
+        max_files:
+          type: integer
+          label: 'Maximum number of files to search for similarity.'
+        minimum_should_match:
+          type: string
+          label: 'Minimum similarity threshold for duplicate detection.'
+        skip_access_check:
+          type: boolean
+          label: 'Whether to skip report access checks.'
 
 field.field_settings.reliefweb_file:
   type: mapping
@@ -59,6 +75,12 @@ field.widget.settings.reliefweb_file:
     duplicate_warning_message:
       type: string
       label: 'Warning message to display when duplicates are found.'
+    duplicate_max_files:
+      type: integer
+      label: 'Maximum number of files to search for similarity.'
+    duplicate_skip_access_check:
+      type: boolean
+      label: 'Whether to skip report access checks.'
 
 field.widget.settings.reliefweb_file_simplified:
   type: field.widget.settings.reliefweb_file

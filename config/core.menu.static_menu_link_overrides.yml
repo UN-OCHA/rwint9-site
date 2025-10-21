@@ -7,3 +7,9 @@ definitions:
     weight: -10
     expanded: true
     enabled: true
+  masquerade__unmasquerade:
+    menu_name: account
+    parent: user.page
+    weight: -43
+    expanded: false
+    enabled: true

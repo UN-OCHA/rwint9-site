@@ -896,6 +896,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     // Create the file entity with the content.
     $file = $this->createFile($uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators, $bytes);
+    if (empty($file)) {
+      throw new \Exception(strtr('Unable to create the file entity for the uploaded file @url with UUID @uuid.', [
+        '@url' => $url,
+        '@uuid' => $uuid,
+      ]));
+    }
 
     // Set the properties of the ReliefWeb file field item so it's fully
     // constructed and can be added to the field item list.

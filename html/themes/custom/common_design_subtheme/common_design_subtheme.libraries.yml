@@ -201,6 +201,7 @@ rw-form:
       components/rw-form/rw-form.css: {}
       components/rw-form/rw-form--file-widget.css: {}
       components/rw-form/rw-form--widget.css: {}
+      components/rw-form/rw-form--details.css: {}
   # Some widgets like the inline entity forms show drupal messages added via
   # javascript in which case the cd-alert component may not be loaded so we
   # add it as a dependency of the rw-form library which is added globally.
@@ -441,6 +442,7 @@ rw-user:
     theme:
       components/rw-user/rw-user.css: {}
       components/rw-user/rw-user-bookmarks.css: {}
+      components/rw-user/rw-user-posting-rights-form.css: {}
 
 rw-user-information:
   css:

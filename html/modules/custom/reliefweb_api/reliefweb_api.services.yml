@@ -8,6 +8,3 @@ services:
   reliefweb_api.client:
     class: Drupal\reliefweb_api\Services\ReliefWebApiClient
     arguments: ['@cache.reliefweb_api', '@config.factory', '@datetime.time', '@http_client', '@logger.factory', '@request_stack']
-  reliefweb_api.file_duplication:
-    class: Drupal\reliefweb_api\Services\ReliefWebApiFileDuplication
-    arguments: ['@state', '@config.factory', '@http_client', '@logger.factory']

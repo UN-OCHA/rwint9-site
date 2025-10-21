@@ -445,7 +445,47 @@ class UserPostingRightsHelper {
    *   Associative array with the source IDs as keys and the corresponding
    *   posting rights as values.
    */
-  public static function getSourcesWithPostingRightsForUser(AccountInterface $account, array $bundles = [], string $operator = 'AND', ?int $limit = NULL): array {
+  public static function getSourcesWithPostingRightsForUser(
+    AccountInterface $account,
+    array $bundles = [],
+    string $operator = 'AND',
+    ?int $limit = NULL,
+  ): array {
+    // Fetch the user posting rights.
+    $results = static::getSourcesWithUserPostingRightsForUser($account, $bundles, $operator, $limit);
+
+    // Fetch domain posting rights to merge with user posting rights.
+    // We use the `+` operator to merge the results so that user posting rights
+    // take precedence over domain posting rights.
+    $results += static::getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit);
+
+    return $results;
+  }
+
+  /**
+   * Get the sources the user has user posting rights for.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User for which to retrieve the sources.
+   * @param array<string, array<int>> $bundles
+   *   Bundle rights filters in the form of an associative array with the
+   *   bundles (job, training, report) as keys and a list of rights (0, 1, 2, 3)
+   *   as values.
+   * @param string $operator
+   *   How to combine the bundle rights conditions.
+   * @param ?int $limit
+   *   Number of sources to retrieve.
+   *
+   * @return array<int, array<string, mixed>>
+   *   Associative array with the source IDs as keys and the corresponding
+   *   posting rights as values.
+   */
+  public static function getSourcesWithUserPostingRightsForUser(
+    AccountInterface $account,
+    array $bundles = [],
+    string $operator = 'AND',
+    ?int $limit = NULL,
+  ): array {
     $helper = new self();
     $database = $helper->getDatabase();
 
@@ -492,9 +532,6 @@ class UserPostingRightsHelper {
 
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
 
-    // Always fetch domain posting rights to merge with user posting rights.
-    $results += static::getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit);
-
     return $results;
   }
 
@@ -516,7 +553,12 @@ class UserPostingRightsHelper {
    *   Associative array with the source IDs as keys and the corresponding
    *   posting rights as values.
    */
-  protected static function getSourcesWithDomainPostingRightsForUser(AccountInterface $account, array $bundles = [], string $operator = 'AND', ?int $limit = NULL): array {
+  public static function getSourcesWithDomainPostingRightsForUser(
+    AccountInterface $account,
+    array $bundles = [],
+    string $operator = 'AND',
+    ?int $limit = NULL,
+  ): array {
     $helper = new self();
     $database = $helper->getDatabase();
 

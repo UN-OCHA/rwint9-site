@@ -582,7 +582,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function forceContentLanguage(EntityInterface $entity): ?string {
+  public function forceContentLanguage(EntityInterface $entity): string|int|null {
     // Retrieve the import record and check if there is a defined language.
     $record = $this->getImportRecordForEntity($entity);
     if (empty($record)) {
@@ -599,6 +599,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         return NULL;
       }
 
+      // Return the term ID matching the language code.
       return $defined_languages[$tags['language']];
     }
 

@@ -20,7 +20,7 @@ use Drupal\Core\Url;
 use Drupal\Core\StringTranslation\ByteSizeMarkup;
 use Drupal\file\Entity\File;
 use Drupal\file\Validation\FileValidatorInterface;
-use Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface;
+use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFileType;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -77,7 +77,7 @@ class ReliefWebFile extends WidgetBase {
   /**
    * The ReliefWeb API file duplication service.
    *
-   * @var \Drupal\reliefweb_api\Services\ReliefWebApiFileDuplicationInterface
+   * @var \Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface
    */
   protected $fileDuplication;
 
@@ -102,7 +102,7 @@ class ReliefWebFile extends WidgetBase {
     RendererInterface $renderer,
     RequestStack $request_stack,
     FileValidatorInterface $file_validator,
-    ReliefWebApiFileDuplicationInterface $file_duplication,
+    ReliefWebFileDuplicationInterface $file_duplication,
   ) {
     parent::__construct(
       $plugin_id,
@@ -139,7 +139,7 @@ class ReliefWebFile extends WidgetBase {
       $container->get('renderer'),
       $container->get('request_stack'),
       $container->get('file.validator'),
-      $container->get('reliefweb_api.file_duplication')
+      $container->get('reliefweb_files.file_duplication')
     );
   }
 
@@ -155,6 +155,8 @@ class ReliefWebFile extends WidgetBase {
       'duplicate_max_documents' => 5,
       'duplicate_minimum_should_match' => '80%',
       'duplicate_warning_message' => 'Possible duplicate file(s) found:',
+      'duplicate_max_files' => 20,
+      'duplicate_skip_access_check' => FALSE,
     ] + parent::defaultSettings();
   }
 
@@ -223,6 +225,24 @@ class ReliefWebFile extends WidgetBase {
       '#maxlength' => 255,
     ];
 
+    $duplicate_max_files = $this->getDuplicateMaxFilesSetting();
+    $element['duplicate_max_files'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum files to search'),
+      '#description' => $this->t('Maximum number of files to search for similarity.'),
+      '#default_value' => $form_state->getValue('duplicate_max_files', $duplicate_max_files),
+      '#min' => 1,
+      '#max' => 100,
+    ];
+
+    $duplicate_skip_access_check = $this->getDuplicateSkipAccessCheckSetting();
+    $element['duplicate_skip_access_check'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Skip report access checks'),
+      '#description' => $this->t('Whether to skip report access checks in duplicate detection.'),
+      '#default_value' => $form_state->getValue('duplicate_skip_access_check', $duplicate_skip_access_check),
+    ];
+
     return $element;
   }
 
@@ -279,9 +299,11 @@ class ReliefWebFile extends WidgetBase {
       '@max_file_size' => ByteSizeMarkup::create($this->getMaxFileSizeSetting()),
     ]);
 
-    $summary[] = $this->t('Duplicate checking: @max_docs documents, @threshold threshold', [
+    $summary[] = $this->t('Duplicate checking: @max_docs documents, @max_files files, @threshold threshold, @published_only', [
       '@max_docs' => $this->getDuplicateMaxDocumentsSetting(),
+      '@max_files' => $this->getDuplicateMaxFilesSetting(),
       '@threshold' => $this->getDuplicateMinimumShouldMatchSetting(),
+      '@published_only' => $this->getDuplicateSkipAccessCheckSetting() ? $this->t('skip access checks') : $this->t('all documents'),
     ]);
 
     return $summary;
@@ -293,7 +315,7 @@ class ReliefWebFile extends WidgetBase {
    * @return ?array
    *   List of allowed extensions or NULL.
    */
-  protected function getExtensionsSetting(): ?array {
+  public function getExtensionsSetting(): ?array {
     $extensions = trim($this->getSetting('extensions') ?: '');
     if (empty($extensions)) {
       return NULL;
@@ -307,7 +329,7 @@ class ReliefWebFile extends WidgetBase {
    * @return int
    *   Max file size.
    */
-  protected function getMaxFileSizeSetting(): int {
+  public function getMaxFileSizeSetting(): int {
     return $this->getSetting('max_file_size');
   }
 
@@ -317,7 +339,7 @@ class ReliefWebFile extends WidgetBase {
    * @return int
    *   Maximum number of similar documents to return.
    */
-  protected function getDuplicateMaxDocumentsSetting(): int {
+  public function getDuplicateMaxDocumentsSetting(): int {
     return $this->getSetting('duplicate_max_documents');
   }
 
@@ -327,7 +349,7 @@ class ReliefWebFile extends WidgetBase {
    * @return string
    *   Minimum similarity threshold.
    */
-  protected function getDuplicateMinimumShouldMatchSetting(): string {
+  public function getDuplicateMinimumShouldMatchSetting(): string {
     return $this->getSetting('duplicate_minimum_should_match');
   }
 
@@ -337,8 +359,28 @@ class ReliefWebFile extends WidgetBase {
    * @return string
    *   Warning message to display when duplicates are found.
    */
-  protected function getDuplicateWarningMessageSetting(): string {
+  public function getDuplicateWarningMessageSetting(): string {
     return $this->getSetting('duplicate_warning_message');
+  }
+
+  /**
+   * Get the duplicate max files setting.
+   *
+   * @return int
+   *   Maximum number of files to search for similarity.
+   */
+  public function getDuplicateMaxFilesSetting(): int {
+    return $this->getSetting('duplicate_max_files');
+  }
+
+  /**
+   * Get the duplicate skip access check setting.
+   *
+   * @return bool
+   *   Whether to skip report access checks.
+   */
+  public function getDuplicateSkipAccessCheckSetting(): bool {
+    return $this->getSetting('duplicate_skip_access_check');
   }
 
   /**
@@ -1829,9 +1871,11 @@ class ReliefWebFile extends WidgetBase {
       $duplicates = $this->fileDuplication->findSimilarDocuments(
         $extracted_text,
         $bundle,
+        !empty($entity_id) ? [$entity_id] : [],
         $this->getDuplicateMaxDocumentsSetting(),
         $this->getDuplicateMinimumShouldMatchSetting(),
-        !empty($entity_id) ? [$entity_id] : [],
+        $this->getDuplicateMaxFilesSetting(),
+        $this->getDuplicateSkipAccessCheckSetting(),
       );
     }
 
@@ -1842,38 +1886,68 @@ class ReliefWebFile extends WidgetBase {
     ];
 
     // Add the duplicate message.
-    $this->addDuplicateMessage($element, $duplicates);
+    if (!empty($duplicates)) {
+      $duplicate_message = $this->buildDuplicateMessage($duplicates);
+      $duplicate_message['#weight'] = -1;
+      $element['duplicate_message'] = $duplicate_message;
+    }
   }
 
   /**
-   * Add duplicate message to the form element.
+   * Build duplicate message render array.
    *
-   * @param array $element
-   *   The form element to add the duplicate message to.
    * @param array $duplicates
    *   Array of duplicate documents.
+   * @param string $warning_message
+   *   The warning message to display.
+   *
+   * @return array
+   *   The render array for the duplicate message.
    */
-  protected function addDuplicateMessage(array &$element, array $duplicates) {
+  public function buildDuplicateMessage(array $duplicates, string $warning_message = '') {
     if (empty($duplicates)) {
-      return;
+      return [];
     }
 
     $items = [];
     foreach ($duplicates as $document) {
+      $title = $document['title'] ?? 'Unknown document';
+      $similarity_percentage = $document['similarity_percentage'] ?? '';
+
+      // Create a container for the link and similarity percentage.
       $items[] = [
-        '#type' => 'link',
-        '#title' => $document['title'] ?? 'Unknown document',
-        '#url' => Url::fromUri($document['url'] ?? ''),
+        '#type' => 'container',
         '#attributes' => [
-          'target' => '_blank',
+          'class' => ['duplicate-document-item'],
+        ],
+        'link' => [
+          '#type' => 'link',
+          '#title' => $title,
+          '#url' => Url::fromUri($document['url'] ?? ''),
+          '#attributes' => [
+            'target' => '_blank',
+          ],
+        ],
+        'similarity' => [
+          '#type' => 'html_tag',
+          '#tag' => 'span',
+          '#attributes' => [
+            'class' => ['duplicate-similarity-percentage'],
+          ],
+          '#value' => $similarity_percentage,
         ],
       ];
     }
 
-    $element['duplicate_message'] = [
+    $warning_message = $warning_message ?: $this->getDuplicateWarningMessageSetting();
+
+    return [
       '#type' => 'container',
       '#attributes' => [
         'class' => ['duplicate-files-message'],
+      ],
+      '#attached' => [
+        'library' => ['reliefweb_files/file.duplicate-message'],
       ],
       'warning' => [
         '#type' => 'html_tag',
@@ -1888,7 +1962,7 @@ class ReliefWebFile extends WidgetBase {
             'class' => ['messages__content'],
           ],
           'text' => [
-            '#markup' => $this->getDuplicateWarningMessageSetting(),
+            '#markup' => $warning_message,
           ],
         ],
         'list' => [
@@ -1899,7 +1973,6 @@ class ReliefWebFile extends WidgetBase {
           ],
         ],
       ],
-      '#weight' => -1,
     ];
   }
 
