@@ -337,20 +337,20 @@ class ReliefWebFilesCommands extends DrushCommands {
    * @param int|null $max_files
    *   Maximum number of files to search for similarity. NULL to use config
    *   default.
-   * @param bool|null $only_published
-   *   Whether to only include published documents. NULL to use config default.
+   * @param bool|null $skip_access_check
+   *   Whether to skip report access checks. NULL to use config default.
    *
    * @command rw-files:find-similar-files
    *
    * @usage rw-files:find-similar-files 12345
-   * @usage rw-files:find-similar-files 12345 --max-documents=20 --max-files=50 --only-published=true
+   * @usage rw-files:find-similar-files 12345 --max-documents=20 --max-files=50 --skip-access-check=true
    */
   public function findSimilarFiles(
     int $node_id,
     ?int $max_documents = NULL,
     ?string $minimum_should_match = NULL,
     ?int $max_files = NULL,
-    ?bool $only_published = NULL,
+    ?bool $skip_access_check = NULL,
   ): void {
     $node = $this->entityTypeManager->getStorage('node')->load($node_id);
 
@@ -395,7 +395,7 @@ class ReliefWebFilesCommands extends DrushCommands {
         $max_documents,
         $minimum_should_match,
         $max_files,
-        $only_published,
+        $skip_access_check,
       );
 
       // Add file information to each similar document.

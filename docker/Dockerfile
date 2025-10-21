@@ -1,5 +1,5 @@
 # Build the code.
-FROM public.ecr.aws/unocha/php-k8s:8.3-stable as builder
+FROM public.ecr.aws/unocha/php-k8s:8.3-stable AS builder
 
 ARG  BRANCH_ENVIRONMENT
 
@@ -45,7 +45,8 @@ LABEL info.humanitarianresponse.build.date=$BUILD_DATE \
 
 RUN mkdir -p /etc/nginx/custom && \
     # Install ghostscript to convert JPX images embedded in PDFs.
-    apk add --no-cache ghostscript && \
+    # Install antiword and pandoc to convert doc/docx files to plain text.
+    apk add --no-cache ghostscript antiword pandoc-cli && \
     # Install lua resty library to generate UUIDs.
     cd /tmp && \
     git clone --branch=0.0.7 https://github.com/thibaultcha/lua-resty-jit-uuid.git && \

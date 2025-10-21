@@ -13,3 +13,7 @@ adjust training moderation status based on classification status:
 requeue report for classification on change:
   title: 'Requeue report for classification on change'
   description: 'Requeue a report for classification when saving its changes.'
+
+check for duplicate files:
+  title: 'Check for duplicate files'
+  description: 'Check for potential duplicate files when editing reports.'

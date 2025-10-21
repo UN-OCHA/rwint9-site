@@ -33,7 +33,7 @@ services:
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
   reliefweb_entities.report.form_alter:
     class: Drupal\reliefweb_entities\Services\ReportFormAlter
-    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_files.file_duplication', '@request_stack', '@renderer', '@messenger']
   reliefweb_entities.source.form_alter:
     class: Drupal\reliefweb_entities\Services\SourceFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation']

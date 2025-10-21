@@ -7,3 +7,11 @@ reliefweb_utility.error_413:
     _permission: 'access content'
   options:
     no_cache: 'TRUE'
+
+reliefweb_utility.text_extraction_command_mapping:
+  path: '/admin/config/reliefweb/text-extraction'
+  defaults:
+    _title: 'Text Extraction Configuration'
+    _form: '\Drupal\reliefweb_utility\Form\TextExtractionCommandMappingForm'
+  requirements:
+    _permission: 'administer site configuration'

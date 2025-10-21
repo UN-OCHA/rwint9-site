@@ -18,6 +18,70 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
 class FileHelperTest extends ExistingSiteBase {
 
   /**
+   * Original text extraction commands configuration.
+   *
+   * @var array|null
+   */
+  protected $originalTextExtractionCommands;
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function setUp(): void {
+    parent::setUp();
+
+    // Store the original configuration.
+    $config = \Drupal::configFactory()->get('reliefweb_utility.settings');
+    $this->originalTextExtractionCommands = $config->get('text_extraction.commands');
+
+    // Set up test configuration for text extraction commands.
+    // Use mutool for PDF (always present) and echo for text files.
+    $config = \Drupal::configFactory()->getEditable('reliefweb_utility.settings');
+    $config->set('text_extraction.commands', [
+      [
+        'mimetype' => 'application/pdf',
+        'command' => '/usr/bin/mutool',
+        'args' => 'draw -F txt',
+        'options' => '',
+        'page' => TRUE,
+        'ignore_errors_if_output' => TRUE,
+      ],
+      [
+        'mimetype' => 'text/plain',
+        'command' => '/bin/cat',
+        'args' => '',
+        'options' => '',
+        'page' => FALSE,
+        'ignore_errors_if_output' => FALSE,
+      ],
+    ])->save();
+
+    // Clear the cache to force reload of configuration.
+    FileHelper::clearTextExtractionCommandsCache();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    // Restore the original configuration.
+    if ($this->originalTextExtractionCommands !== NULL) {
+      $config = \Drupal::configFactory()->getEditable('reliefweb_utility.settings');
+      $config->set('text_extraction.commands', $this->originalTextExtractionCommands)->save();
+    }
+    else {
+      // If there was no original configuration, remove the test configuration.
+      $config = \Drupal::configFactory()->getEditable('reliefweb_utility.settings');
+      $config->clear('text_extraction.commands')->save();
+    }
+
+    // Clear the cache to force reload of configuration.
+    FileHelper::clearTextExtractionCommandsCache();
+
+    parent::tearDown();
+  }
+
+  /**
    * Create a file entity, save it, and mark it for cleanup.
    *
    * @param array $values
@@ -110,10 +174,10 @@ class FileHelperTest extends ExistingSiteBase {
       'filemime' => 'text/plain',
     ], $test_content);
 
-    // Text extraction should return empty for unsupported mimetype.
+    // Text extraction should return the file content for supported mimetype.
     $result = FileHelper::extractText($file);
 
-    $this->assertEquals('', $result);
+    $this->assertEquals('This is test text content.', $result);
   }
 
   /**
@@ -222,10 +286,19 @@ class FileHelperTest extends ExistingSiteBase {
     $this->assertIsArray($results);
     $this->assertCount(3, $results);
 
-    // All results should be empty strings since text/plain is not supported.
+    // All results should contain the file content since text/plain is now
+    // supported.
+    $expected_contents = [
+      'Test content for file 1',
+      'Test content for file 2',
+      'Test content for file 3',
+    ];
+
+    $i = 0;
     foreach ($results as $result) {
       $this->assertIsString($result);
-      $this->assertEquals('', $result);
+      $this->assertEquals($expected_contents[$i], $result);
+      $i++;
     }
   }
 
@@ -378,11 +451,13 @@ class FileHelperTest extends ExistingSiteBase {
     $this->assertArrayHasKey($file1->id(), $results);
     $this->assertArrayHasKey($file2->id(), $results);
 
-    // Text file should return empty string.
-    $this->assertEquals('', $results[$file1->id()]);
+    // Text file should return the actual file content.
+    $this->assertEquals('text content', $results[$file1->id()]);
 
-    // PDF file result depends on mutool availability.
+    // PDF file should return actual extracted text from mutool.
     $this->assertIsString($results[$file2->id()]);
+    // The PDF contains "Test PDF" text, so mutool should extract it.
+    $this->assertStringContainsString('Test PDF', $results[$file2->id()]);
   }
 
 }

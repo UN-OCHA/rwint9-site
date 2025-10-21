@@ -45,6 +45,7 @@ module:
   locale: 0
   mailsystem: 0
   maintenance200: 0
+  masquerade: 0
   media: 0
   media_library: 0
   memcache: 0

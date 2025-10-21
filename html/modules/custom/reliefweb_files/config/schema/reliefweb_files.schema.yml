@@ -36,9 +36,9 @@ reliefweb_files.settings:
         minimum_should_match:
           type: string
           label: 'Minimum similarity threshold for duplicate detection.'
-        only_published:
+        skip_access_check:
           type: boolean
-          label: 'Whether to only include published documents.'
+          label: 'Whether to skip report access checks.'
 
 field.field_settings.reliefweb_file:
   type: mapping
@@ -75,6 +75,12 @@ field.widget.settings.reliefweb_file:
     duplicate_warning_message:
       type: string
       label: 'Warning message to display when duplicates are found.'
+    duplicate_max_files:
+      type: integer
+      label: 'Maximum number of files to search for similarity.'
+    duplicate_skip_access_check:
+      type: boolean
+      label: 'Whether to skip report access checks.'
 
 field.widget.settings.reliefweb_file_simplified:
   type: field.widget.settings.reliefweb_file

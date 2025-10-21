@@ -4,7 +4,7 @@ services:
     arguments: ['@config.factory', '@http_client', '@logger.factory']
   reliefweb_files.file_duplication:
     class: Drupal\reliefweb_files\Services\ReliefWebFileDuplication
-    arguments: ['@state', '@config.factory', '@http_client', '@logger.factory', '@database', '@entity_type.manager', '@file_system']
+    arguments: ['@state', '@config.factory', '@http_client', '@logger.factory', '@database', '@entity_type.manager', '@file_system', '@current_user']
   reliefweb_files.route_subscriber:
     class: Drupal\reliefweb_files\Routing\RouteSubscriber
     tags:

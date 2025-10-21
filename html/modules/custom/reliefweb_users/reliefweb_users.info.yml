@@ -5,3 +5,4 @@ package: reliefweb
 core_version_requirement: ^10 || ^11
 dependencies:
   - drupal:user
+  - masquerade:masquerade

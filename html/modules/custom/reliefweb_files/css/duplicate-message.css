@@ -32,3 +32,39 @@
 .duplicate-files-list a:hover {
   text-decoration: underline;
 }
+
+/* Styles for duplicate document items with similarity percentage */
+.duplicate-document-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25em;
+  padding: 0.25em 0;
+}
+
+.duplicate-document-item .duplicate-similarity-percentage {
+  margin-left: 0.5em;
+  padding: 0.2em 0.5em;
+  white-space: nowrap;
+  color: #734c00;
+  border-radius: 3px;
+  background-color: #f4daa6;
+  font-size: 0.9em;
+  font-weight: bold;
+}
+
+/* Styling when the duplicate message is displayed via the messenger service. */
+.messages {
+  .duplicate-files-message {
+    margin: 0;
+  }
+
+  .duplicate-files-list a {
+    color: var(--brand-primary);
+
+    &:hover {
+      text-decoration: underline;
+      color: var(--brand-primary--dark);
+    }
+  }
+}
