@@ -1274,7 +1274,7 @@ function reliefweb_entities_trigger_webhooks($event, $payload) {
   $webhooks_service = \Drupal::service('webhooks.service');
   $webhook_configs = $webhooks_service->loadMultipleByEvent($event);
 
-  $payload = [
+  $webhook_payload = [
     'event' => $event,
     'payload' => $payload,
   ];
@@ -1284,7 +1284,7 @@ function reliefweb_entities_trigger_webhooks($event, $payload) {
   /** @var \Drupal\webhooks\Entity\WebhookConfig $webhook_config */
   foreach ($webhook_configs as $webhook_config) {
     $webhook = new Webhook(
-      $payload,
+      $webhook_payload,
       $headers,
       $event,
       'application/json'
