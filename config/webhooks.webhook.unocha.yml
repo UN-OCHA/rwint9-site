@@ -4,10 +4,10 @@ status: true
 dependencies: {  }
 id: unocha
 label: UNOCHA
-payload_url: 'http://unocha-site.docksal.site/webhook/publications'
+payload_url: ''
 type: outgoing
 events: 'a:1:{s:24:"reliefweb:entity_updated";s:24:"reliefweb:entity_updated";}'
-secret: null
+secret: ''
 content_type: application/json
 token: ''
 non_blocking: false
