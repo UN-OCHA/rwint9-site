@@ -1279,6 +1279,7 @@ function reliefweb_entities_trigger_webhooks($event, $payload) {
     'payload' => $payload,
   ];
 
+  // No extra headers needed.
   $headers = [];
 
   /** @var \Drupal\webhooks\Entity\WebhookConfig $webhook_config */
