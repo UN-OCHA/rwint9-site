@@ -1263,6 +1263,13 @@ function reliefweb_entities_notify_webhooks($event, $payload) {
 
 /**
  * Trigger webhooks.
+ *
+ * This function is registered as a shutdown function and is not called directly.
+ *
+ * @param string $event
+ *   The webhook event name.
+ * @param array $payload
+ *   The webhook payload data.
  */
 function reliefweb_entities_trigger_webhooks($event, $payload) {
   /** @var \Drupal\webhooks\WebhooksService $webhooks_service */
