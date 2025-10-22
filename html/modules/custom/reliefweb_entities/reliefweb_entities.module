@@ -1239,7 +1239,23 @@ function reliefweb_entities_webhooks_event_info_alter(&$options) {
 }
 
 /**
- * Notify webhooks.
+ * Registers a shutdown function to notify webhooks of a specific event.
+ *
+ * This function defers the execution of webhook notifications until the end of
+ * the request by registering a shutdown function. This ensures that webhook
+ * processing does not interfere with the main request lifecycle and is only
+ * triggered after all other processing is complete.
+ *
+ * @param string $event
+ *   The name of the webhook event to trigger.
+ * @param array $payload
+ *   The data to send with the webhook notification.
+ *
+ * @see drupal_register_shutdown_function()
+ * @see reliefweb_entities_trigger_webhooks()
+ *
+ * @sideeffect Registers a shutdown function that will trigger webhooks after
+ *   the main request has finished processing.
  */
 function reliefweb_entities_notify_webhooks($event, $payload) {
   drupal_register_shutdown_function('reliefweb_entities_trigger_webhooks', $event, $payload);
