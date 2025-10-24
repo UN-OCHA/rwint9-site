@@ -5,8 +5,10 @@ namespace Drupal\reliefweb_import\Drush\Commands;
 use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
 use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
 use Consolidation\SiteProcess\ProcessManagerAwareTrait;
+use Drupal\Core\Config\ConfigFactory;
 use Drupal\reliefweb_import\Plugin\ReliefwebImporterPluginManagerInterface;
 use Drupal\reliefweb_import\Service\JobFeedsImporterInterface;
+use Drupal\reliefweb_import\Service\WorkDayJobImporter;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -23,7 +25,9 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    */
   public function __construct(
     protected JobFeedsImporterInterface $jobImporter,
+    protected WorkDayJobImporter $workdayJobImporter,
     protected ReliefwebImporterPluginManagerInterface $importerPluginManager,
+    protected ConfigFactory $configFactory,
   ) {}
 
   /**
@@ -42,6 +46,59 @@ class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInte
    */
   public function importJobs(int $limit = 50): void {
     $this->jobImporter->importJobs($limit);
+  }
+
+  /**
+   * Import workday jobs.
+   *
+   * @param int $limit
+   *   Max number of items to import.
+   *
+   * @command reliefweb_import:workday
+   *
+   * @usage reliefweb_import:workday
+   *   Import workday jobs.
+   *
+   * @validate-module-enabled reliefweb_import
+   * @aliases reliefweb-import-workday
+   */
+  public function importWorkdayJobs(int $limit = 50): void {
+    // Load configuration.
+    $tenants_config = $this->configFactory->listAll('reliefweb_import.workday.');
+
+    foreach ($tenants_config as $name) {
+      if ($name === 'reliefweb_import.workday') {
+        // Skip the base config.
+        continue;
+      }
+
+      $config = $this->configFactory->get($name)->get();
+
+      // Skip if not enabled.
+      if (empty($config['enabled'])) {
+        $this->logger()->info(strtr('Skipping import for WorkDay tenant: @name.', [
+          '@name' => $config['name'] ?? $name,
+        ]));
+        continue;
+      }
+
+      $this->logger()->info(strtr('Starting import for WorkDay tenant: @name.', [
+        '@name' => $config['name'] ?? $name,
+      ]));
+
+      try {
+        $this->workdayJobImporter->setSettings($config);
+        $this->workdayJobImporter->validateSettings();
+        $this->workdayJobImporter->importJobs($limit);
+      }
+      catch (\Exception $e) {
+        $this->logger()->error(strtr('WorkDay tenant: @name import failed with error: @message', [
+          '@name' => $config['name'] ?? $name,
+          '@message' => $e->getMessage(),
+        ]));
+        continue;
+      }
+    }
   }
 
   /**

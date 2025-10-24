@@ -77,6 +77,11 @@ class ImportExportService {
         continue;
       }
 
+      // Skip rows having an ignore flag.
+      if (isset($data['ignore']) && !empty($data['ignore'])) {
+        continue;
+      }
+
       // Make sure Id field is present.
       if (empty($data[$field_info['id']])) {
         // Close the file.
@@ -124,6 +129,11 @@ class ImportExportService {
       $data = [];
       for ($i = 0; $i < count($row); $i++) {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
+      }
+
+      // Skip rows having an ignore flag.
+      if (isset($data['ignore']) && !empty($data['ignore'])) {
+        continue;
       }
 
       // Add row number to the data.
