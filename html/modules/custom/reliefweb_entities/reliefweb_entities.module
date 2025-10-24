@@ -34,6 +34,7 @@ use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\taxonomy\TermInterface;
 use Drupal\user\EntityOwnerInterface;
+use Drupal\webhooks\Webhook;
 use Symfony\Component\HttpKernel\Exception\GoneHttpException;
 
 /**
@@ -1225,4 +1226,93 @@ function reliefweb_entities_node_delete(EntityInterface $entity) {
       }
     }
   }
+}
+
+/**
+ * Implements hook_webhooks_event_info_alter().
+ */
+function reliefweb_entities_webhooks_event_info_alter(&$options) {
+  $options['reliefweb:entity_updated'] = [
+    'type' => t('ReliefWeb Entity updated'),
+    'events' => 'reliefweb:entity_updated',
+  ];
+}
+
+/**
+ * Registers a shutdown function to notify webhooks of a specific event.
+ *
+ * This function defers the execution of webhook notifications until the end of
+ * the request by registering a shutdown function. This ensures that webhook
+ * processing does not interfere with the main request lifecycle and is only
+ * triggered after all other processing is complete.
+ *
+ * @param string $event
+ *   The name of the webhook event to trigger.
+ * @param array $payload
+ *   The data to send with the webhook notification.
+ *
+ * @see drupal_register_shutdown_function()
+ * @see reliefweb_entities_trigger_webhooks()
+ *
+ * @sideeffect Registers a shutdown function that will trigger webhooks after
+ *   the main request has finished processing.
+ */
+function reliefweb_entities_notify_webhooks($event, $payload) {
+  drupal_register_shutdown_function('reliefweb_entities_trigger_webhooks', $event, $payload);
+}
+
+/**
+ * Trigger webhooks.
+ *
+ * @param string $event
+ *   The webhook event name.
+ * @param array $payload
+ *   The webhook payload data.
+ */
+function reliefweb_entities_trigger_webhooks($event, $payload) {
+  /** @var \Drupal\webhooks\WebhooksService $webhooks_service */
+  $webhooks_service = \Drupal::service('webhooks.service');
+  $webhook_configs = $webhooks_service->loadMultipleByEvent($event);
+
+  $webhook_payload = [
+    'event' => $event,
+    'payload' => $payload,
+  ];
+
+  // No extra headers needed.
+  $headers = [];
+
+  /** @var \Drupal\webhooks\Entity\WebhookConfig $webhook_config */
+  foreach ($webhook_configs as $webhook_config) {
+    $webhook = new Webhook(
+      $webhook_payload,
+      $headers,
+      $event,
+      'application/json'
+    );
+
+    $webhooks_service->send($webhook_config, $webhook);
+  }
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ *
+ * Notify webhooks about the entity update.
+ */
+function reliefweb_entities_node_update(EntityInterface $entity) {
+  /** @var \Drupal\node\NodeInterface $entity */
+
+  // Ignore if the entity is not published.
+  if (!$entity->isPublished()) {
+    return;
+  }
+
+  $payload = [
+    'entity_type' => $entity->getEntityTypeId(),
+    'entity_id' => $entity->id(),
+    'bundle' => $entity->bundle(),
+  ];
+
+  reliefweb_entities_notify_webhooks('reliefweb:entity_updated', $payload);
 }
