@@ -68,6 +68,7 @@
         "drupal/token": "^1.11",
         "drupal/user_display_name": "^1.0",
         "drupal/username_enumeration_prevention": "^1.3",
+        "drupal/webhooks": "^3.0@alpha",
         "drush/drush": "^13",
         "elasticsearch/elasticsearch": "^8",
         "eliashaeussler/transient-logger": "^1.0",
