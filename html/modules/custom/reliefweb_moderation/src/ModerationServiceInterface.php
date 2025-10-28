@@ -120,6 +120,19 @@ interface ModerationServiceInterface {
   public function isEditableStatus($status, ?AccountInterface $account = NULL);
 
   /**
+   * Check if an entity with the given status is deletable for the account.
+   *
+   * @param string $status
+   *   Entity moderation status.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account. Defaults to the current user if not provided.
+   *
+   * @return bool
+   *   TRUE if the entity is deletable.
+   */
+  public function isDeletableStatus(string $status, ?AccountInterface $account = NULL): bool;
+
+  /**
    * Check if an entity with the given status is considered published.
    *
    * Note: published doesn't mean that the entity is accessible to everybody.
@@ -174,18 +187,70 @@ interface ModerationServiceInterface {
    * @return \Drupal\Core\Access\AccessResultInterface
    *   Access result.
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL);
+  public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface;
+
+  /**
+   * Check access to a node.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   * @param string $operation
+   *   Operation: view, create, edit or delete.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access result.
+   */
+  public function nodeAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface;
+
+  /**
+   * Check access to a taxonomy term.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   * @param string $operation
+   *   Operation: view, create, edit or delete.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access result.
+   */
+  public function taxonomyTermAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface;
 
   /**
    * Check access to create an entity.
    *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   User trying to get access.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public function entityCreateAccess(AccountInterface $account): AccessResultInterface;
+  public function entityCreateAccess(?AccountInterface $account = NULL): AccessResultInterface;
+
+  /**
+   * Check access to create a node.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function nodeCreateAccess(?AccountInterface $account = NULL): AccessResultInterface;
+
+  /**
+   * Check access to create a taxonomy term.
+   *
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function taxonomyTermCreateAccess(?AccountInterface $account = NULL): AccessResultInterface;
 
   /**
    * Alter the entity form, to add the moderation status submit buttons.

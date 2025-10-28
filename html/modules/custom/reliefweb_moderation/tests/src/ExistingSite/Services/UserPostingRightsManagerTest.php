@@ -82,10 +82,16 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Save the original posting rights status mapping.
     $this->originalPostingRightsStatusMapping = $this->userPostingRightsManager->getUserPostingRightsToModerationStatusMapping();
 
+    // Create a role with the "apply posting rights" permission.
+    $posting_right_role_id = $this->createRole([
+      'apply posting rights',
+    ]);
+
     // Create a test user with email domain.
     $this->testUser = $this->createUser([], 'test_user', FALSE, [
       'mail' => 'test@example.com',
       'status' => 1,
+      'roles' => [$posting_right_role_id],
     ]);
 
     // Source vocabulary.
