@@ -1327,16 +1327,14 @@ function reliefweb_entities_node_update(EntityInterface $entity) {
 }
 
 /**
- * Checks if there is an active outgoing webhook configured for the given event.
- *
- * Uses static caching via drupal_static to improve performance for repeated checks
- * during a single request.
+ * Checks if there is an active outgoing webhook configured for the event.
  *
  * @param string $event
  *   The name of the webhook event to check for active outgoing webhooks.
  *
  * @return bool
- *   TRUE if there is at least one active outgoing webhook for the event, FALSE otherwise.
+ *   TRUE if there is at least one active outgoing webhook for the event,
+ *   FALSE otherwise.
  */
 function reliefweb_entities_has_active_webhook_for_event(string $event): bool {
   $active = drupal_static(__FUNCTION__, []);
