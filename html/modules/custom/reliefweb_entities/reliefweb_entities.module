@@ -1258,6 +1258,10 @@ function reliefweb_entities_webhooks_event_info_alter(&$options) {
  *   the main request has finished processing.
  */
 function reliefweb_entities_notify_webhooks($event, $payload) {
+  if (!reliefweb_entities_has_active_webhook_for_event($event)) {
+    return;
+  }
+
   drupal_register_shutdown_function('reliefweb_entities_trigger_webhooks', $event, $payload);
 }
 
@@ -1303,6 +1307,11 @@ function reliefweb_entities_trigger_webhooks($event, $payload) {
 function reliefweb_entities_node_update(EntityInterface $entity) {
   /** @var \Drupal\node\NodeInterface $entity */
 
+  // Only for reports.
+  if ($entity->bundle() !== 'report') {
+    return;
+  }
+
   // Ignore if the entity is not published.
   if (!$entity->isPublished()) {
     return;
@@ -1315,4 +1324,29 @@ function reliefweb_entities_node_update(EntityInterface $entity) {
   ];
 
   reliefweb_entities_notify_webhooks('reliefweb:entity_updated', $payload);
+}
+
+/**
+ * Checks if there is an active outgoing webhook configured for the event.
+ *
+ * @param string $event
+ *   The name of the webhook event to check for active outgoing webhooks.
+ *
+ * @return bool
+ *   TRUE if there is at least one active outgoing webhook for the event,
+ *   FALSE otherwise.
+ */
+function reliefweb_entities_has_active_webhook_for_event(string $event): bool {
+  $active = drupal_static(__FUNCTION__, []);
+  if (isset($active[$event])) {
+    return $active[$event];
+  }
+
+  /** @var \Drupal\webhooks\WebhooksService $webhooks_service */
+  $webhooks_service = \Drupal::service('webhooks.service');
+  $webhook_configs = $webhooks_service->loadMultipleByEvent($event, 'outgoing');
+
+  $active[$event] = !empty($webhook_configs);
+
+  return $active[$event];
 }
