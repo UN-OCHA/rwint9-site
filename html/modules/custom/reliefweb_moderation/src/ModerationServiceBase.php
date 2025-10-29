@@ -241,6 +241,13 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function isDeletableStatus(string $status, ?AccountInterface $account = NULL): bool {
+    return $this->isEditableStatus($status, $account);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPublishedStatus($status) {
     return $status === 'published';
   }
@@ -293,14 +300,35 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+  public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
+    // Return the access result based on the entity type.
+    return match ($entity->getEntityTypeId()) {
+      // Check access to a node.
+      'node' => $this->nodeAccess($entity, $operation, $account),
+      // Check access to a taxonomy term.
+      'taxonomy_term' => $this->taxonomyTermAccess($entity, $operation, $account),
+      // Access neutral, let other modules handle the access.
+      default => AccessResult::neutral(),
+    };
+  }
+
+  /**
+   * Check access to a node.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   * @param string $operation
+   *   Operation: view, edit, delete or view_moderation_information.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access result.
+   */
+  public function nodeAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
     $account = $account ?: $this->currentUser;
 
-    $access = FALSE;
-
     $bundle = $entity->bundle();
-
-    $entity_type_id = $entity->getEntityTypeId();
 
     $status = $entity->getModerationStatus();
 
@@ -308,123 +336,224 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
 
     $editable = $this->isEditableStatus($status, $account);
 
+    $deletable = $this->isDeletableStatus($status, $account);
+
     $owner = FALSE;
     if ($entity instanceof EntityOwnerInterface) {
       $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
     }
 
-    switch ($entity_type_id) {
-      case 'node':
-        // Access to everything for those permissions.
-        $access = $account->hasPermission('bypass node access') || $account->hasPermission('administer nodes');
-
-        if (!$access) {
-          switch ($operation) {
-            case 'view':
-              if ($account->hasPermission('access content')) {
-                $access = $viewable || $account->hasPermission('view any content');
-
-                // Check if the user is the owner or has posting rights.
-                // Document owners are allowed to view their documents even if
-                // they don't have the posting rights on it (due to being
-                // blocked for one of the sources for example).
-                if (!$access && $account->hasPermission('view own unpublished content')) {
-                  $access = $owner || $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
-                }
-              }
-              break;
-
-            case 'create':
-              $access = $account->hasPermission('create any content') ||
-                        $account->hasPermission('create ' . $bundle . ' content');
-              break;
-
-            case 'update':
-              if ($account->hasPermission('edit any ' . $bundle . ' content')) {
-                $access = TRUE;
-              }
-              elseif ($editable && $account->hasPermission('edit own ' . $bundle . ' content')) {
-                $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
-              }
-              break;
-
-            case 'delete':
-              if ($account->hasPermission('delete any ' . $bundle . ' content')) {
-                $access = TRUE;
-              }
-              elseif ($account->hasPermission('delete own ' . $bundle . ' content')) {
-                $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
-              }
-              break;
-
-            case 'view_moderation_information':
-              if ($account->hasPermission('view ' . $bundle . ' moderation information') || $account->hasPermission('view moderation information')) {
-                if ($account->hasPermission('edit any ' . $bundle . ' content')) {
-                  $access = TRUE;
-                }
-                elseif ($account->hasPermission('edit own ' . $bundle . ' content')) {
-                  $access = $this->userPostingRightsManager->userHasPostingRights($account, $entity, $status);
-                }
-              }
-              break;
-
-            default:
-              return AccessResult::neutral();
-          }
-        }
-
-        break;
-
-      case 'taxonomy_term':
-        // Access to everything for those permissions.
-        $access = $account->hasPermission('administer taxonomy');
-
-        if (!$access) {
-          switch ($operation) {
-            case 'view':
-              if ($account->hasPermission('access content')) {
-                $access = $viewable || $account->hasPermission('view any content');
-              }
-              break;
-
-            case 'create':
-              $access = $account->hasPermission('edit terms in ' . $bundle);
-              break;
-
-            case 'update':
-              $access = $account->hasPermission('edit terms in ' . $bundle) && $editable;
-              break;
-
-            case 'delete':
-              $access = $account->hasPermission('delete terms in ' . $bundle);
-              break;
-
-            case 'view_moderation_information':
-              if ($account->hasPermission('view moderation information')) {
-                $access = $account->hasPermission('edit terms in ' . $bundle);
-              }
-              break;
-
-            default:
-              return AccessResult::neutral();
-          }
-        }
-
-        break;
-
-      default:
-        return AccessResult::neutral();
+    // Access to everything for those permissions.
+    if ($account->hasPermission('bypass node access') || $account->hasPermission('administer nodes')) {
+      return AccessResult::allowed();
     }
 
-    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+    // Check access based on the operation.
+    $access = match ($operation) {
+      'view' => match (TRUE) {
+        // User can view any content regardless of the status.
+        $account->hasPermission('view any content') => TRUE,
+        // User can view any bundle content regardless of the status.
+        $account->hasPermission('view any ' . $bundle . ' content') => TRUE,
+        // User can view published content.
+        $viewable && $account->hasPermission('access content') => TRUE,
+        // User is the owner and has the permission to view own
+        // unpublished content for entity's bundle.
+        $owner && $account->hasPermission('view own unpublished content') && $account->hasPermission('view own unpublished ' . $bundle . ' content') => TRUE,
+        // User has access to affiliated unpublished content and has
+        // posting rights for the entity's organizations.
+        $account->hasPermission('view affiliated unpublished ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'update' => match (TRUE) {
+        // User can edit any content.
+        $editable && $account->hasPermission('edit any ' . $bundle . ' content') => TRUE,
+        // User can edit own bundle content and has posting rights.
+        $editable && $owner && $account->hasPermission('edit own ' . $bundle . ' content') => TRUE,
+        // User can edit affiliated bundle content and has posting rights.
+        $editable && $account->hasPermission('edit affiliated ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'delete' => match (TRUE) {
+        // User can delete any content.
+        $deletable && $account->hasPermission('delete any ' . $bundle . ' content') => TRUE,
+        // User can delete own bundle content and has posting rights.
+        $deletable && $owner && $account->hasPermission('delete own ' . $bundle . ' content') => TRUE,
+        // User can delete affiliated bundle content and has posting rights.
+        $deletable && $account->hasPermission('delete affiliated ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'view_moderation_information' => match (TRUE) {
+        // User can view moderation information for any content.
+        $account->hasPermission('view moderation information') => TRUE,
+        // User can view moderation information for content of the
+        // bundle type and can edit the entity.
+        $account->hasPermission('view ' . $bundle . ' moderation information') && $this->entityAccess($entity, 'update', $account)->isAllowed() => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      // Access neutral, let other modules handle the access.
+      default => NULL,
+    };
+
+    // Return the access result.
+    return match ($access) {
+      TRUE => AccessResult::allowed(),
+      FALSE => AccessResult::forbidden(),
+      default => AccessResult::neutral(),
+    };
+  }
+
+  /**
+   * Check access to a taxonomy term.
+   *
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   * @param string $operation
+   *   Operation: view, edit, delete or view_moderation_information.
+   * @param \Drupal\Core\Session\AccountInterface|null $account
+   *   User account accessing the entity. Defaults to the current user.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   Access result.
+   */
+  public function taxonomyTermAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
+    $account = $account ?: $this->currentUser;
+
+    $bundle = $entity->bundle();
+
+    $status = $entity->getModerationStatus();
+
+    $viewable = $this->isViewableStatus($status, $account);
+
+    $editable = $this->isEditableStatus($status, $account);
+
+    $deletable = $this->isDeletableStatus($status, $account);
+
+    $access = FALSE;
+
+    // Access to everything for those permissions.
+    if ($account->hasPermission('administer taxonomy')) {
+      return AccessResult::allowed();
+    }
+
+    // Check access based on the operation.
+    $access = match ($operation) {
+      'view' => match (TRUE) {
+        // User can view any content regardless of the status.
+        $account->hasPermission('view any content') => TRUE,
+        // User can view published content.
+        $viewable && $account->hasPermission('access content') => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'update' => match (TRUE) {
+        // User can edit terms of the vocabulary.
+        $editable && $account->hasPermission('edit terms in ' . $bundle) => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'delete' => match (TRUE) {
+        // User can delete terms of the vocabulary.
+        $deletable && $account->hasPermission('delete terms in ' . $bundle) => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      'view_moderation_information' => match (TRUE) {
+        // User can view moderation information for any content.
+        $account->hasPermission('view moderation information') => TRUE,
+        // No access.
+        default => FALSE,
+      },
+      // Access neutral, let other modules handle the access.
+      default => NULL,
+    };
+
+    // Return the access result.
+    return match ($access) {
+      TRUE => AccessResult::allowed(),
+      FALSE => AccessResult::forbidden(),
+      default => AccessResult::neutral(),
+    };
   }
 
   /**
    * {@inheritdoc}
    */
-  public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
-    // No opinion, let the permission system handles the access by default.
-    return AccessResult::neutral();
+  public function entityCreateAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    // Return the access result based on the entity type.
+    return match ($this->getEntityTypeId()) {
+      // Check create access to a node.
+      'node' => $this->nodeCreateAccess($account),
+      // Check create access to a taxonomy term.
+      'taxonomy_term' => $this->taxonomyTermCreateAccess($account),
+      // Access neutral, let other modules handle the access.
+      default => AccessResult::neutral(),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function nodeCreateAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    $account = $account ?: $this->currentUser;
+
+    $bundle = $this->getBundle();
+
+    $access = match (TRUE) {
+      // User can create content of the bundle type.
+      $account->hasPermission('create ' . $bundle . ' content') => TRUE,
+      // No access.
+      default => FALSE,
+    };
+
+    // Return the access result.
+    return match ($access) {
+      TRUE => AccessResult::allowed(),
+      FALSE => AccessResult::forbidden(),
+      default => AccessResult::neutral(),
+    };
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function taxonomyTermCreateAccess(?AccountInterface $account = NULL): AccessResultInterface {
+    $account = $account ?: $this->currentUser;
+
+    $bundle = $this->getBundle();
+
+    $access = match (TRUE) {
+      // User can create terms of the vocabulary.
+      $account->hasPermission('edit terms in ' . $bundle) => TRUE,
+      // No access.
+      default => FALSE,
+    };
+
+    // Return the access result.
+    return match ($access) {
+      TRUE => AccessResult::allowed(),
+      FALSE => AccessResult::forbidden(),
+      default => AccessResult::neutral(),
+    };
+  }
+
+  /**
+   * Check if a user has posting rights on the entity.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account.
+   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
+   *   Entity.
+   *
+   * @return bool
+   *   TRUE if the user has posting rights, FALSE otherwise.
+   */
+  public function userHasPostingRights(AccountInterface $account, EntityModeratedInterface $entity): bool {
+    return $this->userPostingRightsManager->userHasPostingRights($account, $entity, $entity->getModerationStatus());
   }
 
   /**

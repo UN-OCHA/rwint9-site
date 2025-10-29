@@ -14,6 +14,26 @@ view any content:
   title: 'View any content'
   description: 'Allow users to view any content.'
 
+edit archived content:
+  title: 'Edit archived content'
+  description: 'Allow users to edit archived content.'
+
+edit duplicate content:
+  title: 'Edit duplicate content'
+  description: 'Allow users to edit duplicate content.'
+
+edit refused content:
+  title: 'Edit refused content'
+  description: 'Allow users to edit refused content.'
+
+manage external disasters:
+  title: 'Manage external disasters'
+  description: 'Allow users to manage external disasters.'
+
+# Permission to view moderation information for any content.
+# For individual content types, use the "view <content_type> moderation
+# information" permissions defined in the ContentPermissions::permissions()
+# callback.
 view moderation information:
   title: 'View moderation information'
   description: 'Allow users to view the moderation status and revision message.'
@@ -30,28 +50,7 @@ view moderation information revision message author:
   title: 'View moderation information revision message author'
   description: 'Allow users to view the moderation revision message author.'
 
-create report only if allowed or trusted for a source:
-  title: 'Create report only if allowed or trusted for a source'
-  descrition: 'Restrict report creation to people with allowed or trusted user posting rights for a source.'
-
-# @todo use a permission callback instead to generate those permissions
-# dynamically.
-view job moderation information:
-  title: 'View job moderation information'
-  description: 'Allow users to view the job moderation status and revision message.'
-
-view report moderation information:
-  title: 'View report moderation information'
-  description: 'Allow users to view the report moderation status and revision message.'
-
-view topic moderation information:
-  title: 'View topic moderation information'
-  description: 'Allow users to view the topic moderation status and revision message.'
-
-view training moderation information:
-  title: 'View training moderation information'
-  description: 'Allow users to view the training moderation status and revision message.'
-
+# Posting rights permissions.
 apply posting rights:
   title: 'Apply posting rights'
   description: 'Allow users to have posting rights that will be applied for status mapping configuration and moderation decisions.'
@@ -59,3 +58,8 @@ apply posting rights:
 administer posting rights mapping:
   title: 'Administer posting rights mapping'
   description: 'Allow users to access and configure the posting rights status mapping form.'
+
+# Content permissions.
+permission_callbacks:
+  - \Drupal\reliefweb_moderation\AffiliatedContentPermissions::permissions
+  - \Drupal\reliefweb_moderation\ContentPermissions::permissions

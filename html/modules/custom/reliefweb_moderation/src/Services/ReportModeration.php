@@ -2,8 +2,6 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Link;
@@ -315,32 +313,30 @@ class ReportModeration extends ModerationServiceBase {
       ],
     ];
 
-    // Add extra buttons to manage content submitted via the API.
-    if ($entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id)) {
+    // The provider is only set on content submitted via the API.
+    $api_submitted = $entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id);
+    $account = $this->currentUser;
+
+    // Allow to set the status to pending for content submitted via the API.
+    if ($api_submitted) {
       $buttons['pending'] = [
         '#value' => $this->t('Pending'),
       ];
-      // Note: once refused the document is not editable anymore unless
-      // the current user is also an administrator or webmaster.
-      // @see ::isEditableStatus().
+    }
+
+    // Allow to refuse content submitted via the API or already refused
+    // documents.
+    if (($api_submitted || $status === 'refused') && $account->hasPermission('edit refused content')) {
       $buttons['refused'] = [
         '#value' => $this->t('Refused'),
       ];
     }
 
-    // Admin and webmasters can also edit archived or refused documents.
-    // @see ::isEditableStatus().
-    if (UserHelper::userHasRoles(['administrator', 'webmaster'])) {
+    // Allow to archive documents.
+    if ($account->hasPermission('edit archived content')) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
-
-      // Allow to refuse already refused documents (from contributors or API).
-      if ($status === 'refused') {
-        $buttons['refused'] = [
-          '#value' => $this->t('Refused'),
-        ];
-      }
     }
 
     return $buttons;
@@ -364,9 +360,13 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => [
         '#value' => $this->t('Save as draft'),
       ],
+      // Pending is the default submission status and the actual status
+      // is determined later on based on the posting rights of the submitter.
+      // @see \Drupal\reliefweb_moderation\EntityWithPostingRightsTrait::updateModerationStatusFromPostingRights()
       'pending' => [
         '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
       ],
+      // This button allows to unpublish a document.
       'on-hold' => [
         '#value' => $this->t('On-hold'),
       ],
@@ -406,12 +406,16 @@ class ReportModeration extends ModerationServiceBase {
     $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     $buttons = [
+      // Pending is the default submission status and the actual status
+      // is determined later on based on the posting rights of the submitter.
+      // @see \Drupal\reliefweb_moderation\EntityWithPostingRightsTrait::updateModerationStatusFromPostingRights()
       'pending' => [
         '#value' => $new ? $this->t('Submit') : $this->t('Submit changes'),
       ],
     ];
 
     if (!$new) {
+      // This button allows to unpublish a document.
       $buttons['on-hold'] = [
         '#value' => $this->t('Unpublish'),
       ];
@@ -437,13 +441,12 @@ class ReportModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    if ($status === 'archive') {
-      return UserHelper::userHasRoles(['administrator', 'webmaster'], $account);
-    }
-    elseif ($status === 'refused') {
-      return UserHelper::userHasRoles(['administrator', 'editor', 'webmaster'], $account);
-    }
-    return TRUE;
+    $account = $account ?: $this->currentUser;
+    return match ($status) {
+      'archive' => $account->hasPermission('edit archived content'),
+      'refused' => $account->hasPermission('edit refused content'),
+      default => TRUE,
+    };
   }
 
   /**
@@ -454,74 +457,6 @@ class ReportModeration extends ModerationServiceBase {
     // Disable if not published or previously published to avoid resending
     // notifications when making modification to a published report.
     $entity->notifications_content_disable = $status !== 'published' || $previous_status === 'published';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
-    $account = $account ?: $this->currentUser;
-
-    $access_result = parent::entityAccess($entity, $operation, $account);
-
-    if ($operation !== 'view') {
-      // Normally editors can edit any kind of reports
-      // but there are some exceptions like archived reports.
-      $access = !$access_result->isForbidden() &&
-        $this->isEditableStatus($entity->getModerationStatus(), $account);
-
-      $access_result = $access ? $access_result : AccessResult::forbidden();
-    }
-
-    // Submitters have stricter access rules.
-    if ($account->hasRole('submitter') && !$account->hasRole('contributor') && !$account->hasRole('editor') && !$access_result->isForbidden()) {
-      $access_result = $this->entityAccessForSubmitters($entity, $operation, $account, $access_result);
-    }
-
-    return $access_result;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function entityCreateAccess(AccountInterface $account): AccessResultInterface {
-    $access_result = parent::entityCreateAccess($account);
-    // Disallow report creation for submitters without posting rights.
-    if ($account->hasPermission('create report only if allowed or trusted for a source') && !$this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle())) {
-      return AccessResult::forbidden();
-    }
-    return $access_result;
-  }
-
-  /**
-   * Perform addition access check for submitters.
-   *
-   * @param \Drupal\reliefweb_moderation\EntityModeratedInterface $entity
-   *   Entity being accessed.
-   * @param string $operation
-   *   Access operation being performed.
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   User trying to access.
-   * @param \Drupal\Core\Access\AccessResultInterface $access_result
-   *   Current access result.
-   *
-   * @return \Drupal\Core\Access\AccessResultInterface
-   *   The updated access result.
-   */
-  protected function entityAccessForSubmitters(EntityModeratedInterface $entity, string $operation, AccountInterface $account, AccessResultInterface $access_result): AccessResultInterface {
-    $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
-
-    $allowed = match($operation) {
-      'view' => $owner,
-      'create' => $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
-      'update' => $owner && $this->userPostingRightsManager->isUserAllowedOrTrustedForAnySource($account, $this->getBundle()),
-      'delete' => FALSE,
-      'view_moderation_information' => !$access_result->isForbidden(),
-      default => !$access_result->isForbidden(),
-    };
-
-    $access_result->forbiddenIf(!$allowed);
-    return $access_result;
   }
 
   /**

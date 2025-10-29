@@ -6,7 +6,6 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
-use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the disaster terms.
@@ -143,8 +142,9 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function getFilterStatuses() {
     $statuses = parent::getFilterStatuses();
-    // @todo replace with permission.
-    if (!UserHelper::userHasRoles(['external_disaster_manager'])) {
+    // External disasters are only visible to users with the "Manage external
+    // disasters" permission.
+    if (!$this->currentUser->hasPermission('manage external disasters')) {
       unset($statuses['external']);
       unset($statuses['external-archive']);
     }
@@ -157,19 +157,17 @@ class DisasterModeration extends ModerationServiceBase {
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     $buttons = [];
     $new = empty($status) || $entity->isNew();
+    $account = $this->currentUser;
 
-    // @todo replace with permission.
-    if (UserHelper::userHasRoles(['editor'])) {
-      $buttons['draft'] = [
-        '#value' => $this->t('Draft'),
-      ];
-      $buttons['alert'] = [
-        '#value' => $this->t('Alert'),
-      ];
-      $buttons['ongoing'] = [
-        '#value' => $this->t('Ongoing'),
-      ];
-    }
+    $buttons['draft'] = [
+      '#value' => $this->t('Draft'),
+    ];
+    $buttons['alert'] = [
+      '#value' => $this->t('Alert'),
+    ];
+    $buttons['ongoing'] = [
+      '#value' => $this->t('Ongoing'),
+    ];
 
     // Allow to save new disasters as past disasters directly.
     if ($new) {
@@ -177,19 +175,20 @@ class DisasterModeration extends ModerationServiceBase {
         '#value' => $this->t('Past disaster'),
       ];
     }
-
-    // @todo replace with permission.
-    if (UserHelper::userHasRoles(['external_disaster_manager'])) {
-      $buttons['external'] = [
-        '#value' => $this->t('External'),
+    // Otherwise use a catch all button to archive existing disasters based
+    // on their existing status (ex: draft -> draft-archive, ongoing -> past).
+    // @see ::alterSubmittedEntityStatus()
+    else {
+      $buttons['archive'] = [
+        '#value' => $this->t('Archive'),
       ];
     }
 
-    // Use a catch all button to archive existing disasters.
-    // @see ::alterSubmittedEntityStatus()
-    if (!$new) {
-      $buttons['archive'] = [
-        '#value' => $this->t('Archive'),
+    // External disasters are only editable by users with the "Manage external
+    // disasters" permission.
+    if ($account->hasPermission('manage external disasters')) {
+      $buttons['external'] = [
+        '#value' => $this->t('External'),
       ];
     }
 
@@ -242,15 +241,10 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function isViewableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
-    // External disasters are only viewable by "External disaster managers".
-    if ($status === 'external' || $status === 'external-archive') {
-      return UserHelper::userHasRoles(['external_disaster_manager'], $account);
-    }
-    // Editors can view any disaster.
-    elseif (UserHelper::userHasRoles(['editor'], $account)) {
-      return TRUE;
-    }
-    return parent::isViewableStatus($status, $account);
+    return match ($status) {
+      'external', 'external-archive' => $account->hasPermission('manage external disasters'),
+      default => parent::isViewableStatus($status, $account),
+    };
   }
 
   /**
@@ -265,15 +259,12 @@ class DisasterModeration extends ModerationServiceBase {
    */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
-    if (!$account->hasPermission('edit terms in disaster')) {
-      return FALSE;
-    }
-    // External disasters are only editable by "External disaster managers".
-    if ($status === 'external' || $status === 'external-archive') {
-      return UserHelper::userHasRoles(['external_disaster_manager'], $account);
-    }
-    // Only Editors are allowed to edit disasters.
-    return UserHelper::userHasRoles(['editor'], $account);
+    return match ($status) {
+      // External disasters are only editable by users with the "Manage external
+      // disasters" permission.
+      'external', 'external-archive' => $account->hasPermission('manage external disasters'),
+      default => parent::isEditableStatus($status, $account),
+    };
   }
 
   /**

@@ -515,6 +515,11 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       return FALSE;
     }
 
+    // Disallow if the user does not have the 'apply posting rights' permission.
+    if (!$account->hasPermission('apply posting rights')) {
+      return FALSE;
+    }
+
     $bundle = $entity->bundle();
     $allowed = FALSE;
 
@@ -912,6 +917,16 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $entity->updateRevisionLogMessage($message, 'prepend');
 
     return TRUE;
+  }
+
+  /**
+   * Get the list of content types that support posting rights.
+   *
+   * @return array
+   *   Array of content type machine names.
+   */
+  public function getSupportedContentTypes(): array {
+    return ['report', 'job', 'training'];
   }
 
 }
