@@ -52,14 +52,11 @@ class AffiliatedContentPermissions implements ContainerInjectionInterface {
     $node_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple($content_types);
 
     foreach ($content_types as $content_type) {
-      // Get the proper label for the content type.
-      $node_type = $node_types[$content_type] ?? NULL;
-      $content_type_label = $node_type ? $node_type->label() : ucfirst($content_type);
+      if (!isset($node_types[$content_type])) {
+        continue;
+      }
 
-      $permissions['view own unpublished ' . $content_type . ' content'] = [
-        'title' => $this->t('View own unpublished @content_type content', ['@content_type' => $content_type_label]),
-        'description' => $this->t('Allow users to view their own unpublished @content_type content.', ['@content_type' => $content_type_label]),
-      ];
+      $content_type_label = $node_types[$content_type]->label();
 
       $permissions['view affiliated unpublished ' . $content_type . ' content'] = [
         'title' => $this->t('View affiliated unpublished @content_type content', ['@content_type' => $content_type_label]),
