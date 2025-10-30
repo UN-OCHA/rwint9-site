@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_entities\ExistingSite;
 
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\taxonomy\TermInterface;
 use Drupal\taxonomy\VocabularyInterface;
+use Drupal\user\Entity\User;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
@@ -51,6 +53,20 @@ class RwReportBase extends ExistingSiteBase {
   protected $originalPostingRightsStatusMapping;
 
   /**
+   * Administrator.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $administrator;
+
+  /**
+   * Anonymous user.
+   *
+   * @var \Drupal\user\UserInterface
+   */
+  protected $anonymous;
+
+  /**
    * Set up the test.
    */
   protected function setUp(): void {
@@ -65,6 +81,13 @@ class RwReportBase extends ExistingSiteBase {
 
     // Set up default moderation status mapping.
     $this->setUpDefaultModerationStatusMapping();
+
+    // Create an administrator user so that we can test access to the report
+    // regardless of its moderation status and posting rights.
+    $this->administrator = $this->createUser(admin: TRUE);
+
+    // Retrive the anonymous user.
+    $this->anonymous = User::getAnonymousUser();
   }
 
   /**
@@ -248,20 +271,19 @@ class RwReportBase extends ExistingSiteBase {
   }
 
   /**
-   * Get the expected response status as anonymous from moderation status.
+   * Get the expected response status for entity and user.
    *
-   * @param string $status
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to get the expected response status for.
+   * @param \Drupal\Core\Session\AccountInterface $user
+   *   The user to get the expected response status for.
    *   The moderation status.
    *
    * @return int
    *   The expected response status.
    */
-  protected function getExpectedResponseStatusAsAnonymous(string $status): int {
-    return match ($status) {
-      'published' => 200,
-      'to-review' => 200,
-      default => 404,
-    };
+  protected function getExpectedResponseStatusForEntityAndUser(EntityInterface $entity, AccountInterface $user): int {
+    return $entity->access('view', $user) ? 200 : 404;
   }
 
   /**

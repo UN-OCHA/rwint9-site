@@ -47,7 +47,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test creating a report as editor, draft.
    */
-  public function testCreateReportAsEditorDraft() {
+  public function testCreateReportAsEditorDraft(): void {
     $this->runTestCreateReportAsEditor(
       'draft',
       'draft',
@@ -57,7 +57,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test creating a report as editor, published.
    */
-  public function testCreateReportAsEditorPublished() {
+  public function testCreateReportAsEditorPublished(): void {
     $this->runTestCreateReportAsEditor(
       'published',
       'published',
@@ -67,7 +67,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor unverified, draft.
    */
-  public function testCreateReportAsContributorUnverifiedDraft() {
+  public function testCreateReportAsContributorUnverifiedDraft(): void {
     $this->runTestCreateReportAsContributor(
       'draft',
       'unverified',
@@ -77,7 +77,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor unverified, pending.
    */
-  public function testCreateReportAsContributorUnverifiedPending() {
+  public function testCreateReportAsContributorUnverifiedPending(): void {
     $this->runTestCreateReportAsContributor(
       'pending',
       'unverified',
@@ -87,7 +87,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor blocked, draft.
    */
-  public function testCreateReportAsContributorBlockedDraft() {
+  public function testCreateReportAsContributorBlockedDraft(): void {
     $this->runTestCreateReportAsContributor(
       'draft',
       'trusted',
@@ -97,7 +97,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor blocked, pending.
    */
-  public function testCreateReportAsContributorBlockedPending() {
+  public function testCreateReportAsContributorBlockedPending(): void {
     $this->runTestCreateReportAsContributor(
       'pending',
       'blocked',
@@ -107,7 +107,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor allowed, draft.
    */
-  public function testCreateReportAsContributorAllowedDraft() {
+  public function testCreateReportAsContributorAllowedDraft(): void {
     $this->runTestCreateReportAsContributor(
       'draft',
       'allowed',
@@ -117,7 +117,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor allowed, to-review.
    */
-  public function testCreateReportAsContributorAllowedPending() {
+  public function testCreateReportAsContributorAllowedPending(): void {
     $this->runTestCreateReportAsContributor(
       'pending',
       'allowed',
@@ -127,7 +127,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor trusted, draft.
    */
-  public function testCreateReportAsContributorTrustedDraft() {
+  public function testCreateReportAsContributorTrustedDraft(): void {
     $this->runTestCreateReportAsContributor(
       'draft',
       'trusted',
@@ -137,7 +137,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor trusted, pending.
    */
-  public function testCreateReportAsContributorTrustedPending() {
+  public function testCreateReportAsContributorTrustedPending(): void {
     $this->runTestCreateReportAsContributor(
       'pending',
       'trusted',
@@ -147,7 +147,7 @@ class RwReportCreateTest extends RwReportBase {
   /**
    * Test report as contributor trusted, pending but blocked source.
    */
-  public function testCreateReportAsContributorTrustedPendingBlockedSource() {
+  public function testCreateReportAsContributorTrustedPendingBlockedSource(): void {
     $this->runTestCreateReportAsContributor(
       'pending',
       'trusted',
@@ -248,11 +248,6 @@ class RwReportCreateTest extends RwReportBase {
       ],
     ]);
 
-    // OK for user.
-    $this->drupalGet($report->toUrl());
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
-
     // Get the expected moderation status.
     if ($source_moderation_status === 'blocked') {
       $expected_moderation_status = 'refused';
@@ -273,11 +268,30 @@ class RwReportCreateTest extends RwReportBase {
       $expected_moderation_status = $moderation_status;
     }
 
+    // First check the moderation status.
     $this->assertEquals($report->moderation_status->value, $expected_moderation_status);
 
+    // Test for user.
+    $expected_response_status = $this->getExpectedResponseStatusForEntityAndUser($report, $user);
+    $this->drupalGet($report->toUrl());
+    $this->assertSession()->statusCodeEquals($expected_response_status);
+    if ($expected_response_status === 200) {
+      $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
+      $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
+    }
+
+    // Test for administrator.
+    $expected_response_status = $this->getExpectedResponseStatusForEntityAndUser($report, $this->administrator);
+    $this->assertEquals(200, $expected_response_status, 'The status should always be 200 for the administrator.');
+    $this->drupalLogin($this->administrator);
+    $this->drupalGet($report->toUrl());
+    $this->assertSession()->statusCodeEquals($expected_response_status);
+    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
+    $this->assertSession()->elementTextEquals('css', '.rw-article__title.rw-page-title', $title);
+
     // Test for anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
+    $expected_response_status = $this->getExpectedResponseStatusForEntityAndUser($report, $this->anonymous);
+    $this->drupalLogout();
     $this->drupalGet($report->toUrl());
     $this->assertSession()->statusCodeEquals($expected_response_status);
     if ($expected_response_status === 200) {
