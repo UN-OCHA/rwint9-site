@@ -357,32 +357,30 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
         $account->hasPermission('view any ' . $bundle . ' content') => TRUE,
         // User can view published content.
         $viewable && $account->hasPermission('access content') => TRUE,
-        // User is the owner and has the permission to view own
-        // unpublished content for entity's bundle.
-        $owner && $account->hasPermission('view own unpublished content') && $account->hasPermission('view own unpublished ' . $bundle . ' content') => TRUE,
-        // User has access to affiliated unpublished content and has
-        // posting rights for the entity's organizations.
+        // User can view affiliated unpublished content.
         $account->hasPermission('view affiliated unpublished ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // User can view own unpublished content and has posting rights.
+        $owner && $account->hasPermission('view own unpublished ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
         // No access.
         default => FALSE,
       },
       'update' => match (TRUE) {
         // User can edit any content.
         $editable && $account->hasPermission('edit any ' . $bundle . ' content') => TRUE,
-        // User can edit own bundle content and has posting rights.
-        $editable && $owner && $account->hasPermission('edit own ' . $bundle . ' content') => TRUE,
         // User can edit affiliated bundle content and has posting rights.
         $editable && $account->hasPermission('edit affiliated ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // User can edit own bundle content and has posting rights.
+        $editable && $owner && $account->hasPermission('edit own ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
         // No access.
         default => FALSE,
       },
       'delete' => match (TRUE) {
         // User can delete any content.
         $deletable && $account->hasPermission('delete any ' . $bundle . ' content') => TRUE,
-        // User can delete own bundle content and has posting rights.
-        $deletable && $owner && $account->hasPermission('delete own ' . $bundle . ' content') => TRUE,
         // User can delete affiliated bundle content and has posting rights.
         $deletable && $account->hasPermission('delete affiliated ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
+        // User can delete own bundle content and has posting rights.
+        $deletable && $owner && $account->hasPermission('delete own ' . $bundle . ' content') && $this->userHasPostingRights($account, $entity) => TRUE,
         // No access.
         default => FALSE,
       },
