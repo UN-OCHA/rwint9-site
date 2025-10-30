@@ -4,3 +4,10 @@ reliefweb_moderation.posting_rights_mapping:
   route_name: reliefweb_moderation.posting_rights_mapping
   parent: system.admin_config_content
   weight: 101
+
+reliefweb_moderation.role_capabilities:
+  title: 'Role Capabilities Overview'
+  description: 'View summary of what different roles can do with content'
+  route_name: reliefweb_moderation.role_capabilities
+  parent: system.admin_config_content
+  weight: 102
