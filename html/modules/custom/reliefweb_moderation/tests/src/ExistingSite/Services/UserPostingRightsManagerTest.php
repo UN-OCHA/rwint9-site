@@ -682,19 +682,40 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     );
     $this->assertFalse($has_rights, 'Anonymous user should not have posting rights');
 
-    // Test with new entity. Do not save it so that it doesn't have an ID.
-    $new_entity = Node::create([
+    // Test with new entity owned by the user - should grant posting rights.
+    $new_entity_owned = Node::create([
       'type' => 'job',
-      'title' => 'New Job',
+      'title' => 'New Job Owned by User',
       'uid' => $this->testUser->id(),
     ]);
 
     $has_rights = $this->userPostingRightsManager->userHasPostingRights(
       $this->testUser,
-      $new_entity,
+      $new_entity_owned,
       'draft'
     );
-    $this->assertFalse($has_rights, 'New entity without ID should not grant posting rights');
+    $this->assertTrue($has_rights, 'New entity without ID owned by user should grant posting rights');
+
+    // Test with new entity owned by a different user - should not grant
+    // posting rights.
+    $different_user = $this->createUser([], 'different_user', FALSE, [
+      'name' => 'different_user',
+      'mail' => 'different@example.com',
+      'status' => 1,
+    ]);
+
+    $new_entity_not_owned = Node::create([
+      'type' => 'job',
+      'title' => 'New Job Owned by Different User',
+      'uid' => $different_user->id(),
+    ]);
+
+    $has_rights = $this->userPostingRightsManager->userHasPostingRights(
+      $this->testUser,
+      $new_entity_not_owned,
+      'draft'
+    );
+    $this->assertFalse($has_rights, 'New entity without ID not owned by user should not grant posting rights');
   }
 
   /**
@@ -989,8 +1010,6 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
   /**
    * Test bundle filtering with OR operator for user posting rights.
-   *
-   * This test should FAIL due to the bug in the current implementation.
    */
   public function testGetSourcesWithUserPostingRightsForUserWithOrOperator(): void {
     // Create a source with mixed rights for the test user.
@@ -1103,8 +1122,6 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
   /**
    * Test bundle filtering with OR operator for domain posting rights.
-   *
-   * This test should FAIL due to the bug in the current implementation.
    */
   public function testGetSourcesWithDomainPostingRightsForUserWithOrOperator(): void {
     // Create a source with domain posting rights.
