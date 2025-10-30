@@ -1101,9 +1101,13 @@ class InoreaderService {
     if (isset($tags['source'])) {
       $extra_tags = $this->state->get('reliefweb_importer_inoreader_extra_tags', []);
 
+      // Handle the weird case there $tags['source'] is an array. Pick the
+      // first element and ignore the rest.
+      $source = is_array($tags['source']) ? $tags['source'][0] : $tags['source'];
+
       // Merge extra tags if they exist.
-      if (!empty($extra_tags[$tags['source']])) {
-        $tags = $this->mergeTags($tags, $extra_tags[$tags['source']]);
+      if (!empty($extra_tags[$source])) {
+        $tags = $this->mergeTags($tags, $extra_tags[$source]);
       }
     }
 
