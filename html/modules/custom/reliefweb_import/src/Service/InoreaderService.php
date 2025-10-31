@@ -1103,7 +1103,7 @@ class InoreaderService {
 
       // Handle the weird case there $tags['source'] is an array. Pick the
       // first element and ignore the rest.
-      $source = is_array($tags['source']) ? $tags['source'][0] : $tags['source'];
+      $source = is_array($tags['source']) ? reset($tags['source']) : $tags['source'];
 
       // Merge extra tags if they exist.
       if (!empty($extra_tags[$source])) {
