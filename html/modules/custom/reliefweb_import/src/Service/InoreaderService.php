@@ -1059,14 +1059,24 @@ class InoreaderService {
           if (!is_array($value)) {
             $value = [$value];
           }
-          $tags[$key] = array_values(array_unique(array_merge($tags[$key], $value)));
+          $tags[$key] = array_values(array_merge($tags[$key], $value));
+          $tags[$key] = array_unique($tags[$key]);
         }
         else {
           $tags[$key] = $value;
         }
       }
       else {
-        $tags[$key] = $value;
+        if ($this->isMultiValueTag($key)) {
+          if (!is_array($value)) {
+            $value = [$value];
+          }
+          $tags[$key] = $value;
+          $tags[$key] = array_unique($tags[$key]);
+        }
+        else {
+          $tags[$key] = $value;
+        }
       }
     }
 
@@ -1148,15 +1158,9 @@ class InoreaderService {
           $tags[$tag_key] = $tag_value;
         }
         else {
-          if (!is_array($tags[$tag_key])) {
-            $tags[$tag_key] = [
-              $tags[$tag_key],
-            ];
-          }
-          $tags[$tag_key][] = $tag_value;
+          // Ignore multiple definitions for single-value tags.
         }
       }
-
     }
 
     $tags = $this->fixLegacyPuppeteer2Tag($tags);

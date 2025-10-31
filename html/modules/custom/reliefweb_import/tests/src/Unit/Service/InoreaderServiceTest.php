@@ -47,7 +47,13 @@ class InoreaderServiceTest extends TestCase {
   protected function setUp(): void {
     $this->httpClient = $this->createMock(ClientInterface::class);
     $state = $this->createMock(StateInterface::class);
-    $state->method('get')->willReturn([]);
+    $state->method('get')->willReturn([
+      'state' => [
+        'wrapper' => '.main-content',
+        'remove' => ['.ads', '.sponsored', '.ads'],
+        'f' => 'content',
+      ],
+    ]);
     $this->logger = $this->createMock(LoggerInterface::class);
 
     $this->service = new InoreaderService($this->httpClient, $state);
@@ -68,6 +74,25 @@ class InoreaderServiceTest extends TestCase {
    */
   public static function tagExtractionProvider() {
     return [
+      [
+        '[source:state][source:456][pdf:canonical][status:published]',
+        [
+          'source' => 'state',
+          'pdf' => 'canonical',
+          'status' => 'published',
+          'wrapper' => ['.main-content'],
+          'remove' => ['.ads', '.sponsored'],
+          'fallback' => 'content',
+        ],
+      ],
+      [
+        '[source:123][source:456][pdf:canonical][status:published]',
+        [
+          'source' => '123',
+          'pdf' => 'canonical',
+          'status' => 'published',
+        ],
+      ],
       [
         '[source:123][pdf:canonical][status:published]',
         [
@@ -194,7 +219,7 @@ class InoreaderServiceTest extends TestCase {
       [
         ['duplicate:one', 'duplicate:two'],
         [
-          'duplicate' => ['one', 'two'],
+          'duplicate' => 'one',
         ],
       ],
       [
@@ -213,7 +238,7 @@ class InoreaderServiceTest extends TestCase {
       [
         ['arraykey:val1', 'arraykey:val2', 'arraykey:val3'],
         [
-          'arraykey' => ['val1', 'val2', 'val3'],
+          'arraykey' => 'val1',
         ],
       ],
     ];
