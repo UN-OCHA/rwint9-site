@@ -49,7 +49,7 @@ class InoreaderServiceTest extends TestCase {
     $state = $this->createMock(StateInterface::class);
     $state->method('get')->willReturn([
       'state' => [
-        'wrapper' => '.main-content',
+        'w' => '.main-content',
         'remove' => ['.ads', '.sponsored', '.ads'],
         'f' => 'content',
       ],
@@ -75,12 +75,12 @@ class InoreaderServiceTest extends TestCase {
   public static function tagExtractionProvider() {
     return [
       [
-        '[source:state][source:456][pdf:canonical][status:published]',
+        '[source:state][source:456][pdf:canonical][s:published][wrapper:.sidebar]',
         [
           'source' => 'state',
           'pdf' => 'canonical',
           'status' => 'published',
-          'wrapper' => ['.main-content'],
+          'wrapper' => ['.sidebar', '.main-content'],
           'remove' => ['.ads', '.sponsored'],
           'fallback' => 'content',
         ],
