@@ -47,7 +47,13 @@ class InoreaderServiceTest extends TestCase {
   protected function setUp(): void {
     $this->httpClient = $this->createMock(ClientInterface::class);
     $state = $this->createMock(StateInterface::class);
-    $state->method('get')->willReturn([]);
+    $state->method('get')->willReturn([
+      'state' => [
+        'w' => '.main-content',
+        'remove' => ['.ads', '.sponsored', '.ads'],
+        'f' => 'content',
+      ],
+    ]);
     $this->logger = $this->createMock(LoggerInterface::class);
 
     $this->service = new InoreaderService($this->httpClient, $state);
@@ -68,6 +74,25 @@ class InoreaderServiceTest extends TestCase {
    */
   public static function tagExtractionProvider() {
     return [
+      [
+        '[source:state][source:456][pdf:canonical][s:published][wrapper:.sidebar]',
+        [
+          'source' => 'state',
+          'pdf' => 'canonical',
+          'status' => 'published',
+          'wrapper' => ['.sidebar', '.main-content'],
+          'remove' => ['.ads', '.sponsored'],
+          'fallback' => 'content',
+        ],
+      ],
+      [
+        '[source:123][source:456][pdf:canonical][status:published]',
+        [
+          'source' => '123',
+          'pdf' => 'canonical',
+          'status' => 'published',
+        ],
+      ],
       [
         '[source:123][pdf:canonical][status:published]',
         [
@@ -194,7 +219,7 @@ class InoreaderServiceTest extends TestCase {
       [
         ['duplicate:one', 'duplicate:two'],
         [
-          'duplicate' => ['one', 'two'],
+          'duplicate' => 'one',
         ],
       ],
       [
@@ -213,7 +238,7 @@ class InoreaderServiceTest extends TestCase {
       [
         ['arraykey:val1', 'arraykey:val2', 'arraykey:val3'],
         [
-          'arraykey' => ['val1', 'val2', 'val3'],
+          'arraykey' => 'val1',
         ],
       ],
     ];
@@ -479,7 +504,7 @@ class InoreaderServiceTest extends TestCase {
 
     // Case 2: PDF link inside wrapper.
     $html = '<div class="main"><a href="https://example.com/wrapped.pdf">PDF</a></div>';
-    $tags = ['wrapper' => '.main'];
+    $tags = ['wrapper' => ['.main']];
     $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
     $this->assertEquals('https://example.com/wrapped.pdf', $result);
 
@@ -498,13 +523,13 @@ class InoreaderServiceTest extends TestCase {
 
     // Case 4: PDF link with wrapper and url filter.
     $html = '<div class="main"><a href="/relative.pdf">PDF</a></div>';
-    $tags = ['wrapper' => '.main', 'url' => 'relative'];
+    $tags = ['wrapper' => ['.main'], 'url' => 'relative'];
     $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
     $this->assertEquals('/relative.pdf', $result);
 
     // Case 4b: PDF link with wrapper and url filter as array.
     $html = '<div class="main"><a href="/relative.pdf">PDF</a><a href="/other.pdf">PDF2</a></div>';
-    $tags = ['wrapper' => '.main', 'url' => ['relative', 'other']];
+    $tags = ['wrapper' => ['.main'], 'url' => ['relative', 'other']];
     $result = $method->invokeArgs($this->service, [$page_url, $html, $tags]);
     // Should match /relative.pdf first.
     $this->assertEquals('/relative.pdf', $result);
@@ -607,7 +632,7 @@ class InoreaderServiceTest extends TestCase {
       [
         ['source' => '123'],
         ['wrapper' => '.main'],
-        ['source' => '123', 'wrapper' => '.main'],
+        ['source' => '123', 'wrapper' => ['.main']],
       ],
       // 2. Overwrite single-value tag.
       [
@@ -649,13 +674,13 @@ class InoreaderServiceTest extends TestCase {
       [
         [],
         ['w' => '.main'],
-        ['wrapper' => '.main'],
+        ['wrapper' => ['.main']],
       ],
       // 9. Merge with tag alias (u => url).
       [
         [],
         ['u' => 'abc'],
-        ['url' => 'abc'],
+        ['url' => ['abc']],
       ],
       // 10. Merge with tag alias (r => replace).
       [
@@ -685,7 +710,7 @@ class InoreaderServiceTest extends TestCase {
       [
         [],
         ['p' => 'selector'],
-        ['puppeteer' => 'selector'],
+        ['puppeteer' => ['selector']],
       ],
       // 15. Merge with tag alias (pa => puppeteer-attrib).
       [
@@ -703,7 +728,7 @@ class InoreaderServiceTest extends TestCase {
       [
         [],
         ['h' => '.content'],
-        ['html' => '.content'],
+        ['html' => ['.content']],
       ],
       // 18. Merge with tag alias (d => delay).
       [
