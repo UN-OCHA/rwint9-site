@@ -57,171 +57,131 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
   /**
    * Test adding a report - blocked.
    */
-  public function testAddReportAsContributorBlockedWithoutRandom() {
-    $this->drupalLogin($this->contributor);
-
-    $edit = $this->getEditFields($this->randomMachineName(32));
-    $edit['field_source[]'] = [
-      $this->sources['unverified']->id(),
-      $this->sources['blocked']->id(),
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-    ];
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has thrown an error.
-    $this->assertSession()->pageTextContains(strtr('Publications from "@source" are not allowed.', [
-      '@source' => $this->sources['blocked']->getName(),
-    ]));
+  public function testAddReportAsContributorBlockedWithoutRandom(): void {
+    $this->runTestAddReportWithError([
+      'unverified',
+      'blocked',
+      'allowed',
+      'trusted',
+    ], 'blocked');
   }
 
   /**
    * Test adding a report - unverified.
    */
-  public function testAddReportAsContributorUnverifiedWithoutRandom() {
-    $title = $this->randomMachineName(32);
-
-    $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['unverified']->id(),
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-    ];
-
-    $this->drupalLogin($this->contributor);
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_some_unverified');
-    $node = $this->getNodeByTitle($title);
-    $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
-
-    // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals($expected_response_status);
+  public function testAddReportAsContributorUnverifiedWithoutRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'unverified',
+      'allowed',
+      'trusted',
+    ], 'trusted_some_unverified');
   }
 
   /**
    * Test adding a report - allowed.
    */
-  public function testAddReportAsContributorAllowedWithoutRandom() {
-    $title = $this->randomMachineName(32);
-
-    $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-    ];
-
-    $this->drupalLogin($this->contributor);
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_some_allowed');
-    $node = $this->getNodeByTitle($title);
-    $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
-
-    // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals($expected_response_status);
+  public function testAddReportAsContributorAllowedWithoutRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'allowed',
+      'trusted',
+    ], 'trusted_some_allowed');
   }
 
   /**
    * Test adding a report - trusted.
    */
-  public function testAddReportAsContributorTrustedWithoutRandom() {
-    $title = $this->randomMachineName(32);
-
-    $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['trusted']->id(),
-    ];
-
-    $this->drupalLogin($this->contributor);
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_all');
-    $node = $this->getNodeByTitle($title);
-    $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
-
-    // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals($expected_response_status);
+  public function testAddReportAsContributorTrustedWithoutRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'trusted',
+    ], 'trusted_all');
   }
 
   /**
    * Test adding a report - blocked.
    */
-  public function testAddReportAsContributorBlockedWithRandom() {
+  public function testAddReportAsContributorBlockedWithRandom(): void {
+    $this->runTestAddReportWithError([
+      'unverified',
+      'blocked',
+      'allowed',
+      'trusted',
+      'random',
+    ], 'blocked');
+  }
+
+  /**
+   * Test adding a report - unverified.
+   */
+  public function testAddReportAsContributorUnverifiedWithRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'unverified',
+      'allowed',
+      'trusted',
+      'random',
+    ], 'trusted_some_unverified');
+  }
+
+  /**
+   * Test adding a report - allowed.
+   */
+  public function testAddReportAsContributorAllowedWithRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'allowed',
+      'trusted',
+      'random',
+    ], 'trusted_some_unverified');
+  }
+
+  /**
+   * Test adding a report - trusted.
+   */
+  public function testAddReportAsContributorTrustedWithRandom(): void {
+    $this->runTestAddReportWithSuccess([
+      'trusted',
+      'random',
+    ], 'trusted_some_unverified');
+  }
+
+  /**
+   * Run test for adding a report that should result in an error.
+   *
+   * @param array $source_keys
+   *   Array of source keys to include in the report.
+   * @param string $blocked_source_key
+   *   The key of the blocked source to check in the error message.
+   */
+  protected function runTestAddReportWithError(array $source_keys, string $blocked_source_key): void {
     $this->drupalLogin($this->contributor);
 
     $edit = $this->getEditFields($this->randomMachineName(32));
-    $edit['field_source[]'] = [
-      $this->sources['unverified']->id(),
-      $this->sources['blocked']->id(),
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-      $this->sources['random']->id(),
-    ];
+    $edit['field_source[]'] = array_map(function ($key) {
+      return $this->sources[$key]->id();
+    }, $source_keys);
 
     $this->drupalGet('node/add/report');
     $this->submitForm($edit, 'Submit');
 
     // Check that the report has thrown an error.
     $this->assertSession()->pageTextContains(strtr('Publications from "@source" are not allowed.', [
-      '@source' => $this->sources['blocked']->label(),
+      '@source' => $this->sources[$blocked_source_key]->getName(),
     ]));
   }
 
   /**
-   * Test adding a report - unverified.
+   * Run test for adding a report that should succeed.
+   *
+   * @param array $source_keys
+   *   Array of source keys to include in the report.
+   * @param string $moderation_scenario
+   *   The moderation scenario to check.
    */
-  public function testAddReportAsContributorUnverifiedWithRandom() {
+  protected function runTestAddReportWithSuccess(array $source_keys, string $moderation_scenario): void {
     $title = $this->randomMachineName(32);
 
     $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['unverified']->id(),
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-      $this->sources['random']->id(),
-    ];
+    $edit['field_source[]'] = array_map(function ($key) {
+      return $this->sources[$key]->id();
+    }, $source_keys);
 
     $this->drupalLogin($this->contributor);
 
@@ -236,88 +196,21 @@ class RwReportAddMultipleSourcesTest extends RwReportBase {
     $this->assertSession()->pageTextContains('English');
 
     // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_some_unverified');
+    $expected_moderation_status = $this->getModerationStatusForScenario($moderation_scenario);
     $node = $this->getNodeByTitle($title);
     $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
 
     // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
+    $expected_response_status = $this->getExpectedResponseStatusForEntityAndUser($node, $this->anonymous);
+    $this->drupalLogout();
     $this->drupalGet($node->toUrl());
     $this->assertSession()->statusCodeEquals($expected_response_status);
-  }
-
-  /**
-   * Test adding a report - allowed.
-   */
-  public function testAddReportAsContributorAllowedWithRandom() {
-    $title = $this->randomMachineName(32);
-
-    $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['allowed']->id(),
-      $this->sources['trusted']->id(),
-      $this->sources['random']->id(),
-    ];
-
-    $this->drupalLogin($this->contributor);
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_some_unverified');
-    $node = $this->getNodeByTitle($title);
-    $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
-
-    // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals($expected_response_status);
-  }
-
-  /**
-   * Test adding a report - trusted.
-   */
-  public function testAddReportAsContributorTrustedWithRandom() {
-    $title = $this->randomMachineName(32);
-
-    $edit = $this->getEditFields($title);
-    $edit['field_source[]'] = [
-      $this->sources['trusted']->id(),
-      $this->sources['random']->id(),
-    ];
-
-    $this->drupalLogin($this->contributor);
-
-    $this->drupalGet('node/add/report');
-    $this->submitForm($edit, 'Submit');
-
-    // Check that the report has been created.
-    $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
-    $this->assertSession()->pageTextContains('Report ' . $edit['title[0][value]'] . ' has been created');
-    $this->assertSession()->pageTextContains('Belgium');
-    $this->assertSession()->pageTextContains('UN Document');
-    $this->assertSession()->pageTextContains('English');
-
-    // Check moderation status.
-    $expected_moderation_status = $this->getModerationStatusForScenario('trusted_some_unverified');
-    $node = $this->getNodeByTitle($title);
-    $this->assertEquals($node->moderation_status->value, $expected_moderation_status);
-
-    // Check as anonymous.
-    $expected_response_status = $this->getExpectedResponseStatusAsAnonymous($expected_moderation_status);
-    $this->drupalGet('user/logout');
-    $this->drupalGet($node->toUrl());
-    $this->assertSession()->statusCodeEquals($expected_response_status);
+    if ($expected_response_status === 200) {
+      $this->assertSession()->titleEquals($title . ' - Belgium | ' . $this->siteName);
+      $this->assertSession()->pageTextContains('Belgium');
+      $this->assertSession()->pageTextContains('UN Document');
+      $this->assertSession()->pageTextContains('English');
+    }
   }
 
 }

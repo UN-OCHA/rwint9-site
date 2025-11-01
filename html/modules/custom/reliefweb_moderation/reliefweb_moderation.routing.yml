@@ -40,3 +40,13 @@ reliefweb_moderation.posting_rights_mapping:
     _admin_route: TRUE
   requirements:
     _permission: 'administer posting rights mapping'
+
+reliefweb_moderation.role_capabilities:
+  path: '/admin/config/reliefweb/role-capabilities'
+  defaults:
+    _form: '\Drupal\reliefweb_moderation\Form\RoleCapabilitiesForm'
+    _title: 'Role Capabilities Overview'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'access administration pages'

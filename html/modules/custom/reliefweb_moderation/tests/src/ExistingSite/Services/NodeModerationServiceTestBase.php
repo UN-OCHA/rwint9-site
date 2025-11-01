@@ -265,8 +265,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
       ],
       'edit_affiliated_bundle' => [
         'access content',
-        'view own unpublished content',
-        'view own unpublished ' . $bundle . ' content',
+        'view affiliated unpublished ' . $bundle . ' content',
         'edit affiliated ' . $bundle . ' content',
         'delete affiliated ' . $bundle . ' content',
         'apply posting rights',
@@ -284,8 +283,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
       ],
       'delete_affiliated_bundle' => [
         'access content',
-        'view own unpublished content',
-        'view own unpublished ' . $bundle . ' content',
+        'view affiliated unpublished ' . $bundle . ' content',
         'delete affiliated ' . $bundle . ' content',
         'apply posting rights',
       ],
@@ -878,6 +876,10 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
 
   /**
    * Test affiliated access with posting rights.
+   *
+   * This test verifies that users with only "affiliated" permission (without
+   * "own" permission) can still view, edit, and delete their own content,
+   * as the "affiliated" permission includes access to own content.
    */
   public function testAffiliatedAccessWithPostingRights(): void {
     $affiliated_draft = $this->testNodes['affiliated_draft'];
@@ -885,19 +887,21 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
     $author_draft = $this->testNodes['draft'];
 
     // Test affiliated user access to their own content with posting rights.
+    // This user only has "affiliated" permission, not "own" permission.
     $this->setCurrentUser($this->testUsers['edit_affiliated_bundle']);
 
-    // Can view their own content.
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(), 'Affiliated user can view own draft ' . $this->getBundle() . 's');
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'view')->isAllowed(), 'Affiliated user can view own published ' . $this->getBundle() . 's');
+    // Can view their own content (affiliated permission includes own content).
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(), 'Affiliated user (without own permission) can view own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'view')->isAllowed(), 'Affiliated user (without own permission) can view own published ' . $this->getBundle() . 's');
 
-    // Can edit their own content.
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'update')->isAllowed(), 'Affiliated user can update own draft ' . $this->getBundle() . 's');
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'update')->isAllowed(), 'Affiliated user can update own published ' . $this->getBundle() . 's');
+    // Can edit their own content (affiliated permission includes own content).
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'update')->isAllowed(), 'Affiliated user (without own permission) can update own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'update')->isAllowed(), 'Affiliated user (without own permission) can update own published ' . $this->getBundle() . 's');
 
-    // Can delete their own content.
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'delete')->isAllowed(), 'Affiliated user can delete own draft ' . $this->getBundle() . 's');
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'delete')->isAllowed(), 'Affiliated user can delete own published ' . $this->getBundle() . 's');
+    // Can delete their own content (affiliated permission includes own
+    // content).
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'delete')->isAllowed(), 'Affiliated user (without own permission) can delete own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_published, 'delete')->isAllowed(), 'Affiliated user (without own permission) can delete own published ' . $this->getBundle() . 's');
 
     // Can edit affiliated content (content from other users with same source).
     $this->assertTrue($this->moderationService->entityAccess($author_draft, 'update')->isAllowed(), 'Affiliated user can update affiliated draft ' . $this->getBundle() . 's');
@@ -917,20 +921,96 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
   }
 
   /**
+   * Test that users with only "affiliated" permission can act on own content.
+   *
+   * This test explicitly verifies the permissions hierarchy where "affiliated"
+   * permission includes access to own content, without needing separate "own"
+   * permission.
+   */
+  public function testAffiliatedPermissionIncludesOwnContent(): void {
+    // Create a node owned by the user with only "affiliated" permission.
+    $affiliated_user = $this->testUsers['edit_affiliated_bundle'];
+    $own_draft_node = $this->createNode([
+      'type' => $this->getBundle(),
+      'title' => 'Own Draft ' . ucfirst($this->getBundle()) . ' for Affiliated User',
+      'uid' => $affiliated_user->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+    ]);
+    $own_published_node = $this->createNode([
+      'type' => $this->getBundle(),
+      'title' => 'Own Published ' . ucfirst($this->getBundle()) . ' for Affiliated User',
+      'uid' => $affiliated_user->id(),
+      'moderation_status' => 'published',
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+    ]);
+
+    $this->setCurrentUser($affiliated_user);
+
+    // User with only "affiliated" permission can view own unpublished content.
+    $this->assertTrue($this->moderationService->entityAccess($own_draft_node, 'view')->isAllowed(),
+      'User with only affiliated permission can view own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($own_published_node, 'view')->isAllowed(),
+      'User with only affiliated permission can view own published ' . $this->getBundle() . 's');
+
+    // User with only "affiliated" permission can edit own content.
+    $this->assertTrue($this->moderationService->entityAccess($own_draft_node, 'update')->isAllowed(),
+      'User with only affiliated permission can update own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($own_published_node, 'update')->isAllowed(),
+      'User with only affiliated permission can update own published ' . $this->getBundle() . 's');
+
+    // User with only "affiliated" permission can delete own content.
+    $this->assertTrue($this->moderationService->entityAccess($own_draft_node, 'delete')->isAllowed(),
+      'User with only affiliated permission can delete own draft ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($own_published_node, 'delete')->isAllowed(),
+      'User with only affiliated permission can delete own published ' . $this->getBundle() . 's');
+
+    // Verify the same for delete_affiliated_bundle user.
+    $delete_affiliated_user = $this->testUsers['delete_affiliated_bundle'];
+    $own_delete_node = $this->createNode([
+      'type' => $this->getBundle(),
+      'title' => 'Own Draft ' . ucfirst($this->getBundle()) . ' for Delete Affiliated User',
+      'uid' => $delete_affiliated_user->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $this->testSource->id()],
+      ],
+    ]);
+
+    $this->setCurrentUser($delete_affiliated_user);
+    $this->assertTrue($this->moderationService->entityAccess($own_delete_node, 'delete')->isAllowed(),
+      'User with only delete affiliated permission can delete own draft ' . $this->getBundle() . 's');
+  }
+
+  /**
    * Test view access for affiliated unpublished content.
+   *
+   * This test verifies that users with only "view affiliated unpublished"
+   * permission (without "view own unpublished" permission) can still view
+   * their own unpublished content, as the "affiliated" permission includes
+   * access to own content.
    */
   public function testAffiliatedViewUnpublishedAccess(): void {
     $affiliated_draft = $this->testNodes['affiliated_draft'];
     $author_draft = $this->testNodes['draft'];
 
     // Test affiliated user can view affiliated unpublished content.
+    // This user only has "view affiliated unpublished" permission, not
+    // "view own unpublished" permission.
     $this->setCurrentUser($this->testUsers['view_affiliated_unpublished']);
-    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(), 'Affiliated user can view own unpublished ' . $this->getBundle() . 's');
-    $this->assertTrue($this->moderationService->entityAccess($author_draft, 'view')->isAllowed(), 'Affiliated user can view affiliated unpublished ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(),
+      'Affiliated user (without own unpublished permission) can view own unpublished ' . $this->getBundle() . 's');
+    $this->assertTrue($this->moderationService->entityAccess($author_draft, 'view')->isAllowed(),
+      'Affiliated user can view affiliated unpublished ' . $this->getBundle() . 's');
 
     // Test other users cannot view affiliated unpublished content.
     $this->setCurrentUser($this->testUsers['edit_own_bundle']);
-    $this->assertFalse($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(), 'Author cannot view affiliated unpublished ' . $this->getBundle() . 's');
+    $this->assertFalse($this->moderationService->entityAccess($affiliated_draft, 'view')->isAllowed(),
+      'Author cannot view affiliated unpublished ' . $this->getBundle() . 's');
   }
 
   /**

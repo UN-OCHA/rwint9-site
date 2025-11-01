@@ -20,7 +20,5 @@ permissions:
   - 'check for duplicate files'
   - 'create report content'
   - 'edit affiliated report content'
-  - 'edit own report content'
   - 'view affiliated unpublished report content'
   - 'view own posts'
-  - 'view own unpublished report content'

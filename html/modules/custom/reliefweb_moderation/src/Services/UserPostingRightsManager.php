@@ -510,57 +510,62 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       return FALSE;
     }
 
-    // Disallow in case of unknown entity id (ex: new entity).
-    if ($entity->id() === NULL) {
-      return FALSE;
-    }
-
-    // Disallow if the user does not have the 'apply posting rights' permission.
-    if (!$account->hasPermission('apply posting rights')) {
-      return FALSE;
-    }
-
-    $bundle = $entity->bundle();
-    $allowed = FALSE;
-
     $owner = FALSE;
     if ($entity instanceof EntityOwnerInterface) {
       $owner = $entity->getOwnerId() === $account->id() && $account->id() > 0;
     }
 
-    // Only applies to job, training and report.
-    if ($this->entitySupportsPostingRights($entity)) {
-      // Check for sources for which the user is blocked, allowed or trusted.
-      //
-      // Note: if there is no source or the user in unverified for the sources
-      // then we default to the base behavior: disallowed unless owner.
-      if ($entity->hasField('field_source') && !$entity->field_source->isEmpty()) {
-        // Get the document sources.
-        $sources = [];
-        foreach ($entity->field_source as $item) {
-          if (!empty($item->target_id)) {
-            $sources[] = $item->target_id;
-          }
-        }
+    // If the entity is new, allow if the user is the owner.
+    if ($entity->id() === NULL) {
+      return $owner;
+    }
 
-        // Check if the user is allowed or blocked.
-        foreach ($this->getUserPostingRights($account, $sources) as $data) {
-          $right = $data[$bundle] ?? 0;
-          // If the user is blocked for one of the sources always disallow even
-          // if the user is the owner of the document, except for drafts.
-          //
-          // No strict equality as $right can be a numeric string or an integer.
-          if ($right == 1) {
-            return $owner && $status === 'draft';
-          }
-          // Allowed for at least one of the sources. That means that in the
-          // case of joint ads, being allowed to post for one of the sources
-          // is enough to be considered having posting rights on the document
-          // (unless blocked for one of the sources, of course).
-          elseif ($right > 1) {
-            $allowed = TRUE;
-          }
-        }
+    // If the entity does not support posting rights, allow if the user is
+    // the owner.
+    if (!$this->entitySupportsPostingRights($entity)) {
+      return $owner;
+    }
+
+    // If the entity has no sources, allow if the user is the owner since we
+    // cannot check for posting rights.
+    if (!$entity->hasField('field_source') || $entity->field_source->isEmpty()) {
+      return $owner;
+    }
+
+    // If the user does not have the 'apply posting rights' permission, allow
+    // if the user is the owner.
+    if (!$account->hasPermission('apply posting rights')) {
+      return $owner;
+    }
+
+    $bundle = $entity->bundle();
+    $allowed = FALSE;
+
+    // Get the document sources.
+    $sources = [];
+    foreach ($entity->field_source as $item) {
+      if (!empty($item->target_id)) {
+        $sources[] = $item->target_id;
+      }
+    }
+
+    // Check if the user is allowed or blocked.
+    foreach ($this->getUserPostingRights($account, $sources) as $data) {
+      $right = $data[$bundle] ?? 0;
+      // If the user is blocked for one of the sources always disallow even
+      // if the user is the owner of the document, except for drafts since
+      // drafts are work in progress that do not require editorial review.
+      //
+      // No strict equality as $right can be a numeric string or an integer.
+      if ($right == 1) {
+        return $owner && $status === 'draft';
+      }
+      // Allowed for at least one of the sources. That means that in the
+      // case of joint ads, being allowed to post for one of the sources
+      // is enough to be considered having posting rights on the document
+      // (unless blocked for one of the sources, of course).
+      elseif ($right > 1) {
+        $allowed = TRUE;
       }
     }
 
@@ -690,7 +695,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       $query->range(0, $limit);
     }
 
-    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
+    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
 
     // Filter results based on allowed content types.
     return $this->filterPostingRightsByAllowedContentTypes($results);
@@ -766,7 +771,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       $query->range(0, $limit);
     }
 
-    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative);
+    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
 
     // Filter results based on allowed content types.
     return $this->filterPostingRightsByAllowedContentTypes($results);

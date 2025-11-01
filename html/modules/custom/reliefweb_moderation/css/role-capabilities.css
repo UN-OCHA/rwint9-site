@@ -1,0 +1,32 @@
+/**
+ * @file
+ * Styles for the Role Capabilities form.
+ */
+
+.role-capabilities-description {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background: #f8f9fa;
+}
+
+.role-capabilities-description ul {
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.role-capabilities-description li {
+  margin-bottom: 0.25rem;
+}
+
+/* Ensure consistent column widths across all tables. */
+.role-capabilities-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.role-capabilities-table th:first-child,
+.role-capabilities-table td:first-child {
+  width: 25%;
+}

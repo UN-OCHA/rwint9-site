@@ -9,3 +9,8 @@ posting_rights_mapping:
   css:
     theme:
       css/posting-rights-mapping.css: {}
+
+role_capabilities:
+  css:
+    theme:
+      css/role-capabilities.css: {}
