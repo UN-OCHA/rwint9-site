@@ -58,7 +58,16 @@ class ImportExportService {
     if (!$f) {
       throw new \Exception("Unable to open file: $filename");
     }
-    $header = fgetcsv($f, NULL, ',');
+
+    // Detect delimiter and enclosure.
+    $enclosure_info = NULL;
+    try {
+      $enclosure_info = reliefweb_sync_orgs_detect_csv_enclosure($f);
+    }
+    catch (\Exception $e) {
+      throw new \Exception("Unable to read from file: $filename");
+    }
+    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure']);
 
     // Replace all spaces with underscores.
     $header_lowercase = array_map(function ($value) {
@@ -66,7 +75,7 @@ class ImportExportService {
     }, $header);
 
     // Get data.
-    while ($row = fgetcsv($f, NULL, ',')) {
+    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'])) {
       $data = [];
       for ($i = 0; $i < count($row); $i++) {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
@@ -117,7 +126,16 @@ class ImportExportService {
     if (!$f) {
       throw new \Exception("Unable to open file: $filename");
     }
-    $header = fgetcsv($f, NULL, "\t");
+
+    // Detect delimiter and enclosure.
+    $enclosure_info = NULL;
+    try {
+      $enclosure_info = reliefweb_sync_orgs_detect_csv_enclosure($f);
+    }
+    catch (\Exception $e) {
+      throw new \Exception("Unable to read from file: $filename");
+    }
+    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure']);
 
     // Replace all spaces with underscores.
     $header_lowercase = array_map(function ($value) {
@@ -125,7 +143,7 @@ class ImportExportService {
     }, $header);
 
     // Get data.
-    while ($row = fgetcsv($f, NULL, "\t")) {
+    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'])) {
       $data = [];
       for ($i = 0; $i < count($row); $i++) {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');

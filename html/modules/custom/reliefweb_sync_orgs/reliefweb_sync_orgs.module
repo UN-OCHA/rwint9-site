@@ -60,3 +60,65 @@ function reliefweb_sync_orgs_searchable_fields(): array {
 
   return array_unique($fields);
 }
+
+/**
+ * Detect the delimiter and enclosure of a CSV or TSV file.
+ */
+function reliefweb_sync_orgs_detect_csv_enclosure($file_handle): array {
+  if (!$file_handle) {
+    throw new \Exception("Unable to open file");
+  }
+
+  $header = fgets($file_handle);
+  if (empty($header)) {
+    throw new \Exception("Unable to read header line from file");
+  }
+
+  $delimiter = NULL;
+  $enclosure = NULL;
+
+  $delimiters = [',', ';', "\t"];
+  $enclosures = ['"', "'"];
+
+  foreach ($delimiters as $delim) {
+    $fields = str_getcsv($header, $delim);
+    if (count($fields) > 1) {
+      $delimiter = $delim;
+      foreach ($enclosures as $enc) {
+        $fields = str_getcsv($header, $delimiter, $enc);
+        if (strpos($header, $enc) !== FALSE && count($fields) > 1) {
+          $enclosure = $enc;
+          break;
+        }
+      }
+
+      // If header does not contain enclosure, check next line.
+      if ($enclosure === NULL) {
+        $header = fgets($file_handle);
+        $fields = str_getcsv($header, $delimiter, $enc);
+        foreach ($enclosures as $enc) {
+          $fields = str_getcsv($header, $delimiter, $enc);
+          if (strpos($header, $enc) !== FALSE && count($fields) > 1) {
+            $enclosure = $enc;
+            break;
+          }
+        }
+      }
+
+      break;
+    }
+  }
+
+  // Fallback to double quotes if none detected.
+  if ($enclosure === NULL) {
+    $enclosure = '"';
+  }
+
+  // Rewind the file handle for future reading.
+  rewind($file_handle);
+
+  return [
+    'delimiter' => $delimiter,
+    'enclosure' => $enclosure,
+  ];
+}
