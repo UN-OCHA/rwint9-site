@@ -188,6 +188,14 @@ class ImportExportService {
     // Field info.
     $field_info = reliefweb_sync_orgs_field_info();
 
+    // Reversed mapping.
+    $reversed_mapping = [];
+    if (isset($field_info)) {
+      foreach ($field_info as $source => $info) {
+        $reversed_mapping[$source] = array_flip($info['mapping'] ?? []);
+      }
+    }
+
     $export_data = [];
     foreach ($records as $record) {
       $source = $record['source'] ?? '';
@@ -207,6 +215,14 @@ class ImportExportService {
         'parent_name' => '',
         'parent_id' => '',
         'create_new' => '',
+        'rw_homepage' => '',
+        'homepage' => isset($reversed_mapping[$source]['field_homepage']) ? $record['csv_item'][$reversed_mapping[$source]['field_homepage']] : '',
+        'rw_countries' => '',
+        'countries' => isset($reversed_mapping[$source]['field_country']) ? $record['csv_item'][$reversed_mapping[$source]['field_country']] : '',
+        'rw_short_name' => '',
+        'short_name' => isset($reversed_mapping[$source]['field_short_name']) ? $record['csv_item'][$reversed_mapping[$source]['field_short_name']] : '',
+        'rw_description' => '',
+        'description' => isset($reversed_mapping[$source]['description']) ? $record['csv_item'][$reversed_mapping[$source]['description']] : '',
       ];
 
       // Add term information if available.
@@ -222,6 +238,26 @@ class ImportExportService {
             $row['parent_name'] = $parent->getName();
             $row['parent_id'] = $parent->id();
           }
+        }
+
+        if ($term->hasField('field_homepage') && !$term->get('field_homepage')->isEmpty()) {
+          $row['rw_homepage'] = $term->get('field_homepage')->uri;
+        }
+
+        if ($term->hasField('field_country') && !$term->get('field_country')->isEmpty()) {
+          $countries = [];
+          foreach ($term->get('field_country')->referencedEntities() as $country_term) {
+            $countries[] = $country_term->getName();
+          }
+          $row['rw_countries'] = implode('; ', $countries);
+        }
+
+        if ($term->hasField('field_shortname') && !$term->get('field_shortname')->isEmpty()) {
+          $row['rw_short_name'] = $term->get('field_shortname')->value;
+        }
+
+        if ($term->hasField('description') && !$term->get('description')->isEmpty()) {
+          $row['rw_description'] = $term->get('description')->value;
         }
       }
 

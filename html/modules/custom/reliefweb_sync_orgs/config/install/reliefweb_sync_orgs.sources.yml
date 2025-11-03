@@ -5,7 +5,7 @@ hdx:
   mapping:
     display_name: name
     hdx_org_type: organization_type
-    org_acronym: short_name
+    org_acronym: field_short_name
     description: description
     org_url: field_homepage
   search:
@@ -25,8 +25,8 @@ hpc:
   label_field: org_name
   mapping:
     org_name: name
-    org_abbreviation: short_name
-    country: country
+    org_abbreviation: field_short_name
+    country: field_country
     primarytype: organization_type
   search:
     - org_name
@@ -42,7 +42,7 @@ iati:
   mapping:
     publisher: name
     organization_type: organization_type
-    hq_country_or_region: country
+    hq_country_or_region: field_country
   search:
     - publisher
   matching:
@@ -55,7 +55,7 @@ global3w:
   label_field: organization
   mapping:
     organization: name
-    abbreviation: short_name
+    abbreviation: field_short_name
   search:
     - organization
   matching:
