@@ -256,7 +256,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
           'homepage' => 'field_homepage',
           'countries' => 'field_country',
           'short_name' => 'field_shortname',
-          'description' => 'field_description',
+          'description' => 'description',
         ];
 
         foreach ($fields as $import_field => $target_field) {
