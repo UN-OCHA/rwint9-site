@@ -250,7 +250,7 @@ class ImportExportService {
           foreach ($term->get('field_country')->referencedEntities() as $country_term) {
             $countries[] = $country_term->getName();
           }
-          $row['rw_countries'] = implode('; ', $countries);
+          $row['rw_countries'] = implode(', ', $countries);
         }
 
         if ($term->hasField('field_shortname') && !$term->get('field_shortname')->isEmpty()) {
@@ -313,6 +313,11 @@ class ImportExportService {
 
         break;
       }
+    }
+
+    // Make sure a delimiter was detected.
+    if ($delimiter === NULL) {
+      throw new \Exception("Unable to detect delimiter in CSV/TSV file");
     }
 
     // Fallback to double quotes if none detected.
