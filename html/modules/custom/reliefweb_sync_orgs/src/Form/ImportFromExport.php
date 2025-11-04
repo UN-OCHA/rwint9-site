@@ -84,6 +84,13 @@ class ImportFromExport extends FormBase {
       '#description' => $this->t('TSV file containing records to import'),
     ];
 
+    $form['use_import_fields'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Use import fields'),
+      '#description' => $this->t('If checked, the import fields (homepage, countries, short_name and description) will be used for the term.'),
+      '#default_value' => FALSE,
+    ];
+
     $form['submit'] = [
       '#type' => 'submit',
       '#value' => $this->t('Import'),
@@ -120,15 +127,16 @@ class ImportFromExport extends FormBase {
 
     $filename = $this->fileSystem->realpath($file->getFileUri());
 
-    $this->importFromTsv($filename);
+    $use_import_fields = $form_state->getValue('use_import_fields') ?? FALSE;
+    $this->importFromTsv($filename, $use_import_fields);
   }
 
   /**
    * Import from tsv.
    */
-  public function importFromTsv(string $filename) {
+  public function importFromTsv(string $filename, $use_import_fields = FALSE) {
     try {
-      $count = $this->importExportService->importFromTsv(self::QUEUE_NAME, $filename);
+      $count = $this->importExportService->importFromTsv(self::QUEUE_NAME, $filename, $use_import_fields);
     }
     catch (\Exception $e) {
       $this->getLogger('reliefweb_sync_orgs')->error($e->getMessage());

@@ -133,6 +133,14 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
    *   The organization data array.
    */
   protected function updateOrCreateTerm($item): void {
+    $use_import_fields = FALSE;
+    if (isset($item['_use_import_fields'])) {
+      if ($item['_use_import_fields'] == '1') {
+        $use_import_fields = TRUE;
+      }
+      unset($item['_use_import_fields']);
+    }
+
     $source = $item['source'] ?? '';
     if (empty($source)) {
       throw new \Exception('Source must be provided in the item data.');
@@ -247,6 +255,65 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
           $payload['parent'] = [
             'target_id' => $parent_term->id(),
           ];
+        }
+      }
+
+      // Use fields from the imported file if available.
+      if ($use_import_fields) {
+        $fields = [
+          'homepage',
+          'countries',
+          'short_name',
+          'description',
+        ];
+
+        foreach ($fields as $import_field) {
+          if (isset($item[$import_field]) && !empty($item[$import_field])) {
+            switch ($import_field) {
+              case 'description':
+                $payload[$field] = [
+                  'value' => $item[$import_field],
+                  'format' => 'markdown',
+                ];
+                break;
+
+              case 'countries':
+                // Try to load the country terms if available.
+                $payload['country'] = [];
+                foreach (explode(',', $item[$import_field]) as $country_name) {
+                  $country_name = trim($country_name);
+                  if (empty($country_name)) {
+                    continue;
+                  }
+                  $country_id = $this->entityTypeManager
+                    ->getStorage('taxonomy_term')
+                    ->loadByProperties([
+                      'vid' => 'country',
+                      'name' => $country_name,
+                    ]);
+
+                  if ($country_id) {
+                    $payload['field_country'][] = [
+                      'target_id' => reset($country_id)->id(),
+                    ];
+                  }
+                }
+
+                break;
+
+              case 'homepage':
+                $payload['field_homepage'] = [
+                  'uri' => $item[$import_field],
+                ];
+                break;
+
+              case 'short_name':
+                $payload['field_shortname'] = [
+                  'value' => $item[$import_field],
+                ];
+                break;
+            }
+          }
         }
       }
 

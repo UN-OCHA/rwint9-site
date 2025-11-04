@@ -77,7 +77,7 @@ function reliefweb_sync_orgs_detect_csv_enclosure($file_handle): array {
   $delimiter = NULL;
   $enclosure = NULL;
 
-  $delimiters = [',', ';', "\t"];
+  $delimiters = ["\t", ',', ';'];
   $enclosures = ['"', "'"];
 
   foreach ($delimiters as $delim) {

@@ -119,7 +119,7 @@ class ImportExportService {
   /**
    * Import from tsv.
    */
-  public function importFromTsv(string $queue_name, string $filename) {
+  public function importFromTsv(string $queue_name, string $filename, bool $use_import_fields = FALSE) {
     $count = 0;
 
     $f = fopen($filename, 'r');
@@ -156,6 +156,7 @@ class ImportExportService {
 
       // Add row number to the data.
       $data['_row_number'] = $count + 1;
+      $data['_use_import_fields'] = $use_import_fields ? '1' : '0';
 
       $this->getQueue($queue_name)->createItem($data);
       $count++;
