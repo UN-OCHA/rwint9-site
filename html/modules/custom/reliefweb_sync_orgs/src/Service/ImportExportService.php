@@ -133,7 +133,7 @@ class ImportExportService {
       $enclosure_info = $this->detectCsvEnclosure($f);
     }
     catch (\Exception $e) {
-      throw new \Exception("Unable to read from file: $filename");
+      throw new \Exception("Unable to read from file: $filename - " . $e->getMessage(), 0, $e);
     }
     $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure']);
 
