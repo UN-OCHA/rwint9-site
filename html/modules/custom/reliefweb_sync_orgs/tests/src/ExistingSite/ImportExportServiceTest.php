@@ -3,6 +3,7 @@
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
 use Drupal\reliefweb_sync_orgs\Service\ImportExportService;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * Test import export service.
@@ -81,6 +82,34 @@ class ImportExportServiceTest extends ImportBase {
     $this->importExportService->importFromTsv($queue_name, $filename, $source);
 
     $this->assertEquals($queue->numberOfItems(), 9);
+  }
+
+  /**
+   * Test detectCsvEnclosure.
+   */
+  #[DataProvider('detectCsvEnclosureProvider')]
+  public function testDetectCsvEnclosure(string $filename, string $expected_delimiter, ?string $expected_enclosure) {
+    $f = @fopen(__DIR__ . '/fixtures/' . $filename, 'r');
+    $enclosure_info = $this->importExportService->detectCsvEnclosure($f);
+    $this->assertEquals($expected_delimiter, $enclosure_info['delimiter']);
+    $this->assertEquals($expected_enclosure, $enclosure_info['enclosure']);
+  }
+
+  /**
+   * Data provider for testDetectCsvEnclosure.
+   */
+  public static function detectCsvEnclosureProvider() {
+    return [
+      ['detect_csv_semicolon.csv', ';', '"'],
+      ['detect_csv_semicolon_quote.csv', ';', '\''],
+      ['detect_csv_semicolon_doublequote.csv', ';', '"'],
+      ['detect_csv_colon.csv', ',', '"'],
+      ['detect_csv_colon_quote.csv', ',', '\''],
+      ['detect_csv_colon_doublequote.csv', ',', '"'],
+      ['detect_csv_tab.tsv', "\t", '"'],
+      ['detect_csv_tab_quote.tsv', "\t", '\''],
+      ['detect_csv_tab_doublequote.tsv', "\t", '"'],
+    ];
   }
 
 }

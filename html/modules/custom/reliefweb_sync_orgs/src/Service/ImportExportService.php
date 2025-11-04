@@ -62,7 +62,7 @@ class ImportExportService {
     // Detect delimiter and enclosure.
     $enclosure_info = NULL;
     try {
-      $enclosure_info = reliefweb_sync_orgs_detect_csv_enclosure($f);
+      $enclosure_info = $this->detectCsvEnclosure($f);
     }
     catch (\Exception $e) {
       throw new \Exception("Unable to read from file: $filename");
@@ -130,7 +130,7 @@ class ImportExportService {
     // Detect delimiter and enclosure.
     $enclosure_info = NULL;
     try {
-      $enclosure_info = reliefweb_sync_orgs_detect_csv_enclosure($f);
+      $enclosure_info = $this->detectCsvEnclosure($f);
     }
     catch (\Exception $e) {
       throw new \Exception("Unable to read from file: $filename");
@@ -266,6 +266,67 @@ class ImportExportService {
     }
 
     return $export_data;
+  }
+
+  /**
+   * Detect the delimiter and enclosure of a CSV or TSV file.
+   */
+  public function detectCsvEnclosure($file_handle): array {
+    if (!$file_handle) {
+      throw new \Exception("Unable to open file");
+    }
+
+    $header = fgets($file_handle);
+    if (empty($header)) {
+      throw new \Exception("Unable to read header line from file");
+    }
+
+    $delimiter = NULL;
+    $enclosure = NULL;
+
+    $delimiters = ["\t", ',', ';'];
+    $enclosures = ['"', "'"];
+
+    foreach ($delimiters as $delim) {
+      $fields = str_getcsv($header, $delim);
+      if (count($fields) > 1) {
+        $delimiter = $delim;
+        foreach ($enclosures as $enc) {
+          $fields = str_getcsv($header, $delimiter, $enc);
+          if (strpos($header, $enc) !== FALSE && count($fields) > 1) {
+            $enclosure = $enc;
+            break;
+          }
+        }
+
+        // If header does not contain enclosure, check next line.
+        if ($enclosure === NULL) {
+          $row = fgets($file_handle);
+          foreach ($enclosures as $enc) {
+            $fields = str_getcsv($row, $delimiter, $enc);
+            if (strpos($row, $enc) !== FALSE && count($fields) > 1) {
+              $enclosure = $enc;
+              break;
+            }
+          }
+        }
+
+        break;
+      }
+    }
+
+    // Fallback to double quotes if none detected.
+    if ($enclosure === NULL) {
+      $enclosure = '"';
+    }
+
+    // Rewind the file handle for future reading.
+    rewind($file_handle);
+
+    return [
+      'delimiter' => $delimiter,
+      'enclosure' => $enclosure,
+    ];
   }
 
 }
