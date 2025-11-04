@@ -83,7 +83,7 @@ class ImportFromExport extends FormBase {
       '#markup' => implode('<br>', [
         $this->t('Upload a TSV file exported from the ReliefWeb Sync Organizations module to import organization records.'),
         $this->t('Set the <em>Create New</em> column to 1 to create a new organization.'),
-        $this->t('Set the <em>Use sheet data</em> column to 1 use the data from the sheet, columns: homepage, countries, short_name and description.'),
+        $this->t('Set the <em>Use sheet data</em> column to 1 to use the data from the sheet, columns: homepage, countries, short_name and description.'),
         $this->t('You can use <em>Parent Name</em> and <em>Parent ID</em> columns to set a parent organization.'),
       ]),
     ];
