@@ -133,14 +133,6 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
    *   The organization data array.
    */
   protected function updateOrCreateTerm($item): void {
-    $use_import_fields = FALSE;
-    if (isset($item['_use_import_fields'])) {
-      if ($item['_use_import_fields'] == '1') {
-        $use_import_fields = TRUE;
-      }
-      unset($item['_use_import_fields']);
-    }
-
     $source = $item['source'] ?? '';
     if (empty($source)) {
       throw new \Exception('Source must be provided in the item data.');
@@ -259,19 +251,19 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
       }
 
       // Use fields from the imported file if available.
-      if ($use_import_fields) {
+      if ($item['use_sheet_data'] ?? FALSE && $item['use_sheet_data'] == '1') {
         $fields = [
-          'homepage',
-          'countries',
-          'short_name',
-          'description',
+          'homepage' => 'field_homepage',
+          'countries' => 'field_country',
+          'short_name' => 'field_shortname',
+          'description' => 'field_description',
         ];
 
-        foreach ($fields as $import_field) {
+        foreach ($fields as $import_field => $target_field) {
           if (isset($item[$import_field]) && !empty($item[$import_field])) {
             switch ($import_field) {
               case 'description':
-                $payload[$field] = [
+                $payload[$target_field] = [
                   'value' => $item[$import_field],
                   'format' => 'markdown',
                 ];
@@ -279,7 +271,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
 
               case 'countries':
                 // Try to load the country terms if available.
-                $payload['country'] = [];
+                $payload[$target_field] = [];
                 foreach (explode(',', $item[$import_field]) as $country_name) {
                   $country_name = trim($country_name);
                   if (empty($country_name)) {
@@ -293,7 +285,7 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
                     ]);
 
                   if ($country_id) {
-                    $payload['field_country'][] = [
+                    $payload[$target_field][] = [
                       'target_id' => reset($country_id)->id(),
                     ];
                   }
@@ -302,13 +294,13 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
                 break;
 
               case 'homepage':
-                $payload['field_homepage'] = [
+                $payload[$target_field] = [
                   'uri' => $item[$import_field],
                 ];
                 break;
 
               case 'short_name':
-                $payload['field_shortname'] = [
+                $payload[$target_field] = [
                   'value' => $item[$import_field],
                 ];
                 break;

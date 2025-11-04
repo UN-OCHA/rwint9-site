@@ -119,7 +119,7 @@ class ImportExportService {
   /**
    * Import from tsv.
    */
-  public function importFromTsv(string $queue_name, string $filename, bool $use_import_fields = FALSE) {
+  public function importFromTsv(string $queue_name, string $filename) {
     $count = 0;
 
     $f = fopen($filename, 'r');
@@ -156,7 +156,6 @@ class ImportExportService {
 
       // Add row number to the data.
       $data['_row_number'] = $count + 1;
-      $data['_use_import_fields'] = $use_import_fields ? '1' : '0';
 
       $this->getQueue($queue_name)->createItem($data);
       $count++;
@@ -216,6 +215,7 @@ class ImportExportService {
         'parent_name' => '',
         'parent_id' => '',
         'create_new' => '',
+        'use_sheet_data' => '',
         'rw_homepage' => '',
         'homepage' => isset($reversed_mapping[$source]['field_homepage']) ? $record['csv_item'][$reversed_mapping[$source]['field_homepage']] : '',
         'rw_countries' => '',
@@ -272,8 +272,8 @@ class ImportExportService {
    * Detect the delimiter and enclosure of a CSV or TSV file.
    */
   public function detectCsvEnclosure($file_handle): array {
-    if (!$file_handle) {
-      throw new \Exception("Unable to open file");
+    if (!is_resource($file_handle) || get_resource_type($file_handle) !== 'stream') {
+      throw new \Exception("Parameter \$file_handle must be a valid file handle (resource of type 'stream')");
     }
 
     $header = fgets($file_handle);

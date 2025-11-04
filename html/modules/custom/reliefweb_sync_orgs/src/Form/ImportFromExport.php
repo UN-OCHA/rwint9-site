@@ -78,17 +78,20 @@ class ImportFromExport extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['info'] = [
+      '#type' => 'markup',
+      '#markup' => implode('<br>', [
+        $this->t('Upload a TSV file exported from the ReliefWeb Sync Organizations module to import organization records.'),
+        $this->t('Set the <em>Create New</em> column to 1 create a new organization.'),
+        $this->t('Set the <em>Use sheet data</em> column to 1 use the data from the sheet, columns: homepage, countries, short_name and description.'),
+        $this->t('You can use <em>Parent Name</em> and <em>Parent ID</em> columns to set a parent organization.'),
+      ]),
+    ];
+
     $form['tsv_file'] = [
       '#type' => 'file',
       '#title' => $this->t('TSV file'),
       '#description' => $this->t('TSV file containing records to import'),
-    ];
-
-    $form['use_import_fields'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Use import fields'),
-      '#description' => $this->t('If checked, the import fields (homepage, countries, short_name and description) will be used for the term.'),
-      '#default_value' => FALSE,
     ];
 
     $form['submit'] = [
@@ -127,16 +130,15 @@ class ImportFromExport extends FormBase {
 
     $filename = $this->fileSystem->realpath($file->getFileUri());
 
-    $use_import_fields = $form_state->getValue('use_import_fields') ?? FALSE;
-    $this->importFromTsv($filename, $use_import_fields);
+    $this->importFromTsv($filename);
   }
 
   /**
    * Import from tsv.
    */
-  public function importFromTsv(string $filename, $use_import_fields = FALSE) {
+  public function importFromTsv(string $filename) {
     try {
-      $count = $this->importExportService->importFromTsv(self::QUEUE_NAME, $filename, $use_import_fields);
+      $count = $this->importExportService->importFromTsv(self::QUEUE_NAME, $filename);
     }
     catch (\Exception $e) {
       $this->getLogger('reliefweb_sync_orgs')->error($e->getMessage());
