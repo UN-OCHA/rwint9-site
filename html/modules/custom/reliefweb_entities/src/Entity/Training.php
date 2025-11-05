@@ -89,7 +89,6 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
       'event_url' => $event_url,
       'country' => $this->getEntityMetaFromField('country'),
       'source' => $this->getEntityMetaFromField('source'),
-      'city' => $this->field_city->value ?? '',
       'format' => $this->getEntityMetaFromField('training_format', 'F'),
       'category' => $this->getEntityMetaFromField('training_type', 'TY'),
       'professional_function' => $this->getEntityMetaFromField('career_categories', 'CC'),

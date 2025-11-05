@@ -29,7 +29,7 @@ mode: default
 content:
   body:
     type: reliefweb_formatted_text
-    weight: 9
+    weight: 8
     region: content
     settings:
       max_heading_level: 2
@@ -42,17 +42,9 @@ content:
         hide_guidelines: '1'
   field_career_categories:
     type: reliefweb_options
-    weight: 7
+    weight: 6
     region: content
     settings: {  }
-    third_party_settings: {  }
-  field_city:
-    type: string_textfield
-    weight: 3
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
     third_party_settings: {  }
   field_country:
     type: reliefweb_entity_reference_select
@@ -92,7 +84,7 @@ content:
     third_party_settings: {  }
   field_how_to_apply:
     type: reliefweb_formatted_text
-    weight: 10
+    weight: 9
     region: content
     settings:
       max_heading_level: 3
@@ -105,19 +97,19 @@ content:
         hide_guidelines: '1'
   field_job_closing_date:
     type: reliefweb_datetime
-    weight: 4
+    weight: 3
     region: content
     settings: {  }
     third_party_settings: {  }
   field_job_experience:
     type: options_buttons
-    weight: 6
+    weight: 5
     region: content
     settings: {  }
     third_party_settings: {  }
   field_job_type:
     type: options_buttons
-    weight: 5
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -167,13 +159,13 @@ content:
     third_party_settings: {  }
   field_theme:
     type: options_buttons
-    weight: 8
+    weight: 7
     region: content
     settings: {  }
     third_party_settings: {  }
   path:
     type: path
-    weight: 11
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -187,6 +179,7 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_city: true
   field_import_guid: true
   field_import_hash: true
   field_post_api_hash: true
