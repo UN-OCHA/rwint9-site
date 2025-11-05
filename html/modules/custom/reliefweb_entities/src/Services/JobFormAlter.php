@@ -163,8 +163,7 @@ class JobFormAlter extends EntityFormAlterServiceBase {
    *   Form state.
    */
   protected function alterJobThemeField(array &$form, FormStateInterface $form_state) {
-    // Limit the number of selectable themes.
-    $this->addSelectionLimit($form, 'field_theme', 3);
+    $this->addSelectionLimit($form, 'field_theme', 1, TRUE);
 
     // Disable the selection of themes for some career categories.
     $themeless = Job::getJobThemelessCategories();

@@ -50,7 +50,7 @@ class TrainingFormAlter extends EntityFormAlterServiceBase {
     }
 
     // Limit the number of selectable themes and categories.
-    $this->addSelectionLimit($form, 'field_theme', 3);
+    $this->addSelectionLimit($form, 'field_theme', 1, TRUE);
     $this->addSelectionLimit($form, 'field_career_categories', 3);
 
     // Alter the available options for the theme and advertisement language:
