@@ -66,8 +66,10 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     // - Remove Humanitarian Financing (4597) (Trello #OnXq5cCC).
     // - Remove Logistics and Telecommunications (4598) (Trello #G3YgNUF6).
     // - Remove World (254) (Trello #DI9bxljg).
+    // - Remove Volunteer Opportunity (266) (Jira RW-1379).
     FormHelper::removeOptions($form, 'field_theme', Job::getJobIrrelevantThemes());
     FormHelper::removeOptions($form, 'field_country', Job::getJobIrrelevantCountries());
+    FormHelper::removeOptions($form, 'field_job_type', Job::getJobIrrelevantJobTypes());
 
     // Fix the years of experience ordering. Ordering by tid does the trick.
     FormHelper::orderOptionsByValue($form, 'field_job_experience');

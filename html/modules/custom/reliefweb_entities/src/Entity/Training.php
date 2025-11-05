@@ -92,8 +92,8 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
       'format' => $this->getEntityMetaFromField('training_format', 'F'),
       'category' => $this->getEntityMetaFromField('training_type', 'TY'),
       'professional_function' => $this->getEntityMetaFromField('career_categories', 'CC'),
-      'theme' => $this->getEntityMetaFromField('theme', 'T'),
-      'training_language' => $this->getEntityMetaFromField('training_language', 'TL'),
+      'theme' => $this->getEntityMetaFromField('theme', 'T', [], static::getTrainingIrrelevantThemes()),
+      'training_language' => $this->getEntityMetaFromField('training_language', 'TL', [], static::getTrainingIrrelevantTrainingLanguages()),
       'cost' => $cost,
     ];
   }
