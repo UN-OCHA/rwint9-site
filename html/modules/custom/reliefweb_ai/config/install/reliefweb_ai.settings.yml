@@ -3,7 +3,7 @@ ocha_ai_chat:
   instructions_replace: false
   login_instructions: |
     <p>The use of <strong>Ask ReliefWeb</strong> requires an account on ReliefWeb.</p>
-    <p>Please <a href="/user/login/hid?destination=@destination" target="_parent">login</a> or <a href="https://auth.humanitarian.id/register" target="_parent">create a new account</a>.</p>
+    <p>Please <a href="/user/login?destination=@destination" target="_parent">log in</a>.</p>
 language_detection:
   tag: 'content'
   use_title: false
