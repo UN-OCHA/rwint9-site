@@ -56,6 +56,19 @@ class ReliefWebStateHelper {
   }
 
   /**
+   * Get the list of job types that are irrelevant for jobs.
+   *
+   * @return array
+   *   List of job type term ids.
+   */
+  public static function getJobIrrelevantJobTypes() {
+    // Irrelevant job types:
+    // - Volunteer Opportunity (266) (Jira RW-1379).
+    $default = [266];
+    return \Drupal::state()->get('reliefweb_job_irrelevant_job_types', $default);
+  }
+
+  /**
    * Get the list of job categories for which themes are irrelevant.
    *
    * @return array

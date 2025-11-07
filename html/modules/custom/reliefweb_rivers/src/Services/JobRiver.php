@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_rivers\Services;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -64,6 +65,7 @@ class JobRiver extends RiverServiceBase {
           'type' => 'options',
           'label' => $this->t('Select a job type'),
         ],
+        'exclude' => ReliefWebStateHelper::getJobIrrelevantJobTypes(),
       ],
       'CC' => [
         'name' => $this->t('Career category'),
@@ -95,14 +97,7 @@ class JobRiver extends RiverServiceBase {
           'type' => 'options',
           'label' => $this->t('Select a theme'),
         ],
-        'exclude' => [
-          // Remove Contributions (Collab #2327).
-          4589,
-          // Remove Humanitarian Financing (Trello #OnXq5cCC).
-          4597,
-          // Remove Logistics and Telecommunications (Trello #G3YgNUF6).
-          4598,
-        ],
+        'exclude' => ReliefWebStateHelper::getJobIrrelevantThemes(),
       ],
       'C' => [
         'name' => $this->t('Country'),
@@ -115,10 +110,7 @@ class JobRiver extends RiverServiceBase {
           'label' => $this->t('Search for a country'),
           'resource' => 'countries',
         ],
-        'exclude' => [
-          // Remove World (254) (Trello #DI9bxljg).
-          254,
-        ],
+        'exclude' => ReliefWebStateHelper::getJobIrrelevantCountries(),
       ],
       'S' => [
         'name' => $this->t('Organization'),

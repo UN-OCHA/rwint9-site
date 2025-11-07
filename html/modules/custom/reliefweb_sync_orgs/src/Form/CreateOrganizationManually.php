@@ -111,6 +111,18 @@ class CreateOrganizationManually extends FormBase {
       '#autocomplete_route_name' => 'reliefweb_sync_orgs.autocomplete.organizations',
     ];
 
+    $form['description'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Description'),
+      '#required' => FALSE,
+    ];
+
+    $form['field_homepage'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Homepage URL'),
+      '#required' => FALSE,
+    ];
+
     $form['source'] = [
       '#type' => 'hidden',
       '#value' => $source,
@@ -162,6 +174,8 @@ class CreateOrganizationManually extends FormBase {
     $organization_type = $form_state->getValue('organization_type');
     $country = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('country'));
     $parent_organization = EntityAutocomplete::extractEntityIdFromAutocompleteInput($form_state->getValue('parent_organization'));
+    $field_homepage = trim($form_state->getValue('field_homepage') ?? '');
+    $description = trim($form_state->getValue('description') ?? '');
 
     $id = $form_state->getValue('id');
 
@@ -178,6 +192,10 @@ class CreateOrganizationManually extends FormBase {
     $payload = [
       'name' => $organization,
       'vid' => 'source',
+      'description' => [
+        'value' => $description,
+        'format' => 'markdown',
+      ],
       'field_shortname' => [
         'value' => $short_name,
       ],
@@ -186,6 +204,9 @@ class CreateOrganizationManually extends FormBase {
       ],
       'field_country' => [
         'target_id' => $country,
+      ],
+      'field_homepage' => [
+        'uri' => $field_homepage,
       ],
     ];
 

@@ -175,7 +175,7 @@ class TextHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test strip embedded content..
+   * Test strip embedded content.
    */
   public function testStripEmbeddedContent() {
     $text = 'just a string';
