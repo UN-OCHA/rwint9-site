@@ -72,13 +72,12 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
     return [
       'posted' => $this->createDate($this->getCreatedTime()),
       'closing' => $this->createDate($this->field_job_closing_date->value),
-      'country' => $this->getEntityMetaFromField('country'),
+      'country' => $this->getEntityMetaFromField('country', '', [], static::getJobIrrelevantCountries()),
       'source' => $this->getEntityMetaFromField('source'),
-      'city' => $this->field_city->value ?? '',
-      'type' => $this->getEntityMetaFromField('job_type', 'TY'),
+      'type' => $this->getEntityMetaFromField('job_type', 'TY', [], static::getJobIrrelevantJobTypes()),
       'career_category' => $this->getEntityMetaFromField('career_categories', 'CC'),
       'experience' => $this->getEntityMetaFromField('job_experience', 'E'),
-      'theme' => $this->getEntityMetaFromField('theme', 'T'),
+      'theme' => $this->getEntityMetaFromField('theme', 'T', [], static::getJobIrrelevantThemes()),
     ];
   }
 
@@ -175,6 +174,16 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    */
   public static function getJobIrrelevantThemes() {
     return ReliefWebStateHelper::getJobIrrelevantThemes();
+  }
+
+  /**
+   * Get the list of job types that are irrelevant for jobs.
+   *
+   * @return array
+   *   List of job type term ids.
+   */
+  public static function getJobIrrelevantJobTypes() {
+    return ReliefWebStateHelper::getJobIrrelevantJobTypes();
   }
 
   /**
