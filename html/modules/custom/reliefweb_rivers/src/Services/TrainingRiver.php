@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_rivers\Services;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
+use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -109,14 +110,7 @@ class TrainingRiver extends RiverServiceBase {
           'type' => 'options',
           'label' => $this->t('Select a theme'),
         ],
-        'exclude' => [
-          // Remove Contributions (Collab #2327).
-          4589,
-          // Remove Logistics and Telecommunications (Trello #G3YgNUF6).
-          4598,
-          // Camp Coordination and Camp Management.
-          49458,
-        ],
+        'exclude' => ReliefWebStateHelper::getTrainingIrrelevantThemes(),
       ],
       'C' => [
         'name' => $this->t('Country'),
@@ -162,7 +156,7 @@ class TrainingRiver extends RiverServiceBase {
         'name' => $this->t('Training language'),
         'type' => 'reference',
         'vocabulary' => 'language',
-        'exclude' => [],
+        'exclude' => ReliefWebStateHelper::getTrainingIrrelevantTrainingLanguages(),
         'field' => 'training_language.id',
         'widget' => [
           'type' => 'options',

@@ -318,7 +318,12 @@ trait DocumentTrait {
    *
    * @see Drupal\reliefweb_entities\DocumentInterface::getEntityMetaFromField()
    */
-  public function getEntityMetaFromField($field, $code = NULL, array $extra_fields = ['shortname' => 'shortname']) {
+  public function getEntityMetaFromField(
+    string $field,
+    string $code = '',
+    array $extra_fields = ['shortname' => 'shortname'],
+    array $exclude = [],
+  ) {
     $field = 'field_' . $field;
 
     if (!$this->hasField($field) || !$this->{$field} instanceof EntityReferenceFieldItemList) {
@@ -338,7 +343,12 @@ trait DocumentTrait {
         continue;
       }
 
-      if ($code !== NULL) {
+      // Skip if the entity is in the exclude list.
+      if (!empty($exclude) && in_array($entity->id(), $exclude)) {
+        continue;
+      }
+
+      if (!empty($code)) {
         $url = RiverServiceBase::getRiverUrl($this->bundle(), [
           'advanced-search' => '(' . $code . $entity->id() . ')',
         ], $entity->label(), TRUE);
