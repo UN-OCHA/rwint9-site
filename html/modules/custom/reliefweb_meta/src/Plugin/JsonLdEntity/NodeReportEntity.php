@@ -98,18 +98,26 @@ class NodeReportEntity extends JsonLdEntityBase {
       ->isAccessibleForFree(TRUE)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
       ->keywords($keywords)
-      ->sourceOrganization([
-        Schema::organization()
-          ->name($entity->get('field_source')->entity ? $entity->get('field_source')->entity->label() : ''),
-      ])
       ->publisher([
         Schema::organization()
           ->name('ReliefWeb'),
-      ])
-      ->contentLocation([
-        Schema::country()
-          ->name($entity->get('field_country')->entity ? $entity->get('field_country')->entity->label() : ''),
       ]);
+
+    // Only add sourceOrganization if field_source has a value.
+    if ($entity->get('field_source')->entity) {
+      $schema->sourceOrganization([
+        Schema::organization()
+          ->name($entity->get('field_source')->entity->label()),
+      ]);
+    }
+
+    // Only add contentLocation if field_country has a value.
+    if ($entity->get('field_country')->entity) {
+      $schema->contentLocation([
+        Schema::country()
+          ->name($entity->get('field_country')->entity->label()),
+      ]);
+    }
 
     dpm($schema->toArray(), 'content_format');
     return $schema;
