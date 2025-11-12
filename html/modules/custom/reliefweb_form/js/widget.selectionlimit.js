@@ -42,7 +42,7 @@
       function enableSelectionLimit(element) {
         // Get the limit and set the handler.
         var limit = parseInt(element.getAttribute('data-with-selection-limit'), 10);
-        if (limit > 1) {
+        if (limit > 0) {
           element.addEventListener('change', function (event) {
             var target = event.target;
             if (target && target.getAttribute('type') === 'checkbox') {
