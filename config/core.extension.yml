@@ -38,6 +38,7 @@ module:
   imagemagick: 0
   inline_entity_form: 0
   inline_form_errors: 0
+  json_ld_schema: 0
   jsonlog: 0
   key: 0
   language: 0

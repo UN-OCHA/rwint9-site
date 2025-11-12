@@ -1,0 +1,21 @@
+uuid: e3f7870c-c82d-430b-ba36-c3f33eadbad6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_json_schema
+    - taxonomy.vocabulary.content_format
+  module:
+    - options
+id: taxonomy_term.content_format.field_json_schema
+field_name: field_json_schema
+entity_type: taxonomy_term
+bundle: content_format
+label: 'JSON schema'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: list_string
