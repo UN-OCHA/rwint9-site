@@ -88,13 +88,17 @@ class NodeReportEntity extends JsonLdEntityBase {
       break;
     }
 
+    // Get the language code from the language entity.
+    $language_entity = $entity->get('field_language')->entity;
+    $language_code = $language_entity ? $language_entity->get('field_language_code')->value : 'en';
+
     $schema->name($entity->label())
       ->identifier($entity->uuid())
       ->articleBody($entity->get('body')->value)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePublished($entity->get('field_original_publication_date')->value)
-      ->inLanguage($entity->get('field_language')->entity ? $entity->get('field_language')->entity->get('field_language_code')->value : 'en')
+      ->inLanguage($language_code)
       ->isAccessibleForFree(TRUE)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
       ->keywords($keywords)
