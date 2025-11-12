@@ -12,7 +12,7 @@ use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
 
 /**
- * A test entity.
+ * A Report entity.
  *
  * @JsonLdEntity(
  *   label = "Node Report Entity",
@@ -81,7 +81,7 @@ class NodeReportEntity extends JsonLdEntityBase {
       case 'news_article':
         $schema = Schema::newsArticle();
         break;
-        
+
       case 'report':
       default:
         $schema = Schema::report();
@@ -117,9 +117,18 @@ class NodeReportEntity extends JsonLdEntityBase {
         Schema::country()
           ->name($entity->get('field_country')->entity->label()),
       ]);
+      ])
+      // Only add contentLocation if country is present.
+    ;
+    if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
+      $country_entity = $entity->get('field_country')->entity;
+      if ($country_entity) {
+        $schema->contentLocation([
+          Schema::country()->name($country_entity->label()),
+        ]);
+      }
     }
 
-    dpm($schema->toArray(), 'content_format');
     return $schema;
   }
 
