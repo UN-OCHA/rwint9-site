@@ -771,8 +771,15 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Name of the field to alter.
    * @param int $limit
    *   Maximum number of selectable options.
+   * @param bool $optional
+   *   Whether the field is optional.
    */
-  protected function addSelectionLimit(array &$form, $field, $limit) {
+  protected function addSelectionLimit(
+    array &$form,
+    string $field,
+    int $limit,
+    bool $optional = FALSE,
+  ): void {
     // We only deal with checkboxes elements and a limit > 0.
     if (empty($limit) || !isset($form[$field]['widget']['#type']) || $form[$field]['widget']['#type'] !== 'checkboxes') {
       return;
@@ -782,16 +789,36 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     // If we accept only 1 element then we simply change the type to 'radios'.
     if ($limit === 1) {
-      $element['#type'] = 'radios';
-      if (isset($element['#default_value'])) {
-        if (is_array($element['#default_value'])) {
-          $element['#default_value'] = reset($element['#default_value']);
+      $default_value = $element['#default_value'] ?? NULL;
+
+      if ($optional) {
+        $element['#required'] = FALSE;
+        $element['#type'] = 'checkboxes';
+
+        // Set the default value for the checkboxes element.
+        if (isset($default_value)) {
+          if (is_array($default_value)) {
+            $default_value = array_slice($default_value, 0, 1);
+          }
+          $element['#default_value'] = $default_value;
         }
-        // A FALSE default_value is expected for radios when no value is
-        // selected.
-        // @see \Drupal\Core\Render\Element\Radios
-        if (empty($element['#default_value'])) {
-          $element['#default_value'] = FALSE;
+      }
+      else {
+        $element['#type'] = 'radios';
+        $element['#required'] = TRUE;
+
+        // Set the default value for the radios element.
+        if (isset($default_value)) {
+          if (is_array($default_value)) {
+            $default_value = reset($default_value);
+          }
+          // A FALSE default_value is expected for radios when no value is
+          // selected.
+          // @see \Drupal\Core\Render\Element\Radios
+          if (empty($default_value)) {
+            $default_value = FALSE;
+          }
+          $element['#default_value'] = $default_value;
         }
       }
     }
@@ -803,8 +830,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       if (isset($element['#title'])) {
         $element['#title'] .= ' ' . $title_suffix;
       }
-      $element['#attributes']['data-with-selection-limit'] = $limit;
     }
+
+    // Enable the selection limit client side handling.
+    $element['#attributes']['data-with-selection-limit'] = $limit;
 
     // Add validation.
     $element['#element_validate'][] = [$this, 'validateSelectionLimit'];

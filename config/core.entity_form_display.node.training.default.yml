@@ -34,7 +34,7 @@ mode: default
 content:
   body:
     type: reliefweb_formatted_text
-    weight: 15
+    weight: 14
     region: content
     settings:
       max_heading_level: 2
@@ -47,21 +47,13 @@ content:
         hide_guidelines: '1'
   field_career_categories:
     type: reliefweb_options
-    weight: 11
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
-  field_city:
-    type: string_textfield
-    weight: 3
-    region: content
-    settings:
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
   field_cost:
     type: options_buttons
-    weight: 7
+    weight: 6
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -103,7 +95,7 @@ content:
     third_party_settings: {  }
   field_fee_information:
     type: string_textarea
-    weight: 8
+    weight: 7
     region: content
     settings:
       rows: 3
@@ -111,7 +103,7 @@ content:
     third_party_settings: {  }
   field_how_to_register:
     type: reliefweb_formatted_text
-    weight: 16
+    weight: 15
     region: content
     settings:
       max_heading_level: 3
@@ -124,13 +116,13 @@ content:
         hide_guidelines: '1'
   field_language:
     type: options_buttons
-    weight: 13
+    weight: 12
     region: content
     settings: {  }
     third_party_settings: {  }
   field_link:
     type: link_default
-    weight: 6
+    weight: 5
     region: content
     settings:
       placeholder_url: ''
@@ -138,7 +130,7 @@ content:
     third_party_settings: {  }
   field_registration_deadline:
     type: reliefweb_datetime
-    weight: 5
+    weight: 4
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -188,13 +180,13 @@ content:
     third_party_settings: {  }
   field_theme:
     type: reliefweb_options
-    weight: 12
+    weight: 11
     region: content
     settings: {  }
     third_party_settings: {  }
   field_training_date:
     type: reliefweb_daterange
-    weight: 4
+    weight: 3
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -206,25 +198,25 @@ content:
     third_party_settings: {  }
   field_training_language:
     type: options_buttons
-    weight: 10
+    weight: 9
     region: content
     settings: {  }
     third_party_settings: {  }
   field_training_type:
     type: reliefweb_options
-    weight: 9
+    weight: 8
     region: content
     settings: {  }
     third_party_settings: {  }
   path:
     type: path
-    weight: 17
+    weight: 16
     region: content
     settings: {  }
     third_party_settings: {  }
   title:
     type: string_textfield
-    weight: 14
+    weight: 13
     region: content
     settings:
       size: 60
@@ -232,6 +224,7 @@ content:
     third_party_settings: {  }
 hidden:
   created: true
+  field_city: true
   field_post_api_hash: true
   field_post_api_provider: true
   langcode: true

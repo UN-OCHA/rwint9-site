@@ -6,11 +6,14 @@
  */
 
 use Drupal\Component\Utility\Crypt;
+use Drupal\Component\Utility\Html;
+use Drupal\Component\Utility\UrlHelper;
 use Drupal\Core\Cache\RefinableCacheableDependencyInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
+use Drupal\Core\Render\Markup;
 use Drupal\user\Entity\User;
 use Drupal\user\RoleInterface;
 use Drupal\user\UserInterface;
@@ -461,4 +464,57 @@ function reliefweb_users_assign_submitter_role(UserInterface $user): void {
  */
 function reliefweb_users_menu_links_discovered_alter(&$links) {
   $links['masquerade.unmasquerade']['options'] = ['query' => ['destination' => '/user']];
+}
+
+/**
+ * Implements hook_preprocess_page().
+ */
+function reliefweb_users_preprocess_page(array &$variables): void {
+  // Check if we're on the /user/login page (user.login route or node alias).
+  if (\Drupal::request()->getPathInfo() === '/user/login') {
+    // Add the destination query parameter to the cache contexts.
+    $variables['#cache']['contexts'][] = 'url.query_args:destination';
+
+    $destination = \Drupal::request()->query->get('destination');
+
+    // Only proceed if there is a valid destination and page content.
+    if (!empty($destination) &&
+        !UrlHelper::isExternal($destination) &&
+        !empty($variables['page']['content']['system_main']['#markup'])) {
+
+      $content = (string) $variables['page']['content']['system_main']['#markup'];
+
+      // Parse the HTML content and update login links.
+      $dom = Html::load($content);
+      $links = $dom->getElementsByTagName('a');
+
+      foreach ($links as $link) {
+        $href = $link->getAttribute('href');
+
+        // Check if the link points to /user/login.
+        if (str_contains($href, '/user/login')) {
+          $parts = UrlHelper::parse($href);
+
+          // Add destination if not already present.
+          if (empty($parts['query']['destination'])) {
+            $parts['query']['destination'] = $destination;
+
+            // Rebuild the URL.
+            $href = $parts['path'];
+            if (!empty($parts['query'])) {
+              $href .= '?' . UrlHelper::buildQuery($parts['query']);
+            }
+            if (!empty($parts['fragment'])) {
+              $href .= '#' . $parts['fragment'];
+            }
+
+            $link->setAttribute('href', $href);
+          }
+        }
+      }
+
+      $content = Html::serialize($dom);
+      $variables['page']['content']['system_main']['#markup'] = Markup::create($content);
+    }
+  }
 }

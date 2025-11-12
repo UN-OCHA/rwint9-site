@@ -287,6 +287,7 @@ class JobModeration extends ModerationServiceBase {
     ]);
     $definitions['country']['exclude'] = ReliefWebStateHelper::getJobIrrelevantCountries();
     $definitions['theme']['exclude'] = ReliefWebStateHelper::getJobIrrelevantThemes();
+    $definitions['job_type']['exclude'] = ReliefWebStateHelper::getJobIrrelevantJobTypes();
     return $definitions;
   }
 

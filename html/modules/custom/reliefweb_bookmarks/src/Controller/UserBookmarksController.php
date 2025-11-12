@@ -34,7 +34,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
   protected $account;
 
   /**
-   * Config factory..
+   * Config factory.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
