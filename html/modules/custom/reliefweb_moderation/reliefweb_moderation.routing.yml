@@ -49,7 +49,7 @@ reliefweb_moderation.role_capabilities:
   options:
     _admin_route: TRUE
   requirements:
-    _permission: 'access administration pages'
+    _permission: 'access role capabilities overview'
 
 reliefweb_moderation.domain_posting_rights.overview:
   path: '/moderation/domain-posting-rights'

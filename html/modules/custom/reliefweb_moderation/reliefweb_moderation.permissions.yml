@@ -71,6 +71,11 @@ access moderation source autocomplete:
   title: 'Access moderation source autocomplete'
   description: 'Allow users to access the source autocomplete form.'
 
+# Role capabilities permissions.
+access role capabilities overview:
+  title: 'Access role capabilities overview'
+  description: 'Allow users to access the role capabilities overview page.'
+
 # Content permissions.
 permission_callbacks:
   - \Drupal\reliefweb_moderation\AffiliatedContentPermissions::permissions
