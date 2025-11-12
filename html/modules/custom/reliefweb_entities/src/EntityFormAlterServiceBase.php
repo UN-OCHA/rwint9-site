@@ -830,8 +830,10 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       if (isset($element['#title'])) {
         $element['#title'] .= ' ' . $title_suffix;
       }
-      $element['#attributes']['data-with-selection-limit'] = $limit;
     }
+
+    // Enable the selection limit client side handling.
+    $element['#attributes']['data-with-selection-limit'] = $limit;
 
     // Add validation.
     $element['#element_validate'][] = [$this, 'validateSelectionLimit'];
