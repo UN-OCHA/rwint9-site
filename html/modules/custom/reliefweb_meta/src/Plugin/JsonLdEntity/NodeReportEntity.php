@@ -12,7 +12,7 @@ use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
 
 /**
- * A test entity.
+ * A Report entity.
  *
  * @JsonLdEntity(
  *   label = "Node Report Entity",
@@ -81,7 +81,7 @@ class NodeReportEntity extends JsonLdEntityBase {
       case 'news_article':
         $schema = Schema::newsArticle();
         break;
-        
+
       case 'report':
       default:
         $schema = Schema::report();
@@ -117,7 +117,6 @@ class NodeReportEntity extends JsonLdEntityBase {
       }
     }
 
-    dpm($schema->toArray(), 'content_format');
     return $schema;
   }
 
