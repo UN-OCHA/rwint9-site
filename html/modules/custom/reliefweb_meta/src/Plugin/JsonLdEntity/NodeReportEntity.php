@@ -106,10 +106,16 @@ class NodeReportEntity extends JsonLdEntityBase {
         Schema::organization()
           ->name('ReliefWeb'),
       ])
-      ->contentLocation([
-        Schema::country()
-          ->name($entity->get('field_country')->entity ? $entity->get('field_country')->entity->label() : ''),
-      ]);
+      // Only add contentLocation if country is present.
+    ;
+    if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
+      $country_entity = $entity->get('field_country')->entity;
+      if ($country_entity) {
+        $schema->contentLocation([
+          Schema::country()->name($country_entity->label()),
+        ]);
+      }
+    }
 
     dpm($schema->toArray(), 'content_format');
     return $schema;
