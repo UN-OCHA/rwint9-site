@@ -85,7 +85,7 @@ class NodeReportEntity extends JsonLdEntityBase {
       case 'report':
       default:
         $schema = Schema::report();
-      break;
+        break;
     }
 
     // Get the language code from the language entity.
@@ -108,40 +108,21 @@ class NodeReportEntity extends JsonLdEntityBase {
       ]);
 
     // Only add sourceOrganization if field_source has a value.
-    if ($entity->get('field_source')->entity) {
+    if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
       $schema->sourceOrganization([
         Schema::organization()
           ->name($entity->get('field_source')->entity->label()),
       ]);
     }
 
-    // Only add contentLocation if field_country has a value.
-    if ($entity->get('field_country')->entity) {
-      $schema->contentLocation([
-        Schema::country()
-          ->name($entity->get('field_country')->entity->label()),
-      ]);
-    }
-    
     // Only add contentLocation if country is present.
     if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
-      $country_entity = $entity->get('field_country')->entity;
-      if ($country_entity) {
-        $schema->contentLocation([
-          Schema::country()->name($country_entity->label()),
-        ]);
-      }
+      $schema->contentLocation([
+        Schema::country()->name($entity->get('field_country')->entity->label()),
+      ]);
     }
 
     return $schema;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getCacheableMetadata(EntityInterface $entity, $view_mode): CacheableMetadata {
-    $metadata = parent::getCacheableMetadata($entity, $view_mode);
-    return $metadata;
   }
 
 }
