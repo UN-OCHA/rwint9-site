@@ -1,0 +1,60 @@
+/**
+ * Domain posting rights overview table.
+ */
+.rw-domain-posting-rights-table tbody {
+  tr {
+    border-right: 2px solid var(--cd-reliefweb-brand-grey--light);
+    border-left: 2px solid var(--cd-reliefweb-brand-grey--light);
+  }
+  tr:first-child {
+    border-top: 2px solid var(--cd-reliefweb-brand-grey--light);
+  }
+  tr:last-child, td[rowspan] {
+    border-bottom: 2px solid var(--cd-reliefweb-brand-grey--light);
+  }
+  &::before {
+    display: table-row;
+    height: 10px;
+    content: "";
+  }
+}
+
+.rw-domain-posting-rights-table .rw-domain-cell {
+  background: rgba(var(--cd-rgb-reliefweb-brand-grey--light), 0.2);
+  font-weight: bold;
+}
+.rw-domain-posting-rights-table .rw-edit-cell a {
+  word-break: normal;
+}
+
+.rw-domain-posting-rights--unverified {
+  border-color: var(--cd-reliefweb-orange);
+  background: var(--cd-reliefweb-orange--bg);
+}
+.rw-domain-posting-rights--blocked {
+  border-color: var(--cd-reliefweb-red);
+  background: var(--cd-reliefweb-red--bg);
+}
+.rw-domain-posting-rights--allowed {
+  border-color: var(--cd-reliefweb-blue);
+  background: var(--cd-reliefweb-blue--bg);
+}
+.rw-domain-posting-rights--trusted {
+  border-color: var(--cd-reliefweb-green);
+  background: var(--cd-reliefweb-green--bg);
+}
+.rw-domain-posting-rights--unknown {
+  border-color: var(--cd-reliefweb-grey);
+  background: var(--cd-reliefweb-grey--bg);
+}
+
+/**
+ * Pagination summary.
+ */
+.rw-domain-posting-rights-pagination-summary {
+  margin-bottom: 1rem;
+
+  span {
+    font-weight: bold;
+  }
+}

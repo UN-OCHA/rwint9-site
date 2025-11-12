@@ -59,6 +59,18 @@ administer posting rights mapping:
   title: 'Administer posting rights mapping'
   description: 'Allow users to access and configure the posting rights status mapping form.'
 
+manage domain posting rights:
+  title: 'Manage domain posting rights'
+  description: 'Allow users to manage domain posting rights.'
+
+manage user posting rights:
+  title: 'Manage user posting rights'
+  description: 'Allow users to manage user posting rights.'
+
+access moderation source autocomplete:
+  title: 'Access moderation source autocomplete'
+  description: 'Allow users to access the source autocomplete form.'
+
 # Content permissions.
 permission_callbacks:
   - \Drupal\reliefweb_moderation\AffiliatedContentPermissions::permissions

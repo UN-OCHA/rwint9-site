@@ -2,8 +2,6 @@ uuid: 5f99a06f-6144-41f4-a5de-b59a801f17d2
 langcode: en
 status: true
 dependencies:
-  config:
-    - taxonomy.vocabulary.disaster
   module:
     - reliefweb_moderation
 id: external_disaster_manager

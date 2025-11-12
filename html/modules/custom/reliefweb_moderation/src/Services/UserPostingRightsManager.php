@@ -415,9 +415,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // for types not allowed for the source.
     foreach ($results as $tid => $data) {
       $allowed_types = $allowed_content_types[$tid] ?? [];
-      $data['job'] = isset($allowed_types['job']) ? ($data['job'] ?? 0) : 0;
-      $data['report'] = isset($allowed_types['report']) ? ($data['report'] ?? 0) : 0;
-      $data['training'] = isset($allowed_types['training']) ? ($data['training'] ?? 0) : 0;
+      $data['job'] = isset($allowed_types['job']) ? (int) ($data['job'] ?? 0) : 0;
+      $data['report'] = isset($allowed_types['report']) ? (int) ($data['report'] ?? 0) : 0;
+      $data['training'] = isset($allowed_types['training']) ? (int) ($data['training'] ?? 0) : 0;
       $results[$tid] = $data;
     }
 
@@ -778,6 +778,62 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getSourcesWithDomainPostingRightsForDomain(
+    string $domain,
+    array $bundles = [],
+    string $operator = 'AND',
+    ?int $limit = NULL,
+  ): array {
+    // Normalize domain.
+    $domain = mb_strtolower(trim($domain));
+    if (empty($domain)) {
+      return [];
+    }
+
+    // Get domain posting rights.
+    $table = $this->getFieldTableName('taxonomy_term', 'field_domain_posting_rights');
+    $domain_field = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'domain');
+
+    /** @var array<string, string> $bundle_fields */
+    $bundle_fields = [];
+    $bundle_fields['job'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'job');
+    $bundle_fields['training'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'training');
+    $bundle_fields['report'] = $this->getFieldColumnName('taxonomy_term', 'field_domain_posting_rights', 'report');
+
+    $query = $this->database->select($table, $table);
+    $query->fields($table, ['entity_id']);
+    $query->condition($table . '.bundle', 'source', '=');
+    $query->condition($table . '.' . $domain_field, $domain, '=');
+
+    $condition_group = NULL;
+    foreach ($bundle_fields as $bundle => $bundle_field) {
+      $query->addField($table, $bundle_field, $bundle);
+
+      // Filter by bundle rights.
+      if (!empty($bundles[$bundle])) {
+        $condition_group ??= $query->conditionGroupFactory($operator);
+        $condition_group->condition($table . '.' . $bundle_field, $bundles[$bundle], 'IN');
+      }
+    }
+
+    if (isset($condition_group)) {
+      $query->condition($condition_group);
+    }
+
+    // Limit the result.
+    if (!empty($limit)) {
+      $query->range(0, $limit);
+    }
+
+    $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
+
+    // Filter results based on allowed content types.
+    return $this->filterPostingRightsByAllowedContentTypes($results);
+  }
+
+  /**
    * Format a user posting right.
    *
    * @param string $right
@@ -925,10 +981,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Get the list of content types that support posting rights.
-   *
-   * @return array
-   *   Array of content type machine names.
+   * {@inheritdoc}
    */
   public function getSupportedContentTypes(): array {
     return ['report', 'job', 'training'];

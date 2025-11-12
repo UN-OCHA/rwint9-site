@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\reliefweb_users\Controller;
+namespace Drupal\reliefweb_moderation\Controller;
 
 use Drupal\Core\Controller\ControllerBase;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -97,12 +97,34 @@ class SourceAutocompleteController extends ControllerBase {
     }
     catch (\Exception $exception) {
       // Log the error but don't expose it to the user.
-      $this->getLogger('reliefweb_users')->error('Error in source autocomplete: @message', [
+      $this->getLogger('reliefweb_moderation')->error('Error in source autocomplete: @message', [
         '@message' => $exception->getMessage(),
       ]);
     }
 
     return new JsonResponse($suggestions);
+  }
+
+  /**
+   * Extract source ID from autocomplete input.
+   *
+   * @param string $input
+   *   The autocomplete input value.
+   *
+   * @return int|null
+   *   The source taxonomy term ID or null if not found.
+   */
+  public static function extractSourceIdFromInput(string $input): ?int {
+    if (empty($input)) {
+      return NULL;
+    }
+
+    // Check if the input contains [id:XXX] pattern.
+    if (preg_match('/\[id:(\d+)\]$/', $input, $matches)) {
+      return (int) $matches[1];
+    }
+
+    return NULL;
   }
 
 }

@@ -50,3 +50,43 @@ reliefweb_moderation.role_capabilities:
     _admin_route: TRUE
   requirements:
     _permission: 'access administration pages'
+
+reliefweb_moderation.domain_posting_rights.overview:
+  path: '/moderation/domain-posting-rights'
+  defaults:
+    _form: '\Drupal\reliefweb_moderation\Form\DomainPostingRightsOverviewForm'
+    _title: 'Domain Posting Rights Overview'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'manage domain posting rights'
+
+reliefweb_moderation.domain_posting_rights.edit:
+  path: '/moderation/domain-posting-rights/{domain}/edit'
+  defaults:
+    _form: '\Drupal\reliefweb_moderation\Form\DomainPostingRightsEditForm'
+    _title_callback: '\Drupal\reliefweb_moderation\Form\DomainPostingRightsEditForm::getTitle'
+  options:
+    _admin_route: TRUE
+  requirements:
+    _permission: 'manage domain posting rights'
+
+reliefweb_moderation.user_posting_rights.edit:
+  path: '/moderation/user-posting-rights/{user}/edit'
+  defaults:
+    _form: '\Drupal\reliefweb_moderation\Form\UserPostingRightsEditForm'
+    _title_callback: '\Drupal\reliefweb_moderation\Form\UserPostingRightsEditForm::getTitle'
+  options:
+    _admin_route: TRUE
+    parameters:
+      user:
+        type: entity:user
+  requirements:
+    _permission: 'manage user posting rights'
+
+reliefweb_moderation.source_autocomplete:
+  path: '/reliefweb-moderation/source-autocomplete'
+  defaults:
+    _controller: '\Drupal\reliefweb_moderation\Controller\SourceAutocompleteController::autocomplete'
+  requirements:
+    _permission: 'access moderation source autocomplete'
