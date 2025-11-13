@@ -38,17 +38,38 @@ class BaseEntity extends JsonLdEntityBase {
       ->name($source->label())
       ->url($source->toUrl('canonical', ['absolute' => TRUE])->toString());
 
+    $alternate_names = [];
     if ($source->hasField('field_shortname') && !$source->get('field_shortname')->isEmpty()) {
       $shortname = $source->get('field_shortname')->value;
       if ($shortname) {
-        $org->alternateName($shortname);
+        $alternate_names[] = $shortname;
+      }
+    }
+
+    if ($source->hasField('field_longname') && !$source->get('field_longname')->isEmpty()) {
+      $longname = $source->get('field_longname')->value;
+      if ($longname) {
+        $alternate_names[] = $longname;
       }
     }
 
     if ($source->hasField('field_aliases') && !$source->get('field_aliases')->isEmpty()) {
       $aliases = $source->get('field_aliases')->value;
       if ($aliases) {
-        $org->formerName($aliases);
+        foreach (explode("\n", $aliases) as $item) {
+          $alternate_names[] = $item;
+        }
+      }
+    }
+
+    if (!empty($alternate_names)) {
+      $org->alternateName($alternate_names);
+    }
+
+    if ($source->hasField('field_spanish_name') && !$source->get('field_spanish_name')->isEmpty()) {
+      $shortname = $source->get('field_spanish_name')->value;
+      if ($shortname) {
+        $alternate_names[] = $shortname;
       }
     }
 
