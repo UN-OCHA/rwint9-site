@@ -29,7 +29,7 @@ class NodeTrainingEntity extends BaseEntity {
       return FALSE;
     }
 
-    // Only apply to job content type.
+    // Only apply to training content type.
     if ($entity->bundle() !== 'training') {
       return FALSE;
     }
