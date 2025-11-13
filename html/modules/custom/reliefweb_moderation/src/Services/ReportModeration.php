@@ -244,13 +244,13 @@ class ReportModeration extends ModerationServiceBase {
   public function getStatuses() {
     return [
       'draft' => $this->t('Draft'),
+      'pending' => $this->t('Pending'),
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
+      'refused' => $this->t('Refused'),
       'embargoed' => $this->t('Embargoed'),
       'reference' => $this->t('Reference'),
-      'pending' => $this->t('Pending'),
-      'refused' => $this->t('Refused'),
       'archive' => $this->t('Archived'),
     ];
   }
