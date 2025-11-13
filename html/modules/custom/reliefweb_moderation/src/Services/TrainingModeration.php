@@ -203,7 +203,7 @@ class TrainingModeration extends ModerationServiceBase {
     return match ($status) {
       'duplicate' => $account->hasPermission('edit duplicate content'),
       'refused' => $account->hasPermission('edit refused content'),
-      'draft', 'pending', 'on-hold', 'published', 'expired' => TRUE,
+      'draft', 'pending', 'on-hold', 'to-review', 'published', 'expired' => TRUE,
       default => FALSE,
     };
   }
