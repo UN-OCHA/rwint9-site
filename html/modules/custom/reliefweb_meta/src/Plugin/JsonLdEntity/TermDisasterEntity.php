@@ -24,7 +24,7 @@ class TermDisasterEntity extends BaseEntity {
    * {@inheritdoc}
    */
   public function isApplicable(EntityInterface $entity, $view_mode): bool {
-    // Make sure it is a node.
+    // Make sure it is a taxonomy term.
     if (!$entity instanceof TermInterface) {
       return FALSE;
     }
