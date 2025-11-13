@@ -76,9 +76,7 @@ class NodeTrainingEntity extends BaseEntity {
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePosted(date('c', (int) $entity->getCreatedTime()))
-      ->isAccessibleForFree(TRUE)
-      ->employmentType($entity->get('field_job_type')?->entity?->label())
-      ->validThrough($entity->get('field_job_closing_date')->value)
+      ->expires($entity->get('field_training_date')->value)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
       ->keywords($keywords)
       ->publisher([
