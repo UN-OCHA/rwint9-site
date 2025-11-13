@@ -578,8 +578,8 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
   protected function processDocumentData(string $uuid, array $document): array {
     $data = [];
 
-    // Source: Logistics Cluster.
-    $sources = [3594];
+    // Source: Logistics Cluster and WFP.
+    $sources = [3594, 1741];
 
     if (isset($document['organisations'])) {
       foreach ($document['organisations'] ?? [] as $organisation) {
@@ -680,6 +680,8 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       'language' => array_values($languages),
       'country' => array_values($countries),
       'format' => array_values($formats),
+      // Logistics and Telecommunications.
+      'theme' => [4598],
     ];
 
     // Add the optional fields.
