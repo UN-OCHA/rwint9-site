@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
-use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\json_ld_schema\Entity\JsonLdEntityBase;
 use Drupal\node\NodeInterface;
@@ -35,11 +34,6 @@ class NodeReportEntity extends JsonLdEntityBase {
       return FALSE;
     }
 
-    // Check for report content format.
-    if (!$entity->hasField('field_content_format')) {
-      return FALSE;
-    }
-
     return TRUE;
   }
 
@@ -51,7 +45,7 @@ class NodeReportEntity extends JsonLdEntityBase {
 
     // Fallback to report if field is empty.
     $content_format = 'report';
-    if (!$entity->get('field_content_format')->isEmpty()) {
+    if ($entity->hasField('field_content_format') && !$entity->get('field_content_format')->isEmpty()) {
       // Get the term and check the field_json_schema field.
       $term = $entity->get('field_content_format')->entity;
       if ($term && $term->hasField('field_json_schema') && !$term->get('field_json_schema')->isEmpty()) {
