@@ -116,18 +116,13 @@ class UserPostsService extends ModerationServiceBase {
     $statuses = [
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
-      'published' => $this->t('Published'),
       'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
+      'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
       'expired' => $this->t('Expired'),
       'duplicate' => $this->t('Duplicate'),
     ];
-
-    if ($this->currentUser->hasRole('editor') || $this->currentUser->hasRole('contributor') || $this->currentUser->hasRole('submitter')) {
-      $statuses += [
-        'to-review' => $this->t('To review'),
-      ];
-    }
 
     return $statuses;
   }

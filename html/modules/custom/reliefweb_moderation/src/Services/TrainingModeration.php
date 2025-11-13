@@ -179,12 +179,20 @@ class TrainingModeration extends ModerationServiceBase {
     return [
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
-      'published' => $this->t('Published'),
       'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
+      'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
       'duplicate' => $this->t('Duplicate'),
       'expired' => $this->t('Expired'),
     ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isPublishedStatus($status) {
+    return $status === 'to-review' || $status === 'published';
   }
 
   /**
@@ -214,9 +222,12 @@ class TrainingModeration extends ModerationServiceBase {
       ];
     }
 
-    // Editors can publish, put on hold or refuse a document.
-    // @todo use permission.
+    // Editors can set a as to review, publish, put on hold or refuse a
+    // training.
     if (UserHelper::userHasRoles(['editor'])) {
+      $buttons['to-review'] = [
+        '#value' => $this->t('To review'),
+      ];
       $buttons['published'] = [
         '#value' => $this->t('Publish'),
       ];
@@ -237,7 +248,7 @@ class TrainingModeration extends ModerationServiceBase {
       ];
 
       // Add confirmation when attempting to change published document.
-      if ($status === 'published' || $status === 'expired') {
+      if ($this->isPublishedStatus($status) || $status === 'expired') {
         $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The training may be set as pending.');
         $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
       }
@@ -254,7 +265,7 @@ class TrainingModeration extends ModerationServiceBase {
     }
 
     // Add a button to close (set as expired) a published training.
-    if ($status === 'published' || $status === 'expired') {
+    if ($this->isPublishedStatus($status) || $status === 'expired') {
       $buttons['expired'] = [
         '#value' => $this->t('Close Training'),
       ];
