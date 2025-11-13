@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\json_ld_schema\Entity\JsonLdEntityBase;
 use Drupal\node\NodeInterface;
+use Drupal\reliefweb_meta\BaseEntity;
 use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
 
@@ -18,7 +18,7 @@ use Spatie\SchemaOrg\Type;
  *   id = "rw_node_job",
  * )
  */
-class NodeJobEntity extends JsonLdEntityBase {
+class NodeJobEntity extends BaseEntity {
 
   /**
    * {@inheritdoc}
@@ -80,10 +80,9 @@ class NodeJobEntity extends JsonLdEntityBase {
 
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
-      $schema->hiringOrganization([
-        Schema::organization()
-          ->name($entity->get('field_source')->entity->label()),
-      ]);
+      $source = $entity->get('field_source')->entity;
+      $org = $this->buildSourceThing($source);
+      $schema->hiringOrganization($org);
     }
 
     // Only add contentLocation if country is present.

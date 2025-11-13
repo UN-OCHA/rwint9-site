@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\json_ld_schema\Entity\JsonLdEntityBase;
+use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\taxonomy\TermInterface;
 use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
@@ -18,7 +18,7 @@ use Spatie\SchemaOrg\Type;
  *   id = "rw_term_disaster",
  * )
  */
-class TermDisasterEntity extends JsonLdEntityBase {
+class TermDisasterEntity extends BaseEntity {
 
   /**
    * {@inheritdoc}
@@ -86,10 +86,7 @@ class TermDisasterEntity extends JsonLdEntityBase {
 
     // Only add sourceOrganization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
-      $schema->sourceOrganization([
-        Schema::organization()
-          ->name($entity->get('field_source')->entity->label()),
-      ]);
+      $schema->sourceOrganization($this->buildSourceThing($entity->get('field_source')->entity));
     }
 
     // Only add contentLocation if country is present.
