@@ -108,9 +108,10 @@ class UserRoleAssignment {
     // Support for legacy accounts.
     $legacy = $this->state->get('reliefweb_users_submitter_support_legacy_accounts', TRUE);
 
-    // Check if the user's email domain allows automatic submitter role
-    // assignment or has posting rights for reports or has posted reports.
-    return $this->hasDomainAllowedForSubmitter($user) ||
+    // Check if the user's email domain is privileged, allowing automatic
+    // assignment of the submitter role, or has posting rights for reports or
+    // has posted reports.
+    return $this->isUserEmailDomainPrivileged($user) ||
       $this->hasPostingRights($user, ['report']) ||
       ($legacy && $this->hasPostedContent($user, ['report']));
   }
@@ -143,38 +144,45 @@ class UserRoleAssignment {
     // Support for legacy accounts.
     $legacy = $this->state->get('reliefweb_users_advertiser_support_legacy_accounts', TRUE);
 
-    // Check if the user has job/training posting rights for any source or has
-    // already posted jobs or training.
-    return $this->hasPostingRights($user, ['job', 'training']) ||
+    // Check if the user's email domain is privileged, allowing automatic
+    // assignment of the advertiser role, or has job/training posting rights for
+    // any source, or has already posted jobs or training.
+    return $this->isUserEmailDomainPrivileged($user) ||
+      $this->hasPostingRights($user, ['job', 'training']) ||
       ($legacy && $this->hasPostedContent($user, ['job', 'training']));
   }
 
   /**
-   * Check if user's email domain allows auto submitter role assignment.
+   * Check if user's email domain is privileged.
    *
    * @param \Drupal\user\UserInterface $user
    *   User account.
    *
    * @return bool
-   *   TRUE if the user's email domain is allowed for automatic
-   *   assignment of the submitter role, FALSE otherwise.
+   *   TRUE if the user's email domain is privileged, FALSE otherwise.
    */
-  public function hasDomainAllowedForSubmitter(UserInterface $user): bool {
+  public function isUserEmailDomainPrivileged(UserInterface $user): bool {
     // Retrieve the user email address.
     $email = $user->getEmail();
     if (empty($email) || strpos($email, '@') === FALSE) {
       return FALSE;
     }
 
-    // Retrieve the list of domains allowed for automatic assignment of the
+    // Retrieve the list of privileged domains for automatic assignment of the
     // submitter role.
-    $domains = $this->state->get('reliefweb_users_submitter_allowed_domains', ['un.org']);
+    $domains = $this->state->get('reliefweb_users_privileged_domains', ['un.org']);
     if (empty($domains)) {
       return FALSE;
     }
 
-    // Check if the email domain is allowed.
+    // Normalize the domains to lowercase.
+    $domains = array_map('mb_strtolower', $domains);
+
+    // Extract the email domain and normalize it to lowercase.
     [, $domain] = explode('@', $email, 2);
+    $domain = mb_strtolower(trim($domain));
+
+    // Check if the email domain is allowed.
     if (!in_array($domain, $domains)) {
       return FALSE;
     }

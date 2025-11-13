@@ -22,3 +22,31 @@ function reliefweb_users_update_9001() {
     ->condition('roles_target_id', 'beta')
     ->execute();
 }
+
+/**
+ * Migrate state variables from submitter_allowed_domains to privileged_domains.
+ *
+ * Copy the old state variables to the new names to maintain existing
+ * configuration after the rename.
+ */
+function reliefweb_users_update_9002() {
+  $state = \Drupal::state();
+
+  // Migrate the privileged domains list.
+  $old_domains = $state->get('reliefweb_users_submitter_allowed_domains', NULL);
+  if ($old_domains !== NULL) {
+    // Only set if the new variable doesn't already exist.
+    if ($state->get('reliefweb_users_privileged_domains', NULL) === NULL) {
+      $state->set('reliefweb_users_privileged_domains', $old_domains);
+    }
+  }
+
+  // Migrate the default domain posting rights.
+  $old_default_rights = $state->get('reliefweb_users_submitter_allowed_domains_default_domain_posting_rights', NULL);
+  if ($old_default_rights !== NULL) {
+    // Only set if the new variable doesn't already exist.
+    if ($state->get('reliefweb_users_privileged_domains_default_posting_rights', NULL) === NULL) {
+      $state->set('reliefweb_users_privileged_domains_default_posting_rights', $old_default_rights);
+    }
+  }
+}

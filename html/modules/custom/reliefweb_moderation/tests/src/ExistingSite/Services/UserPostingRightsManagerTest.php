@@ -71,6 +71,16 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   protected array $originalPostingRightsStatusMapping;
 
   /**
+   * Original privileged domains.
+   */
+  protected ?array $originalPrivilegedDomains;
+
+  /**
+   * Original default domain posting rights.
+   */
+  protected ?string $originalDefaultDomainPostingRights;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -79,8 +89,17 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Get the service.
     $this->userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
 
+    // Get the state service.
+    $state = \Drupal::service('state');
+
     // Save the original posting rights status mapping.
     $this->originalPostingRightsStatusMapping = $this->userPostingRightsManager->getUserPostingRightsToModerationStatusMapping();
+
+    // Save the original privileged domains state.
+    $this->originalPrivilegedDomains = $state->get('reliefweb_users_privileged_domains', NULL);
+
+    // Save the original default domain posting rights state.
+    $this->originalDefaultDomainPostingRights = $state->get('reliefweb_users_privileged_domains_default_posting_rights', NULL);
 
     // Create a role with the "apply posting rights" permission.
     $posting_right_role_id = $this->createRole([
@@ -222,6 +241,25 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Restore the original posting rights status mapping.
     $this->userPostingRightsManager->setUserPostingRightsToModerationStatusMapping($this->originalPostingRightsStatusMapping);
+
+    // Get the state service.
+    $state = \Drupal::service('state');
+
+    // Restore the original privileged domains state.
+    if ($this->originalPrivilegedDomains !== NULL) {
+      $state->set('reliefweb_users_privileged_domains', $this->originalPrivilegedDomains);
+    }
+    else {
+      $state->delete('reliefweb_users_privileged_domains');
+    }
+
+    // Restore the original default domain posting rights state.
+    if ($this->originalDefaultDomainPostingRights !== NULL) {
+      $state->set('reliefweb_users_privileged_domains_default_posting_rights', $this->originalDefaultDomainPostingRights);
+    }
+    else {
+      $state->delete('reliefweb_users_privileged_domains_default_posting_rights');
+    }
 
     parent::tearDown();
   }
@@ -398,6 +436,274 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'Source with no rights should return unverified');
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['training'], 'Source with no rights should return unverified');
     $this->assertEquals(0, $rights[$this->noRightsSource->id()]['report'], 'Source with no rights should return unverified');
+  }
+
+  /**
+   * Test whitelisted domains with default posting rights.
+   */
+  public function testWhitelistedDomainsDefaultPostingRights(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain for example.com with default "allowed" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+
+    // Reset cache to ensure new state values are used.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test getUserPostingRights with whitelisted domain and no domain posting
+    // rights.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should use default "allowed" (2) instead of unverified (0).
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Whitelisted domain should use default allowed rights for job');
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['training'], 'Whitelisted domain should use default allowed rights for training');
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['report'], 'Whitelisted domain should use default allowed rights for report');
+
+    // Test getEntityAuthorPostingRights with whitelisted domain.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Whitelisted Domain',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('allowed', $rights, 'Entity with whitelisted domain should return allowed');
+
+    // Test getDomainPostingRights with whitelisted domain.
+    $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $domain_rights);
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['job'], 'Domain posting rights should return default allowed for whitelisted domain');
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['training'], 'Domain posting rights should return default allowed for whitelisted domain');
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['report'], 'Domain posting rights should return default allowed for whitelisted domain');
+  }
+
+  /**
+   * Test whitelisted domains with trusted default posting rights.
+   */
+  public function testWhitelistedDomainsTrustedDefault(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain with default "trusted" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with no domain posting rights.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should use default "trusted" (3) instead of unverified (0).
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['job'], 'Whitelisted domain should use default trusted rights for job');
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['training'], 'Whitelisted domain should use default trusted rights for training');
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['report'], 'Whitelisted domain should use default trusted rights for report');
+
+    // Test getEntityAuthorPostingRights.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Trusted Whitelisted Domain',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('trusted', $rights, 'Entity with trusted whitelisted domain should return trusted');
+  }
+
+  /**
+   * Test whitelisted domains with blocked default posting rights.
+   */
+  public function testWhitelistedDomainsBlockedDefault(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain with default "blocked" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'blocked');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with no domain posting rights.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should use default "blocked" (1) instead of unverified (0).
+    $this->assertEquals(1, $rights[$this->noRightsSource->id()]['job'], 'Whitelisted domain should use default blocked rights for job');
+    $this->assertEquals(1, $rights[$this->noRightsSource->id()]['training'], 'Whitelisted domain should use default blocked rights for training');
+    $this->assertEquals(1, $rights[$this->noRightsSource->id()]['report'], 'Whitelisted domain should use default blocked rights for report');
+
+    // Test getEntityAuthorPostingRights.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Blocked Whitelisted Domain',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('blocked', $rights, 'Entity with blocked whitelisted domain should return blocked');
+  }
+
+  /**
+   * Test that whitelisted domains don't override existing domain rights.
+   */
+  public function testWhitelistedDomainsDontOverrideExistingRights(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain with default "trusted" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with source that has existing domain posting rights.
+    // The domainOnlySource has domain posting rights set to "allowed" (2).
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->domainOnlySource->id()]);
+
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $rights);
+    // Should use existing domain posting rights (allowed = 2), not the default.
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['job'], 'Should use existing domain posting rights, not default');
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['training'], 'Should use existing domain posting rights, not default');
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['report'], 'Should use existing domain posting rights, not default');
+
+    // Test getEntityAuthorPostingRights with existing domain rights.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Existing Domain Rights',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->domainOnlySource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('allowed', $rights, 'Should use existing domain posting rights, not default');
+  }
+
+  /**
+   * Test that non-whitelisted domains still return unverified.
+   */
+  public function testNonWhitelistedDomainsReturnUnverified(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain (different domain).
+    $state->set('reliefweb_users_privileged_domains', ['otherdomain.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with user from example.com (not whitelisted).
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should return unverified (0) since domain is not whitelisted.
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'Non-whitelisted domain should return unverified');
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['training'], 'Non-whitelisted domain should return unverified');
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['report'], 'Non-whitelisted domain should return unverified');
+
+    // Test getEntityAuthorPostingRights.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Non-Whitelisted Domain',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('unverified', $rights, 'Entity with non-whitelisted domain should return unverified');
+  }
+
+  /**
+   * Test whitelisted domains with multiple sources.
+   */
+  public function testWhitelistedDomainsWithMultipleSources(): void {
+    $state = \Drupal::service('state');
+
+    // Set up whitelisted domain with default "allowed" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with multiple sources: one with existing domain rights, one
+    // without.
+    // Has existing domain rights (allowed = 2).
+    $domain_source_id = $this->domainOnlySource->id();
+    // No domain rights, should use default (allowed = 2).
+    $no_rights_source_id = $this->noRightsSource->id();
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [
+      $domain_source_id,
+      $no_rights_source_id,
+    ]);
+
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $rights);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+
+    // Source with existing domain rights should use those.
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['job'], 'Should use existing domain posting rights');
+
+    // Source without domain rights should use default.
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Should use default posting rights for whitelisted domain');
+
+    // Test getEntityAuthorPostingRights with multiple sources.
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Job with Multiple Sources',
+      'uid' => $this->testUser->id(),
+      'field_source' => [
+        ['target_id' => $this->domainOnlySource->id()],
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+    $this->assertEquals('allowed', $rights, 'Entity with multiple sources should return allowed when all are allowed');
+  }
+
+  /**
+   * Test whitelisted domains with user posting rights taking precedence.
+   */
+  public function testWhitelistedDomainsUserRightsPrecedence(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain with default "trusted" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with source that has user posting rights.
+    // The testSource has user posting rights that should take precedence.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->testSource->id()]);
+
+    $this->assertArrayHasKey($this->testSource->id(), $rights);
+    // User rights should take precedence over default domain rights.
+    $this->assertEquals(2, $rights[$this->testSource->id()]['job'], 'User rights should take precedence over default domain rights');
+    $this->assertEquals(3, $rights[$this->testSource->id()]['training'], 'User rights should take precedence over default domain rights');
+    $this->assertEquals(1, $rights[$this->testSource->id()]['report'], 'User rights should take precedence over default domain rights');
+
+    // Test with source that has no user or domain posting rights.
+    // Should use default domain posting rights.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['job'], 'Should use default trusted rights when no user or domain rights exist');
   }
 
   /**
