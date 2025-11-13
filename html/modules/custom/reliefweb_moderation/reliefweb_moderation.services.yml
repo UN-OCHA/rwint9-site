@@ -36,3 +36,7 @@ services:
   reliefweb_moderation.user_posting_rights:
     class: Drupal\reliefweb_moderation\Services\UserPostingRightsManager
     arguments: ['@database', '@entity_type.manager', '@renderer', '@current_user', '@state']
+  theme.negotiator.reliefweb_moderation:
+    class: Drupal\reliefweb_moderation\Theme\ThemeNegotiator
+    tags:
+      - { name: theme_negotiator, priority: 0 }

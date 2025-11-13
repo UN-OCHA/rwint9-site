@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
  * Plugin implementation of the 'reliefweb_domain_posting_rights' widget.
@@ -212,8 +213,7 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
     }
 
     $domain = trim($input['value']);
-    $ascii_domain = idn_to_ascii($domain);
-    if (filter_var($ascii_domain, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME)) {
+    if (UrlHelper::validateDomain($domain)) {
       $data = ['domain' => $domain];
     }
     else {

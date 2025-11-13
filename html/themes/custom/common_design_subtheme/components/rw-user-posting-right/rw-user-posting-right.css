@@ -14,6 +14,9 @@
   font-weight: bold;
 }
 .rw-user-posting-right--large {
+  display: inline-block;
+  margin: 4px;
+  padding: 8px 12px;
   font-size: 13px;
 }
 .rw-user-posting-right[data-user-posting-right="blocked"] {

@@ -222,6 +222,29 @@ interface UserPostingRightsManagerInterface {
   ): array;
 
   /**
+   * Get the sources with domain posting rights for a given domain.
+   *
+   * @param string $domain
+   *   Domain for which to retrieve the sources.
+   * @param array<string, array<int>> $bundles
+   *   Bundle rights filters.
+   * @param string $operator
+   *   How to combine the bundle rights conditions.
+   * @param ?int $limit
+   *   Number of sources to retrieve.
+   *
+   * @return array<int, array<string, mixed>>
+   *   Associative array with the source IDs as keys and the corresponding
+   *   posting rights as values.
+   */
+  public function getSourcesWithDomainPostingRightsForDomain(
+    string $domain,
+    array $bundles = [],
+    string $operator = 'AND',
+    ?int $limit = NULL,
+  ): array;
+
+  /**
    * Format a user posting right.
    *
    * @param string $right
@@ -266,5 +289,13 @@ interface UserPostingRightsManagerInterface {
     AccountInterface $user,
     array $statuses = ['pending'],
   ): bool;
+
+  /**
+   * Get the list of content types that support posting rights.
+   *
+   * @return array<string>
+   *   Array of content type machine names.
+   */
+  public function getSupportedContentTypes(): array;
 
 }

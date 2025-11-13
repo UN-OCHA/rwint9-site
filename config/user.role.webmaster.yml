@@ -46,6 +46,7 @@ permissions:
   - 'access any reliefweb api user dashboard'
   - 'access editorial guidelines'
   - 'access ocha ai chat'
+  - 'access role capabilities overview'
   - 'access taxonomy overview'
   - 'add content to books'
   - 'add guideline entities'
