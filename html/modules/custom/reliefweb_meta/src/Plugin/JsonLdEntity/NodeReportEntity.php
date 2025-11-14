@@ -87,16 +87,11 @@ class NodeReportEntity extends BaseEntity {
         break;
     }
 
-    // Get the language code from the language entity.
-    $language_entity = $entity->get('field_language')->entity;
-    $language_code = $language_entity ? $language_entity->get('field_language_code')->value : 'en';
-
     $schema->name($entity->label())
       ->identifier($entity->uuid())
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePublished($entity->get('field_original_publication_date')->value)
-      ->inLanguage($language_code)
       ->isAccessibleForFree(TRUE)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
       ->keywords($keywords)
@@ -104,6 +99,13 @@ class NodeReportEntity extends BaseEntity {
         Schema::organization()
           ->name('ReliefWeb'),
       ]);
+
+    // Get the language code from the language entity.
+    if ($entity->hasField('field_language') && !$entity->get('field_language')->isEmpty()) {
+      $language_entity = $entity->get('field_language')->entity;
+      $language_code = $language_entity ? $language_entity->get('field_language_code')->value : 'en';
+      $schema->inLanguage($language_code);
+    }
 
     // Only add sourceOrganization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {

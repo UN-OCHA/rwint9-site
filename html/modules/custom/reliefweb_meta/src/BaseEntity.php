@@ -62,15 +62,16 @@ class BaseEntity extends JsonLdEntityBase {
       }
     }
 
-    if (!empty($alternate_names)) {
-      $org->alternateName($alternate_names);
-    }
-
     if ($source->hasField('field_spanish_name') && !$source->get('field_spanish_name')->isEmpty()) {
       $shortname = $source->get('field_spanish_name')->value;
       if ($shortname) {
         $alternate_names[] = $shortname;
       }
+    }
+
+    if (!empty($alternate_names)) {
+      $alternate_names = array_values(array_unique($alternate_names));
+      $org->alternateName($alternate_names);
     }
 
     if ($source->hasField('field_logo') && !$source->get('field_logo')->isEmpty()) {
