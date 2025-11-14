@@ -69,31 +69,29 @@ class TermDisasterEntity extends BaseEntity {
       }
     }
 
-    $schema = Schema::thing();
+    $schema = Schema::event();
     $schema->name($entity->label())
       ->identifier($entity->uuid())
       ->description($entity->get('description')->value)
-      ->dateCreated(date('c', (int) $entity->created->value))
-      ->dateModified(date('c', (int) $entity->changed->value))
-      ->datePublished($entity->get('field_disaster_date')->value)
-      ->isAccessibleForFree(TRUE)
+      ->startDate($entity->get('field_disaster_date')->value)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
-      ->keywords($keywords)
-      ->publisher([
-        Schema::organization()
-          ->name('ReliefWeb'),
-      ]);
+      ->keywords($keywords);
 
-    // Only add sourceOrganization if field_source has a value.
-    if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
-      $schema->sourceOrganization($this->buildSourceThing($entity->get('field_source')->entity));
+    // Only add location if country is present.
+    $locations = [];
+    if ($entity->hasField('field_primary_country') && !$entity->get('field_primary_country')->isEmpty()) {
+      $locations[] = Schema::country()->name($entity->get('field_primary_country')->entity->label());
     }
 
-    // Only add contentLocation if country is present.
-    if ($entity->hasField('field_primary_country') && !$entity->get('field_primary_country')->isEmpty()) {
-      $schema->contentLocation([
-        Schema::country()->name($entity->get('field_primary_country')->entity->label()),
-      ]);
+    if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
+      foreach ($entity->get('field_country')->referencedEntities() as $country) {
+        $locations[] = Schema::country()->name($country->label());
+      }
+    }
+
+    if (!empty($locations)) {
+      $locations = array_values(array_unique($locations));
+      $schema->location($locations);
     }
 
     return $schema;

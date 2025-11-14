@@ -66,19 +66,24 @@ class NodeReportEntity extends BaseEntity {
     switch ($content_format) {
       case 'map':
         $schema = Schema::map();
+        $schema->description($entity->get('body')->value);
         break;
 
       case 'creative_work':
         $schema = Schema::creativeWork();
+        $schema->articleBody($entity->get('body')->value);
         break;
 
       case 'news_article':
         $schema = Schema::newsArticle();
+        $schema->articleBody($entity->get('body')->value);
         break;
 
       case 'report':
       default:
         $schema = Schema::report();
+        $schema->articleBody($entity->get('body')->value);
+
         break;
     }
 
@@ -88,7 +93,6 @@ class NodeReportEntity extends BaseEntity {
 
     $schema->name($entity->label())
       ->identifier($entity->uuid())
-      ->articleBody($entity->get('body')->value)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePublished($entity->get('field_original_publication_date')->value)

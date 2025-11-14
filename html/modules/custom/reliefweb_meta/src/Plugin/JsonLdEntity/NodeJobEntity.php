@@ -65,18 +65,11 @@ class NodeJobEntity extends BaseEntity {
     $schema->name($entity->label())
       ->identifier($entity->uuid())
       ->description($entity->get('body')->value)
-      ->dateCreated(date('c', (int) $entity->getCreatedTime()))
-      ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePosted(date('c', (int) $entity->getCreatedTime()))
-      ->isAccessibleForFree(TRUE)
       ->employmentType($entity->get('field_job_type')?->entity?->label())
       ->validThrough($entity->get('field_job_closing_date')->value)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
-      ->keywords($keywords)
-      ->publisher([
-        Schema::organization()
-          ->name('ReliefWeb'),
-      ]);
+      ->keywords($keywords);
 
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
@@ -87,10 +80,6 @@ class NodeJobEntity extends BaseEntity {
 
     // Only add contentLocation if country is present.
     if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
-      $schema->contentLocation([
-        Schema::country()->name($entity->get('field_country')->entity->label()),
-      ]);
-
       $schema->jobLocation([
         Schema::place()
           ->address(

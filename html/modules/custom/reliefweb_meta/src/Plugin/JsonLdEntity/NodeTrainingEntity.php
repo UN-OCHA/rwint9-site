@@ -75,7 +75,6 @@ class NodeTrainingEntity extends BaseEntity {
       ->description($entity->get('body')->value)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
-      ->datePosted(date('c', (int) $entity->getCreatedTime()))
       ->expires($entity->get('field_training_date')->value)
       ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
       ->keywords($keywords)
@@ -88,7 +87,7 @@ class NodeTrainingEntity extends BaseEntity {
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
       $source = $entity->get('field_source')->entity;
       $org = $this->buildSourceThing($source);
-      $schema->hiringOrganization($org);
+      $schema->author($org);
     }
 
     // Only add contentLocation if country is present.
@@ -96,14 +95,6 @@ class NodeTrainingEntity extends BaseEntity {
       $schema->contentLocation([
         Schema::country()->name($entity->get('field_country')->entity->label()),
       ]);
-
-      $schema->jobLocation([
-        Schema::place()
-          ->address(
-            Schema::postalAddress()
-              ->addressCountry($entity->get('field_country')?->entity?->label())
-          ),
-        ]);
     }
 
     return $schema;
