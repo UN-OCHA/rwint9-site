@@ -163,11 +163,19 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
       // If no user posting rights found, check domain posting rights.
       if (!$user_right_found && $domain && $source_entity->hasField('field_domain_posting_rights')) {
+        $domain_right_found = FALSE;
         foreach ($source_entity->get('field_domain_posting_rights') as $item) {
           if ($item->get('domain')->getValue() === $domain) {
             $right = $rights_keys[$item->get($bundle)->getValue()] ?? 'unverified';
+            $domain_right_found = TRUE;
             break;
           }
+        }
+        // If no domain posting rights found and domain is in allowed list,
+        // use the default domain posting rights.
+        if (!$domain_right_found && $this->isDomainAllowed($domain)) {
+          $default_code = $this->getDefaultDomainPostingRightCode();
+          $right = $rights_keys[$default_code] ?? 'unverified';
         }
       }
 
@@ -256,13 +264,27 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $results = $this->filterPostingRightsByAllowedContentTypes($results);
 
     // Add default rights for non matched sources.
+    // Check if user's domain is in the allowed list to determine default
+    // rights.
+    // Default to unverified.
+    $default_code = 0;
+    if (!empty($account->id())) {
+      $user = $this->entityTypeManager->getStorage('user')->load($account->id());
+      if ($user && $user->getEmail()) {
+        $domain = $this->extractDomainFromEmail($user->getEmail());
+        if ($domain && $this->isDomainAllowed($domain)) {
+          $default_code = $this->getDefaultDomainPostingRightCode();
+        }
+      }
+    }
+
     foreach ($sources as $tid) {
       if (!isset($results[$tid])) {
         $results[$tid] = [
           'tid' => $tid,
-          'job' => 0,
-          'training' => 0,
-          'report' => 0,
+          'job' => $default_code,
+          'training' => $default_code,
+          'report' => $default_code,
         ];
       }
     }
@@ -319,6 +341,37 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
     $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative);
 
+    // If no domain posting rights found and domain is in allowed list,
+    // use the default domain posting rights for missing sources.
+    if (empty($results) && $this->isDomainAllowed($domain)) {
+      $default_code = $this->getDefaultDomainPostingRightCode();
+      // If sources are specified, create default rights for each source.
+      if (!empty($sources)) {
+        foreach ($sources as $tid) {
+          $results[$tid] = [
+            'tid' => $tid,
+            'job' => $default_code,
+            'training' => $default_code,
+            'report' => $default_code,
+          ];
+        }
+      }
+    }
+    elseif (!empty($sources) && $this->isDomainAllowed($domain)) {
+      // For sources that don't have domain posting rights, add default rights.
+      $default_code = $this->getDefaultDomainPostingRightCode();
+      $found_sources = array_keys($results);
+      $missing_sources = array_diff($sources, $found_sources);
+      foreach ($missing_sources as $tid) {
+        $results[$tid] = [
+          'tid' => $tid,
+          'job' => $default_code,
+          'training' => $default_code,
+          'report' => $default_code,
+        ];
+      }
+    }
+
     // Filter results based on allowed content types.
     return $this->filterPostingRightsByAllowedContentTypes($results);
   }
@@ -339,6 +392,55 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
     [, $domain] = explode('@', $email, 2);
     return mb_strtolower(trim($domain));
+  }
+
+  /**
+   * Check if a domain is in the allowed domains list.
+   *
+   * @param string $domain
+   *   Domain to check.
+   *
+   * @return bool
+   *   TRUE if the domain is in the allowed list, FALSE otherwise.
+   */
+  protected function isDomainAllowed(string $domain): bool {
+    $privileged_domains = $this->state->get('reliefweb_users_privileged_domains', []);
+    if (empty($privileged_domains)) {
+      return FALSE;
+    }
+
+    $domain = mb_strtolower(trim($domain));
+    return in_array($domain, $privileged_domains, TRUE);
+  }
+
+  /**
+   * Convert string posting right to numeric code.
+   *
+   * @param string $right
+   *   Posting right as string ('unverified', 'blocked', 'allowed', 'trusted').
+   *
+   * @return int
+   *   Numeric code (0 = unverified, 1 = blocked, 2 = allowed, 3 = trusted).
+   */
+  protected function getPostingRightCode(string $right): int {
+    return match ($right) {
+      'blocked' => 1,
+      'allowed' => 2,
+      'trusted' => 3,
+      // Unverified.
+      default => 0,
+    };
+  }
+
+  /**
+   * Get default domain posting rights code.
+   *
+   * @return int
+   *   Default posting right code.
+   */
+  protected function getDefaultDomainPostingRightCode(): int {
+    $default_right = $this->state->get('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+    return $this->getPostingRightCode($default_right);
   }
 
   /**

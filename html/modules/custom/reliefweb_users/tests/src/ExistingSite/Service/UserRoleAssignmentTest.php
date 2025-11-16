@@ -237,7 +237,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
     $state = \Drupal::state();
     $state_keys = [
       'reliefweb_users_submitter_support_legacy_accounts',
-      'reliefweb_users_submitter_allowed_domains',
+      'reliefweb_users_privileged_domains',
       'reliefweb_users_submitter_check_entraid_for_assignment',
       'reliefweb_users_advertiser_support_legacy_accounts',
     ];
@@ -257,7 +257,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
     $state = \Drupal::state();
     $state_keys = [
       'reliefweb_users_submitter_support_legacy_accounts',
-      'reliefweb_users_submitter_allowed_domains',
+      'reliefweb_users_privileged_domains',
       'reliefweb_users_submitter_check_entraid_for_assignment',
       'reliefweb_users_advertiser_support_legacy_accounts',
     ];
@@ -282,7 +282,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
 
     // Configure submitter role settings.
     $state->set('reliefweb_users_submitter_support_legacy_accounts', TRUE);
-    $state->set('reliefweb_users_submitter_allowed_domains', ['un.org']);
+    $state->set('reliefweb_users_privileged_domains', ['un.org']);
     $state->set('reliefweb_users_submitter_check_entraid_for_assignment', FALSE);
 
     // Configure advertiser role settings.
@@ -503,19 +503,19 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
   }
 
   /**
-   * Test hasDomainAllowedForSubmitter method.
+   * Test isUserEmailDomainPrivileged method.
    */
-  public function testHasDomainAllowedForSubmitter(): void {
+  public function testIsUserEmailDomainPrivileged(): void {
     // Test with UN domain user.
     $this->assertTrue(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->unUser),
-      'UN domain user should be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->unUser),
+      'UN domain user should have privileged domain'
     );
 
     // Test with other domain user.
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->otherDomainUser),
-      'Other domain user should not be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->otherDomainUser),
+      'Other domain user should not have privileged domain'
     );
 
     // Test with user without email.
@@ -524,8 +524,8 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
       'status' => 1,
     ]);
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($no_email_user),
-      'User without email should not be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($no_email_user),
+      'User without email should not have privileged domain'
     );
 
     // Test with user with invalid email.
@@ -534,22 +534,22 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
       'status' => 1,
     ]);
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($invalid_email_user),
-      'User with invalid email should not be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($invalid_email_user),
+      'User with invalid email should not have privileged domain'
     );
   }
 
   /**
-   * Test hasDomainAllowedForSubmitter with Entra ID check.
+   * Test isUserEmailDomainPrivileged with Entra ID check.
    */
-  public function testHasDomainAllowedForSubmitterWithEntraId(): void {
+  public function testIsUserEmailDomainPrivilegedWithEntraId(): void {
     // Enable Entra ID check.
     \Drupal::state()->set('reliefweb_users_submitter_check_entraid_for_assignment', TRUE);
 
     // Test with UN user without Entra ID connection.
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->unUser),
-      'UN user without Entra ID should not be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->unUser),
+      'UN user without Entra ID should not have privileged domain'
     );
 
     // Mock Entra ID connection for UN user.
@@ -562,8 +562,8 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
       ->execute();
 
     $this->assertTrue(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->unUser),
-      'UN user with Entra ID should be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->unUser),
+      'UN user with Entra ID should have privileged domain'
     );
   }
 
@@ -737,25 +737,25 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
    * Test domain configuration changes.
    */
   public function testDomainConfigurationChanges(): void {
-    // Change allowed domains.
-    \Drupal::state()->set('reliefweb_users_submitter_allowed_domains', ['example.com']);
+    // Change privileged domains.
+    \Drupal::state()->set('reliefweb_users_privileged_domains', ['example.com']);
 
     $this->assertTrue(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->testUser),
-      'User with example.com domain should be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->testUser),
+      'User with example.com domain should have privileged domain'
     );
 
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->unUser),
-      'User with un.org domain should not be allowed for submitter role'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->unUser),
+      'User with un.org domain should not have privileged domain'
     );
 
-    // Clear allowed domains.
-    \Drupal::state()->set('reliefweb_users_submitter_allowed_domains', []);
+    // Clear privileged domains.
+    \Drupal::state()->set('reliefweb_users_privileged_domains', []);
 
     $this->assertFalse(
-      $this->userRoleAssignment->hasDomainAllowedForSubmitter($this->testUser),
-      'User should not be allowed for submitter role when no domains are configured'
+      $this->userRoleAssignment->isUserEmailDomainPrivileged($this->testUser),
+      'User should not have privileged domain when no domains are configured'
     );
   }
 

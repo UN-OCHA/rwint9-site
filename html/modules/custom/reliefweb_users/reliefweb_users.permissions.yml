@@ -6,9 +6,9 @@ manage user roles:
   title: 'Manage user roles'
   description: 'Allow users to manager user roles on other accounts.'
 
-administer submitter allowed domains:
-  title: 'Administer submitter allowed domains'
-  description: 'Configure domains allowed for automatic assignment of the submitter role.'
+administer privileged domains:
+  title: 'Administer privileged domains'
+  description: 'Configure privileged domains for automatic role assignment and default posting rights.'
 
 administer submitter form settings:
   title: 'Administer submitter form settings'

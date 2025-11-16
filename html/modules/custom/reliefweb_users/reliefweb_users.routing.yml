@@ -22,13 +22,13 @@ user.email.confirmation.process:
     _maintenance_access: FALSE
     no_cache: TRUE
 
-reliefweb_users.submitter_allowed_domains:
-  path: '/admin/config/people/submitter-allowed-domains'
+reliefweb_users.privileged_domains:
+  path: '/admin/config/people/privileged-domains'
   defaults:
-    _form: '\Drupal\reliefweb_users\Form\SubmitterAllowedDomainsForm'
-    _title: 'Submitter Allowed Domains'
+    _form: '\Drupal\reliefweb_users\Form\PrivilegedDomainsForm'
+    _title: 'Privileged Domains'
   requirements:
-    _permission: 'administer submitter allowed domains'
+    _permission: 'administer privileged domains'
   options:
     _admin_route: TRUE
 
