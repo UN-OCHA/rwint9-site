@@ -250,6 +250,65 @@ class ProcessFromExport extends QueueWorkerBase implements ContainerFactoryPlugi
         }
       }
 
+      // Use fields from the imported file if available.
+      if ($item['use_sheet_data'] ?? FALSE && $item['use_sheet_data'] == '1') {
+        $fields = [
+          'homepage' => 'field_homepage',
+          'countries' => 'field_country',
+          'short_name' => 'field_shortname',
+          'description' => 'description',
+        ];
+
+        foreach ($fields as $import_field => $target_field) {
+          if (isset($item[$import_field]) && !empty($item[$import_field])) {
+            switch ($import_field) {
+              case 'description':
+                $payload[$target_field] = [
+                  'value' => $item[$import_field],
+                  'format' => 'markdown',
+                ];
+                break;
+
+              case 'countries':
+                // Try to load the country terms if available.
+                $payload[$target_field] = [];
+                foreach (explode(',', $item[$import_field]) as $country_name) {
+                  $country_name = trim($country_name);
+                  if (empty($country_name)) {
+                    continue;
+                  }
+                  $country_id = $this->entityTypeManager
+                    ->getStorage('taxonomy_term')
+                    ->loadByProperties([
+                      'vid' => 'country',
+                      'name' => $country_name,
+                    ]);
+
+                  if ($country_id) {
+                    $payload[$target_field][] = [
+                      'target_id' => reset($country_id)->id(),
+                    ];
+                  }
+                }
+
+                break;
+
+              case 'homepage':
+                $payload[$target_field] = [
+                  'uri' => $item[$import_field],
+                ];
+                break;
+
+              case 'short_name':
+                $payload[$target_field] = [
+                  'value' => $item[$import_field],
+                ];
+                break;
+            }
+          }
+        }
+      }
+
       $term = Term::create($payload);
       $term->save();
 
