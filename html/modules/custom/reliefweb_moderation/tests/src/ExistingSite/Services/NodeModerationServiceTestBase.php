@@ -57,11 +57,32 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
   protected array $originalAnonymousPermissions = [];
 
   /**
+   * Original privileged domains state.
+   */
+  protected ?array $originalPrivilegedDomains = NULL;
+
+  /**
+   * Original default domain posting rights state.
+   */
+  protected array|string|null $originalDefaultDomainPostingRights = NULL;
+
+  /**
+   * Test user with privileged domain but no explicit posting rights.
+   */
+  protected User $privilegedDomainUser;
+
+  /**
+   * Test source without posting rights for privileged domain user.
+   */
+  protected Term $noRightsSource;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
     $this->saveOriginalPermissions();
+    $this->saveOriginalPrivilegedDomainsState();
     $this->clearDefaultPermissions();
     $this->moderationService = $this->getModerationService();
     $this->createTestRoles();
@@ -76,6 +97,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
    */
   protected function tearDown(): void {
     $this->restoreOriginalPermissions();
+    $this->restoreOriginalPrivilegedDomainsState();
     parent::tearDown();
   }
 
@@ -376,6 +398,15 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
 
     // Add anonymous user.
     $this->testUsers['anonymous'] = User::getAnonymousUser();
+
+    // Create a user with privileged domain email but no explicit posting
+    // rights.
+    // This user has the "edit affiliated" permission but should not be able to
+    // access affiliated content without explicit posting rights.
+    $this->privilegedDomainUser = $this->createUser(values: [
+      'mail' => 'privileged@example.com',
+      'roles' => [$this->testRoles['edit_affiliated_bundle']],
+    ]);
   }
 
   /**
@@ -429,6 +460,19 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
           'job' => 2,
           'training' => 2,
         ],
+      ],
+      'moderation_status' => 'active',
+    ]);
+
+    // Create a source without posting rights for testing privileged domain
+    // users.
+    $this->noRightsSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Test Source Without Posting Rights',
+      'field_allowed_content_types' => [
+        // Allow job (0), report (1) and training (2) content.
+        ['value' => 0],
+        ['value' => 1],
+        ['value' => 2],
       ],
       'moderation_status' => 'active',
     ]);
@@ -1119,6 +1163,203 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
       'archive' => $this->testUsers['edit_archived'] ?? $this->testUsers['edit_all_special'] ?? NULL,
       default => $this->testUsers['edit_all_special'] ?? NULL,
     };
+  }
+
+  /**
+   * Save the original privileged domains state.
+   */
+  protected function saveOriginalPrivilegedDomainsState(): void {
+    $state = \Drupal::service('state');
+    $this->originalPrivilegedDomains = $state->get('reliefweb_users_privileged_domains', NULL);
+    $this->originalDefaultDomainPostingRights = $state->get('reliefweb_users_privileged_domains_default_posting_rights', NULL);
+  }
+
+  /**
+   * Restore the original privileged domains state.
+   */
+  protected function restoreOriginalPrivilegedDomainsState(): void {
+    $state = \Drupal::service('state');
+    if ($this->originalPrivilegedDomains !== NULL) {
+      $state->set('reliefweb_users_privileged_domains', $this->originalPrivilegedDomains);
+    }
+    else {
+      $state->delete('reliefweb_users_privileged_domains');
+    }
+    if ($this->originalDefaultDomainPostingRights !== NULL) {
+      $state->set('reliefweb_users_privileged_domains_default_posting_rights', $this->originalDefaultDomainPostingRights);
+    }
+    else {
+      $state->delete('reliefweb_users_privileged_domains_default_posting_rights');
+    }
+  }
+
+  /**
+   * Test that privileged domain users without explicit posting rights.
+   *
+   * Test that privileged domain users without explicit posting rights cannot
+   * access affiliated content.
+   *
+   * This test verifies that privileged domain defaults are not used when
+   * checking posting rights for access control, as userHasPostingRights
+   * calls getUserPostingRights with check_privileged_domains = FALSE.
+   */
+  public function testPrivilegedDomainUserWithoutExplicitRights(): void {
+    $state = \Drupal::service('state');
+    $bundle = $this->getBundle();
+
+    // Set up privileged domain with default "allowed" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+
+    // Reset the posting rights cache to ensure new state values are used.
+    $userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+    $userPostingRightsManager->resetCache();
+
+    // Create a node with the source that has no posting rights for the
+    // privileged domain user.
+    $affiliated_node = $this->createNode([
+      'type' => $bundle,
+      'title' => 'Affiliated ' . ucfirst($bundle) . ' for Privileged Domain User',
+      'uid' => $this->testUsers['edit_own_bundle']->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    // Set the privileged domain user as current user.
+    $this->setCurrentUser($this->privilegedDomainUser);
+
+    // User should NOT be able to access affiliated content even though they
+    // have a privileged domain, because there are no explicit posting rights
+    // and privileged domain defaults are not checked for access control.
+    $this->assertFalse($this->moderationService->entityAccess($affiliated_node, 'view')->isAllowed(),
+      'Privileged domain user without explicit posting rights cannot view affiliated ' . $bundle . 's');
+    $this->assertFalse($this->moderationService->entityAccess($affiliated_node, 'update')->isAllowed(),
+      'Privileged domain user without explicit posting rights cannot update affiliated ' . $bundle . 's');
+    $this->assertFalse($this->moderationService->entityAccess($affiliated_node, 'delete')->isAllowed(),
+      'Privileged domain user without explicit posting rights cannot delete affiliated ' . $bundle . 's');
+
+    // User should be able to access their own content (owner permission).
+    $own_node = $this->createNode([
+      'type' => $bundle,
+      'title' => 'Own ' . ucfirst($bundle) . ' for Privileged Domain User',
+      'uid' => $this->privilegedDomainUser->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $this->noRightsSource->id()],
+      ],
+    ]);
+
+    $this->assertTrue($this->moderationService->entityAccess($own_node, 'view')->isAllowed(),
+      'Privileged domain user can view own ' . $bundle . 's (owner permission)');
+    $this->assertTrue($this->moderationService->entityAccess($own_node, 'update')->isAllowed(),
+      'Privileged domain user can update own ' . $bundle . 's (owner permission)');
+    $this->assertTrue($this->moderationService->entityAccess($own_node, 'delete')->isAllowed(),
+      'Privileged domain user can delete own ' . $bundle . 's (owner permission)');
+  }
+
+  /**
+   * Test that privileged domain users with explicit posting rights.
+   *
+   * Test that privileged domain users with explicit posting rights can access
+   * affiliated content.
+   *
+   * This test verifies that explicit posting rights (user or domain) still
+   * work correctly for privileged domain users.
+   */
+  public function testPrivilegedDomainUserWithExplicitRights(): void {
+    $state = \Drupal::service('state');
+    $bundle = $this->getBundle();
+
+    // Set up privileged domain with default "allowed" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+
+    // Create a source with explicit user posting rights for the privileged
+    // domain user.
+    $sourceWithUserRights = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source with User Posting Rights',
+      'field_allowed_content_types' => [
+        ['value' => 0],
+        ['value' => 1],
+        ['value' => 2],
+      ],
+      'field_user_posting_rights' => [
+        [
+          'id' => $this->privilegedDomainUser->id(),
+          'report' => 2,
+          'job' => 2,
+          'training' => 2,
+        ],
+      ],
+      'moderation_status' => 'active',
+    ]);
+
+    // Create a source with explicit domain posting rights for example.com.
+    $sourceWithDomainRights = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Source with Domain Posting Rights',
+      'field_allowed_content_types' => [
+        ['value' => 0],
+        ['value' => 1],
+        ['value' => 2],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          'report' => 2,
+          'job' => 2,
+          'training' => 2,
+        ],
+      ],
+      'moderation_status' => 'active',
+    ]);
+
+    // Reset the posting rights cache.
+    $userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+    $userPostingRightsManager->resetCache();
+
+    // Create nodes with these sources.
+    $nodeWithUserRights = $this->createNode([
+      'type' => $bundle,
+      'title' => 'Node with User Posting Rights',
+      'uid' => $this->testUsers['edit_own_bundle']->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $sourceWithUserRights->id()],
+      ],
+    ]);
+
+    $nodeWithDomainRights = $this->createNode([
+      'type' => $bundle,
+      'title' => 'Node with Domain Posting Rights',
+      'uid' => $this->testUsers['edit_own_bundle']->id(),
+      'moderation_status' => 'draft',
+      'field_source' => [
+        ['target_id' => $sourceWithDomainRights->id()],
+      ],
+    ]);
+
+    // Set the privileged domain user as current user.
+    $this->setCurrentUser($this->privilegedDomainUser);
+
+    // User SHOULD be able to access affiliated content with explicit user
+    // posting rights.
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithUserRights, 'view')->isAllowed(),
+      'Privileged domain user with explicit user posting rights can view affiliated ' . $bundle . 's');
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithUserRights, 'update')->isAllowed(),
+      'Privileged domain user with explicit user posting rights can update affiliated ' . $bundle . 's');
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithUserRights, 'delete')->isAllowed(),
+      'Privileged domain user with explicit user posting rights can delete affiliated ' . $bundle . 's');
+
+    // User SHOULD be able to access affiliated content with explicit domain
+    // posting rights.
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithDomainRights, 'view')->isAllowed(),
+      'Privileged domain user with explicit domain posting rights can view affiliated ' . $bundle . 's');
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithDomainRights, 'update')->isAllowed(),
+      'Privileged domain user with explicit domain posting rights can update affiliated ' . $bundle . 's');
+    $this->assertTrue($this->moderationService->entityAccess($nodeWithDomainRights, 'delete')->isAllowed(),
+      'Privileged domain user with explicit domain posting rights can delete affiliated ' . $bundle . 's');
   }
 
 }

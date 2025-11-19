@@ -50,3 +50,30 @@ function reliefweb_users_update_9002() {
     }
   }
 }
+
+/**
+ * Split default domain posting rights into per-bundle settings.
+ */
+function reliefweb_users_update_9003() {
+  $state = \Drupal::state();
+  $defaults = $state->get('reliefweb_users_privileged_domains_default_posting_rights', NULL);
+  if ($defaults === NULL) {
+    return;
+  }
+
+  $allowed_values = ['unverified', 'blocked', 'allowed', 'trusted'];
+  if (is_string($defaults)) {
+    $defaults = array_fill_keys(['report', 'job', 'training'], $defaults);
+  }
+  elseif (!is_array($defaults)) {
+    $defaults = [];
+  }
+
+  $normalized = [];
+  foreach (['report', 'job', 'training'] as $bundle) {
+    $value = $defaults[$bundle] ?? 'unverified';
+    $normalized[$bundle] = in_array($value, $allowed_values, TRUE) ? $value : 'unverified';
+  }
+
+  $state->set('reliefweb_users_privileged_domains_default_posting_rights', $normalized);
+}

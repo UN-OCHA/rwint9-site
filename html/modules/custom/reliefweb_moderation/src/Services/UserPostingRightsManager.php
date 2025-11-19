@@ -29,11 +29,30 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   use EntityDatabaseInfoTrait;
 
   /**
+   * Bundles supported by default domain posting rights.
+   */
+  protected const SUPPORTED_CONTENT_TYPES = ['report', 'job', 'training'];
+
+  /**
    * Static cache for user posting rights.
    *
    * @var array
    */
   protected array $userPostingRightsCache = [];
+
+  /**
+   * Default domain posting rights.
+   *
+   * @var array<string, string>
+   */
+  protected array $defaultDomainPostingRights = [];
+
+  /**
+   * Default domain posting rights codes.
+   *
+   * @var array<string, int>
+   */
+  protected array $defaultDomainPostingRightsCodes = [];
 
   /**
    * Constructs a UserPostingRightsManager object.
@@ -62,6 +81,8 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    */
   public function resetCache(): void {
     $this->userPostingRightsCache = [];
+    $this->defaultDomainPostingRights = [];
+    $this->defaultDomainPostingRightsCodes = [];
   }
 
   /**
@@ -87,7 +108,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    *   TRUE if the entity supports posting rights, FALSE otherwise.
    */
   public function entityBundleSupportsPostingRights(string $bundle): bool {
-    return in_array($bundle, ['report', 'job', 'training']);
+    return in_array($bundle, self::SUPPORTED_CONTENT_TYPES, TRUE);
   }
 
   /**
@@ -173,8 +194,8 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         }
         // If no domain posting rights found and domain is in allowed list,
         // use the default domain posting rights.
-        if (!$domain_right_found && $this->isDomainAllowed($domain)) {
-          $default_code = $this->getDefaultDomainPostingRightCode();
+        if (!$domain_right_found && $this->isDomainPrivileged($domain)) {
+          $default_code = $this->getDefaultDomainPostingRightCode($bundle);
           $right = $rights_keys[$default_code] ?? 'unverified';
         }
       }
@@ -205,15 +226,18 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    *   A user's account object or the current user if NULL.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Posting rights as an associative array keyed by source id.
    */
-  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []): array {
+  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = [], bool $check_privileged_domains = TRUE): array {
     $account = $account ?: $this->currentUser;
 
-    // Static cache key for the combination account/sources.
-    $key = $account->id() . ':' . implode('-', $sources);
+    // Static cache key for account/sources/check_privileged_domains.
+    $key = $account->id() . ':' . implode('-', $sources) . ':' .
+      ($check_privileged_domains ? '1' : '0');
 
     // Return the cached rights if any.
     if (isset($this->userPostingRightsCache[$key])) {
@@ -245,14 +269,14 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       // If no sources are provided, check domain posting rights for all
       // sources.
       if (empty($sources)) {
-        $results += $this->getDomainPostingRights($account);
+        $results += $this->getDomainPostingRights($account, [], $check_privileged_domains);
       }
       // Otherwise, check domain posting rights for the sources for which no
       // user posting rights were found.
       else {
         $missing_sources = array_diff($sources, array_keys($results));
         if (!empty($missing_sources)) {
-          $results += $this->getDomainPostingRights($account, $missing_sources);
+          $results += $this->getDomainPostingRights($account, $missing_sources, $check_privileged_domains);
         }
       }
     }
@@ -267,13 +291,13 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // Check if user's domain is in the allowed list to determine default
     // rights.
     // Default to unverified.
-    $default_code = 0;
-    if (!empty($account->id())) {
+    $default_codes = array_fill_keys(self::SUPPORTED_CONTENT_TYPES, 0);
+    if (!empty($account->id()) && $check_privileged_domains) {
       $user = $this->entityTypeManager->getStorage('user')->load($account->id());
       if ($user && $user->getEmail()) {
         $domain = $this->extractDomainFromEmail($user->getEmail());
-        if ($domain && $this->isDomainAllowed($domain)) {
-          $default_code = $this->getDefaultDomainPostingRightCode();
+        if ($domain && $this->isDomainPrivileged($domain)) {
+          $default_codes = $this->getDefaultDomainPostingRightCodes();
         }
       }
     }
@@ -282,9 +306,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       if (!isset($results[$tid])) {
         $results[$tid] = [
           'tid' => $tid,
-          'job' => $default_code,
-          'training' => $default_code,
-          'report' => $default_code,
+          'job' => $default_codes['job'],
+          'training' => $default_codes['training'],
+          'report' => $default_codes['report'],
         ];
       }
     }
@@ -302,11 +326,13 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    *   A user's account object.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  public function getDomainPostingRights(AccountInterface $account, array $sources = []): array {
+  public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array {
     $results = [];
 
     // Get user's email domain.
@@ -339,35 +365,49 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       $query->condition($table . '.entity_id', $sources, 'IN');
     }
 
-    $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative);
+    $results = $query->execute()?->fetchAllAssoc('tid', FetchAs::Associative) ?? [];
 
     // If no domain posting rights found and domain is in allowed list,
     // use the default domain posting rights for missing sources.
-    if (empty($results) && $this->isDomainAllowed($domain)) {
-      $default_code = $this->getDefaultDomainPostingRightCode();
+    if ($check_privileged_domains && empty($results) && $this->isDomainPrivileged($domain)) {
+      $default_codes = $this->getDefaultDomainPostingRightCodes();
       // If sources are specified, create default rights for each source.
       if (!empty($sources)) {
         foreach ($sources as $tid) {
           $results[$tid] = [
             'tid' => $tid,
-            'job' => $default_code,
-            'training' => $default_code,
-            'report' => $default_code,
+            'job' => $default_codes['job'],
+            'training' => $default_codes['training'],
+            'report' => $default_codes['report'],
           ];
         }
       }
     }
-    elseif (!empty($sources) && $this->isDomainAllowed($domain)) {
+    elseif ($check_privileged_domains && !empty($sources) && $this->isDomainPrivileged($domain)) {
       // For sources that don't have domain posting rights, add default rights.
-      $default_code = $this->getDefaultDomainPostingRightCode();
+      $default_codes = $this->getDefaultDomainPostingRightCodes();
       $found_sources = array_keys($results);
       $missing_sources = array_diff($sources, $found_sources);
       foreach ($missing_sources as $tid) {
         $results[$tid] = [
           'tid' => $tid,
-          'job' => $default_code,
-          'training' => $default_code,
-          'report' => $default_code,
+          'job' => $default_codes['job'],
+          'training' => $default_codes['training'],
+          'report' => $default_codes['report'],
+        ];
+      }
+    }
+    elseif (!empty($sources)) {
+      // For missing sources when privileged domain defaults don't apply,
+      // add unverified entries to ensure all requested sources are returned.
+      $found_sources = array_keys($results);
+      $missing_sources = array_diff($sources, $found_sources);
+      foreach ($missing_sources as $tid) {
+        $results[$tid] = [
+          'tid' => $tid,
+          'job' => 0,
+          'training' => 0,
+          'report' => 0,
         ];
       }
     }
@@ -377,13 +417,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Extract domain from email address.
-   *
-   * @param string $email
-   *   Email address.
-   *
-   * @return string|null
-   *   Domain part of the email address or NULL if invalid.
+   * {@inheritdoc}
    */
   public function extractDomainFromEmail(string $email): ?string {
     if (empty($email) || strpos($email, '@') === FALSE) {
@@ -395,15 +429,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Check if a domain is in the allowed domains list.
-   *
-   * @param string $domain
-   *   Domain to check.
-   *
-   * @return bool
-   *   TRUE if the domain is in the allowed list, FALSE otherwise.
+   * {@inheritdoc}
    */
-  protected function isDomainAllowed(string $domain): bool {
+  public function isDomainPrivileged(string $domain): bool {
     $privileged_domains = $this->state->get('reliefweb_users_privileged_domains', []);
     if (empty($privileged_domains)) {
       return FALSE;
@@ -433,14 +461,83 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
+   * Get default domain posting rights.
+   *
+   * @return array<string, string>
+   *   Default posting rights keyed by bundle.
+   */
+  protected function getDefaultDomainPostingRights(): array {
+    if (empty($this->defaultDomainPostingRights)) {
+      $defaults = $this->state->get('reliefweb_users_privileged_domains_default_posting_rights');
+      if (is_string($defaults)) {
+        $defaults = array_fill_keys(self::SUPPORTED_CONTENT_TYPES, $defaults);
+      }
+      elseif (!is_array($defaults)) {
+        $defaults = [];
+      }
+      foreach (self::SUPPORTED_CONTENT_TYPES as $bundle) {
+        $this->defaultDomainPostingRights[$bundle] = $this->sanitizePostingRight($defaults[$bundle] ?? 'unverified');
+      }
+    }
+    return $this->defaultDomainPostingRights;
+  }
+
+  /**
+   * Get default domain posting rights value.
+   *
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return string
+   *   Default posting right value.
+   */
+  protected function getDefaultDomainPostingRightValue(string $bundle): string {
+    $defaults = $this->getDefaultDomainPostingRights();
+    return $defaults[$bundle] ?? 'unverified';
+  }
+
+  /**
    * Get default domain posting rights code.
+   *
+   * @param string $bundle
+   *   Content bundle.
    *
    * @return int
    *   Default posting right code.
    */
-  protected function getDefaultDomainPostingRightCode(): int {
-    $default_right = $this->state->get('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+  protected function getDefaultDomainPostingRightCode(string $bundle): int {
+    $default_right = $this->getDefaultDomainPostingRightValue($bundle);
     return $this->getPostingRightCode($default_right);
+  }
+
+  /**
+   * Get default domain posting rights codes keyed by bundle.
+   *
+   * @return array<string, int>
+   *   Default posting right code per bundle.
+   */
+  protected function getDefaultDomainPostingRightCodes(): array {
+    if (empty($this->defaultDomainPostingRightsCodes)) {
+      $defaults = $this->getDefaultDomainPostingRights();
+      $this->defaultDomainPostingRightsCodes = array_map([$this, 'getPostingRightCode'], $defaults);
+    }
+    return $this->defaultDomainPostingRightsCodes;
+  }
+
+  /**
+   * Sanitize a posting right value.
+   *
+   * @param string|null $right
+   *   Posting right value.
+   *
+   * @return string
+   *   Sanitized posting right.
+   */
+  protected function sanitizePostingRight(?string $right): string {
+    return match ($right) {
+      'blocked', 'allowed', 'trusted', 'unverified' => $right,
+      default => 'unverified',
+    };
   }
 
   /**
@@ -652,7 +749,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     }
 
     // Check if the user is allowed or blocked.
-    foreach ($this->getUserPostingRights($account, $sources) as $data) {
+    foreach ($this->getUserPostingRights($account, $sources, FALSE) as $data) {
       $right = $data[$bundle] ?? 0;
       // If the user is blocked for one of the sources always disallow even
       // if the user is the owner of the document, except for drafts since
@@ -1043,6 +1140,30 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       default => 'unverified_all',
     };
 
+    // Adjust scenario for privileged domains.
+    // When the domain is privileged and the default posting right is allowed,
+    // and the scenario is allowed for all the sources, set the scenario to
+    // privileged for all the sources.
+    // This is the only case with ambiguity.
+    // Scenarios with mismatching rights like `trusted_some_allowed` or
+    // `trusted_some_unverified` means there is a right coming from an explicit
+    // posting right record for the source so those do not need to be adjusted.
+    // The `trusted_all` scenario and `unverified_all` scenario could come from
+    // explicit records or from the default domain posting rights but since, in
+    // practice,they respectively correspond to "higher" rights or "lower"
+    // rights, they do not need to be adjusted.
+    // This is to keep the logic simple while allowing an extra scenario for
+    // privileged domains.
+    $domain = $this->extractDomainFromEmail($user->getEmail());
+    if (
+      $domain &&
+      $this->isDomainPrivileged($domain) &&
+      $this->getDefaultDomainPostingRightValue($bundle) === 'allowed' &&
+      $scenario === 'allowed_all'
+    ) {
+      $scenario = 'privileged_all';
+    }
+
     // Skip if there no status for the scenario.
     if (!isset($mapping[$role][$bundle][$scenario])) {
       return FALSE;
@@ -1086,7 +1207,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    * {@inheritdoc}
    */
   public function getSupportedContentTypes(): array {
-    return ['report', 'job', 'training'];
+    return self::SUPPORTED_CONTENT_TYPES;
   }
 
 }

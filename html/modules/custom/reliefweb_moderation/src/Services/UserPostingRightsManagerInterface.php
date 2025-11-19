@@ -60,11 +60,13 @@ interface UserPostingRightsManagerInterface {
    *   A user's account object or the current user if NULL.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Posting rights as an associative array keyed by source id.
    */
-  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []): array;
+  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = [], bool $check_privileged_domains = TRUE): array;
 
   /**
    * Get domain posting rights for an account.
@@ -73,11 +75,13 @@ interface UserPostingRightsManagerInterface {
    *   A user's account object.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  public function getDomainPostingRights(AccountInterface $account, array $sources = []): array;
+  public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array;
 
   /**
    * Extract domain from email address.
@@ -89,6 +93,17 @@ interface UserPostingRightsManagerInterface {
    *   Domain part of the email address or NULL if invalid.
    */
   public function extractDomainFromEmail(string $email): ?string;
+
+  /**
+   * Check if a domain is in the privileged domains list.
+   *
+   * @param string $domain
+   *   Domain to check.
+   *
+   * @return bool
+   *   TRUE if the domain is in the privileged list, FALSE otherwise.
+   */
+  public function isDomainPrivileged(string $domain): bool;
 
   /**
    * Get allowed content types for a source entity.
