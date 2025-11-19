@@ -43,6 +43,8 @@ class NodeJobEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
     $keywords = [];
     // Add themes from field_theme.
     if ($entity->hasField('field_theme') && !$entity->get('field_theme')->isEmpty()) {
@@ -60,21 +62,23 @@ class NodeJobEntity extends BaseEntity {
       }
     }
 
-    $schema = Schema::jobPosting();
+    // Limit body to 1000 characters for description.
+    $description = substr($entity->get('body')->value, 0, 1000);
 
+    $schema = Schema::jobPosting();
     $schema->name($entity->label())
-      ->identifier($entity->uuid())
-      ->description($entity->get('body')->value)
+      ->identifier($url)
+      ->description($description)
       ->datePosted(date('c', (int) $entity->getCreatedTime()))
       ->employmentType($entity->get('field_job_type')?->entity?->label())
       ->validThrough($entity->get('field_job_closing_date')->value)
-      ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
+      ->url($url)
       ->keywords($keywords);
 
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
       $source = $entity->get('field_source')->entity;
-      $org = $this->buildSourceThing($source);
+      $org = $this->buildSourceReference($source);
       $schema->hiringOrganization($org);
     }
 

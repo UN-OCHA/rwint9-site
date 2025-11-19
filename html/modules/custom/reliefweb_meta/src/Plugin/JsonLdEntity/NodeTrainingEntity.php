@@ -43,6 +43,8 @@ class NodeTrainingEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
     $keywords = [];
     // Add themes from field_theme.
     if ($entity->hasField('field_theme') && !$entity->get('field_theme')->isEmpty()) {
@@ -68,15 +70,17 @@ class NodeTrainingEntity extends BaseEntity {
       }
     }
 
-    $schema = Schema::course();
+    // Limit body to 1000 characters for description.
+    $description = substr($entity->get('body')->value, 0, 1000);
 
+    $schema = Schema::course();
     $schema->name($entity->label())
-      ->identifier($entity->uuid())
-      ->description($entity->get('body')->value)
+      ->identifier($url)
+      ->description($description)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->expires($entity->get('field_training_date')->value)
-      ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
+      ->url($url)
       ->keywords($keywords)
       ->publisher([
         Schema::organization()
@@ -86,14 +90,14 @@ class NodeTrainingEntity extends BaseEntity {
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
       $source = $entity->get('field_source')->entity;
-      $org = $this->buildSourceThing($source);
+      $org = $this->buildSourceReference($source);
       $schema->author($org);
     }
 
     // Only add contentLocation if country is present.
     if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
       $schema->contentLocation([
-        Schema::country()->name($entity->get('field_country')->entity->label()),
+        $this->buildCountryReference($entity->get('field_country')->entity),
       ]);
     }
 

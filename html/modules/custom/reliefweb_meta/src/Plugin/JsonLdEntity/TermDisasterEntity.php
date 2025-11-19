@@ -43,6 +43,8 @@ class TermDisasterEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\taxonomy\TermInterface $entity */
 
+    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
     $keywords = [];
     // Add disaster types.
     if ($entity->hasField('field_disaster_type') && !$entity->get('field_disaster_type')->isEmpty()) {
@@ -69,12 +71,15 @@ class TermDisasterEntity extends BaseEntity {
       }
     }
 
+    // Limit description to 1000 characters for description.
+    $description = substr($entity->get('description')->value, 0, 1000);
+
     $schema = Schema::event();
     $schema->name($entity->label())
-      ->identifier($entity->uuid())
-      ->description($entity->get('description')->value)
+      ->identifier($url)
+      ->description($description)
       ->startDate($entity->get('field_disaster_date')->value)
-      ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
+      ->url($url)
       ->keywords($keywords);
 
     // Only add location if country is present.

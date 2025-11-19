@@ -43,6 +43,8 @@ class NodeReportEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
     // Fallback to report if field is empty.
     $content_format = 'report';
     if ($entity->hasField('field_content_format') && !$entity->get('field_content_format')->isEmpty()) {
@@ -62,38 +64,41 @@ class NodeReportEntity extends BaseEntity {
       }
     }
 
+    // Limit body to 1000 characters for description.
+    $description = substr($entity->get('body')->value, 0, 1000);
+
     $schema = NULL;
     switch ($content_format) {
       case 'map':
         $schema = Schema::map();
-        $schema->description($entity->get('body')->value);
+        $schema->description($description);
         break;
 
       case 'creative_work':
         $schema = Schema::creativeWork();
-        $schema->articleBody($entity->get('body')->value);
+        $schema->articleBody($description);
         break;
 
       case 'news_article':
         $schema = Schema::newsArticle();
-        $schema->articleBody($entity->get('body')->value);
+        $schema->articleBody($description);
         break;
 
       case 'report':
       default:
         $schema = Schema::report();
-        $schema->articleBody($entity->get('body')->value);
+        $schema->articleBody($description);
 
         break;
     }
 
     $schema->name($entity->label())
-      ->identifier($entity->uuid())
+      ->identifier($url)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePublished($entity->get('field_original_publication_date')->value)
       ->isAccessibleForFree(TRUE)
-      ->url($entity->toUrl('canonical', ['absolute' => TRUE])->toString())
+      ->url($url)
       ->keywords($keywords)
       ->publisher([
         Schema::organization()
@@ -109,13 +114,13 @@ class NodeReportEntity extends BaseEntity {
 
     // Only add sourceOrganization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
-      $schema->sourceOrganization($this->buildSourceThing($entity->get('field_source')->entity));
+      $schema->sourceOrganization($this->buildSourceReference($entity->get('field_source')->entity));
     }
 
     // Only add contentLocation if country is present.
     if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
       $schema->contentLocation([
-        Schema::country()->name($entity->get('field_country')->entity->label()),
+        $this->buildCountryReference($entity->get('field_country')->entity),
       ]);
     }
 
