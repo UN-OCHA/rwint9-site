@@ -71,16 +71,17 @@ class TermDisasterEntity extends BaseEntity {
       }
     }
 
-    // Limit description to 1000 characters for description.
-    $description = substr($entity->get('description')->value, 0, 1000);
-
     $schema = Schema::event();
     $schema->name($entity->label())
       ->identifier($url)
-      ->description($description)
       ->startDate($entity->get('field_disaster_date')->value)
       ->url($url)
       ->keywords($keywords);
+
+    // Limit body to 1000 characters for description.
+    if ($entity->hasField('description') && !$entity->get('description')->isEmpty()) {
+      $schema->description(substr($entity->get('description')->value, 0, 1000));
+    }
 
     // Only add location if country is present.
     $locations = [];

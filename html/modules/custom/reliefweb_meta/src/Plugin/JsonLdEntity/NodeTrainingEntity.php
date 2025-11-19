@@ -70,13 +70,9 @@ class NodeTrainingEntity extends BaseEntity {
       }
     }
 
-    // Limit body to 1000 characters for description.
-    $description = substr($entity->get('body')->value, 0, 1000);
-
     $schema = Schema::course();
     $schema->name($entity->label())
       ->identifier($url)
-      ->description($description)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->expires($entity->get('field_training_date')->value)
@@ -86,6 +82,11 @@ class NodeTrainingEntity extends BaseEntity {
         Schema::organization()
           ->name('ReliefWeb'),
       ]);
+
+    // Limit body to 1000 characters for description.
+    if ($entity->hasField('body') && !$entity->get('body')->isEmpty()) {
+      $schema->description(substr($entity->get('body')->value, 0, 1000));
+    }
 
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {

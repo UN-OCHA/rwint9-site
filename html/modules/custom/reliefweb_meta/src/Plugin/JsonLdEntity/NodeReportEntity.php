@@ -65,29 +65,40 @@ class NodeReportEntity extends BaseEntity {
     }
 
     // Limit body to 1000 characters for description.
-    $description = substr($entity->get('body')->value, 0, 1000);
+    $description = '';
+    if ($entity->hasField('body') && !$entity->get('body')->isEmpty()) {
+      $description = substr($entity->get('body')->value, 0, 1000);
+    }
 
     $schema = NULL;
     switch ($content_format) {
       case 'map':
         $schema = Schema::map();
-        $schema->description($description);
+        if (!empty($description)) {
+          $schema->description($description);
+        }
         break;
 
       case 'creative_work':
         $schema = Schema::creativeWork();
-        $schema->articleBody($description);
+        if (!empty($description)) {
+          $schema->articleBody($description);
+        }
         break;
 
       case 'news_article':
         $schema = Schema::newsArticle();
-        $schema->articleBody($description);
+        if (!empty($description)) {
+          $schema->articleBody($description);
+        }
         break;
 
       case 'report':
       default:
         $schema = Schema::report();
-        $schema->articleBody($description);
+        if (!empty($description)) {
+          $schema->articleBody($description);
+        }
 
         break;
     }

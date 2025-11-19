@@ -62,18 +62,19 @@ class NodeJobEntity extends BaseEntity {
       }
     }
 
-    // Limit body to 1000 characters for description.
-    $description = substr($entity->get('body')->value, 0, 1000);
-
     $schema = Schema::jobPosting();
     $schema->name($entity->label())
       ->identifier($url)
-      ->description($description)
       ->datePosted(date('c', (int) $entity->getCreatedTime()))
       ->employmentType($entity->get('field_job_type')?->entity?->label())
       ->validThrough($entity->get('field_job_closing_date')->value)
       ->url($url)
       ->keywords($keywords);
+
+    // Limit body to 1000 characters for description.
+    if ($entity->hasField('body') && !$entity->get('body')->isEmpty()) {
+      $schema->description(substr($entity->get('body')->value, 0, 1000));
+    }
 
     // Only add hiring organization if field_source has a value.
     if ($entity->hasField('field_source') && !$entity->get('field_source')->isEmpty()) {
