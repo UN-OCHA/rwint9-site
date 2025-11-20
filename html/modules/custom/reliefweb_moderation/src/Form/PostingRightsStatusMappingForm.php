@@ -5,6 +5,7 @@ namespace Drupal\reliefweb_moderation\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Drupal\reliefweb_moderation\Services\JobModeration;
 use Drupal\reliefweb_moderation\Services\TrainingModeration;
@@ -112,23 +113,33 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['#attached']['library'][] = 'reliefweb_moderation/posting_rights_mapping';
 
+    // Generate URL for privileged domains form.
+    $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
     $form['description'] = [
-      '#markup' => '<div class="posting-rights-description">
-        <p>' . $this->t("Configure the moderation status mapping for different posting rights scenarios. Each scenario represents the user's posting rights across the selected sources when creating or editing content (whether single or multiple sources).") . '</p>
-        <p><strong>' . $this->t('How it works:') . '</strong></p>
-        <ul>
-          <li>' . $this->t('When a user creates or edits content, the system checks their posting rights for each selected source') . '</li>
-          <li>' . $this->t('Based on the combination of rights (blocked, trusted, allowed, unverified), a scenario is determined') . '</li>
-          <li>' . $this->t('The corresponding moderation status is then applied to the content') . '</li>
-        </ul>
-        <p>' . $this->t('The table shows 7 scenarios based on the user posting rights for the selected sources. For each column:') . '</p>
-        <ul>
-          <li><strong>✓</strong> ' . $this->t('means there is at least one selected source for which the user has this right') . '</li>
-          <li><strong>-</strong> ' . $this->t('means there are no selected sources for which the user has this right') . '</li>
-          <li><strong>?</strong> ' . $this->t('means that there may be some selected sources for which the user has this right, but this does not affect the scenario') . '</li>
-        </ul>
-        <p>' . $this->t('Each role with posting rights has its own table. If a role cannot create a specific content type, the corresponding column shows N/A.') . '</p>
-      </div>',
+      '#type' => 'inline_template',
+      '#template' => <<<'TEMPLATE'
+        <div class="posting-rights-description">
+          <p>{{ 'Configure the moderation status mapping for different posting rights scenarios. Each scenario represents the user\'s posting rights across the selected sources when creating or editing content (whether single or multiple sources).'|t }}</p>
+          <p><strong>{{ 'How it works:'|t }}</strong></p>
+          <ul>
+            <li>{{ 'When a user creates or edits content, the system checks their posting rights for each selected source'|t }}</li>
+            <li>{{ 'Based on the combination of rights (blocked, trusted, allowed, unverified), a scenario is determined'|t }}</li>
+            <li>{{ 'The corresponding moderation status is then applied to the content'|t }}</li>
+          </ul>
+          <p>{{ 'The table shows 8 scenarios based on the user posting rights for the selected sources. For each column:'|t }}</p>
+          <ul>
+            <li><strong>✓</strong> {{ 'means there is at least one selected source for which the user has this right'|t }}</li>
+            <li><strong>-</strong> {{ 'means there are no selected sources for which the user has this right'|t }}</li>
+            <li><strong>?</strong> {{ 'means that there may be some selected sources for which the user has this right, but this does not affect the scenario'|t }}</li>
+          </ul>
+          <p><strong>{{ 'Privileged:'|t }}</strong> {{ 'The privileged column indicates that the user has an email domain listed in the privileged domain list managed at <a href=":url" target="_blank">Privileged Domains</a>. Privileged domains are considered allowed for any selected source unless explicit posting rights are set for the source. So the <strong>Privileged All</strong> scenario applies when the user has a privileged domain and there are no explicit posting rights set for any of the selected sources.'|t({':url': privileged_domains_url}) }}</p>
+          <p>{{ 'Each role with posting rights has its own table. If a role cannot create a specific content type, the corresponding column shows N/A.'|t }}</p>
+        </div>
+        TEMPLATE,
+      '#context' => [
+        'privileged_domains_url' => $privileged_domains_url,
+      ],
     ];
 
     // Get the current mapping from the user posting rights manager.
@@ -142,6 +153,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '?',
         'allowed' => '?',
         'unverified' => '?',
+        'privileged' => '?',
       ],
       'trusted_all' => [
         'label' => $this->t('Trusted All'),
@@ -149,6 +161,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '✓',
         'allowed' => '-',
         'unverified' => '-',
+        'privileged' => '?',
       ],
       'trusted_some_allowed' => [
         'label' => $this->t('Trusted + Allowed'),
@@ -156,6 +169,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '✓',
         'allowed' => '✓',
         'unverified' => '-',
+        'privileged' => '?',
       ],
       'trusted_some_unverified' => [
         'label' => $this->t('Trusted + Unverified'),
@@ -163,6 +177,15 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '✓',
         'allowed' => '?',
         'unverified' => '✓',
+        'privileged' => '?',
+      ],
+      'privileged_all' => [
+        'label' => $this->t('Privileged All'),
+        'blocked' => '-',
+        'trusted' => '-',
+        'allowed' => '✓',
+        'unverified' => '-',
+        'privileged' => '✓',
       ],
       'allowed_all' => [
         'label' => $this->t('Allowed All'),
@@ -170,6 +193,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '-',
         'allowed' => '✓',
         'unverified' => '-',
+        'privileged' => '-',
       ],
       'allowed_some_unverified' => [
         'label' => $this->t('Allowed + Unverified'),
@@ -177,6 +201,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '-',
         'allowed' => '✓',
         'unverified' => '✓',
+        'privileged' => '?',
       ],
       'unverified_all' => [
         'label' => $this->t('Unverified All'),
@@ -184,6 +209,7 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         'trusted' => '-',
         'allowed' => '-',
         'unverified' => '✓',
+        'privileged' => '?',
       ],
     ];
 
@@ -215,16 +241,18 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
       $form['role_' . $role_id]['mapping'] = [
         '#type' => 'table',
         '#header' => [
-          $this->t('Scenario'),
-          $this->t('Blocked'),
-          $this->t('Trusted'),
-          $this->t('Allowed'),
-          $this->t('Unverified'),
-          $this->t('Report Status'),
-          $this->t('Job Status'),
-          $this->t('Training Status'),
+          ['data' => $this->t('Scenario'), 'class' => ['scenario-cell']],
+          ['data' => $this->t('Blocked'), 'class' => ['rights-cell', 'rights-cell--blocked']],
+          ['data' => $this->t('Trusted'), 'class' => ['rights-cell', 'rights-cell--trusted']],
+          ['data' => $this->t('Allowed'), 'class' => ['rights-cell', 'rights-cell--allowed']],
+          ['data' => $this->t('Unverified'), 'class' => ['rights-cell', 'rights-cell--unverified']],
+          ['data' => $this->t('Privileged'), 'class' => ['rights-cell', 'rights-cell--privileged']],
+          ['data' => $this->t('Report Status'), 'class' => ['status-cell', 'status-cell--report']],
+          ['data' => $this->t('Job Status'), 'class' => ['status-cell', 'status-cell--job']],
+          ['data' => $this->t('Training Status'), 'class' => ['status-cell', 'status-cell--training']],
         ],
         '#attributes' => ['class' => ['posting-rights-mapping-table']],
+        '#sticky' => TRUE,
       ];
 
       foreach ($scenarios as $scenario_key => $scenario) {
@@ -234,28 +262,51 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         $form['role_' . $role_id]['mapping'][$row_key]['scenario'] = [
           '#type' => 'item',
           '#markup' => $scenario['label'],
-          '#wrapper_attributes' => ['class' => ['scenario-cell']],
+          '#wrapper_attributes' => [
+            'class' => [
+              'scenario-cell',
+              'scenario-cell--' . $scenario_key,
+            ],
+          ],
         ];
 
         // Blocked column.
         $form['role_' . $role_id]['mapping'][$row_key]['blocked'] = [
           '#type' => 'item',
           '#markup' => $scenario['blocked'],
-          '#wrapper_attributes' => ['class' => ['rights-cell', 'symbol-' . $this->getSymbolClass($scenario['blocked'])]],
+          '#wrapper_attributes' => [
+            'class' => [
+              'rights-cell',
+              'rights-cell--blocked',
+              'symbol-' . $this->getSymbolClass($scenario['blocked']),
+            ],
+          ],
         ];
 
         // Trusted column.
         $form['role_' . $role_id]['mapping'][$row_key]['trusted'] = [
           '#type' => 'item',
           '#markup' => $scenario['trusted'],
-          '#wrapper_attributes' => ['class' => ['rights-cell', 'symbol-' . $this->getSymbolClass($scenario['trusted'])]],
+          '#wrapper_attributes' => [
+            'class' => [
+              'rights-cell',
+              'rights-cell--trusted',
+              'symbol-' . $this->getSymbolClass($scenario['trusted']),
+            ],
+          ],
         ];
 
         // Allowed column.
         $form['role_' . $role_id]['mapping'][$row_key]['allowed'] = [
           '#type' => 'item',
           '#markup' => $scenario['allowed'],
-          '#wrapper_attributes' => ['class' => ['rights-cell', 'symbol-' . $this->getSymbolClass($scenario['allowed'])]],
+          '#wrapper_attributes' => [
+            'class' => [
+              'rights-cell',
+              'rights-cell--allowed',
+              'symbol-' . $this->getSymbolClass($scenario['allowed']),
+            ],
+          ],
         ];
 
         // Unverified column.
@@ -263,7 +314,24 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
           '#type' => 'item',
           '#markup' => $scenario['unverified'],
           '#wrapper_attributes' => [
-            'class' => ['rights-cell', 'symbol-' . $this->getSymbolClass($scenario['unverified'])],
+            'class' => [
+              'rights-cell',
+              'rights-cell--unverified',
+              'symbol-' . $this->getSymbolClass($scenario['unverified']),
+            ],
+          ],
+        ];
+
+        // Privileged column.
+        $form['role_' . $role_id]['mapping'][$row_key]['privileged'] = [
+          '#type' => 'item',
+          '#markup' => $scenario['privileged'],
+          '#wrapper_attributes' => [
+            'class' => [
+              'rights-cell',
+              'rights-cell--privileged',
+              'symbol-' . $this->getSymbolClass($scenario['privileged']),
+            ],
           ],
         ];
 
@@ -274,13 +342,21 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
             '#options' => $report_statuses,
             '#default_value' => $current_mapping[$role_id]['report'][$scenario_key] ?? 'draft',
             '#required' => TRUE,
+            '#wrapper_attributes' => [
+              'class' => [
+                'status-cell',
+                'status-cell--report',
+              ],
+            ],
           ];
         }
         else {
           $form['role_' . $role_id]['mapping'][$row_key]['report_status'] = [
             '#type' => 'item',
             '#markup' => 'N/A',
-            '#wrapper_attributes' => ['class' => ['na-cell']],
+            '#wrapper_attributes' => [
+              'class' => ['na-cell', 'na-cell--report'],
+            ],
           ];
         }
 
@@ -291,13 +367,18 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
             '#options' => $job_statuses,
             '#default_value' => $current_mapping[$role_id]['job'][$scenario_key] ?? 'draft',
             '#required' => TRUE,
+            '#wrapper_attributes' => [
+              'class' => ['status-cell', 'status-cell--job'],
+            ],
           ];
         }
         else {
           $form['role_' . $role_id]['mapping'][$row_key]['job_status'] = [
             '#type' => 'item',
             '#markup' => 'N/A',
-            '#wrapper_attributes' => ['class' => ['na-cell']],
+            '#wrapper_attributes' => [
+              'class' => ['na-cell', 'na-cell--job'],
+            ],
           ];
         }
 
@@ -308,13 +389,18 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
             '#options' => $training_statuses,
             '#default_value' => $current_mapping[$role_id]['training'][$scenario_key] ?? 'draft',
             '#required' => TRUE,
+            '#wrapper_attributes' => [
+              'class' => ['status-cell', 'status-cell--training'],
+            ],
           ];
         }
         else {
           $form['role_' . $role_id]['mapping'][$row_key]['training_status'] = [
             '#type' => 'item',
             '#markup' => 'N/A',
-            '#wrapper_attributes' => ['class' => ['na-cell']],
+            '#wrapper_attributes' => [
+              'class' => ['na-cell', 'na-cell--training'],
+            ],
           ];
         }
       }

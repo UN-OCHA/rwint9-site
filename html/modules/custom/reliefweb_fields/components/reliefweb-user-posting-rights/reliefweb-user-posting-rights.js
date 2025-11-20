@@ -136,10 +136,11 @@
 
       // Rights info.
       container.setAttribute('data-status', data.status ? 'active' : 'blocked');
+      container.setAttribute('data-report', data.report);
       container.setAttribute('data-job', data.job);
       container.setAttribute('data-training', data.training);
-      container.setAttribute('data-report', data.report);
       container.setAttribute('data-name', [data.id, data.name, data.mail].join(', '));
+      container.setAttribute('data-privileged', data.privileged);
 
       // User info.
       var info = document.createElement('div');
@@ -168,9 +169,9 @@
       actions.setAttribute('data-actions', '');
 
       // Rights.
+      actions.appendChild(this.createSelect('report', data.report, disabled));
       actions.appendChild(this.createSelect('job', data.job, disabled));
       actions.appendChild(this.createSelect('training', data.training, disabled));
-      actions.appendChild(this.createSelect('report', data.report, disabled));
 
       // Remove.
       actions.appendChild(this.createButton('remove', t('Remove'), true, '', disabled));
@@ -227,9 +228,9 @@
     createFilters: function () {
       var container = document.createElement('div');
       container.setAttribute('data-filters', '');
+      container.setAttribute('data-report', 'all');
       container.setAttribute('data-job', 'all');
       container.setAttribute('data-training', 'all');
-      container.setAttribute('data-report', 'all');
       container.setAttribute('data-name', '');
 
       var title = document.createElement('span');
@@ -237,9 +238,9 @@
       container.appendChild(title);
 
       // Rights filters.
+      container.appendChild(this.createSelect('report', '', false, true));
       container.appendChild(this.createSelect('job', '', false, true));
       container.appendChild(this.createSelect('training', '', false, true));
-      container.appendChild(this.createSelect('report', '', false, true));
 
       // User filter.
       container.appendChild(this.createUserFilter());
@@ -447,9 +448,9 @@
     getEntryData: function (element) {
       return {
         id: element.getAttribute('data-id'),
+        report: Math.max(element.querySelector('select[data-name="report"]').selectedIndex, 0),
         job: Math.max(element.querySelector('select[data-name="job"]').selectedIndex, 0),
         training: Math.max(element.querySelector('select[data-name="training"]').selectedIndex, 0),
-        report: Math.max(element.querySelector('select[data-name="report"]').selectedIndex, 0),
         notes: element.querySelector('textarea').value.trim()
       };
     },
@@ -543,7 +544,7 @@
         var name = target.getAttribute('data-name');
 
         // Update the rights attributes of the user row.
-        if (name === 'job' || name === 'training' || name === 'report') {
+        if (name === 'report' || name === 'job' || name === 'training') {
           var parent = target.parentNode.parentNode;
 
           // If the parent is not the filter container, then it's a select

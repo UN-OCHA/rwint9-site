@@ -7,11 +7,12 @@ namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Services;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Render\RenderContext;
 use Drupal\node\Entity\Node;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
 use Drupal\user\EntityOwnerInterface;
-use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -78,7 +79,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   /**
    * Original default domain posting rights.
    */
-  protected ?string $originalDefaultDomainPostingRights;
+  protected array|string|null $originalDefaultDomainPostingRights;
 
   /**
    * {@inheritdoc}
@@ -265,6 +266,19 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * Helper to set default domain posting rights state.
+   *
+   * @param array|string $values
+   *   Posting rights per bundle or a single value for all bundles.
+   */
+  protected function setDefaultDomainPostingRights(array|string $values): void {
+    if (is_string($values)) {
+      $values = array_fill_keys(['report', 'job', 'training'], $values);
+    }
+    \Drupal::state()->set('reliefweb_users_privileged_domains_default_posting_rights', $values);
+  }
+
+  /**
    * Test getEntityAuthorPostingRights method.
    */
   public function testGetEntityAuthorPostingRights(): void {
@@ -446,7 +460,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain for example.com with default "allowed" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+    $this->setDefaultDomainPostingRights('allowed');
 
     // Reset cache to ensure new state values are used.
     $this->userPostingRightsManager->resetCache();
@@ -490,7 +504,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain with default "trusted" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+    $this->setDefaultDomainPostingRights('trusted');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -526,7 +540,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain with default "blocked" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'blocked');
+    $this->setDefaultDomainPostingRights('blocked');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -562,7 +576,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain with default "trusted" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+    $this->setDefaultDomainPostingRights('trusted');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -599,7 +613,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain (different domain).
     $state->set('reliefweb_users_privileged_domains', ['otherdomain.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+    $this->setDefaultDomainPostingRights('allowed');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -635,7 +649,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up whitelisted domain with default "allowed" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'allowed');
+    $this->setDefaultDomainPostingRights('allowed');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -676,6 +690,60 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * Test whitelisted domains with distinct default rights per bundle.
+   */
+  public function testWhitelistedDomainsPerBundleDefaults(): void {
+    $state = \Drupal::service('state');
+
+    // Set up whitelisted domain with distinct defaults.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->setDefaultDomainPostingRights([
+      'job' => 'allowed',
+      'training' => 'trusted',
+      'report' => 'unverified',
+    ]);
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Job should use allowed default');
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['training'], 'Training should use trusted default');
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['report'], 'Report should use unverified default');
+
+    $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['job'], 'Domain rights should use allowed default');
+    $this->assertEquals(3, $domain_rights[$this->noRightsSource->id()]['training'], 'Domain rights should use trusted default');
+    $this->assertEquals(0, $domain_rights[$this->noRightsSource->id()]['report'], 'Domain rights should use unverified default');
+  }
+
+  /**
+   * Test cache reset clears cached default posting rights.
+   */
+  public function testResetCacheClearsDefaultPostingRights(): void {
+    $state = \Drupal::service('state');
+
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->setDefaultDomainPostingRights('allowed');
+    $this->userPostingRightsManager->resetCache();
+
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Job should use allowed default after cache reset');
+
+    // Update defaults without resetting cache; value should remain cached.
+    $this->setDefaultDomainPostingRights('trusted');
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Cached default should still be used without reset');
+
+    // Reset cache to pick up new defaults.
+    $this->userPostingRightsManager->resetCache();
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertEquals(3, $rights[$this->noRightsSource->id()]['job'], 'Cache reset should reload trusted default');
+  }
+
+  /**
    * Test whitelisted domains with user posting rights taking precedence.
    */
   public function testWhitelistedDomainsUserRightsPrecedence(): void {
@@ -683,7 +751,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Set up privileged domain with default "trusted" rights.
     $state->set('reliefweb_users_privileged_domains', ['example.com']);
-    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+    $this->setDefaultDomainPostingRights('trusted');
 
     // Reset cache.
     $this->userPostingRightsManager->resetCache();
@@ -704,6 +772,123 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
     $this->assertEquals(3, $rights[$this->noRightsSource->id()]['job'], 'Should use default trusted rights when no user or domain rights exist');
+  }
+
+  /**
+   * Test check_privileged_domains parameter.
+   */
+  public function testCheckPrivilegedDomainsParameter(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domain with default "allowed" rights.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->setDefaultDomainPostingRights('allowed');
+
+    // Reset cache.
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with check_privileged_domains = TRUE (default behavior).
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()], TRUE);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should use default "allowed" (2) for privileged domain.
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'With check_privileged_domains=TRUE, should use default allowed rights');
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['training'], 'With check_privileged_domains=TRUE, should use default allowed rights');
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['report'], 'With check_privileged_domains=TRUE, should use default allowed rights');
+
+    // Test with check_privileged_domains = FALSE.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()], FALSE);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    // Should return unverified (0) since privileged domains are not checked.
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['job'], 'With check_privileged_domains=FALSE, should return unverified');
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['training'], 'With check_privileged_domains=FALSE, should return unverified');
+    $this->assertEquals(0, $rights[$this->noRightsSource->id()]['report'], 'With check_privileged_domains=FALSE, should return unverified');
+
+    // Test getDomainPostingRights with check_privileged_domains = TRUE.
+    $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->noRightsSource->id()], TRUE);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $domain_rights);
+    // Should use default "allowed" (2) for privileged domain.
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['job'], 'Domain rights with check_privileged_domains=TRUE should use default allowed');
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['training'], 'Domain rights with check_privileged_domains=TRUE should use default allowed');
+    $this->assertEquals(2, $domain_rights[$this->noRightsSource->id()]['report'], 'Domain rights with check_privileged_domains=TRUE should use default allowed');
+
+    // Test getDomainPostingRights with check_privileged_domains = FALSE.
+    $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->noRightsSource->id()], FALSE);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $domain_rights);
+    // Should return unverified (0) since privileged domains are not checked.
+    $this->assertEquals(0, $domain_rights[$this->noRightsSource->id()]['job'], 'Domain rights with check_privileged_domains=FALSE should return unverified');
+    $this->assertEquals(0, $domain_rights[$this->noRightsSource->id()]['training'], 'Domain rights with check_privileged_domains=FALSE should return unverified');
+    $this->assertEquals(0, $domain_rights[$this->noRightsSource->id()]['report'], 'Domain rights with check_privileged_domains=FALSE should return unverified');
+
+    // Test that default behavior (TRUE) still works when parameter is omitted.
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->noRightsSource->id()]);
+    $this->assertArrayHasKey($this->noRightsSource->id(), $rights);
+    $this->assertEquals(2, $rights[$this->noRightsSource->id()]['job'], 'Default behavior (omitted parameter) should check privileged domains');
+
+    // Test that explicit domain posting rights still work when
+    // check_privileged_domains = FALSE.
+    // The domainOnlySource has explicit domain posting rights (allowed = 2).
+    $rights = $this->userPostingRightsManager->getUserPostingRights($this->testUser, [$this->domainOnlySource->id()], FALSE);
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $rights);
+    // Should still return explicit domain posting rights even when
+    // check_privileged_domains = FALSE.
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['job'], 'Explicit domain posting rights should still work when check_privileged_domains=FALSE');
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['training'], 'Explicit domain posting rights should still work when check_privileged_domains=FALSE');
+    $this->assertEquals(2, $rights[$this->domainOnlySource->id()]['report'], 'Explicit domain posting rights should still work when check_privileged_domains=FALSE');
+
+    // Test getDomainPostingRights with explicit domain rights and
+    // check_privileged_domains = FALSE.
+    $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->domainOnlySource->id()], FALSE);
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $domain_rights);
+    // Should still return explicit domain posting rights.
+    $this->assertEquals(2, $domain_rights[$this->domainOnlySource->id()]['job'], 'Explicit domain rights should work when check_privileged_domains=FALSE');
+    $this->assertEquals(2, $domain_rights[$this->domainOnlySource->id()]['training'], 'Explicit domain rights should work when check_privileged_domains=FALSE');
+    $this->assertEquals(2, $domain_rights[$this->domainOnlySource->id()]['report'], 'Explicit domain rights should work when check_privileged_domains=FALSE');
+  }
+
+  /**
+   * Test default domain posting rights helper methods.
+   */
+  public function testGetDefaultDomainPostingRightsHelpers(): void {
+    $state = \Drupal::service('state');
+
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', [
+      'job' => 'allowed',
+      'training' => 'trusted',
+      'report' => 'blocked',
+    ]);
+
+    $this->userPostingRightsManager->resetCache();
+
+    $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
+    $this->assertSame([
+      'report' => 'blocked',
+      'job' => 'allowed',
+      'training' => 'trusted',
+    ], $defaults, 'Should return per-bundle defaults from state');
+
+    $this->assertSame('allowed', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('job'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('unknown'), 'Unknown bundle should fall back to unverified');
+
+    $this->assertSame(2, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('job'));
+    $this->assertSame(0, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('unknown'), 'Unknown bundle should fall back to unverified code');
+
+    $codes = $this->userPostingRightsManager->getDefaultDomainPostingRightCodes();
+    $this->assertSame([
+      'report' => 1,
+      'job' => 2,
+      'training' => 3,
+    ], $codes, 'Should map defaults to numeric codes');
+
+    // Update state with a scalar value (applies to all bundles).
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+    $this->userPostingRightsManager->resetCache();
+
+    $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
+    $this->assertSame([
+      'report' => 'trusted',
+      'job' => 'trusted',
+      'training' => 'trusted',
+    ], $defaults, 'Scalar state should be expanded to all bundles');
   }
 
   /**
@@ -825,27 +1010,39 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * Test sanitizePostingRight method.
+   */
+  public function testSanitizePostingRight(): void {
+    $this->assertSame('allowed', $this->userPostingRightsManager->sanitizePostingRight('allowed'));
+    $this->assertSame('blocked', $this->userPostingRightsManager->sanitizePostingRight('blocked'));
+    $this->assertSame('trusted', $this->userPostingRightsManager->sanitizePostingRight('trusted'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('unverified'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('invalid'), 'Invalid values should default to unverified');
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight(NULL), 'NULL should default to unverified');
+  }
+
+  /**
    * Test extractDomainFromEmail method.
    */
   public function testExtractDomainFromEmail(): void {
     // Test with valid email.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@example.com']);
+    $domain = DomainHelper::extractDomainFromEmail('test@example.com');
     $this->assertEquals('example.com', $domain, 'Should extract domain from valid email');
 
     // Test with empty email.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['']);
+    $domain = DomainHelper::extractDomainFromEmail('');
     $this->assertNull($domain, 'Should return null for empty email');
 
     // Test with invalid email (no @).
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['invalid-email']);
+    $domain = DomainHelper::extractDomainFromEmail('invalid-email');
     $this->assertNull($domain, 'Should return null for email without @');
 
     // Test with email with multiple @ symbols.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@sub@example.com']);
+    $domain = DomainHelper::extractDomainFromEmail('test@sub@example.com');
     $this->assertEquals('sub@example.com', $domain, 'Should handle multiple @ symbols correctly');
 
     // Test case sensitivity.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@EXAMPLE.COM']);
+    $domain = DomainHelper::extractDomainFromEmail('test@EXAMPLE.COM');
     $this->assertEquals('example.com', $domain, 'Should convert domain to lowercase');
   }
 
@@ -1487,6 +1684,37 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Should include the domain rights source since it matches the job
     // condition.
     $this->assertArrayHasKey($domainRightsSource->id(), $sources, 'Should include source that matches at least one OR condition');
+  }
+
+  /**
+   * Test getSourcesWithDomainPostingRightsForDomain method.
+   */
+  public function testGetSourcesWithDomainPostingRightsForDomain(): void {
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include source with mixed user/domain rights');
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include domain-only source');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should retrieve job rights for the mixed source');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['job'], 'Should retrieve job rights for domain-only source');
+
+    // Limit should restrict the number of returned sources.
+    $limited = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR',
+      1
+    );
+    $this->assertCount(1, $limited, 'Should respect limit parameter');
+
+    // Unknown domain should return empty.
+    $this->assertEmpty(
+      $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain('unknown.com'),
+      'Unknown domain should return empty array'
+    );
   }
 
   /**
@@ -2515,6 +2743,135 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Reload and check final status.
     $past_job = \Drupal::entityTypeManager()->getStorage('node')->load($past_job->id());
     $this->assertEquals('expired', $past_job->get('moderation_status')->value, 'Job with past closing date should be expired');
+  }
+
+  /**
+   * Test isDomainPrivileged method.
+   */
+  public function testIsDomainPrivileged(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domains.
+    $state->set('reliefweb_users_privileged_domains', ['example.com', 'UN.ORG']);
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with exact match (normalized).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return TRUE for exact match'
+    );
+
+    // Test with uppercase domain (should be normalized and match).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('EXAMPLE.COM'),
+      'Should return TRUE for uppercase domain (normalized)'
+    );
+
+    // Test with uppercase privileged domain (should be normalized and match).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('un.org'),
+      'Should return TRUE for lowercase domain matching uppercase privileged domain'
+    );
+
+    // Test with @ prefix (should be normalized and removed).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('@example.com'),
+      'Should return TRUE for domain with @ prefix (normalized)'
+    );
+
+    // Test with whitespace (should be normalized and trimmed).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('  example.com  '),
+      'Should return TRUE for domain with whitespace (normalized)'
+    );
+
+    // Test with @ prefix and uppercase and whitespace.
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('  @EXAMPLE.COM  '),
+      'Should return TRUE for domain with @ prefix, uppercase, and whitespace (normalized)'
+    );
+
+    // Test with non-privileged domain.
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('other.com'),
+      'Should return FALSE for non-privileged domain'
+    );
+
+    // Test with empty privileged domains list.
+    $state->set('reliefweb_users_privileged_domains', []);
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE when privileged domains list is empty'
+    );
+
+    // Test with NULL privileged domains (not set in state).
+    $state->delete('reliefweb_users_privileged_domains');
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE when privileged domains are not configured'
+    );
+
+    // Test caching behavior - privileged domains should be cached.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->userPostingRightsManager->resetCache();
+
+    // First call should populate cache.
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'First call should return TRUE and populate cache'
+    );
+
+    // Change state without resetting cache - should still use cached value.
+    $state->set('reliefweb_users_privileged_domains', ['other.com']);
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should use cached privileged domains without reset'
+    );
+
+    // Reset cache and verify new domains are loaded.
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE after cache reset with new domains'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('other.com'),
+      'Should return TRUE for new privileged domain after cache reset'
+    );
+
+    // Test with multiple privileged domains.
+    $state->set('reliefweb_users_privileged_domains', ['example.com', 'test.org', '  @DEMO.NET  ']);
+    $this->userPostingRightsManager->resetCache();
+
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return TRUE for first privileged domain'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('TEST.ORG'),
+      'Should return TRUE for second privileged domain (case insensitive)'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('demo.net'),
+      'Should return TRUE for third privileged domain (normalized from @DEMO.NET with whitespace)'
+    );
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('notprivileged.com'),
+      'Should return FALSE for non-privileged domain'
+    );
+  }
+
+  /**
+   * Test getSupportedContentTypes method.
+   */
+  public function testGetSupportedContentTypes(): void {
+    $this->assertSame(
+      ['report', 'job', 'training'],
+      $this->userPostingRightsManager->getSupportedContentTypes(),
+      'Supported content types should match the manager constant'
+    );
   }
 
   /**

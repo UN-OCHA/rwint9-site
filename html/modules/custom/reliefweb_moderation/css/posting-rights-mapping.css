@@ -62,15 +62,15 @@
 }
 
 .posting-rights-mapping-table .rights-cell.symbol-maybe {
-  color: #e65100;
-  background-color: #ffe0b2;
+  color: #e07000;
+  background-color: #f5f3ef;
   font-weight: bold;
 }
 
 .posting-rights-mapping-table .rights-cell.symbol-none {
   color: #424242;
   background-color: #f5f5f5;
-  font-weight: normal;
+  font-weight: bold;
 }
 
 /* Scenario column styling */
@@ -81,15 +81,21 @@
   font-weight: bold;
 }
 
+/* Privileged column styling */
+.posting-rights-mapping-table th.rights-cell--privileged {
+  background-color: #dedfe4;
+}
+.posting-rights-mapping-table td.rights-cell--privileged {
+  border-right: 1.5px solid #c1c2c7;
+  border-left: 1.5px solid #c1c2c7;
+}
+
 /* Status columns styling */
-.posting-rights-mapping-table th:nth-child(6),
-.posting-rights-mapping-table th:nth-child(7),
-.posting-rights-mapping-table th:nth-child(8) {
+.posting-rights-mapping-table th.status-cell {
   background-color: #e3f2fd;
 }
 
-.posting-rights-mapping-table td:nth-child(6),
-.posting-rights-mapping-table td:nth-child(7),
-.posting-rights-mapping-table td:nth-child(8) {
+.posting-rights-mapping-table td.status-cell,
+.posting-rights-mapping-table td.na-cell {
   background-color: #f8f9fa;
 }

@@ -15,6 +15,7 @@ use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_moderation\Controller\SourceAutocompleteController;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -81,9 +82,26 @@ class DomainPostingRightsOverviewForm extends FormBase {
     $domain_filter = $this->getRequest()->query->get('domain', '');
     $source_filter = $this->getRequest()->query->get('source', '');
 
+    $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+    $form['privileged_info'] = [
+      '#type' => 'inline_template',
+      '#template' => <<<TEMPLATE
+        <div class="rw-posting-rights-privileged-box">
+        {%- trans -%}
+        Domains that appear in the <a href="{{ url }}" target="_blank">privileged domains list</a> are highlighted with a star. Privileged domains default to <strong>allowed</strong> for jobs, training and reports for any source unless overridden by the explicit posting rights shown below.
+        {%- endtrans -%}
+        </div>
+        TEMPLATE,
+      '#context' => [
+        'url' => $privileged_domains_url,
+      ],
+      '#weight' => -10,
+    ];
+
     // Normalize domain filter.
     if (!empty($domain_filter)) {
-      $domain_filter = $this->normalizeDomain($domain_filter);
+      $domain_filter = DomainHelper::normalizeDomain($domain_filter);
     }
 
     // Build filters section.
@@ -228,7 +246,7 @@ class DomainPostingRightsOverviewForm extends FormBase {
     // Group by domain.
     $grouped = [];
     foreach ($results as $row) {
-      $domain = $this->normalizeDomain($row['domain']);
+      $domain = DomainHelper::normalizeDomain($row['domain']);
       if (empty($domain)) {
         continue;
       }
@@ -406,8 +424,23 @@ class DomainPostingRightsOverviewForm extends FormBase {
 
         // Domain cell (with rowspan for first row of each domain group).
         if ($row_index === 0) {
+          $is_privileged = $this->userPostingRightsManager->isDomainPrivileged($domain);
+          $domain_cell = [
+            '#type' => 'inline_template',
+            '#template' => <<<TEMPLATE
+              <span class="rw-domain-posting-rights-domain">{{ domain }}</span>
+              {% if privileged %}
+                <span class="rw-domain-posting-rights-domain-star" role="img" aria-label="{{ 'Privileged domain'|t }}"></span>
+              {% endif %}
+              TEMPLATE,
+            '#context' => [
+              'domain' => $domain,
+              'privileged' => $is_privileged,
+            ],
+          ];
+
           $row_cells[] = [
-            'data' => $domain,
+            'data' => $domain_cell,
             'rowspan' => $row_count,
             'class' => ['rw-domain-cell'],
           ];
@@ -482,7 +515,7 @@ class DomainPostingRightsOverviewForm extends FormBase {
 
       // Normalize domain.
       if (!empty($domain)) {
-        $domain = $this->normalizeDomain($domain);
+        $domain = DomainHelper::normalizeDomain($domain);
       }
 
       // Build query parameters.
@@ -562,21 +595,6 @@ class DomainPostingRightsOverviewForm extends FormBase {
       $query['source'] = $source_filter;
     }
     return Url::fromRoute('reliefweb_moderation.domain_posting_rights.overview', [], ['query' => $query])->toString();
-  }
-
-  /**
-   * Normalize domain.
-   *
-   * @param string $domain
-   *   The domain to normalize.
-   *
-   * @return string
-   *   The normalized domain.
-   */
-  protected function normalizeDomain(string $domain): string {
-    $domain = mb_strtolower(trim($domain));
-    $domain = ltrim($domain, '@');
-    return $domain;
   }
 
   /**

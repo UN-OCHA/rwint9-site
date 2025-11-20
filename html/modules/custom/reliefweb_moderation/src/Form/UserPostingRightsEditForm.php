@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Controller\SourceAutocompleteController;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -75,20 +76,42 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
 
     // Add informational box before the table.
     $form['rights']['info'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['rw-posting-rights-info-box', 'messages', 'messages--warning'],
-      ],
+      '#type' => 'inline_template',
+      '#template' => <<<TEMPLATE
+        <div class="rw-posting-rights-info-box messages messages--warning">
+        <ul>
+        <li>{{ 'Domain posting rights apply to all users sharing the same email domain. Any changes will affect everyone with that domain.'|t }}</li>
+        <li>{{ 'For the same source, user-specific posting rights take precedence over domain posting rights.'|t }}</li>
+        </ul>
+        </div>
+        TEMPLATE,
       '#weight' => -1,
     ];
-    $form['rights']['info']['content'] = [
-      '#type' => 'inline_template',
-      '#template' => '<ul><li>{{ domain_rights_info }}</li><li>{{ precedence_info }}</li></ul>',
-      '#context' => [
-        'domain_rights_info' => $this->t('Domain posting rights apply to all users sharing the same email domain. Any changes will affect everyone with that domain.'),
-        'precedence_info' => $this->t('For the same source, user-specific posting rights take precedence over domain posting rights.'),
-      ],
-    ];
+
+    // Check if the user's email domain is privileged.
+    $user_domain = DomainHelper::extractDomainFromEmail($user_email ?? '');
+    $privileged = !empty($user_domain) && $this->userPostingRightsManager->isDomainPrivileged($user_domain);
+
+    // Add informational box before the table if the domain is privileged.
+    if ($privileged) {
+      $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+      $form['rights']['privileged_info'] = [
+        '#type' => 'inline_template',
+        '#weight' => -0.5,
+        '#template' => <<<TEMPLATE
+          <div class="rw-posting-rights-privileged-box">
+          {%- trans -%}
+          The user's email domain <strong>{{ domain }}</strong> is currently in the <a href="{{ url }}" target="_blank">privileged domains list</a>. By default it is considered <strong>allowed</strong> for jobs, training and reports for any source. The organizations listed below have <strong>explicit posting rights</strong> that take precedence over this default.
+          {%- endtrans -%}
+          </div>
+          TEMPLATE,
+        '#context' => [
+          'domain' => $user_domain,
+          'url' => $privileged_domains_url,
+        ],
+      ];
+    }
 
     $rights_options = $this->getRightsOptions();
 
@@ -241,7 +264,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       ];
 
       // Rights columns.
-      $rights_fields = $this->buildRightsSelectFields($rights_options);
+      $rights_fields = $this->buildRightsSelectFields($rights_options, $privileged);
       $form['rights']['table'][$row_key]['report'] = $rights_fields['report'];
       $form['rights']['table'][$row_key]['job'] = $rights_fields['job'];
       $form['rights']['table'][$row_key]['training'] = $rights_fields['training'];
@@ -329,7 +352,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
             $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());
             $domain = NULL;
             if ($user_entity && $user_entity->getEmail()) {
-              $domain = $this->extractDomainFromEmail($user_entity->getEmail());
+              $domain = DomainHelper::extractDomainFromUser($user_entity);
             }
 
             if (empty($domain)) {
@@ -340,7 +363,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
             // Check for existing domain posting rights.
             if ($source->hasField('field_domain_posting_rights')) {
               foreach ($source->field_domain_posting_rights as $item) {
-                if (mb_strtolower(trim($item->domain)) === $domain) {
+                if (DomainHelper::normalizeDomain($item->domain) === $domain) {
                   $form_state->setErrorByName("rights][table][{$row_key}][source", $this->t('User already has domain rights for the organization @source with domain @domain.', [
                     '@source' => $source->label(),
                     '@domain' => $domain,
@@ -380,7 +403,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
     $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());
     $user_domain = NULL;
     if ($user_entity && $user_entity->getEmail()) {
-      $user_domain = $this->extractDomainFromEmail($user_entity->getEmail());
+      $user_domain = DomainHelper::extractDomainFromUser($user_entity);
     }
 
     $removed_new_rows = $form_state->get('removed_new_rows') ?? [];
@@ -607,9 +630,9 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->get('field_domain_posting_rights') as $index => $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         $source->get('field_domain_posting_rights')->removeItem($index);
         $source->save();
         $counts['removed']++;
@@ -672,9 +695,9 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         // Only update if the rights have changed.
         if ((int) $item->report !== $report_rights || (int) $item->job !== $job_rights || (int) $item->training !== $training_rights) {
           $item->report = $report_rights;
@@ -797,31 +820,13 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return FALSE;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->field_domain_posting_rights as $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         return TRUE;
       }
     }
     return FALSE;
-  }
-
-  /**
-   * Extract domain from email address.
-   *
-   * @param string $email
-   *   Email address.
-   *
-   * @return string|null
-   *   Domain part of the email address or null if invalid.
-   */
-  protected function extractDomainFromEmail(string $email): ?string {
-    if (empty($email) || !str_contains($email, '@')) {
-      return NULL;
-    }
-
-    [, $domain] = explode('@', $email, 2);
-    return $this->normalizeDomain($domain);
   }
 
   /**

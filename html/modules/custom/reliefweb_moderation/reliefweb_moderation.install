@@ -168,3 +168,68 @@ function reliefweb_moderation_update_11001() {
     \Drupal::logger('reliefweb_moderation')->info('Set default posting rights status mapping configuration.');
   }
 }
+
+/**
+ * Update posting rights status mapping to include privileged_all scenario.
+ */
+function reliefweb_moderation_update_11002() {
+  $state = \Drupal::state();
+
+  $mapping = [
+    'contributor' => [
+      'report' => [
+        'blocked' => 'refused',
+        'trusted_all' => 'published',
+        'trusted_some_allowed' => 'published',
+        'trusted_some_unverified' => 'to-review',
+        'privileged_all' => 'to-review',
+        'allowed_all' => 'to-review',
+        'allowed_some_unverified' => 'to-review',
+        'unverified_all' => 'to-review',
+      ],
+      'job' => [],
+      'training' => [],
+    ],
+    'submitter' => [
+      'report' => [
+        'blocked' => 'refused',
+        'trusted_all' => 'published',
+        'trusted_some_allowed' => 'published',
+        'trusted_some_unverified' => 'to-review',
+        'privileged_all' => 'to-review',
+        'allowed_all' => 'to-review',
+        'allowed_some_unverified' => 'pending',
+        'unverified_all' => 'pending',
+      ],
+      'job' => [],
+      'training' => [],
+    ],
+    'advertiser' => [
+      'report' => [],
+      'job' => [
+        'blocked' => 'refused',
+        'trusted_all' => 'published',
+        'trusted_some_allowed' => 'published',
+        'trusted_some_unverified' => 'to-review',
+        'privileged_all' => 'to-review',
+        'allowed_all' => 'to-review',
+        'allowed_some_unverified' => 'to-review',
+        'unverified_all' => 'pending',
+      ],
+      'training' => [
+        'blocked' => 'refused',
+        'trusted_all' => 'published',
+        'trusted_some_allowed' => 'published',
+        'trusted_some_unverified' => 'to-review',
+        'privileged_all' => 'to-review',
+        'allowed_all' => 'pending',
+        'allowed_some_unverified' => 'pending',
+        'unverified_all' => 'pending',
+      ],
+    ],
+  ];
+
+  $state->set('reliefweb_posting_rights_status_mapping', $mapping);
+
+  \Drupal::logger('reliefweb_moderation')->info('Updated posting rights status mapping to include privileged_all scenario.');
+}

@@ -60,11 +60,13 @@ interface UserPostingRightsManagerInterface {
    *   A user's account object or the current user if NULL.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Posting rights as an associative array keyed by source id.
    */
-  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = []): array;
+  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = [], bool $check_privileged_domains = TRUE): array;
 
   /**
    * Get domain posting rights for an account.
@@ -73,22 +75,24 @@ interface UserPostingRightsManagerInterface {
    *   A user's account object.
    * @param array<int> $sources
    *   List of source ids. Limit the returned rights to the given sources.
+   * @param bool $check_privileged_domains
+   *   Whether to check privileged domains for default posting rights.
    *
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  public function getDomainPostingRights(AccountInterface $account, array $sources = []): array;
+  public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array;
 
   /**
-   * Extract domain from email address.
+   * Check if a domain is in the privileged domains list.
    *
-   * @param string $email
-   *   Email address.
+   * @param string $domain
+   *   Domain to check.
    *
-   * @return string|null
-   *   Domain part of the email address or NULL if invalid.
+   * @return bool
+   *   TRUE if the domain is in the privileged list, FALSE otherwise.
    */
-  public function extractDomainFromEmail(string $email): ?string;
+  public function isDomainPrivileged(string $domain): bool;
 
   /**
    * Get allowed content types for a source entity.
@@ -297,5 +301,54 @@ interface UserPostingRightsManagerInterface {
    *   Array of content type machine names.
    */
   public function getSupportedContentTypes(): array;
+
+  /**
+   * Sanitize a posting right value.
+   *
+   * @param string|null $right
+   *   Posting right value.
+   *
+   * @return string
+   *   Sanitized posting right.
+   */
+  public function sanitizePostingRight(?string $right): string;
+
+  /**
+   * Get default domain posting rights.
+   *
+   * @return array<string, string>
+   *   Default posting rights keyed by bundle.
+   */
+  public function getDefaultDomainPostingRights(): array;
+
+  /**
+   * Get default domain posting rights value.
+   *
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return string
+   *   Default posting right value.
+   */
+  public function getDefaultDomainPostingRightValue(string $bundle): string;
+
+  /**
+   * Get default domain posting rights code.
+   *
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return int
+   *   Default posting right code.
+   */
+  public function getDefaultDomainPostingRightCode(string $bundle): int;
+
+  /**
+   * Get default domain posting rights codes.
+   *
+   * @return array<string, int>
+   *   Default posting right code per bundle.
+   */
+  public function getDefaultDomainPostingRightCodes(): array;
 
 }

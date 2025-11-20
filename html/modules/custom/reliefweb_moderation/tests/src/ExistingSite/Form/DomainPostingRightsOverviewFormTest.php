@@ -861,39 +861,6 @@ class DomainPostingRightsOverviewFormTest extends ExistingSiteBase {
   }
 
   /**
-   * Test normalizeDomain normalizes various formats.
-   */
-  public function testNormalizeDomain(): void {
-    $container = $this->container;
-    $form = DomainPostingRightsOverviewForm::create($container);
-
-    // Use reflection to access protected method.
-    $reflection = new \ReflectionClass($form);
-    $method = $reflection->getMethod('normalizeDomain');
-    $method->setAccessible(TRUE);
-
-    // Test with @ prefix.
-    $normalized = $method->invoke($form, '@example.com');
-    $this->assertEquals('example.com', $normalized);
-
-    // Test with uppercase.
-    $normalized = $method->invoke($form, 'EXAMPLE.COM');
-    $this->assertEquals('example.com', $normalized);
-
-    // Test with whitespace.
-    $normalized = $method->invoke($form, '  example.com  ');
-    $this->assertEquals('example.com', $normalized);
-
-    // Test with @ prefix and uppercase and whitespace.
-    $normalized = $method->invoke($form, '  @EXAMPLE.COM  ');
-    $this->assertEquals('example.com', $normalized);
-
-    // Test normal domain.
-    $normalized = $method->invoke($form, 'example.com');
-    $this->assertEquals('example.com', $normalized);
-  }
-
-  /**
    * Test buildForm with source that has shortname.
    */
   public function testBuildFormWithSourceShortname(): void {

@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_moderation\Traits\UserPostingRightsTrait;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\EntityOwnerInterface;
 
 /**
@@ -120,12 +121,21 @@ class ReliefWebSourceRestricted extends ReliefWebSource {
       // Restrict to the sources the entity's owner is allowed to post for.
       if ($entity instanceof EntityOwnerInterface) {
         $owner = $entity->getOwner();
-        $sources = $this->getUserPostingRightsManager()->getSourcesWithPostingRightsForUser($owner, [$bundle => [2, 3]]);
-        if (!empty($sources)) {
-          $query->condition($table . '.' . $id_field, array_keys($sources), 'IN');
-        }
-        else {
-          $query->alwaysFalse();
+        $user_posting_rights_manager = $this->getUserPostingRightsManager();
+
+        // Check if the user domain is privileged.
+        $user_domain = DomainHelper::extractDomainFromUser($owner);
+
+        // Only filter if the user domain is not privileged since privileged
+        // domains are allowed to post for all sources.
+        if (!$user_domain || !$user_posting_rights_manager->isDomainPrivileged($user_domain)) {
+          $sources = $user_posting_rights_manager->getSourcesWithPostingRightsForUser($owner, [$bundle => [2, 3]]);
+          if (!empty($sources)) {
+            $query->condition($table . '.' . $id_field, array_keys($sources), 'IN');
+          }
+          else {
+            $query->alwaysFalse();
+          }
         }
       }
       else {

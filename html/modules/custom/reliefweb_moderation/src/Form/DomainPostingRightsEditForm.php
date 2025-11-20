@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Controller\SourceAutocompleteController;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -43,8 +44,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
    */
   public static function getTitle(string $domain): TranslatableMarkup {
     // Normalize domain.
-    $domain = mb_strtolower(trim($domain));
-    $domain = ltrim($domain, '@');
+    $domain = DomainHelper::normalizeDomain($domain);
     return \Drupal::translation()->translate('Edit Posting Rights for @domain', ['@domain' => $domain]);
   }
 
@@ -54,8 +54,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, ?string $domain = NULL): array {
     // Normalize domain.
     if (!empty($domain)) {
-      $domain = mb_strtolower(trim($domain));
-      $domain = ltrim($domain, '@');
+      $domain = DomainHelper::normalizeDomain($domain);
     }
 
     if (empty($domain)) {
@@ -67,6 +66,29 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
 
     // Store the domain for use in other methods.
     $form_state->set('domain', $domain);
+
+    // Check if the domain is privileged.
+    $privileged = $this->userPostingRightsManager->isDomainPrivileged($domain);
+
+    // Add informational box before the table if the domain is privileged.
+    if ($privileged) {
+      $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+      $form['privileged_domain_info'] = [
+        '#type' => 'inline_template',
+        '#template' => <<<TEMPLATE
+          <div class="rw-posting-rights-privileged-box">
+          {%- trans -%}
+          The domain <strong>{{ domain }}</strong> is currently in the <a href="{{ url }}" target="_blank">privileged domains list</a>. By default it is considered <strong>allowed</strong> for jobs, training and reports for any source. The organizations listed below have <strong>explicit posting rights</strong> that take precedence over this default.
+          {%- endtrans -%}
+          </div>
+          TEMPLATE,
+        '#context' => [
+          'domain' => $domain,
+          'url' => $privileged_domains_url,
+        ],
+      ];
+    }
 
     // Get existing domain posting rights for this domain.
     $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain($domain);
@@ -162,7 +184,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
 
       $form['rights']['table'][$row_key]['source'] = $this->buildNewRowSourceField($row_key, $rights_options);
 
-      $rights_fields = $this->buildRightsSelectFields($rights_options);
+      $rights_fields = $this->buildRightsSelectFields($rights_options, $privileged);
       $form['rights']['table'][$row_key]['report'] = $rights_fields['report'];
       $form['rights']['table'][$row_key]['job'] = $rights_fields['job'];
       $form['rights']['table'][$row_key]['training'] = $rights_fields['training'];
@@ -231,7 +253,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
           // Check for existing domain posting rights.
           if ($source->hasField('field_domain_posting_rights')) {
             foreach ($source->field_domain_posting_rights as $item) {
-              if (mb_strtolower(trim($item->domain)) === $domain) {
+              if (DomainHelper::normalizeDomain($item->domain) === $domain) {
                 $form_state->setErrorByName("rights][table][{$row_key}][source", $this->t('Domain @domain already has posting rights for the organization @source.', [
                   '@domain' => $domain,
                   '@source' => $source->label(),
@@ -408,7 +430,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
    */
   protected function hasDomainRights($source, string $domain): bool {
     foreach ($source->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $domain) {
         return TRUE;
       }
     }
@@ -427,7 +449,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
    */
   protected function removeDomainRights($source, string $domain, array &$counts): void {
     foreach ($source->get('field_domain_posting_rights') as $index => $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $domain) {
         $source->get('field_domain_posting_rights')->removeItem($index);
         $source->save();
         $counts['removed']++;
@@ -454,7 +476,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
    */
   protected function updateDomainRights($source, string $domain, int $report_rights, int $job_rights, int $training_rights, array &$counts): void {
     foreach ($source->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $domain) {
         // Only update if the rights have changed.
         if ((int) $item->report !== $report_rights || (int) $item->job !== $job_rights || (int) $item->training !== $training_rights) {
           $item->report = $report_rights;

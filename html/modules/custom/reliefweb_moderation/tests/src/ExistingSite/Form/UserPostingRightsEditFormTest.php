@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Form;
 
 use Drupal\Core\Form\FormState;
 use Drupal\reliefweb_moderation\Form\UserPostingRightsEditForm;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
@@ -528,7 +529,7 @@ class UserPostingRightsEditFormTest extends ExistingSiteBase {
     $this->testSource = Term::load($this->testSource->id());
     $has_rights = FALSE;
     foreach ($this->testSource->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $this->testDomain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $this->testDomain) {
         $this->assertEquals(2, (int) $item->report);
         $this->assertEquals(3, (int) $item->job);
         $this->assertEquals(1, (int) $item->training);
@@ -634,7 +635,7 @@ class UserPostingRightsEditFormTest extends ExistingSiteBase {
     $this->testSource = Term::load($this->testSource->id());
     $updated = FALSE;
     foreach ($this->testSource->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $this->testDomain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $this->testDomain) {
         $this->assertEquals(3, (int) $item->report);
         $this->assertEquals(2, (int) $item->job);
         $this->assertEquals(1, (int) $item->training);
@@ -729,7 +730,7 @@ class UserPostingRightsEditFormTest extends ExistingSiteBase {
     $this->testSource = Term::load($this->testSource->id());
     $has_rights = FALSE;
     foreach ($this->testSource->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $this->testDomain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $this->testDomain) {
         $has_rights = TRUE;
         break;
       }
@@ -806,7 +807,7 @@ class UserPostingRightsEditFormTest extends ExistingSiteBase {
 
     $source2_added = FALSE;
     foreach ($this->testSource2->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && mb_strtolower(trim($item->domain)) === $this->testDomain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $this->testDomain) {
         $source2_added = TRUE;
         break;
       }
