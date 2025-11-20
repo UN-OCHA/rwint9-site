@@ -10,6 +10,7 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\UserInterface;
 
 /**
@@ -162,28 +163,14 @@ class UserRoleAssignment {
    *   TRUE if the user's email domain is privileged, FALSE otherwise.
    */
   public function isUserEmailDomainPrivileged(UserInterface $user): bool {
-    // Retrieve the user email address.
-    $email = $user->getEmail();
-    if (empty($email) || strpos($email, '@') === FALSE) {
+    // Extract the domain from the user's email.
+    $domain = DomainHelper::extractDomainFromUser($user);
+    if (!$domain) {
       return FALSE;
     }
 
-    // Retrieve the list of privileged domains for automatic assignment of the
-    // submitter role.
-    $domains = $this->state->get('reliefweb_users_privileged_domains', ['un.org']);
-    if (empty($domains)) {
-      return FALSE;
-    }
-
-    // Normalize the domains to lowercase.
-    $domains = array_map('mb_strtolower', $domains);
-
-    // Extract the email domain and normalize it to lowercase.
-    [, $domain] = explode('@', $email, 2);
-    $domain = mb_strtolower(trim($domain));
-
-    // Check if the email domain is allowed.
-    if (!in_array($domain, $domains)) {
+    // Check if the domain is privileged.
+    if (!$this->userPostingRightsManager->isDomainPrivileged($domain)) {
       return FALSE;
     }
 

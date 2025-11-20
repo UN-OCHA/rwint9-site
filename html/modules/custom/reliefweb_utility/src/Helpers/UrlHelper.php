@@ -313,32 +313,4 @@ class UrlHelper extends DrupalUrlHelper {
     return '';
   }
 
-  /**
-   * Validate a domain.
-   *
-   * @param string $domain
-   *   Domain.
-   * @param bool $check_tld
-   *   Whether to check the TLD or not.
-   *
-   * @return bool
-   *   TRUE if the domain is valid, FALSE otherwise.
-   */
-  public static function validateDomain(string $domain, bool $check_tld = TRUE): bool {
-    if (empty($domain)) {
-      return FALSE;
-    }
-
-    if ($check_tld && !str_contains($domain, '.')) {
-      return FALSE;
-    }
-
-    $ascii_domain = idn_to_ascii($domain);
-    if (empty($ascii_domain)) {
-      return FALSE;
-    }
-
-    return filter_var($ascii_domain, \FILTER_VALIDATE_DOMAIN, \FILTER_FLAG_HOSTNAME) !== FALSE;
-  }
-
 }

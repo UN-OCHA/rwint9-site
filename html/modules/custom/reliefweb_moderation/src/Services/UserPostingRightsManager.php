@@ -16,6 +16,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
@@ -55,6 +56,13 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   protected array $defaultDomainPostingRightsCodes = [];
 
   /**
+   * Privileged (normalized) domains.
+   *
+   * @var ?array<string>
+   */
+  protected ?array $privilegedDomains = NULL;
+
+  /**
    * Constructs a UserPostingRightsManager object.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -83,6 +91,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $this->userPostingRightsCache = [];
     $this->defaultDomainPostingRights = [];
     $this->defaultDomainPostingRightsCodes = [];
+    $this->privilegedDomains = NULL;
   }
 
   /**
@@ -152,7 +161,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $bundle = $entity->bundle();
     $uid = $entity->getOwnerId();
     $email = $entity->getOwner()?->getEmail() ?? '';
-    $domain = $this->extractDomainFromEmail($email);
+    $domain = DomainHelper::extractDomainFromEmail($email);
 
     $source_entities = $source_item_list->referencedEntities();
     foreach ($source_entities as $source_entity) {
@@ -295,7 +304,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     if (!empty($account->id()) && $check_privileged_domains) {
       $user = $this->entityTypeManager->getStorage('user')->load($account->id());
       if ($user && $user->getEmail()) {
-        $domain = $this->extractDomainFromEmail($user->getEmail());
+        $domain = DomainHelper::extractDomainFromUser($user);
         if ($domain && $this->isDomainPrivileged($domain)) {
           $default_codes = $this->getDefaultDomainPostingRightCodes();
         }
@@ -341,7 +350,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       return $results;
     }
 
-    $domain = $this->extractDomainFromEmail($user->getEmail());
+    $domain = DomainHelper::extractDomainFromUser($user);
     if (!$domain) {
       return $results;
     }
@@ -419,26 +428,21 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function extractDomainFromEmail(string $email): ?string {
-    if (empty($email) || strpos($email, '@') === FALSE) {
-      return NULL;
-    }
-
-    [, $domain] = explode('@', $email, 2);
-    return mb_strtolower(trim($domain));
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function isDomainPrivileged(string $domain): bool {
-    $privileged_domains = $this->state->get('reliefweb_users_privileged_domains', []);
-    if (empty($privileged_domains)) {
+    if (!isset($this->privilegedDomains)) {
+      $privileged_domains = $this->state->get('reliefweb_users_privileged_domains', []);
+      // Normalize the domains.
+      $this->privilegedDomains = array_map([DomainHelper::class, 'normalizeDomain'], $privileged_domains);
+    }
+    if (empty($this->privilegedDomains)) {
       return FALSE;
     }
 
-    $domain = mb_strtolower(trim($domain));
-    return in_array($domain, $privileged_domains, TRUE);
+    // Normalize the domain.
+    $domain = DomainHelper::normalizeDomain($domain);
+
+    // Check if the domain is in the list of privileged domains.
+    return in_array($domain, $this->privilegedDomains, TRUE);
   }
 
   /**
@@ -930,7 +934,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       return [];
     }
 
-    $domain = $this->extractDomainFromEmail($user->getEmail());
+    $domain = DomainHelper::extractDomainFromUser($user);
     if (!$domain) {
       return [];
     }
@@ -986,7 +990,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     ?int $limit = NULL,
   ): array {
     // Normalize domain.
-    $domain = mb_strtolower(trim($domain));
+    $domain = DomainHelper::normalizeDomain($domain);
     if (empty($domain)) {
       return [];
     }
@@ -1154,7 +1158,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // rights, they do not need to be adjusted.
     // This is to keep the logic simple while allowing an extra scenario for
     // privileged domains.
-    $domain = $this->extractDomainFromEmail($user->getEmail());
+    $domain = DomainHelper::extractDomainFromUser($user);
     if (
       $domain &&
       $this->isDomainPrivileged($domain) &&

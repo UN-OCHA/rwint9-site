@@ -340,21 +340,6 @@ abstract class PostingRightsEditFormBase extends FormBase {
   }
 
   /**
-   * Normalize domain.
-   *
-   * @param string $domain
-   *   The domain to normalize.
-   *
-   * @return string
-   *   The normalized domain.
-   */
-  protected function normalizeDomain(string $domain): string {
-    $domain = mb_strtolower(trim($domain));
-    $domain = ltrim($domain, '@');
-    return $domain;
-  }
-
-  /**
    * Load sources by IDs and sort them by label.
    *
    * @param array $source_ids

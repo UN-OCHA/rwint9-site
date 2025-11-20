@@ -7,6 +7,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Controller\SourceAutocompleteController;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -329,7 +330,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
             $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());
             $domain = NULL;
             if ($user_entity && $user_entity->getEmail()) {
-              $domain = $this->extractDomainFromEmail($user_entity->getEmail());
+              $domain = DomainHelper::extractDomainFromUser($user_entity);
             }
 
             if (empty($domain)) {
@@ -340,7 +341,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
             // Check for existing domain posting rights.
             if ($source->hasField('field_domain_posting_rights')) {
               foreach ($source->field_domain_posting_rights as $item) {
-                if (mb_strtolower(trim($item->domain)) === $domain) {
+                if (DomainHelper::normalizeDomain($item->domain) === $domain) {
                   $form_state->setErrorByName("rights][table][{$row_key}][source", $this->t('User already has domain rights for the organization @source with domain @domain.', [
                     '@source' => $source->label(),
                     '@domain' => $domain,
@@ -380,7 +381,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
     $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());
     $user_domain = NULL;
     if ($user_entity && $user_entity->getEmail()) {
-      $user_domain = $this->extractDomainFromEmail($user_entity->getEmail());
+      $user_domain = DomainHelper::extractDomainFromUser($user_entity);
     }
 
     $removed_new_rows = $form_state->get('removed_new_rows') ?? [];
@@ -607,9 +608,9 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->get('field_domain_posting_rights') as $index => $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         $source->get('field_domain_posting_rights')->removeItem($index);
         $source->save();
         $counts['removed']++;
@@ -672,9 +673,9 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->get('field_domain_posting_rights') as $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         // Only update if the rights have changed.
         if ((int) $item->report !== $report_rights || (int) $item->job !== $job_rights || (int) $item->training !== $training_rights) {
           $item->report = $report_rights;
@@ -797,31 +798,13 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       return FALSE;
     }
 
-    $user_domain = $this->normalizeDomain($user_domain);
+    $user_domain = DomainHelper::normalizeDomain($user_domain);
     foreach ($source->field_domain_posting_rights as $item) {
-      if (isset($item->domain) && $this->normalizeDomain($item->domain) === $user_domain) {
+      if (isset($item->domain) && DomainHelper::normalizeDomain($item->domain) === $user_domain) {
         return TRUE;
       }
     }
     return FALSE;
-  }
-
-  /**
-   * Extract domain from email address.
-   *
-   * @param string $email
-   *   Email address.
-   *
-   * @return string|null
-   *   Domain part of the email address or null if invalid.
-   */
-  protected function extractDomainFromEmail(string $email): ?string {
-    if (empty($email) || !str_contains($email, '@')) {
-      return NULL;
-    }
-
-    [, $domain] = explode('@', $email, 2);
-    return $this->normalizeDomain($domain);
   }
 
   /**

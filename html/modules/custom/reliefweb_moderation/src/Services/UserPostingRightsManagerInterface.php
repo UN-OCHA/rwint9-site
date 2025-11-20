@@ -84,17 +84,6 @@ interface UserPostingRightsManagerInterface {
   public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array;
 
   /**
-   * Extract domain from email address.
-   *
-   * @param string $email
-   *   Email address.
-   *
-   * @return string|null
-   *   Domain part of the email address or NULL if invalid.
-   */
-  public function extractDomainFromEmail(string $email): ?string;
-
-  /**
    * Check if a domain is in the privileged domains list.
    *
    * @param string $domain

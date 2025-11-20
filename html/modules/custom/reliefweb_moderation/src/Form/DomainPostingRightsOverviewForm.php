@@ -15,6 +15,7 @@ use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_moderation\Controller\SourceAutocompleteController;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -83,7 +84,7 @@ class DomainPostingRightsOverviewForm extends FormBase {
 
     // Normalize domain filter.
     if (!empty($domain_filter)) {
-      $domain_filter = $this->normalizeDomain($domain_filter);
+      $domain_filter = DomainHelper::normalizeDomain($domain_filter);
     }
 
     // Build filters section.
@@ -228,7 +229,7 @@ class DomainPostingRightsOverviewForm extends FormBase {
     // Group by domain.
     $grouped = [];
     foreach ($results as $row) {
-      $domain = $this->normalizeDomain($row['domain']);
+      $domain = DomainHelper::normalizeDomain($row['domain']);
       if (empty($domain)) {
         continue;
       }
@@ -482,7 +483,7 @@ class DomainPostingRightsOverviewForm extends FormBase {
 
       // Normalize domain.
       if (!empty($domain)) {
-        $domain = $this->normalizeDomain($domain);
+        $domain = DomainHelper::normalizeDomain($domain);
       }
 
       // Build query parameters.
@@ -562,21 +563,6 @@ class DomainPostingRightsOverviewForm extends FormBase {
       $query['source'] = $source_filter;
     }
     return Url::fromRoute('reliefweb_moderation.domain_posting_rights.overview', [], ['query' => $query])->toString();
-  }
-
-  /**
-   * Normalize domain.
-   *
-   * @param string $domain
-   *   The domain to normalize.
-   *
-   * @return string
-   *   The normalized domain.
-   */
-  protected function normalizeDomain(string $domain): string {
-    $domain = mb_strtolower(trim($domain));
-    $domain = ltrim($domain, '@');
-    return $domain;
   }
 
   /**

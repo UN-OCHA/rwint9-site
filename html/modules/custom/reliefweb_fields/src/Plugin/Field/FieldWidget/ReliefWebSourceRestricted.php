@@ -8,6 +8,7 @@ use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\reliefweb_moderation\Traits\UserPostingRightsTrait;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\EntityOwnerInterface;
 
 /**
@@ -123,7 +124,7 @@ class ReliefWebSourceRestricted extends ReliefWebSource {
         $user_posting_rights_manager = $this->getUserPostingRightsManager();
 
         // Check if the user domain is privileged.
-        $user_domain = $user_posting_rights_manager->extractDomainFromEmail($owner->getEmail());
+        $user_domain = DomainHelper::extractDomainFromUser($owner);
 
         // Only filter if the user domain is not privileged since privileged
         // domains are allowed to post for all sources.

@@ -7,7 +7,7 @@ namespace Drupal\reliefweb_users\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -125,7 +125,7 @@ class PrivilegedDomainsForm extends FormBase {
     $domains = array_filter(array_map('trim', explode("\n", $domains_text)));
 
     foreach ($domains as $domain) {
-      if (!UrlHelper::validateDomain($domain)) {
+      if (!DomainHelper::validateDomain($domain)) {
         $form_state->setError($form['domains'], $this->t('The domain %domain is not valid.', ['%domain' => $domain]));
       }
     }

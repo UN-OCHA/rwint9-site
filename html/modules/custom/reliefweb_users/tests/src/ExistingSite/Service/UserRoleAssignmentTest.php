@@ -739,6 +739,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
   public function testDomainConfigurationChanges(): void {
     // Change privileged domains.
     \Drupal::state()->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->userPostingRightsManager->resetCache();
 
     $this->assertTrue(
       $this->userRoleAssignment->isUserEmailDomainPrivileged($this->testUser),
@@ -752,6 +753,7 @@ class UserRoleAssignmentTest extends ExistingSiteBase {
 
     // Clear privileged domains.
     \Drupal::state()->set('reliefweb_users_privileged_domains', []);
+    $this->userPostingRightsManager->resetCache();
 
     $this->assertFalse(
       $this->userRoleAssignment->isUserEmailDomainPrivileged($this->testUser),

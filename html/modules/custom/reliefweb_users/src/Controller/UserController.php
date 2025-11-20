@@ -13,6 +13,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -343,7 +344,7 @@ class UserController extends ControllerBase {
     $user_domains = [];
     foreach ($users as $uid => $user) {
       if (!empty($user->mail)) {
-        $domain = $this->userPostingRightsManager->extractDomainFromEmail($user->mail) ?? '';
+        $domain = DomainHelper::extractDomainFromUser($user) ?? '';
         if ($domain) {
           $user_domains[$domain][] = $uid;
         }
@@ -365,7 +366,7 @@ class UserController extends ControllerBase {
       $domain_query->condition('f.bundle', 'source');
 
       foreach ($domain_query->execute() as $record) {
-        $domain = strtolower($record->domain);
+        $domain = DomainHelper::normalizeDomain($record->domain);
         if (isset($user_domains[$domain])) {
           foreach ($user_domains[$domain] as $uid) {
             // Only add domain rights if user doesn't already have user rights

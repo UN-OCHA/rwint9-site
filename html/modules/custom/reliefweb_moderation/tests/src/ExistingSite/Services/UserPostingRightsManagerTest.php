@@ -7,11 +7,12 @@ namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Services;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Render\RenderContext;
 use Drupal\node\Entity\Node;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Drupal\user\Entity\User;
 use Drupal\user\EntityOwnerInterface;
-use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
@@ -967,23 +968,23 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
    */
   public function testExtractDomainFromEmail(): void {
     // Test with valid email.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@example.com']);
+    $domain = DomainHelper::extractDomainFromEmail('test@example.com');
     $this->assertEquals('example.com', $domain, 'Should extract domain from valid email');
 
     // Test with empty email.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['']);
+    $domain = DomainHelper::extractDomainFromEmail('');
     $this->assertNull($domain, 'Should return null for empty email');
 
     // Test with invalid email (no @).
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['invalid-email']);
+    $domain = DomainHelper::extractDomainFromEmail('invalid-email');
     $this->assertNull($domain, 'Should return null for email without @');
 
     // Test with email with multiple @ symbols.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@sub@example.com']);
+    $domain = DomainHelper::extractDomainFromEmail('test@sub@example.com');
     $this->assertEquals('sub@example.com', $domain, 'Should handle multiple @ symbols correctly');
 
     // Test case sensitivity.
-    $domain = $this->invokeProtectedMethod('extractDomainFromEmail', ['test@EXAMPLE.COM']);
+    $domain = DomainHelper::extractDomainFromEmail('test@EXAMPLE.COM');
     $this->assertEquals('example.com', $domain, 'Should convert domain to lowercase');
   }
 
@@ -2653,6 +2654,124 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Reload and check final status.
     $past_job = \Drupal::entityTypeManager()->getStorage('node')->load($past_job->id());
     $this->assertEquals('expired', $past_job->get('moderation_status')->value, 'Job with past closing date should be expired');
+  }
+
+  /**
+   * Test isDomainPrivileged method.
+   */
+  public function testIsDomainPrivileged(): void {
+    $state = \Drupal::service('state');
+
+    // Set up privileged domains.
+    $state->set('reliefweb_users_privileged_domains', ['example.com', 'UN.ORG']);
+    $this->userPostingRightsManager->resetCache();
+
+    // Test with exact match (normalized).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return TRUE for exact match'
+    );
+
+    // Test with uppercase domain (should be normalized and match).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('EXAMPLE.COM'),
+      'Should return TRUE for uppercase domain (normalized)'
+    );
+
+    // Test with uppercase privileged domain (should be normalized and match).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('un.org'),
+      'Should return TRUE for lowercase domain matching uppercase privileged domain'
+    );
+
+    // Test with @ prefix (should be normalized and removed).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('@example.com'),
+      'Should return TRUE for domain with @ prefix (normalized)'
+    );
+
+    // Test with whitespace (should be normalized and trimmed).
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('  example.com  '),
+      'Should return TRUE for domain with whitespace (normalized)'
+    );
+
+    // Test with @ prefix and uppercase and whitespace.
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('  @EXAMPLE.COM  '),
+      'Should return TRUE for domain with @ prefix, uppercase, and whitespace (normalized)'
+    );
+
+    // Test with non-privileged domain.
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('other.com'),
+      'Should return FALSE for non-privileged domain'
+    );
+
+    // Test with empty privileged domains list.
+    $state->set('reliefweb_users_privileged_domains', []);
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE when privileged domains list is empty'
+    );
+
+    // Test with NULL privileged domains (not set in state).
+    $state->delete('reliefweb_users_privileged_domains');
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE when privileged domains are not configured'
+    );
+
+    // Test caching behavior - privileged domains should be cached.
+    $state->set('reliefweb_users_privileged_domains', ['example.com']);
+    $this->userPostingRightsManager->resetCache();
+
+    // First call should populate cache.
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'First call should return TRUE and populate cache'
+    );
+
+    // Change state without resetting cache - should still use cached value.
+    $state->set('reliefweb_users_privileged_domains', ['other.com']);
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should use cached privileged domains without reset'
+    );
+
+    // Reset cache and verify new domains are loaded.
+    $this->userPostingRightsManager->resetCache();
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return FALSE after cache reset with new domains'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('other.com'),
+      'Should return TRUE for new privileged domain after cache reset'
+    );
+
+    // Test with multiple privileged domains.
+    $state->set('reliefweb_users_privileged_domains', ['example.com', 'test.org', '  @DEMO.NET  ']);
+    $this->userPostingRightsManager->resetCache();
+
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('example.com'),
+      'Should return TRUE for first privileged domain'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('TEST.ORG'),
+      'Should return TRUE for second privileged domain (case insensitive)'
+    );
+    $this->assertTrue(
+      $this->userPostingRightsManager->isDomainPrivileged('demo.net'),
+      'Should return TRUE for third privileged domain (normalized from @DEMO.NET with whitespace)'
+    );
+    $this->assertFalse(
+      $this->userPostingRightsManager->isDomainPrivileged('notprivileged.com'),
+      'Should return FALSE for non-privileged domain'
+    );
   }
 
   /**

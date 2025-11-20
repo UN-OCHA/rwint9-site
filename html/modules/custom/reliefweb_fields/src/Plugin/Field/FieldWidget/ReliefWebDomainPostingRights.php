@@ -9,7 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
-use Drupal\reliefweb_utility\Helpers\UrlHelper;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 
 /**
  * Plugin implementation of the 'reliefweb_domain_posting_rights' widget.
@@ -153,7 +153,7 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
     $values = [];
     foreach ($data as $item) {
       $values[] = [
-        'domain' => mb_strtolower(trim($item['domain'])),
+        'domain' => DomainHelper::normalizeDomain($item['domain']),
         'job' => intval($item['job'], 10),
         'training' => intval($item['training'], 10),
         'report' => intval($item['report'], 10),
@@ -178,7 +178,7 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
    *   Normalized data.
    */
   public static function normalizeData(array $data) {
-    $data['domain'] = mb_strtolower(trim($data['domain'] ?? ''));
+    $data['domain'] = DomainHelper::normalizeDomain($data['domain'] ?? '');
     $data['job'] = isset($data['job']) ? intval($data['job'], 10) : 0;
     $data['training'] = isset($data['training']) ? intval($data['training'], 10) : 0;
     $data['report'] = isset($data['report']) ? intval($data['report'], 10) : 0;
@@ -213,7 +213,7 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
     }
 
     $domain = trim($input['value']);
-    if (UrlHelper::validateDomain($domain)) {
+    if (DomainHelper::validateDomain($domain)) {
       $data = ['domain' => $domain];
     }
     else {
