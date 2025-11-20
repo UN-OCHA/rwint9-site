@@ -43,9 +43,11 @@ class TermCountryEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\taxonomy\TermInterface $entity */
 
+    $id =  $this->getHomepageUrl() . 'taxonomy/term/' . $entity->id();
     $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+
     $country = Schema::country()
-      ->identifier($url)
+      ->identifier($id)
       ->name($entity->label())
       ->url($url);
 

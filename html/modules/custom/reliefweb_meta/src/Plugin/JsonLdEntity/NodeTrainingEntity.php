@@ -43,6 +43,7 @@ class NodeTrainingEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $id = $this->getHomepageUrl() . 'node/' . $entity->id();
     $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
 
     $keywords = [];
@@ -72,7 +73,7 @@ class NodeTrainingEntity extends BaseEntity {
 
     $schema = Schema::course();
     $schema->name($entity->label())
-      ->identifier($url)
+      ->identifier($id)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->expires($entity->get('field_training_date')->value)

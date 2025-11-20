@@ -43,6 +43,7 @@ class NodeReportEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $id = $this->getHomepageUrl() . 'node/' . $entity->id();
     $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
 
     // Fallback to report if field is empty.
@@ -104,7 +105,7 @@ class NodeReportEntity extends BaseEntity {
     }
 
     $schema->name($entity->label())
-      ->identifier($url)
+      ->identifier($id)
       ->dateCreated(date('c', (int) $entity->getCreatedTime()))
       ->dateModified(date('c', (int) $entity->getChangedTime()))
       ->datePublished($entity->get('field_original_publication_date')->value)

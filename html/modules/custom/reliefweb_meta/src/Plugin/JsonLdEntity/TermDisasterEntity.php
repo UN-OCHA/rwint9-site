@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Url;
 use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\taxonomy\TermInterface;
 use Spatie\SchemaOrg\Schema;
@@ -43,6 +44,7 @@ class TermDisasterEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\taxonomy\TermInterface $entity */
 
+    $id =  $this->getHomepageUrl() . 'taxonomy/term/' . $entity->id();
     $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
 
     $keywords = [];
@@ -73,7 +75,7 @@ class TermDisasterEntity extends BaseEntity {
 
     $schema = Schema::event();
     $schema->name($entity->label())
-      ->identifier($url)
+      ->identifier($id)
       ->startDate($entity->get('field_disaster_date')->value)
       ->url($url)
       ->keywords($keywords);

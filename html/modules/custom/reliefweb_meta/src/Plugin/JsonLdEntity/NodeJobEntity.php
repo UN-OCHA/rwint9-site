@@ -43,6 +43,7 @@ class NodeJobEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\node\NodeInterface $entity */
 
+    $id = $this->getHomepageUrl() . 'node/' . $entity->id();
     $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
 
     $keywords = [];
@@ -64,7 +65,7 @@ class NodeJobEntity extends BaseEntity {
 
     $schema = Schema::jobPosting();
     $schema->name($entity->label())
-      ->identifier($url)
+      ->identifier($id)
       ->datePosted(date('c', (int) $entity->getCreatedTime()))
       ->employmentType($entity->get('field_job_type')?->entity?->label())
       ->validThrough($entity->get('field_job_closing_date')->value)
