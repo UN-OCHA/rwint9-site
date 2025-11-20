@@ -56,6 +56,15 @@ class ExportRecordsToTsv extends ControllerBase {
       'Parent Name',
       'Parent ID',
       'Create New',
+      'Use sheet data',
+      'rw_homepage',
+      'homepage',
+      'rw_countries',
+      'countries',
+      'rw_short_name',
+      'short_name',
+      'rw_description',
+      'description',
     ];
 
     // Convert to TSV.
