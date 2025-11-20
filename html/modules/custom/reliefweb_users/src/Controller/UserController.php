@@ -344,7 +344,7 @@ class UserController extends ControllerBase {
     $user_domains = [];
     foreach ($users as $uid => $user) {
       if (!empty($user->mail)) {
-        $domain = DomainHelper::extractDomainFromUser($user) ?? '';
+        $domain = DomainHelper::extractDomainFromEmail($user->mail) ?? '';
         if ($domain) {
           $user_domains[$domain][] = $uid;
         }

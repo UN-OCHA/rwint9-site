@@ -846,6 +846,52 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * Test default domain posting rights helper methods.
+   */
+  public function testGetDefaultDomainPostingRightsHelpers(): void {
+    $state = \Drupal::service('state');
+
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', [
+      'job' => 'allowed',
+      'training' => 'trusted',
+      'report' => 'blocked',
+    ]);
+
+    $this->userPostingRightsManager->resetCache();
+
+    $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
+    $this->assertSame([
+      'report' => 'blocked',
+      'job' => 'allowed',
+      'training' => 'trusted',
+    ], $defaults, 'Should return per-bundle defaults from state');
+
+    $this->assertSame('allowed', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('job'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('unknown'), 'Unknown bundle should fall back to unverified');
+
+    $this->assertSame(2, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('job'));
+    $this->assertSame(0, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('unknown'), 'Unknown bundle should fall back to unverified code');
+
+    $codes = $this->userPostingRightsManager->getDefaultDomainPostingRightCodes();
+    $this->assertSame([
+      'report' => 1,
+      'job' => 2,
+      'training' => 3,
+    ], $codes, 'Should map defaults to numeric codes');
+
+    // Update state with a scalar value (applies to all bundles).
+    $state->set('reliefweb_users_privileged_domains_default_posting_rights', 'trusted');
+    $this->userPostingRightsManager->resetCache();
+
+    $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
+    $this->assertSame([
+      'report' => 'trusted',
+      'job' => 'trusted',
+      'training' => 'trusted',
+    ], $defaults, 'Scalar state should be expanded to all bundles');
+  }
+
+  /**
    * Test getAllowedContentTypes method.
    */
   public function testGetAllowedContentTypes(): void {
@@ -961,6 +1007,18 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['job'], 'Source with no allowed types should reset all rights');
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['report'], 'Source with no allowed types should reset all rights');
     $this->assertEquals(0, $filtered_results[$sourceNoTypes->id()]['training'], 'Source with no allowed types should reset all rights');
+  }
+
+  /**
+   * Test sanitizePostingRight method.
+   */
+  public function testSanitizePostingRight(): void {
+    $this->assertSame('allowed', $this->userPostingRightsManager->sanitizePostingRight('allowed'));
+    $this->assertSame('blocked', $this->userPostingRightsManager->sanitizePostingRight('blocked'));
+    $this->assertSame('trusted', $this->userPostingRightsManager->sanitizePostingRight('trusted'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('unverified'));
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('invalid'), 'Invalid values should default to unverified');
+    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight(NULL), 'NULL should default to unverified');
   }
 
   /**
@@ -1626,6 +1684,37 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     // Should include the domain rights source since it matches the job
     // condition.
     $this->assertArrayHasKey($domainRightsSource->id(), $sources, 'Should include source that matches at least one OR condition');
+  }
+
+  /**
+   * Test getSourcesWithDomainPostingRightsForDomain method.
+   */
+  public function testGetSourcesWithDomainPostingRightsForDomain(): void {
+    $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertArrayHasKey($this->testSource->id(), $sources, 'Should include source with mixed user/domain rights');
+    $this->assertArrayHasKey($this->domainOnlySource->id(), $sources, 'Should include domain-only source');
+    $this->assertEquals(2, $sources[$this->testSource->id()]['job'], 'Should retrieve job rights for the mixed source');
+    $this->assertEquals(2, $sources[$this->domainOnlySource->id()]['job'], 'Should retrieve job rights for domain-only source');
+
+    // Limit should restrict the number of returned sources.
+    $limited = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR',
+      1
+    );
+    $this->assertCount(1, $limited, 'Should respect limit parameter');
+
+    // Unknown domain should return empty.
+    $this->assertEmpty(
+      $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain('unknown.com'),
+      'Unknown domain should return empty array'
+    );
   }
 
   /**
@@ -2771,6 +2860,17 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     $this->assertFalse(
       $this->userPostingRightsManager->isDomainPrivileged('notprivileged.com'),
       'Should return FALSE for non-privileged domain'
+    );
+  }
+
+  /**
+   * Test getSupportedContentTypes method.
+   */
+  public function testGetSupportedContentTypes(): void {
+    $this->assertSame(
+      ['report', 'job', 'training'],
+      $this->userPostingRightsManager->getSupportedContentTypes(),
+      'Supported content types should match the manager constant'
     );
   }
 

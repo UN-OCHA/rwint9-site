@@ -82,6 +82,23 @@ class DomainPostingRightsOverviewForm extends FormBase {
     $domain_filter = $this->getRequest()->query->get('domain', '');
     $source_filter = $this->getRequest()->query->get('source', '');
 
+    $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+    $form['privileged_info'] = [
+      '#type' => 'inline_template',
+      '#template' => <<<TEMPLATE
+        <div class="rw-posting-rights-privileged-box">
+        {%- trans -%}
+        Domains that appear in the <a href="{{ url }}" target="_blank">privileged domains list</a> are highlighted with a star. Privileged domains default to <strong>allowed</strong> for jobs, training and reports for any source unless overridden by the explicit posting rights shown below.
+        {%- endtrans -%}
+        </div>
+        TEMPLATE,
+      '#context' => [
+        'url' => $privileged_domains_url,
+      ],
+      '#weight' => -10,
+    ];
+
     // Normalize domain filter.
     if (!empty($domain_filter)) {
       $domain_filter = DomainHelper::normalizeDomain($domain_filter);
@@ -407,8 +424,23 @@ class DomainPostingRightsOverviewForm extends FormBase {
 
         // Domain cell (with rowspan for first row of each domain group).
         if ($row_index === 0) {
+          $is_privileged = $this->userPostingRightsManager->isDomainPrivileged($domain);
+          $domain_cell = [
+            '#type' => 'inline_template',
+            '#template' => <<<TEMPLATE
+              <span class="rw-domain-posting-rights-domain">{{ domain }}</span>
+              {% if privileged %}
+                <span class="rw-domain-posting-rights-domain-star" role="img" aria-label="{{ 'Privileged domain'|t }}"></span>
+              {% endif %}
+              TEMPLATE,
+            '#context' => [
+              'domain' => $domain,
+              'privileged' => $is_privileged,
+            ],
+          ];
+
           $row_cells[] = [
-            'data' => $domain,
+            'data' => $domain_cell,
             'rowspan' => $row_count,
             'class' => ['rw-domain-cell'],
           ];

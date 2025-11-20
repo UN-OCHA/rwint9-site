@@ -108,28 +108,37 @@ abstract class PostingRightsEditFormBase extends FormBase {
    *
    * @param array $rights_options
    *   The rights options array.
+   * @param bool $privileged
+   *   TRUE if the domain is privileged, FALSE otherwise.
    * @param int $default_value
    *   The default value for the select fields.
    *
    * @return array
    *   An array with 'report', 'job', and 'training' keys.
    */
-  protected function buildRightsSelectFields(array $rights_options, int $default_value = 0): array {
+  protected function buildRightsSelectFields(array $rights_options, bool $privileged, int $default_value = 0): array {
+    if ($privileged) {
+      $default_values = $this->userPostingRightsManager->getDefaultDomainPostingRightCodes();
+    }
+    else {
+      $default_values = array_fill_keys(['report', 'job', 'training'], $default_value);
+    }
+
     return [
       'report' => [
         '#type' => 'select',
         '#options' => $rights_options,
-        '#default_value' => $default_value,
+        '#default_value' => $default_values['report'],
       ],
       'job' => [
         '#type' => 'select',
         '#options' => $rights_options,
-        '#default_value' => $default_value,
+        '#default_value' => $default_values['job'],
       ],
       'training' => [
         '#type' => 'select',
         '#options' => $rights_options,
-        '#default_value' => $default_value,
+        '#default_value' => $default_values['training'],
       ],
     ];
   }

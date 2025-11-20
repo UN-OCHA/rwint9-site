@@ -76,20 +76,42 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
 
     // Add informational box before the table.
     $form['rights']['info'] = [
-      '#type' => 'container',
-      '#attributes' => [
-        'class' => ['rw-posting-rights-info-box', 'messages', 'messages--warning'],
-      ],
+      '#type' => 'inline_template',
+      '#template' => <<<TEMPLATE
+        <div class="rw-posting-rights-info-box messages messages--warning">
+        <ul>
+        <li>{{ 'Domain posting rights apply to all users sharing the same email domain. Any changes will affect everyone with that domain.'|t }}</li>
+        <li>{{ 'For the same source, user-specific posting rights take precedence over domain posting rights.'|t }}</li>
+        </ul>
+        </div>
+        TEMPLATE,
       '#weight' => -1,
     ];
-    $form['rights']['info']['content'] = [
-      '#type' => 'inline_template',
-      '#template' => '<ul><li>{{ domain_rights_info }}</li><li>{{ precedence_info }}</li></ul>',
-      '#context' => [
-        'domain_rights_info' => $this->t('Domain posting rights apply to all users sharing the same email domain. Any changes will affect everyone with that domain.'),
-        'precedence_info' => $this->t('For the same source, user-specific posting rights take precedence over domain posting rights.'),
-      ],
-    ];
+
+    // Check if the user's email domain is privileged.
+    $user_domain = DomainHelper::extractDomainFromEmail($user_email ?? '');
+    $privileged = !empty($user_domain) && $this->userPostingRightsManager->isDomainPrivileged($user_domain);
+
+    // Add informational box before the table if the domain is privileged.
+    if ($privileged) {
+      $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+      $form['rights']['privileged_info'] = [
+        '#type' => 'inline_template',
+        '#weight' => -0.5,
+        '#template' => <<<TEMPLATE
+          <div class="rw-posting-rights-privileged-box">
+          {%- trans -%}
+          The user's email domain <strong>{{ domain }}</strong> is currently in the <a href="{{ url }}" target="_blank">privileged domains list</a>. By default it is considered <strong>allowed</strong> for jobs, training and reports for any source. The organizations listed below have <strong>explicit posting rights</strong> that take precedence over this default.
+          {%- endtrans -%}
+          </div>
+          TEMPLATE,
+        '#context' => [
+          'domain' => $user_domain,
+          'url' => $privileged_domains_url,
+        ],
+      ];
+    }
 
     $rights_options = $this->getRightsOptions();
 
@@ -242,7 +264,7 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
       ];
 
       // Rights columns.
-      $rights_fields = $this->buildRightsSelectFields($rights_options);
+      $rights_fields = $this->buildRightsSelectFields($rights_options, $privileged);
       $form['rights']['table'][$row_key]['report'] = $rights_fields['report'];
       $form['rights']['table'][$row_key]['job'] = $rights_fields['job'];
       $form['rights']['table'][$row_key]['training'] = $rights_fields['training'];

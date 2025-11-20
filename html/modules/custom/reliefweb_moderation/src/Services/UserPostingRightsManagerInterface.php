@@ -302,4 +302,53 @@ interface UserPostingRightsManagerInterface {
    */
   public function getSupportedContentTypes(): array;
 
+  /**
+   * Sanitize a posting right value.
+   *
+   * @param string|null $right
+   *   Posting right value.
+   *
+   * @return string
+   *   Sanitized posting right.
+   */
+  public function sanitizePostingRight(?string $right): string;
+
+  /**
+   * Get default domain posting rights.
+   *
+   * @return array<string, string>
+   *   Default posting rights keyed by bundle.
+   */
+  public function getDefaultDomainPostingRights(): array;
+
+  /**
+   * Get default domain posting rights value.
+   *
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return string
+   *   Default posting right value.
+   */
+  public function getDefaultDomainPostingRightValue(string $bundle): string;
+
+  /**
+   * Get default domain posting rights code.
+   *
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return int
+   *   Default posting right code.
+   */
+  public function getDefaultDomainPostingRightCode(string $bundle): int;
+
+  /**
+   * Get default domain posting rights codes.
+   *
+   * @return array<string, int>
+   *   Default posting right code per bundle.
+   */
+  public function getDefaultDomainPostingRightCodes(): array;
+
 }

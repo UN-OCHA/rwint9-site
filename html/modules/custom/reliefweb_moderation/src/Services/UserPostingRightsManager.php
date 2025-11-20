@@ -465,12 +465,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Get default domain posting rights.
-   *
-   * @return array<string, string>
-   *   Default posting rights keyed by bundle.
+   * {@inheritdoc}
    */
-  protected function getDefaultDomainPostingRights(): array {
+  public function getDefaultDomainPostingRights(): array {
     if (empty($this->defaultDomainPostingRights)) {
       $defaults = $this->state->get('reliefweb_users_privileged_domains_default_posting_rights');
       if (is_string($defaults)) {
@@ -487,40 +484,25 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Get default domain posting rights value.
-   *
-   * @param string $bundle
-   *   Content bundle.
-   *
-   * @return string
-   *   Default posting right value.
+   * {@inheritdoc}
    */
-  protected function getDefaultDomainPostingRightValue(string $bundle): string {
+  public function getDefaultDomainPostingRightValue(string $bundle): string {
     $defaults = $this->getDefaultDomainPostingRights();
     return $defaults[$bundle] ?? 'unverified';
   }
 
   /**
-   * Get default domain posting rights code.
-   *
-   * @param string $bundle
-   *   Content bundle.
-   *
-   * @return int
-   *   Default posting right code.
+   * {@inheritdoc}
    */
-  protected function getDefaultDomainPostingRightCode(string $bundle): int {
+  public function getDefaultDomainPostingRightCode(string $bundle): int {
     $default_right = $this->getDefaultDomainPostingRightValue($bundle);
     return $this->getPostingRightCode($default_right);
   }
 
   /**
-   * Get default domain posting rights codes keyed by bundle.
-   *
-   * @return array<string, int>
-   *   Default posting right code per bundle.
+   * {@inheritdoc}
    */
-  protected function getDefaultDomainPostingRightCodes(): array {
+  public function getDefaultDomainPostingRightCodes(): array {
     if (empty($this->defaultDomainPostingRightsCodes)) {
       $defaults = $this->getDefaultDomainPostingRights();
       $this->defaultDomainPostingRightsCodes = array_map([$this, 'getPostingRightCode'], $defaults);
@@ -529,15 +511,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Sanitize a posting right value.
-   *
-   * @param string|null $right
-   *   Posting right value.
-   *
-   * @return string
-   *   Sanitized posting right.
+   * {@inheritdoc}
    */
-  protected function sanitizePostingRight(?string $right): string {
+  public function sanitizePostingRight(?string $right): string {
     return match ($right) {
       'blocked', 'allowed', 'trusted', 'unverified' => $right,
       default => 'unverified',

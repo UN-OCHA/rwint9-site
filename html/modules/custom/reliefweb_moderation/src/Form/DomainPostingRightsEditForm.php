@@ -67,6 +67,29 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
     // Store the domain for use in other methods.
     $form_state->set('domain', $domain);
 
+    // Check if the domain is privileged.
+    $privileged = $this->userPostingRightsManager->isDomainPrivileged($domain);
+
+    // Add informational box before the table if the domain is privileged.
+    if ($privileged) {
+      $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+      $form['privileged_domain_info'] = [
+        '#type' => 'inline_template',
+        '#template' => <<<TEMPLATE
+          <div class="rw-posting-rights-privileged-box">
+          {%- trans -%}
+          The domain <strong>{{ domain }}</strong> is currently in the <a href="{{ url }}" target="_blank">privileged domains list</a>. By default it is considered <strong>allowed</strong> for jobs, training and reports for any source. The organizations listed below have <strong>explicit posting rights</strong> that take precedence over this default.
+          {%- endtrans -%}
+          </div>
+          TEMPLATE,
+        '#context' => [
+          'domain' => $domain,
+          'url' => $privileged_domains_url,
+        ],
+      ];
+    }
+
     // Get existing domain posting rights for this domain.
     $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain($domain);
 
@@ -161,7 +184,7 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
 
       $form['rights']['table'][$row_key]['source'] = $this->buildNewRowSourceField($row_key, $rights_options);
 
-      $rights_fields = $this->buildRightsSelectFields($rights_options);
+      $rights_fields = $this->buildRightsSelectFields($rights_options, $privileged);
       $form['rights']['table'][$row_key]['report'] = $rights_fields['report'];
       $form['rights']['table'][$row_key]['job'] = $rights_fields['job'];
       $form['rights']['table'][$row_key]['training'] = $rights_fields['training'];
