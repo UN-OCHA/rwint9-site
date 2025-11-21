@@ -8,12 +8,17 @@ dependencies:
     - node
     - reliefweb_entities
     - reliefweb_files
+    - reliefweb_moderation
+    - reliefweb_user_posts
 id: submitter
 label: Submitter
 weight: 12
 is_admin: null
 permissions:
   - 'access own reliefweb private files'
+  - 'apply posting rights'
   - 'check for duplicate files'
   - 'create report content'
-  - 'edit own report content'
+  - 'edit affiliated report content'
+  - 'view affiliated unpublished report content'
+  - 'view own posts'

@@ -7,3 +7,6 @@ services:
     class: Drupal\reliefweb_users\Access\SystemUserAccessCheck
     tags:
       - { name: access_check, applies_to: _reliefweb_user_access_check }
+  reliefweb_users.user_role_assignment:
+    class: Drupal\reliefweb_users\Service\UserRoleAssignment
+    arguments: ['@entity_type.manager', '@account_switcher', '@logger.factory', '@database', '@state', '@reliefweb_moderation.user_posting_rights']

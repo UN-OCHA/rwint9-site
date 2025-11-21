@@ -2,10 +2,8 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -87,7 +85,8 @@ class JobModeration extends ModerationServiceBase {
       // User, source and country info.
       $info = [];
       // User posting rights.
-      $info['posting_rights'] = UserPostingRightsHelper::renderRight(UserPostingRightsHelper::getEntityAuthorPostingRights($entity));
+      $posting_rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
+      $info['posting_rights'] = $this->userPostingRightsManager->renderRight($posting_rights);
       // Author.
       $info['author'] = $this->getEntityAuthorData($entity);
       // Source.
@@ -154,8 +153,9 @@ class JobModeration extends ModerationServiceBase {
     return [
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
-      'published' => $this->t('Published'),
       'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
+      'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
       'duplicate' => $this->t('Duplicate'),
       'expired' => $this->t('Expired'),
@@ -165,35 +165,21 @@ class JobModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    return in_array($status, [
-      'draft',
-      'pending',
-      'on-hold',
-      'published',
-      'expired',
-    ]);
+  public function isPublishedStatus($status) {
+    return $status === 'to-review' || $status === 'published';
   }
 
   /**
    * {@inheritdoc}
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
     $account = $account ?: $this->currentUser;
-
-    $access_result = parent::entityAccess($entity, $operation, $account);
-
-    // Allow deletion of draft, pending and on-hold only if not an editor.
-    if ($operation === 'delete') {
-      $statuses = ['draft', 'pending', 'on-hold'];
-      $access = $account->hasPermission('bypass node access') ||
-                $account->hasPermission('administer nodes') ||
-                $account->hasPermission('delete any ' . $entity->bundle() . ' content') ||
-                ($access_result->isAllowed() && in_array($entity->getModerationStatus(), $statuses));
-      $access_result = $access ? AccessResult::allowed() : AccessResult::forbidden();
-    }
-
-    return $access_result;
+    return match ($status) {
+      'duplicate' => $account->hasPermission('edit duplicate content'),
+      'refused' => $account->hasPermission('edit refused content'),
+      'draft', 'pending', 'on-hold', 'to-review', 'published', 'expired' => TRUE,
+      default => FALSE,
+    };
   }
 
   /**
@@ -210,9 +196,12 @@ class JobModeration extends ModerationServiceBase {
       ];
     }
 
-    // Editors can publish, put on hold or refuse a document.
-    // @todo use permission.
+    // Editors can set a as to review, publish, put on hold or refuse a
+    // job.
     if (UserHelper::userHasRoles(['editor'])) {
+      $buttons['to-review'] = [
+        '#value' => $this->t('To review'),
+      ];
       $buttons['published'] = [
         '#value' => $this->t('Publish'),
       ];
@@ -233,7 +222,7 @@ class JobModeration extends ModerationServiceBase {
       ];
 
       // Add confirmation when attempting to change published document.
-      if ($status === 'published' || $status === 'expired') {
+      if ($this->isPublishedStatus($status) || $status === 'expired') {
         $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The job may be set as pending.');
         $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
       }
@@ -250,7 +239,7 @@ class JobModeration extends ModerationServiceBase {
     }
 
     // Add a button to close (set as expired) a published job.
-    if ($status === 'published' || $status === 'expired') {
+    if ($this->isPublishedStatus($status) || $status === 'expired') {
       $buttons['expired'] = [
         '#value' => $this->t('Close Job'),
       ];

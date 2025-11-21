@@ -22,25 +22,13 @@ user.email.confirmation.process:
     _maintenance_access: FALSE
     no_cache: TRUE
 
-reliefweb_users.posting_rights:
-  path: '/user/{user}/posting-rights'
+reliefweb_users.privileged_domains:
+  path: '/admin/config/people/privileged-domains'
   defaults:
-    _form: '\Drupal\reliefweb_users\Form\UserPostingRightsForm'
-    _title: 'Posting Rights'
+    _form: '\Drupal\reliefweb_users\Form\PrivilegedDomainsForm'
+    _title: 'Privileged Domains'
   requirements:
-    _permission: 'access user posting rights page'
-  options:
-    parameters:
-      user:
-        type: entity:user
-
-reliefweb_users.submitter_allowed_domains:
-  path: '/admin/config/people/submitter-allowed-domains'
-  defaults:
-    _form: '\Drupal\reliefweb_users\Form\SubmitterAllowedDomainsForm'
-    _title: 'Submitter Allowed Domains'
-  requirements:
-    _permission: 'administer submitter allowed domains'
+    _permission: 'administer privileged domains'
   options:
     _admin_route: TRUE
 
@@ -53,10 +41,3 @@ reliefweb_users.submitter_form_settings:
     _permission: 'administer submitter form settings'
   options:
     _admin_route: TRUE
-
-reliefweb_users.source_autocomplete:
-  path: '/reliefweb-users/source-autocomplete'
-  defaults:
-    _controller: '\Drupal\reliefweb_users\Controller\SourceAutocompleteController::autocomplete'
-  requirements:
-    _permission: 'access user posting rights page'
