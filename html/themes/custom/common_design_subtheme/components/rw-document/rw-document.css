@@ -172,6 +172,7 @@
   content: url('../../img/auth/linkedin_logo.svg');
 }
 
+.rw-document.rw-article--book .rw-article__content a[href^="/user/login/entra-id"]::before,
 .rw-document.rw-article--book .rw-article__content a[href^="/user/login/microsoft"]::before {
   content: url('../../img/auth/microsoft_logo.svg');
 }
