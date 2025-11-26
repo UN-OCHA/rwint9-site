@@ -1,9 +1,13 @@
 uuid: 1a2c260d-9ace-4de5-b722-7131c06e5e34
 langcode: en
 status: true
-dependencies: {  }
+dependencies:
+  module:
+    - reliefweb_moderation
 id: administrator
 label: Administrator
 weight: 5
 is_admin: true
-permissions: {  }
+permissions:
+  - 'edit archived content'
+  - 'edit refused content'

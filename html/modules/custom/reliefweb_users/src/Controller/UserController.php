@@ -12,6 +12,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Link;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Request;
 
@@ -49,13 +51,21 @@ class UserController extends ControllerBase {
   protected $pagerManager;
 
   /**
+   * The user posting rights manager service.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * {@inheritdoc}
    */
-  public function __construct(Connection $database, FormBuilderInterface $form_builder, DateFormatterInterface $date_formatter, PagerManagerInterface $pager_manager) {
+  public function __construct(Connection $database, FormBuilderInterface $form_builder, DateFormatterInterface $date_formatter, PagerManagerInterface $pager_manager, UserPostingRightsManagerInterface $user_posting_rights_manager) {
     $this->database = $database;
     $this->formBuilder = $form_builder;
     $this->dateFormatter = $date_formatter;
     $this->pagerManager = $pager_manager;
+    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
@@ -66,7 +76,8 @@ class UserController extends ControllerBase {
       $container->get('database'),
       $container->get('form_builder'),
       $container->get('date.formatter'),
-      $container->get('pager.manager')
+      $container->get('pager.manager'),
+      $container->get('reliefweb_moderation.user_posting_rights')
     );
   }
 
@@ -333,9 +344,9 @@ class UserController extends ControllerBase {
     $user_domains = [];
     foreach ($users as $uid => $user) {
       if (!empty($user->mail)) {
-        $domain = substr(strrchr($user->mail, '@'), 1);
+        $domain = DomainHelper::extractDomainFromEmail($user->mail) ?? '';
         if ($domain) {
-          $user_domains[strtolower($domain)][] = $uid;
+          $user_domains[$domain][] = $uid;
         }
       }
     }
@@ -355,7 +366,7 @@ class UserController extends ControllerBase {
       $domain_query->condition('f.bundle', 'source');
 
       foreach ($domain_query->execute() as $record) {
-        $domain = strtolower($record->domain);
+        $domain = DomainHelper::normalizeDomain($record->domain);
         if (isset($user_domains[$domain])) {
           foreach ($user_domains[$domain] as $uid) {
             // Only add domain rights if user doesn't already have user rights

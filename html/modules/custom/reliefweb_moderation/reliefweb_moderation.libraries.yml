@@ -4,3 +4,13 @@ moderation:
     /libraries/simple-autocomplete/simpleautocomplete.js: {}
     /libraries/simple-datepicker/simpledatepicker.js: {}
     js/moderation.js: {}
+
+posting_rights_mapping:
+  css:
+    theme:
+      css/posting-rights-mapping.css: {}
+
+role_capabilities:
+  css:
+    theme:
+      css/role-capabilities.css: {}

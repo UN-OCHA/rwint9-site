@@ -17,7 +17,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -70,6 +70,13 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
   protected $state;
 
   /**
+   * The user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected $userPostingRightsManager;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -84,6 +91,8 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   The state service.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    */
   public function __construct(
     Connection $database,
@@ -92,6 +101,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     EntityTypeManagerInterface $entity_type_manager,
     StateInterface $state,
     TranslationInterface $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
   ) {
     $this->database = $database;
     $this->currentUser = $current_user;
@@ -99,6 +109,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
     $this->entityTypeManager = $entity_type_manager;
     $this->state = $state;
     $this->stringTranslation = $string_translation;
+    $this->userPostingRightsManager = $user_posting_rights_manager;
   }
 
   /**
@@ -700,7 +711,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         }
       }
 
-      $rights = UserPostingRightsHelper::getUserPostingRights($author, $sources);
+      $rights = $this->userPostingRightsManager->getUserPostingRights($author, $sources);
       foreach (TaxonomyHelper::getSourceShortnames(array_keys($rights)) as $tid => $name) {
         $build['#sources'][$tid] = [
           'url' => Url::fromRoute('entity.taxonomy_term.canonical', [

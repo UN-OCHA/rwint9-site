@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_guidelines\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
@@ -155,7 +156,7 @@ class GuidelineListModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+  public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
     $account = $account ?: $this->currentUser;
 
     $access = FALSE;

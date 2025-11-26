@@ -1,0 +1,8 @@
+client_id: REPLACE
+client_secret: REPLACE
+tenant_id: ''
+account_type: common
+login_behavior: register_and_login
+allowed_domains: ''
+block_user_1: true
+block_admin_role: true

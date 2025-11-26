@@ -51,6 +51,37 @@ trait EntityRevisionedTrait {
   }
 
   /**
+   * Update the revision log message with a new message.
+   *
+   * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::updateRevisionLogMessage()
+   */
+  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE): void {
+    $message = trim($message);
+    if (empty($message)) {
+      return;
+    }
+
+    $revision_log_field = $this->getEntityType()?->getRevisionMetadataKey('revision_log_message');
+    if (empty($revision_log_field)) {
+      return;
+    }
+
+    $log = trim($this->{$revision_log_field}->value ?? '');
+    if ($skip_if_present && mb_stripos($log, $message) !== FALSE) {
+      return;
+    }
+
+    $log = match ($action) {
+      'prepend' => $message . $log,
+      'append' => $log . $message,
+      'replace' => $message,
+      default => $log,
+    };
+
+    $this->{$revision_log_field}->value = trim($log);
+  }
+
+  /**
    * Get the entity history service.
    *
    * @return \Drupal\reliefweb_revisions\Services\EntityHistory

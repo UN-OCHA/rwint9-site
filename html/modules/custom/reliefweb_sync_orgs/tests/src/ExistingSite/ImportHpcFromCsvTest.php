@@ -4,9 +4,14 @@
 
 namespace Drupal\Tests\reliefweb_sync_orgs\ExistingSite;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+
 /**
- * Import organizations from CSV.
+ * Test import HPC from CSV.
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(FALSE)]
 class ImportHpcFromCsvTest extends ImportBase {
 
   /**

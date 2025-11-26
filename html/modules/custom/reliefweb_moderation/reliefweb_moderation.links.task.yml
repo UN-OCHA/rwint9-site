@@ -67,3 +67,8 @@ reliefweb_moderation.content.announcement:
   route_parameters:
     service: announcement
   title: Announcements
+
+reliefweb_moderation.user_posting_rights.edit:
+  route_name: reliefweb_moderation.user_posting_rights.edit
+  title: 'Posting Rights'
+  base_route: entity.user.canonical

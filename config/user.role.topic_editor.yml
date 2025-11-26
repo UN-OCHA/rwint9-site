@@ -22,4 +22,5 @@ permissions:
   - 'edit any image_topic media'
   - 'edit any topic content'
   - 'use text format markdown'
+  - 'view any topic content'
   - 'view topic moderation information'

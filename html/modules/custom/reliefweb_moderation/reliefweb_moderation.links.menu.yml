@@ -1,0 +1,13 @@
+reliefweb_moderation.posting_rights_mapping:
+  title: 'Posting Rights Status Mapping'
+  description: 'Configure moderation status mapping for different posting rights scenarios'
+  route_name: reliefweb_moderation.posting_rights_mapping
+  parent: system.admin_config_content
+  weight: 101
+
+reliefweb_moderation.role_capabilities:
+  title: 'Role Capabilities Overview'
+  description: 'View summary of what different roles can do with content'
+  route_name: reliefweb_moderation.role_capabilities
+  parent: system.admin_config_content
+  weight: 102

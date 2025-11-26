@@ -1,0 +1,30 @@
+uuid: 0bf400d8-595c-41c0-82eb-ceccde23a71d
+langcode: en
+status: true
+dependencies:
+  config:
+    - node.type.job
+    - node.type.training
+  module:
+    - node
+    - ocha_content_classification
+    - reliefweb_moderation
+    - reliefweb_user_posts
+id: advertiser
+label: Advertiser
+weight: 13
+is_admin: false
+permissions:
+  - 'apply ocha content classification to node job'
+  - 'apply posting rights'
+  - 'create job content'
+  - 'create training content'
+  - 'delete own job content'
+  - 'delete own training content'
+  - 'edit affiliated job content'
+  - 'edit affiliated training content'
+  - 'view affiliated unpublished job content'
+  - 'view affiliated unpublished training content'
+  - 'view job moderation information'
+  - 'view own posts'
+  - 'view training moderation information'
