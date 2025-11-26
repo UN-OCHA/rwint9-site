@@ -7,7 +7,6 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
-use Drupal\reliefweb_utility\Helpers\UserHelper;
 
 /**
  * Moderation service for the source terms.
@@ -195,13 +194,6 @@ class SourceModeration extends ModerationServiceBase {
         '#value' => $this->t('Duplicate'),
       ],
     ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isViewableStatus($status, ?AccountInterface $account = NULL) {
-    return parent::isViewableStatus($status, $account) || UserHelper::userHasRoles(['editor'], $account);
   }
 
   /**

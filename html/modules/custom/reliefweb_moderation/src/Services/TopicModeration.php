@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -132,7 +133,7 @@ class TopicModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function entityAccess(EntityModeratedInterface $entity, $operation = 'view', ?AccountInterface $account = NULL) {
+  public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
     // RW-1180: allow topic editors to view unpublished topics.
     // @todo Check if we can introduce granular permissions to view unpublished
     // content types.

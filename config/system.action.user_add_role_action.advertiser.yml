@@ -1,0 +1,14 @@
+uuid: 1c98c217-3aaa-4e3e-85f6-c8c5261276b1
+langcode: en
+status: true
+dependencies:
+  config:
+    - user.role.advertiser
+  module:
+    - user
+id: user_add_role_action.advertiser
+label: 'Add the Advertiser role to the selected user(s)'
+type: user
+plugin: user_add_role_action
+configuration:
+  rid: advertiser

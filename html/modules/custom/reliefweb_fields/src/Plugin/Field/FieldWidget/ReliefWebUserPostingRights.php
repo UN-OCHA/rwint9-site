@@ -10,6 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\UserInterface;
 
 /**
@@ -26,6 +28,20 @@ use Drupal\user\UserInterface;
  * )
  */
 class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The user posting rights manager.
+   *
+   * @var \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   */
+  protected static UserPostingRightsManagerInterface $userPostingRightsManager;
+
+  /**
+   * Default posting right codes for privileged domains.
+   *
+   * @var array<string, int>
+   */
+  protected static array $defaultPostingRightsCodes;
 
   /**
    * {@inheritdoc}
@@ -55,6 +71,21 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     // Retrieve (and initialize if needed) the field widget state with the
     // the json encoded field data.
     $field_state = static::getFieldState($parents, $field_name, $form_state, $items->getValue(), $settings);
+
+    $privileged_domains_url = Url::fromRoute('reliefweb_users.privileged_domains')->toString();
+
+    $elements['privileged_info'] = [
+      '#type' => 'inline_template',
+      '#template' => <<<TEMPLATE
+        <div data-privileged-info><span data-privileged-icon aria-hidden="true"></span><span>{%- trans -%}
+        Users with emails from domains in the <a href="{{ url }}" target="_blank">privileged domains list</a> are marked with a star. Their domains default to <strong>allowed</strong> for jobs, training and reports. Records here replace this default <strong>for this organization</strong> for <strong>the users</strong>.
+        {%- endtrans -%}
+        </span></div>
+        TEMPLATE,
+      '#context' => [
+        'url' => $privileged_domains_url,
+      ],
+    ];
 
     // Store a json encoded version of the fields data.
     $elements['data'] = [
@@ -197,24 +228,34 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    *   Normalized data.
    */
   public static function normalizeData(array $data) {
+    $name = trim($data['name']);
+    $mail = trim($data['mail']);
+    $domain = DomainHelper::extractDomainFromEmail($mail);
+    $privileged = static::isDomainPrivileged($domain);
+    $default_job = static::getDefaultPostingRightCode('job', $privileged);
+    $default_training = static::getDefaultPostingRightCode('training', $privileged);
+    $default_report = static::getDefaultPostingRightCode('report', $privileged);
+
     // The user ID key can be either `id` when retrieved from the field or
     // `uid` when retrieved from the database (see ::validateUserId()).
     $data['id'] = intval($data['id'] ?? $data['uid'], 10);
-    $data['job'] = isset($data['job']) ? intval($data['job'], 10) : 0;
-    $data['training'] = isset($data['training']) ? intval($data['training'], 10) : 0;
-    $data['report'] = isset($data['report']) ? intval($data['report'], 10) : 0;
+    $data['report'] = isset($data['report']) ? intval($data['report'], 10) : $default_report;
+    $data['job'] = isset($data['job']) ? intval($data['job'], 10) : $default_job;
+    $data['training'] = isset($data['training']) ? intval($data['training'], 10) : $default_training;
     $data['notes'] = isset($data['notes']) ? trim($data['notes']) : '';
 
-    $data['name'] = trim($data['name']);
-    $data['mail'] = trim($data['mail']);
+    $data['name'] = $name;
+    $data['mail'] = $mail;
 
     $data['status'] = intval($data['status'], 10);
     // Blocked users are not allowed to post.
     if ($data['status'] === 0) {
+      $data['report'] = 1;
       $data['job'] = 1;
       $data['training'] = 1;
-      $data['report'] = 1;
     }
+
+    $data['privileged'] = $privileged ? 1 : 0;
 
     return $data;
   }
@@ -510,6 +551,66 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         $entity->save();
       }
     }
+  }
+
+  /**
+   * Get the user posting rights manager.
+   *
+   * @return \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface
+   *   User posting rights manager.
+   */
+  public static function getUserPostingRightsManager(): UserPostingRightsManagerInterface {
+    if (!isset(static::$userPostingRightsManager)) {
+      static::$userPostingRightsManager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+    }
+    return static::$userPostingRightsManager;
+  }
+
+  /**
+   * Check if the domain is privileged.
+   *
+   * @param string $domain
+   *   Domain.
+   *
+   * @return bool
+   *   TRUE if the domain is privileged, FALSE otherwise.
+   */
+  public static function isDomainPrivileged(string $domain): bool {
+    if ($domain === '') {
+      return FALSE;
+    }
+    return static::getUserPostingRightsManager()->isDomainPrivileged($domain);
+  }
+
+  /**
+   * Get default posting rights for privileged domains.
+   *
+   * @return array<string, int>
+   *   Default posting rights for privileged domains.
+   */
+  protected static function getDefaultPostingRightCodes(): array {
+    if (!isset(static::$defaultPostingRightsCodes)) {
+      static::$defaultPostingRightsCodes = static::getUserPostingRightsManager()->getDefaultDomainPostingRightCodes();
+    }
+    return static::$defaultPostingRightsCodes;
+  }
+
+  /**
+   * Get the default posting right for a bundle.
+   *
+   * @param string $bundle
+   *   Bundle.
+   * @param bool $privileged
+   *   TRUE if the domain is privileged, FALSE otherwise.
+   *
+   * @return int
+   *   Default posting right.
+   */
+  protected static function getDefaultPostingRightCode(string $bundle, bool $privileged): int {
+    if ($privileged) {
+      return static::getDefaultPostingRightCodes()[$bundle] ?? 0;
+    }
+    return 0;
   }
 
 }

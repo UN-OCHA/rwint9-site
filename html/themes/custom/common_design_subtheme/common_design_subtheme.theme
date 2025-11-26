@@ -9,6 +9,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
+use Drupal\Core\Template\AttributeValueBase;
 use Drupal\Core\Url;
 use Drupal\common_design_subtheme\FormElementOptional;
 use Drupal\media\MediaInterface;
@@ -331,6 +332,22 @@ function common_design_subtheme_preprocess_inline_entity_form_entity_table(array
         if (isset($variables['form'][$key]['form'])) {
           $variables['table'][$key]['#attributes']['class'] = 'visually-hidden';
         }
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_preprocess_table().
+ *
+ * Preserve the group property for grouped table variants.
+ */
+function common_design_subtheme_preprocess_table__grouped(array &$variables): void {
+  // Copy the group property from the row attributes to the row itself.
+  if (!empty($variables['rows'])) {
+    foreach ($variables['rows'] as $index => $row) {
+      if (isset($row['attributes']['group']) && $row['attributes']['group'] instanceof AttributeValueBase) {
+        $variables['rows'][$index]['group'] = $row['attributes']['group']->value();
       }
     }
   }

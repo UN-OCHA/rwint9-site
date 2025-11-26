@@ -12,6 +12,7 @@ use Drupal\reliefweb_entities\OpportunityDocumentInterface;
 use Drupal\reliefweb_entities\OpportunityDocumentTrait;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
+use Drupal\reliefweb_moderation\EntityWithPostingRightsTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -27,6 +28,7 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
   use DocumentTrait;
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
+  use EntityWithPostingRightsTrait;
   use OpportunityDocumentTrait;
   use StringTranslationTrait;
 

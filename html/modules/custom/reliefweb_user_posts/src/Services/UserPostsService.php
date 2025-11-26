@@ -14,8 +14,8 @@ use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
-use Drupal\reliefweb_moderation\Helpers\UserPostingRightsHelper;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
@@ -51,6 +51,8 @@ class UserPostsService extends ModerationServiceBase {
    *   The request stack.
    * @param \Drupal\Core\StringTranslation\TranslationInterface $string_translation
    *   The translation manager service.
+   * @param \Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface $user_posting_rights_manager
+   *   The user posting rights manager service.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match service.
    */
@@ -64,6 +66,7 @@ class UserPostsService extends ModerationServiceBase {
     PagerParametersInterface $pager_parameters,
     RequestStack $request_stack,
     TranslationInterface $string_translation,
+    UserPostingRightsManagerInterface $user_posting_rights_manager,
     RouteMatchInterface $route_match,
   ) {
     parent::__construct(
@@ -75,7 +78,8 @@ class UserPostsService extends ModerationServiceBase {
       $pager_manager,
       $pager_parameters,
       $request_stack,
-      $string_translation
+      $string_translation,
+      $user_posting_rights_manager
     );
     $this->routeMatch = $route_match;
   }
@@ -112,18 +116,13 @@ class UserPostsService extends ModerationServiceBase {
     $statuses = [
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
-      'published' => $this->t('Published'),
       'on-hold' => $this->t('On-hold'),
+      'to-review' => $this->t('To review'),
+      'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
       'expired' => $this->t('Expired'),
       'duplicate' => $this->t('Duplicate'),
     ];
-
-    if ($this->currentUser->hasRole('editor') || $this->currentUser->hasRole('contributor') || $this->currentUser->hasRole('submitter')) {
-      $statuses += [
-        'to-review' => $this->t('To review'),
-      ];
-    }
 
     return $statuses;
   }
@@ -357,7 +356,7 @@ class UserPostsService extends ModerationServiceBase {
       $sources[] = $source->value;
     }
 
-    $rights = UserPostingRightsHelper::getUserPostingRights($user, $sources);
+    $rights = $this->userPostingRightsManager->getUserPostingRights($user, $sources);
 
     // For editors, we allow returning sources that are blocked for the user.
     $min_right = $this->currentUser->hasPermission('edit any job content') ? 0 : 1;
@@ -488,7 +487,7 @@ class UserPostsService extends ModerationServiceBase {
     // for which the user is allowed to post.
     $allowed = [];
     $blocked = [];
-    foreach (UserPostingRightsHelper::getUserPostingRights($user, []) as $tid => $rights) {
+    foreach ($this->userPostingRightsManager->getUserPostingRights($user, []) as $tid => $rights) {
       foreach ($types as $type) {
         if (isset($rights[$type])) {
           if ($rights[$type] > 1) {

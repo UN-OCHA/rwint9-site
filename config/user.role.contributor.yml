@@ -15,6 +15,7 @@ dependencies:
     - reliefweb_guidelines
     - reliefweb_moderation
     - reliefweb_revisions
+    - reliefweb_user_posts
 id: contributor
 label: Contributor
 weight: 9
@@ -22,16 +23,20 @@ is_admin: null
 permissions:
   - 'access editorial guidelines'
   - 'access reliefweb private files'
+  - 'apply posting rights'
   - 'bypass ocha content classification for node report'
   - 'check for duplicate files'
   - 'create image_report media'
   - 'create report content'
+  - 'delete affiliated report content'
   - 'delete media'
   - 'delete own image_report media'
   - 'display source attention messages'
+  - 'edit affiliated report content'
   - 'edit own image_report media'
-  - 'edit own report content'
   - 'update media'
+  - 'view affiliated unpublished report content'
   - 'view entity history'
+  - 'view own posts'
   - 'view own unpublished media'
   - 'view report moderation information'
