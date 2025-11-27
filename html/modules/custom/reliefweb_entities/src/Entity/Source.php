@@ -206,7 +206,7 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
    * @return array
    *   Render array with the list of social media links.
    */
-  protected function getOrganizationSocialMediaLinks() {
+  public function getOrganizationSocialMediaLinks(): array {
     $links = [];
 
     if ($this->field_links->isEmpty()) {
