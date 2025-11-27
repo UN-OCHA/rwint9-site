@@ -1327,6 +1327,33 @@ function reliefweb_entities_node_update(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_ENTITY_TYPE_update().
+ *
+ * Notify webhooks about the entity update.
+ */
+function reliefweb_entities_taxonomy_term_update(EntityInterface $entity) {
+  /** @var \Drupal\taxonomy\TermInterface $entity */
+
+  // Only for country and source.
+  if (!in_array($entity->bundle(), ['country', 'source'], TRUE)) {
+    return;
+  }
+
+  // Ignore if the entity is not published.
+  if (!$entity->isPublished()) {
+    return;
+  }
+
+  $payload = [
+    'entity_type' => $entity->getEntityTypeId(),
+    'entity_id' => $entity->id(),
+    'bundle' => $entity->bundle(),
+  ];
+
+  reliefweb_entities_notify_webhooks('reliefweb:entity_updated', $payload);
+}
+
+/**
  * Checks if there is an active outgoing webhook configured for the event.
  *
  * @param string $event
