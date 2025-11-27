@@ -43,14 +43,24 @@ class TermSourceEntity extends BaseEntity {
   public function getData(EntityInterface $entity, $view_mode): Type {
     /** @var \Drupal\taxonomy\TermInterface $entity */
 
-    $id =  $this->getHomepageUrl() . 'taxonomy/term/' . $entity->id();
-    $url = $entity->toUrl('canonical', ['absolute' => TRUE])->toString();
+    // Use the entity permalink as identifier so that we can link to it
+    // in the report schema.org JSON-LD.
+    $id = $this->getEntityPermalinkUrl($entity);
 
+    // Create the schema object for the organization.
     $org = Schema::organization()
       ->identifier($id)
-      ->name($entity->label())
-      ->url($url);
+      ->name($entity->label());
 
+    // Use the organization homepage as URL if set.
+    if ($entity->hasField('field_homepage') && !$entity->get('field_homepage')->isEmpty()) {
+      $homepage = $entity->get('field_homepage')->uri;
+      if ($homepage) {
+        $org->url($homepage);
+      }
+    }
+
+    // Add the alternate names: shortname, longname, aliases, spanish name.
     $alternate_names = [];
     if ($entity->hasField('field_shortname') && !$entity->get('field_shortname')->isEmpty()) {
       $shortname = $entity->get('field_shortname')->value;
@@ -83,33 +93,49 @@ class TermSourceEntity extends BaseEntity {
     }
 
     if (!empty($alternate_names)) {
+      $alternate_names = array_map('trim', $alternate_names);
+      $alternate_names = array_filter($alternate_names, function($value) use ($entity) {
+        return !empty($value) && $value !== $entity->label();
+      });
       $alternate_names = array_values(array_unique($alternate_names));
-      $org->alternateName($alternate_names);
-    }
 
-    if ($entity->hasField('field_logo') && !$entity->get('field_logo')->isEmpty()) {
-      $logo_file = $entity->get('field_logo')->entity;
-      $file_url_generator = \Drupal::service('file_url_generator');
-
-      if ($logo_file) {
-        $org->logo($file_url_generator->generateAbsoluteString($logo_file->get('field_media_image')->entity->getFileUri()));
+      if (!empty($alternate_names)) {
+        $org->alternateName($alternate_names);
       }
     }
 
-    if ($entity->hasField('field_homepage') && !$entity->get('field_homepage')->isEmpty()) {
-      $homepage = $entity->get('field_homepage')->entity;
-      if ($homepage) {
-        $org->url($homepage->toUrl('canonical', ['absolute' => TRUE])->toString());
-      }
-    }
-
+    // Add the headquarter country as location.
     if ($entity->hasField('field_country') && !$entity->get('field_country')->isEmpty()) {
-      $org->location([
-        Schema::country()->name($entity->get('field_country')->entity->label()),
-      ]);
+      $country = $entity->get('field_country')->entity;
+      if ($country) {
+        $org->location($this->buildCountryReference($country));
+      }
     }
 
-    return $org;
+    // Add the social media links.
+    $social_media_links = [];
+    foreach ($entity->getOrganizationSocialMediaLinks()['#links'] ?? [] as $link) {
+      $social_media_links[] = $link['url'];
+    }
+    if (!empty($social_media_links)) {
+      $org->sameAs($social_media_links);
+    }
+
+    // Use the canonical (aliased) URL for the ProfilePage ID and URL because it
+    // identifies the specific web document serving as the profile, distinct
+    // from the organization entity itself.
+    $url = $this->getEntityCanonicalUrl($entity);
+
+    // We use a ProfilePage because this ReliefWeb source page describes the
+    // organization, but is not the organization's official homepage.
+    $profile = Schema::profilePage()
+      ->identifier($url)
+      ->url($url);
+
+    // Set the organization as main entity of the profile page.
+    $profile->mainEntity($org);
+
+    return $profile;
   }
 
 }
