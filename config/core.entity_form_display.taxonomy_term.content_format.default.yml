@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - field.field.taxonomy_term.content_format.field_json_schema
     - taxonomy.vocabulary.content_format
   module:
     - allowed_formats
@@ -23,6 +24,12 @@ content:
       allowed_formats:
         hide_help: '1'
         hide_guidelines: '1'
+  field_json_schema:
+    type: options_select
+    weight: 26
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   name:
     type: string_textfield
     weight: 0
