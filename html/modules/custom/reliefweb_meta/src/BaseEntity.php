@@ -196,18 +196,6 @@ class BaseEntity extends JsonLdEntityBase implements ContainerFactoryPluginInter
       return '';
     }
 
-    // Get the content and skip if empty.
-    $content = $entity->get($field)->value;
-    if (empty($content)) {
-      return '';
-    }
-
-    // Render the content.
-    $content = check_markup($content, $entity->get($field)->format);
-    if (empty($content)) {
-      return '';
-    }
-
     // Get the content length for the entity.
     $entity_type_id = $entity->getEntityTypeId();
     $bundle = $entity->bundle();
@@ -215,11 +203,26 @@ class BaseEntity extends JsonLdEntityBase implements ContainerFactoryPluginInter
     if (is_numeric($length)) {
       $length = (int) $length;
     }
-    elseif (is_int($length)) {
-      $length = $length;
-    }
+
     // Skip if the length is not a valid number.
-    else {
+    if (!is_int($length)) {
+      return '';
+    }
+
+    // Skip if the length is 0.
+    if ($length === 0) {
+      return '';
+    }
+
+    // Get the content and skip if empty.
+    $content = $entity->get($field)->value;
+    if (empty($content)) {
+      return '';
+    }
+
+    // Render the content.
+    $content = (string) check_markup($content, $entity->get($field)->format);
+    if (empty($content)) {
       return '';
     }
 
