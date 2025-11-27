@@ -1,0 +1,24 @@
+uuid: e67a1353-ea6f-41d0-9d89-a80069eb6436
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.content_format.field_json_schema
+    - taxonomy.vocabulary.content_format
+  module:
+    - text
+id: taxonomy_term.content_format.default
+targetEntityType: taxonomy_term
+bundle: content_format
+mode: default
+content:
+  description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  field_json_schema: true
+  langcode: true
