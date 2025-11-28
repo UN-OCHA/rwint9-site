@@ -1236,6 +1236,24 @@ function reliefweb_entities_webhooks_event_info_alter(&$options) {
     'type' => t('ReliefWeb Entity updated'),
     'events' => 'reliefweb:entity_updated',
   ];
+
+  $options['reliefweb:report_updated'] = [
+    'type' => t('ReliefWeb Report updated'),
+    'events' => 'reliefweb:report_updated',
+  ];
+
+  $options['reliefweb:country_updated'] = [
+    'type' => t('ReliefWeb Country updated'),
+    'events' => 'reliefweb:country_updated',
+  ];
+  $options['reliefweb:source_updated'] = [
+    'type' => t('ReliefWeb Source updated'),
+    'events' => 'reliefweb:source_updated',
+  ];
+  $options['reliefweb:disaster_updated'] = [
+    'type' => t('ReliefWeb Disaster updated'),
+    'events' => 'reliefweb:disaster_updated',
+  ];
 }
 
 /**
@@ -1324,6 +1342,35 @@ function reliefweb_entities_node_update(EntityInterface $entity) {
   ];
 
   reliefweb_entities_notify_webhooks('reliefweb:entity_updated', $payload);
+  reliefweb_entities_notify_webhooks('reliefweb:report_updated', $payload);
+}
+
+/**
+ * Implements hook_ENTITY_TYPE_update().
+ *
+ * Notify webhooks about the entity update.
+ */
+function reliefweb_entities_taxonomy_term_update(EntityInterface $entity) {
+  /** @var \Drupal\taxonomy\TermInterface $entity */
+
+  // Only for country and source.
+  if (!in_array($entity->bundle(), ['country', 'source'], TRUE)) {
+    return;
+  }
+
+  $payload = [
+    'entity_type' => $entity->getEntityTypeId(),
+    'entity_id' => $entity->id(),
+    'bundle' => $entity->bundle(),
+  ];
+
+  reliefweb_entities_notify_webhooks('reliefweb:entity_updated', $payload);
+  if ($entity->bundle() === 'country') {
+    reliefweb_entities_notify_webhooks('reliefweb:country_updated', $payload);
+  }
+  elseif ($entity->bundle() === 'source') {
+    reliefweb_entities_notify_webhooks('reliefweb:source_updated', $payload);
+  }
 }
 
 /**
