@@ -1,0 +1,13 @@
+uuid: b0673796-2fc5-4b35-b1e7-9589cd84902e
+langcode: en
+status: true
+dependencies: {  }
+id: reliefweb_response
+label: 'ReliefWeb Response'
+payload_url: 'http://response-local.test/webhook/invalidate'
+type: outgoing
+events: 'a:2:{s:25:"reliefweb:country_updated";s:25:"reliefweb:country_updated";s:24:"reliefweb:source_updated";s:24:"reliefweb:source_updated";}'
+secret: REPLACE
+content_type: application/json
+token: REPLACE
+non_blocking: false
