@@ -776,6 +776,20 @@ function reliefweb_entities_entity_presave(EntityInterface $entity) {
 }
 
 /**
+ * Implements hook_ocha_content_classification_skip_classification_alter().
+ */
+function reliefweb_entities_ocha_content_classification_skip_classification_alter(bool &$skip_classification, ClassificationWorkflowInterface $workflow, array $context): void {
+  $entity = $context['entity'];
+  if ($entity instanceof EntityModeratedInterface) {
+    $status = $entity->getModerationStatus();
+    // Draft and refused entities should not be classified.
+    if ($status === 'draft' || $status === 'refused') {
+      $skip_classification = TRUE;
+    }
+  }
+}
+
+/**
  * Implements hook_ocha_content_classification_pre_entity_presave().
  *
  * Requeue entity for classification when changed.
