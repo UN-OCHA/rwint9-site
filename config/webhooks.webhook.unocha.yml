@@ -4,7 +4,7 @@ status: true
 dependencies: {  }
 id: unocha
 label: UNOCHA
-payload_url: ''
+payload_url: 'http://unocha-local.test/webhook/publications'
 type: outgoing
 events: 'a:1:{s:24:"reliefweb:entity_updated";s:24:"reliefweb:entity_updated";}'
 secret: ''
