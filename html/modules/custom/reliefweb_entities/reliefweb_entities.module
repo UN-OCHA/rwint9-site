@@ -944,6 +944,33 @@ function reliefweb_entities_ocha_content_classification_prepare_entity_alter(Ent
 }
 
 /**
+ * Implements hook_ocha_content_classification_hide_form_fields_alter().
+ */
+function reliefweb_entities_ocha_content_classification_hide_form_fields_alter(array &$fields_to_hide, ClassificationWorkflowInterface $workflow, array $context): void {
+  $entity = $context['entity'];
+  $bundle = $entity->bundle();
+
+  if ($bundle === 'job' && !$entity->get('field_source')->isEmpty()) {
+    // Only show the fields if the classification is completed.
+    $status = $context['classifier']->getEntityClassificationStatus($entity);
+    if ($status === ClassificationStatus::Completed) {
+      // Retrieve the consolidated posting rights for the user to check if
+      // the user is trusted for the sources of the entity.
+      $user = \Drupal::currentUser()->getAccount();
+      $sources = array_column($entity->get('field_source')->getValue(), 'target_id');
+      $user_posting_rights_manager = \Drupal::service('reliefweb_moderation.user_posting_rights');
+      $rights = $user_posting_rights_manager->getUserConsolidatedPostingRight($user, $bundle, $sources);
+
+      // Prevent hiding the fields if the user is trusted.
+      if (!empty($rights['code']) && $rights['code'] === 3) {
+        // Effectively unhide the fields by resetting the array.
+        $fields_to_hide = [];
+      }
+    }
+  }
+}
+
+/**
  * Set a taxonomy term's revision information.
  *
  * @param \Drupal\Core\Entity\EntityInterface $entity
