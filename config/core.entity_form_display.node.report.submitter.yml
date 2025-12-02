@@ -32,6 +32,7 @@ dependencies:
     - field.field.node.report.field_vulnerable_groups
     - node.type.report
   module:
+    - allowed_formats
     - path
     - reliefweb_fields
     - reliefweb_files
@@ -40,6 +41,21 @@ targetEntityType: node
 bundle: report
 mode: submitter
 content:
+  body:
+    type: reliefweb_formatted_text_with_summary
+    weight: 5
+    region: content
+    settings:
+      rows: '9'
+      placeholder: ''
+      max_heading_level: '2'
+      strip_embedded_content: '1'
+      summary_rows: '3'
+      show_summary: 0
+    third_party_settings:
+      allowed_formats:
+        hide_help: '0'
+        hide_guidelines: '1'
   field_file:
     type: reliefweb_file_simplified
     weight: 4
@@ -61,7 +77,7 @@ content:
     third_party_settings: {  }
   field_notify:
     type: string_textarea
-    weight: 8
+    weight: 9
     region: content
     settings:
       rows: 5
@@ -69,13 +85,13 @@ content:
     third_party_settings: {  }
   field_origin:
     type: options_select
-    weight: 6
+    weight: 7
     region: content
     settings: {  }
     third_party_settings: {  }
   field_origin_notes:
     type: string_textfield
-    weight: 7
+    weight: 8
     region: content
     settings:
       size: 60
@@ -83,7 +99,7 @@ content:
     third_party_settings: {  }
   field_original_publication_date:
     type: reliefweb_datetime
-    weight: 5
+    weight: 6
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -171,7 +187,7 @@ content:
     third_party_settings: {  }
   path:
     type: path
-    weight: 9
+    weight: 10
     region: content
     settings: {  }
     third_party_settings: {  }
@@ -184,7 +200,6 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
-  body: true
   created: true
   field_bury: true
   field_content_format: true

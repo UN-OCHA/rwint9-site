@@ -602,4 +602,13 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
   .form-item-buttons-description {
     margin-top: 3px;
   }
+
+  .field--name-body {
+    .form-type-textarea label {
+      font-size: 1.25rem;
+    }
+    .filter-wrapper {
+      display: none;
+    }
+  }
 }
