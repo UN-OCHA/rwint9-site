@@ -38,5 +38,9 @@
     {{ add_more ? add_more|merge({
       '#attributes': create_attribute(add_more['#attributes'] ?? {}).addClass('rw-file-widget__add-more'),
     }) }}
+
+    {%- if element['#description'] is not empty -%}
+    <div class="rw-file-widget__description description">{{ element['#description'] }}</div>
+    {%- endif -%}
   </div>
 </fieldset>
