@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\NodeInterface;
 use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Spatie\SchemaOrg\NewsArticle;
@@ -27,17 +26,7 @@ class NodeReportEntity extends BaseEntity {
    * {@inheritdoc}
    */
   public function isApplicable(EntityInterface $entity, $view_mode): bool {
-    // Make sure it is a node.
-    if (!$entity instanceof NodeInterface) {
-      return FALSE;
-    }
-
-    // Only apply to report content type.
-    if ($entity->bundle() !== 'report') {
-      return FALSE;
-    }
-
-    return TRUE;
+    return $this->isEntityApplicable($entity, 'node', 'report');
   }
 
   /**

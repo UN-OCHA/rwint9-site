@@ -207,8 +207,16 @@ function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, A
     $user_roles = $account->getRoles();
 
     // Administrators always have access.
-    if ($account->id() == 1 || in_array('adminitrator', $user_roles)) {
+    if ($account->id() == 1 || in_array('administrator', $user_roles)) {
       return AccessResult::allowed();
+    }
+
+    // If the file is not permanent (e.g., during upload/validation), return
+    // neutral to allow other access checks to proceed. Once the file is saved
+    // and linked to a guideline entity, it will be permanent and the
+    // relationship checks below will work.
+    if (!$entity->isPermanent()) {
+      return AccessResult::neutral();
     }
 
     $query = $database->select('file_managed', 'fm');

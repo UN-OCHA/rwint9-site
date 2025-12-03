@@ -7,7 +7,6 @@ namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\reliefweb_meta\CountrySchema;
-use Drupal\taxonomy\TermInterface;
 use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
 
@@ -25,17 +24,7 @@ class TermCountryEntity extends BaseEntity {
    * {@inheritdoc}
    */
   public function isApplicable(EntityInterface $entity, $view_mode): bool {
-    // Make sure it is a taxonomy term.
-    if (!$entity instanceof TermInterface) {
-      return FALSE;
-    }
-
-    // Only apply to country.
-    if ($entity->bundle() !== 'country') {
-      return FALSE;
-    }
-
-    return TRUE;
+    return $this->isEntityApplicable($entity, 'taxonomy_term', 'country');
   }
 
   /**

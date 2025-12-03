@@ -151,6 +151,85 @@ class NodeJobEntityTest extends ExistingSiteBase {
   }
 
   /**
+   * Test isApplicable for job nodes.
+   */
+  public function testIsApplicableForJobNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Applicable Job',
+      'moderation_status' => 'published',
+      'field_job_closing_date' => [
+        [
+          'value' => date('Y-m-d', strtotime('+1 year')),
+        ],
+      ],
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_job');
+    $this->assertTrue($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects non-job nodes.
+   */
+  public function testIsApplicableRejectsNonJobNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Not A Job',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_job');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects wrong entity type.
+   */
+  public function testIsApplicableRejectsWrongEntityType(): void {
+    $vocabulary = Vocabulary::create([
+      'vid' => 'test_' . $this->randomMachineName(),
+      'name' => 'Test Vocabulary',
+    ]);
+    $vocabulary->save();
+
+    $entity = $this->createTerm($vocabulary, [
+      'name' => 'Not A Job',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_job');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->create([
+        'type' => 'job',
+        'title' => 'New Job',
+      ]);
+
+    $plugin = $this->getPlugin('rw_node_job');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Unpublished Job',
+      'moderation_status' => 'draft',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_job');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
    * Test getData with basic job posting schema.
    */
   public function testGetDataBasicJobPosting(): void {

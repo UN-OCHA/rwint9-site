@@ -48,6 +48,7 @@ class TermCountryEntityTest extends ExistingSiteBase {
   public function testIsApplicableForCountryTerms(): void {
     $entity = $this->createTerm($this->countryVocabulary, [
       'name' => 'Applicable Country',
+      'moderation_status' => 'ongoing',
     ]);
 
     $plugin = $this->getPlugin('rw_term_country');
@@ -66,6 +67,34 @@ class TermCountryEntityTest extends ExistingSiteBase {
 
     $entity = $this->createTerm($vocabulary, [
       'name' => 'Not A Country',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_country');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->create([
+        'vid' => 'country',
+        'name' => 'New Country',
+      ]);
+
+    $plugin = $this->getPlugin('rw_term_country');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createTerm($this->countryVocabulary, [
+      'name' => 'Unpublished Country',
+      'moderation_status' => 'draft',
     ]);
 
     $plugin = $this->getPlugin('rw_term_country');

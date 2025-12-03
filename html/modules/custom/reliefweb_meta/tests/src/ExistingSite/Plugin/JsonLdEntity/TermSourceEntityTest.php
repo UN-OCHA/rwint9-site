@@ -121,6 +121,7 @@ class TermSourceEntityTest extends ExistingSiteBase {
   public function testIsApplicableForSourceTerms(): void {
     $entity = $this->createTerm($this->sourceVocabulary, [
       'name' => 'Applicable Source',
+      'moderation_status' => 'active',
     ]);
 
     $plugin = $this->getPlugin('rw_term_source');
@@ -139,6 +140,34 @@ class TermSourceEntityTest extends ExistingSiteBase {
 
     $entity = $this->createTerm($vocabulary, [
       'name' => 'Not A Source',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_source');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->create([
+        'vid' => 'source',
+        'name' => 'New Source',
+      ]);
+
+    $plugin = $this->getPlugin('rw_term_source');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Unpublished Source',
+      'moderation_status' => 'draft',
     ]);
 
     $plugin = $this->getPlugin('rw_term_source');

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\NodeInterface;
 use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Spatie\SchemaOrg\EventAttendanceModeEnumeration;
@@ -30,17 +29,7 @@ class NodeTrainingEntity extends BaseEntity {
    * {@inheritdoc}
    */
   public function isApplicable(EntityInterface $entity, $view_mode): bool {
-    // Make sure it is a node.
-    if (!$entity instanceof NodeInterface) {
-      return FALSE;
-    }
-
-    // Only apply to training content type.
-    if ($entity->bundle() !== 'training') {
-      return FALSE;
-    }
-
-    return TRUE;
+    return $this->isEntityApplicable($entity, 'node', 'training');
   }
 
   /**

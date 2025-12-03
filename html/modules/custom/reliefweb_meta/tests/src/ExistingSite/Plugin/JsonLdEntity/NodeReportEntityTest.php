@@ -234,6 +234,80 @@ class NodeReportEntityTest extends ExistingSiteBase {
   }
 
   /**
+   * Test isApplicable for report nodes.
+   */
+  public function testIsApplicableForReportNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Applicable Report',
+      'moderation_status' => 'published',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_report');
+    $this->assertTrue($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects non-report nodes.
+   */
+  public function testIsApplicableRejectsNonReportNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Not A Report',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_report');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects wrong entity type.
+   */
+  public function testIsApplicableRejectsWrongEntityType(): void {
+    $vocabulary = Vocabulary::create([
+      'vid' => 'test_' . $this->randomMachineName(),
+      'name' => 'Test Vocabulary',
+    ]);
+    $vocabulary->save();
+
+    $entity = $this->createTerm($vocabulary, [
+      'name' => 'Not A Report',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_report');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->create([
+        'type' => 'report',
+        'title' => 'New Report',
+      ]);
+
+    $plugin = $this->getPlugin('rw_node_report');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Unpublished Report',
+      'moderation_status' => 'draft',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_report');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
    * Test getData with basic report schema.
    */
   public function testGetDataBasicReport(): void {
