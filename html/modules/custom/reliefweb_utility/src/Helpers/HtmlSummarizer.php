@@ -125,7 +125,7 @@ class HtmlSummarizer {
     }
 
     $result = $prefix . implode($separator, $paragraphs) . $suffix;
-    $result = preg_replace('#\s{2,}#', ' ', $result);
+    $result = preg_replace('#\s{2,}#u', ' ', $result);
     return trim($result);
   }
 
@@ -174,7 +174,8 @@ class HtmlSummarizer {
         for ($i = 0; $i < $parts_count; ++$i) {
           if (($length -= mb_strlen($parts[$i])) <= 0) {
             // Truncate the paragraph and add an ellipsis.
-            $paragraphs[$index] = trim(implode(array_slice($parts, 0, $i)), static::$endMarks) . '...';
+            // Use multi-byte safe trim to avoid corrupting UTF-8 strings.
+            $paragraphs[$index] = static::mbTrim(implode(array_slice($parts, 0, $i)), static::$endMarks) . '...';
             // Truncate the list of paragraphs.
             $paragraphs = array_slice($paragraphs, 0, $index + 1);
             // Break from both loops.
@@ -189,6 +190,24 @@ class HtmlSummarizer {
     }
 
     return $paragraphs;
+  }
+
+  /**
+   * Multi-byte safe trim function.
+   *
+   * @param string $text
+   *   Text to trim.
+   * @param string $chars
+   *   Characters to trim from the beginning and end.
+   *
+   * @return string
+   *   Trimmed text.
+   */
+  protected static function mbTrim($text, $chars = " \t\n\r\0\x0B") {
+    // Escape special regex characters in the character mask.
+    $chars = preg_quote($chars, '/');
+    // Use regex with UTF-8 flag to trim multi-byte characters safely.
+    return preg_replace('/^[' . $chars . ']+|[' . $chars . ']+$/u', '', $text);
   }
 
 }

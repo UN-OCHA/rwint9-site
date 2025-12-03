@@ -218,4 +218,85 @@ class HtmlSummarizerTest extends UnitTestCase {
     $this->assertEquals($expected, HtmlSummarizer::summarizeParagraphs($input, $length, $separator_length));
   }
 
+  /**
+   * Test multi-byte character handling.
+   */
+  public function testMultiByteCharacters() {
+    // Test Arabic text with multi-byte characters.
+    $arabic_text = 'تُعدّ الزراعة منذ زمن بعيد العمود الفقري للاقتصاد الريفي وركيزة الأمن الغذائي في سوريا.';
+    $html = '<body><p>' . $arabic_text . '</p></body>';
+    $result = HtmlSummarizer::summarize($html);
+    $this->assertEquals($arabic_text, $result);
+    // Verify UTF-8 encoding is preserved.
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    // Verify JSON encoding works without errors.
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+
+    // Test Arabic text with question mark (؟) which is a multi-byte character.
+    $arabic_with_question = 'ما هو السؤال؟';
+    $html = '<body><p>' . $arabic_with_question . '</p></body>';
+    $result = HtmlSummarizer::summarize($html);
+    $this->assertEquals($arabic_with_question, $result);
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+
+    // Test Arabic text with truncation and end marks.
+    $long_arabic = 'تُعدّ الزراعة منذ زمن بعيد العمود الفقري للاقتصاد الريفي وركيزة الأمن الغذائي في سوريا. غير أنّ عقدًا من النزاع المسلح، تفاقم بفعل تسارع آثار التغير المناخي، قد أدى إلى انهيار النظام الزراعي والغذائي.';
+    $html = '<body><p>' . $long_arabic . '</p></body>';
+    $result = HtmlSummarizer::summarize($html, 100);
+    // 100 + '...' = 103 characters.
+    $this->assertTrue(mb_strlen($result) <= 103);
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+    $this->assertStringEndsWith('...', $result);
+
+    // Test Arabic text ending with question mark (؟) that should be trimmed.
+    $arabic_ending_question = 'ما هو السؤال؟';
+    $input = [$arabic_ending_question];
+    $result = HtmlSummarizer::summarizeParagraphs($input, 5, 0);
+    // The question mark should be preserved, not trimmed incorrectly.
+    $this->assertTrue(mb_check_encoding($result[0], 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+
+    // Test Chinese characters (also multi-byte).
+    $chinese_text = '这是一个测试。';
+    $html = '<body><p>' . $chinese_text . '</p></body>';
+    $result = HtmlSummarizer::summarize($html);
+    $this->assertEquals($chinese_text, $result);
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+
+    // Test mixed Arabic and English.
+    $mixed_text = 'This is English and هذا عربي';
+    $html = '<body><p>' . $mixed_text . '</p></body>';
+    $result = HtmlSummarizer::summarize($html);
+    $this->assertEquals($mixed_text, $result);
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+
+    // Test Arabic text with multiple paragraphs.
+    $paragraph1 = 'تُعدّ الزراعة منذ زمن بعيد العمود الفقري للاقتصاد الريفي.';
+    $paragraph2 = 'غير أنّ عقدًا من النزاع المسلح قد أدى إلى انهيار النظام الزراعي.';
+    $html = '<body><p>' . $paragraph1 . '</p><p>' . $paragraph2 . '</p></body>';
+    $result = HtmlSummarizer::summarize($html);
+    $expected = $paragraph1 . ' ' . $paragraph2;
+    $this->assertEquals($expected, $result);
+    $this->assertTrue(mb_check_encoding($result, 'UTF-8'));
+    $json = json_encode($result);
+    $this->assertNotFalse($json);
+    $this->assertEquals(JSON_ERROR_NONE, json_last_error());
+  }
+
 }
