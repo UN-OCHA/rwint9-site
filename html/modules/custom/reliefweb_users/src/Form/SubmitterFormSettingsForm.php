@@ -156,6 +156,17 @@ class SubmitterFormSettingsForm extends FormBase {
       '#rows' => 3,
     ];
 
+    $form['fields']['body'] = [
+      '#type' => 'text_format',
+      '#title' => $this->t('Body'),
+      '#description' => $this->t('Instructions for the body field.'),
+      '#default_value' => $default_fields['body']['value'] ?? '',
+      '#format' => 'markdown_editor',
+      '#allowed_formats' => ['markdown_editor'],
+      '#after_build' => [[$this, 'hideTextFormat']],
+      '#rows' => 3,
+    ];
+
     $default_buttons = $form_state->getValue('buttons', $settings['buttons'] ?? []);
     $form['buttons'] = [
       '#type' => 'details',

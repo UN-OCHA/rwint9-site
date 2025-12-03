@@ -1,0 +1,33 @@
+uuid: 34a399b7-d862-430b-97b7-c54ef398b3b4
+langcode: en
+status: true
+dependencies:
+  module:
+    - options
+    - taxonomy
+id: taxonomy_term.field_json_schema
+field_name: field_json_schema
+entity_type: taxonomy_term
+type: list_string
+settings:
+  allowed_values:
+    -
+      value: report
+      label: Report
+    -
+      value: creative_work
+      label: CreativeWork
+    -
+      value: map
+      label: Map
+    -
+      value: news_article
+      label: NewsArticle
+  allowed_values_function: ''
+module: options
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

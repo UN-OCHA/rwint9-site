@@ -166,11 +166,6 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       $form['field_original_publication_date']['widget'][0]['value']['#attributes']['data-with-datepicker'] = '';
     }
 
-    // Add PDF formatting widget to the body field.
-    if (isset($form['body'])) {
-      $form['body']['#attributes']['data-with-formatting'] = 'pdf';
-    }
-
     // Alter the primary country field, ensuring it's using a value among
     // the selected country values.
     $this->alterPrimaryField('field_primary_country', $form, $form_state);
@@ -243,7 +238,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    */
   protected function addRoleFormAlterations(array &$form, FormStateInterface $form_state): void {
     if ($this->currentUser->hasRole('editor')) {
-      // Nothing to do. The form is already configured for that role.
+      // Tweak the form for editors.
+      $this->alterFieldsForEditors($form, $form_state);
       return;
     }
     elseif ($this->currentUser->hasRole('contributor')) {
@@ -253,6 +249,21 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     elseif ($this->currentUser->hasRole('submitter')) {
       // Tweak the form for submitters.
       $this->alterFieldsForSubmitters($form, $form_state);
+    }
+  }
+
+  /**
+   * Make alterations for Editor role.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  protected function alterFieldsForEditors(array &$form, FormStateInterface $form_state) {
+    // Add PDF formatting widget to the body field.
+    if (isset($form['body'])) {
+      $form['body']['#attributes']['data-with-formatting'] = 'pdf';
     }
   }
 
@@ -416,7 +427,15 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     foreach ($settings['fields'] ?? [] as $field => $field_instructions) {
       if (isset($form[$field]['widget']) && !empty($field_instructions['value'])) {
         $field_description = check_markup($field_instructions['value'], $field_instructions['format']);
-        $form[$field]['widget']['#description'] = $field_description;
+        if (isset($form[$field]['widget'][0]['value'])) {
+          $form[$field]['widget'][0]['value']['#description'] = $field_description;
+        }
+        elseif (isset($form[$field]['widget'][0])) {
+          $form[$field]['widget'][0]['#description'] = $field_description;
+        }
+        else {
+          $form[$field]['widget']['#description'] = $field_description;
+        }
       }
     }
 
