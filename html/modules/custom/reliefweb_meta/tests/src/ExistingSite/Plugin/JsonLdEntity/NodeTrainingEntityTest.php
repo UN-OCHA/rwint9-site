@@ -297,6 +297,91 @@ class NodeTrainingEntityTest extends ExistingSiteBase {
   }
 
   /**
+   * Test isApplicable for training nodes.
+   */
+  public function testIsApplicableForTrainingNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'training',
+      'title' => 'Applicable Training',
+      'moderation_status' => 'published',
+      'field_registration_deadline' => [
+        [
+          'value' => date('Y-m-d', strtotime('+1 year')),
+        ],
+      ],
+      'field_training_date' => [
+        [
+          'value' => date('Y-m-d', strtotime('+1 year')),
+          'end_value' => date('Y-m-d', strtotime('+1 year + 1 month')),
+        ],
+      ],
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_training');
+    $this->assertTrue($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects non-training nodes.
+   */
+  public function testIsApplicableRejectsNonTrainingNodes(): void {
+    $entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Not A Training',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_training');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects wrong entity type.
+   */
+  public function testIsApplicableRejectsWrongEntityType(): void {
+    $vocabulary = Vocabulary::create([
+      'vid' => 'test_' . $this->randomMachineName(),
+      'name' => 'Test Vocabulary',
+    ]);
+    $vocabulary->save();
+
+    $entity = $this->createTerm($vocabulary, [
+      'name' => 'Not A Training',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_training');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('node')
+      ->create([
+        'type' => 'training',
+        'title' => 'New Training',
+      ]);
+
+    $plugin = $this->getPlugin('rw_node_training');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createNode([
+      'type' => 'training',
+      'title' => 'Unpublished Training',
+      'moderation_status' => 'draft',
+    ]);
+
+    $plugin = $this->getPlugin('rw_node_training');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
    * Test getData with basic course schema (no dates).
    */
   public function testGetDataBasicCourse(): void {

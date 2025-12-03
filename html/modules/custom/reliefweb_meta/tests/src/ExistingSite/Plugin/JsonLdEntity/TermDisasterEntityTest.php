@@ -125,6 +125,78 @@ class TermDisasterEntityTest extends ExistingSiteBase {
   }
 
   /**
+   * Test isApplicable for disaster terms.
+   */
+  public function testIsApplicableForDisasterTerms(): void {
+    $entity = $this->createTerm($this->disasterVocabulary, [
+      'name' => 'Applicable Disaster',
+      'moderation_status' => 'ongoing',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_disaster');
+    $this->assertTrue($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects non-disaster terms.
+   */
+  public function testIsApplicableRejectsNonDisasterTerms(): void {
+    $vocabulary = Vocabulary::create([
+      'vid' => 'test_' . $this->randomMachineName(),
+      'name' => 'Test Vocabulary',
+    ]);
+    $vocabulary->save();
+
+    $entity = $this->createTerm($vocabulary, [
+      'name' => 'Not A Disaster',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_disaster');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects wrong entity type.
+   */
+  public function testIsApplicableRejectsWrongEntityType(): void {
+    $entity = $this->createNode([
+      'type' => 'report',
+      'title' => 'Not A Disaster',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_disaster');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects new entities without ID.
+   */
+  public function testIsApplicableRejectsNewEntities(): void {
+    $entity = \Drupal::entityTypeManager()
+      ->getStorage('taxonomy_term')
+      ->create([
+        'vid' => 'disaster',
+        'name' => 'New Disaster',
+      ]);
+
+    $plugin = $this->getPlugin('rw_term_disaster');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
+   * Test isApplicable rejects unpublished entities.
+   */
+  public function testIsApplicableRejectsUnpublishedEntities(): void {
+    $entity = $this->createTerm($this->disasterVocabulary, [
+      'name' => 'Unpublished Disaster',
+      'moderation_status' => 'draft',
+    ]);
+
+    $plugin = $this->getPlugin('rw_term_disaster');
+    $this->assertFalse($plugin->isApplicable($entity, 'default'));
+  }
+
+  /**
    * Test getData with basic disaster schema.
    */
   public function testGetDataBasicDisaster(): void {
