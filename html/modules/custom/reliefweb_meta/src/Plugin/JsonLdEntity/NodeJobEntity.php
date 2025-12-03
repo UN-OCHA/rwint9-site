@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\reliefweb_meta\Plugin\JsonLdEntity;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\node\NodeInterface;
 use Drupal\reliefweb_meta\BaseEntity;
 use Spatie\SchemaOrg\Schema;
 use Spatie\SchemaOrg\Type;
@@ -24,17 +23,7 @@ class NodeJobEntity extends BaseEntity {
    * {@inheritdoc}
    */
   public function isApplicable(EntityInterface $entity, $view_mode): bool {
-    // Make sure it is a node.
-    if (!$entity instanceof NodeInterface) {
-      return FALSE;
-    }
-
-    // Only apply to job content type.
-    if ($entity->bundle() !== 'job') {
-      return FALSE;
-    }
-
-    return TRUE;
+    return $this->isEntityApplicable($entity, 'node', 'job');
   }
 
   /**

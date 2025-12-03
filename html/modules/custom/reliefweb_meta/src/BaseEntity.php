@@ -65,6 +65,38 @@ class BaseEntity extends JsonLdEntityBase implements ContainerFactoryPluginInter
   }
 
   /**
+   * Check if the entity is applicable.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity.
+   * @param string $entity_type_id
+   *   Expected entity type ID.
+   * @param string $bundle
+   *   Expected bundle.
+   *
+   * @return bool
+   *   TRUE if the entity is applicable, FALSE otherwise.
+   */
+  protected function isEntityApplicable(EntityInterface $entity, string $entity_type_id, string $bundle): bool {
+    // Skip if the entity type ID or bundle is not the expected one.
+    if ($entity->getEntityTypeId() !== $entity_type_id || $entity->bundle() !== $bundle) {
+      return FALSE;
+    }
+
+    // Skip if the entity is new.
+    if ($entity->isNew() || empty($entity->id())) {
+      return FALSE;
+    }
+
+    // Skip if the entity is not published.
+    if (!$entity->isPublished()) {
+      return FALSE;
+    }
+
+    return TRUE;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getData(EntityInterface $entity, $view_mode): Type {
