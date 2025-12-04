@@ -3,6 +3,10 @@
 namespace Drupal\reliefweb_utility\Helpers;
 
 use cogpowered\FineDiff\Diff;
+use cogpowered\FineDiff\Granularity\Character;
+use cogpowered\FineDiff\Granularity\Paragraph;
+use cogpowered\FineDiff\Granularity\Sentence;
+use cogpowered\FineDiff\Granularity\Word;
 
 /**
  * Helper to manipulate texts.
@@ -160,12 +164,23 @@ class TextHelper {
    *   Original text.
    * @param string $to_text
    *   Modified text.
+   * @param string $granularity
+   *   Granularity to use for the diff (character, word, sentence, paragraph).
+   *   Defaults to Word to have decent performance while still being able to
+   *   highlight the differences between the two texts.
    *
    * @return string
    *   HTML text with the differences between the 2 provided texts highlighted.
    */
-  public static function getTextDiff($from_text, $to_text) {
-    $diff = new Diff();
+  public static function getTextDiff(string $from_text, string $to_text, string $granularity = 'word'): string {
+    $diff_granularity = match ($granularity) {
+      'character' => new Character(),
+      'word' => new Word(),
+      'sentence' => new Sentence(),
+      'paragraph' => new Paragraph(),
+      default => new Word(),
+    };
+    $diff = new Diff($diff_granularity);
     return $diff->render($from_text, $to_text);
   }
 
