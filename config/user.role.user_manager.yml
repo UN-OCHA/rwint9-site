@@ -34,6 +34,7 @@ permissions:
   - 'assign webmaster role'
   - 'change own username'
   - 'manage user roles'
+  - 'masquerade as advertiser'
   - 'masquerade as authenticated'
   - 'masquerade as contributor'
   - 'masquerade as submitter'

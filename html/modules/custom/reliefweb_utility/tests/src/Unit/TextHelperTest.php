@@ -187,12 +187,50 @@ class TextHelperTest extends UnitTestCase {
   /**
    * Test get text diff.
    */
-  public function testGetTextDiff() {
+  public function testGetTextDiff(): void {
     $from_text = 'Totam est quasi aliquam sit quibusdam';
     $to_text = 'Totam est quasi dignissimos sit quibusdam';
-    $expected = 'Totam est quasi <del>al</del><ins>d</ins>i<del>qua</del><ins>gnissi</ins>m<ins>os</ins> sit quibusdam';
 
-    $this->assertEquals(TextHelper::getTextDiff($from_text, $to_text), $expected);
+    // Test default behavior (Word granularity).
+    // With Word granularity, the entire word "aliquam" is deleted and
+    // "dignissimos" is inserted as a whole word.
+    $expected_word = 'Totam est quasi <del>aliquam </del><ins>dignissimos </ins>sit quibusdam';
+    $this->assertEquals($expected_word, TextHelper::getTextDiff($from_text, $to_text));
+
+    // Test explicit word granularity.
+    $this->assertEquals($expected_word, TextHelper::getTextDiff($from_text, $to_text, 'word'));
+
+    // Test character granularity.
+    // With Character granularity, differences are shown at the character level.
+    $expected_character = 'Totam est quasi <del>al</del><ins>d</ins>i<del>qua</del><ins>gnissi</ins>m<ins>os</ins> sit quibusdam';
+    $this->assertEquals($expected_character, TextHelper::getTextDiff($from_text, $to_text, 'character'));
+
+    // Test sentence granularity.
+    // With Sentence granularity, differences are shown at the sentence level.
+    $from_sentence = 'First sentence. Second sentence. Third sentence.';
+    $to_sentence = 'First sentence. Modified second sentence. Third sentence.';
+    // The diff parser breaks the text at end of sentence delimiters so the
+    // spaces after a sentence delimiter are part of the following sentence.
+    $expected_sentence = 'First sentence.<del> Second sentence.</del><ins> Modified second sentence.</ins> Third sentence.';
+    $this->assertEquals($expected_sentence, TextHelper::getTextDiff($from_sentence, $to_sentence, 'sentence'));
+
+    // Test paragraph granularity.
+    // With Paragraph granularity, differences are shown at the paragraph level.
+    $from_paragraph = "First paragraph.\n\nSecond paragraph. Another sentence.\n\nThird paragraph.";
+    $to_paragraph = "First paragraph.\n\nModified second paragraph. Another sentence.\n\nThird paragraph.";
+    // The diff parser breaks the text at paragraph delimiters. The paragraph
+    // delimiter (\n\n) that follows a paragraph is included as part of that
+    // paragraph's content when the paragraph is deleted or inserted.
+    $expected_paragraph = "First paragraph.\n\n<del>Second paragraph. Another sentence.\n\n</del><ins>Modified second paragraph. Another sentence.\n\n</ins>Third paragraph.";
+    $this->assertEquals($expected_paragraph, TextHelper::getTextDiff($from_paragraph, $to_paragraph, 'paragraph'));
+
+    // Test invalid granularity (should default to Word).
+    $this->assertEquals($expected_word, TextHelper::getTextDiff($from_text, $to_text, 'invalid'));
+
+    // Test empty strings.
+    $this->assertEquals('', TextHelper::getTextDiff('', ''));
+    $this->assertStringContainsString('<ins>', TextHelper::getTextDiff('', 'new text'));
+    $this->assertStringContainsString('<del>', TextHelper::getTextDiff('old text', ''));
   }
 
   /**

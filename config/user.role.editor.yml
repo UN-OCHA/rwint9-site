@@ -170,6 +170,7 @@ permissions:
   - 'edit user posting rights'
   - 'manage domain posting rights'
   - 'manage user posting rights'
+  - 'masquerade as advertiser'
   - 'masquerade as authenticated'
   - 'masquerade as contributor'
   - 'masquerade as submitter'
