@@ -41,7 +41,7 @@ index 97bb0e4b458..3331245fb8a 100644
     * {@inheritdoc}
     */
 diff --git a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
-index 2b843d6d345..69e8a6c06f9 100644
+index 655f5362517..3a82a9c2bd0 100644
 --- a/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 +++ b/core/modules/file/tests/src/Kernel/FileItemValidationTest.php
 @@ -10,7 +10,6 @@
@@ -49,10 +49,10 @@ index 2b843d6d345..69e8a6c06f9 100644
  use Drupal\KernelTests\KernelTestBase;
  use Drupal\user\Entity\User;
 -use org\bovigo\vfs\vfsStream;
- 
- /**
-  * Tests that files referenced in file and image fields are always validated.
-@@ -76,25 +75,20 @@ public function testFileValidationConstraint($file_type): void {
+ use PHPUnit\Framework\Attributes\DataProvider;
+ use PHPUnit\Framework\Attributes\Group;
+ use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
+@@ -80,25 +79,20 @@ public function testFileValidationConstraint($file_type): void {
        'bundle' => 'entity_test',
        'settings' => [
          'max_filesize' => '2k',
@@ -85,7 +85,7 @@ index 2b843d6d345..69e8a6c06f9 100644
        'uid' => $this->user->id(),
      ]);
      $file->setPermanent();
-@@ -110,11 +104,13 @@ public function testFileValidationConstraint($file_type): void {
+@@ -114,11 +108,13 @@ public function testFileValidationConstraint($file_type): void {
      // Enforce the file to be new as file size is checked only for new files.
      $entity_test->field_test_file->entity->enforceIsNew();
      $result = $entity_test->validate();
@@ -103,7 +103,7 @@ index 2b843d6d345..69e8a6c06f9 100644
      // File size is not checked for already existing files.
      $entity_test->field_test_file->entity->enforceIsNew(FALSE);
 diff --git a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
-index 72937d4e79a..749f74ae79c 100644
+index 3a9c456a03b..3d2c43303bc 100644
 --- a/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
 +++ b/core/modules/image/src/Plugin/Field/FieldType/ImageItem.php
 @@ -529,4 +529,36 @@ public function isDisplayed() {
@@ -144,10 +144,10 @@ index 72937d4e79a..749f74ae79c 100644
 +
  }
 diff --git a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
-index 9d58ad40cc7..fdfc7ff85f7 100644
+index c5b686e10b4..40248f1741f 100644
 --- a/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
 +++ b/core/modules/image/src/Plugin/Field/FieldWidget/ImageWidget.php
-@@ -139,29 +139,10 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
+@@ -140,29 +140,10 @@ protected function formMultipleElements(FieldItemListInterface $items, array &$f
     */
    public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
      $element = parent::formElement($items, $delta, $element, $form, $form_state);
@@ -179,10 +179,10 @@ index 9d58ad40cc7..fdfc7ff85f7 100644
      $element['#accept'] = 'image/*';
  
 diff --git a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
-index dd2e6929a97..9edb33ecb8f 100644
+index 03784b89199..4a469fc1ec4 100644
 --- a/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
 +++ b/core/modules/image/tests/src/Functional/ImageFieldWidgetTest.php
-@@ -48,13 +48,13 @@ public function testWidgetElement(): void {
+@@ -50,13 +50,13 @@ public function testWidgetElement(): void {
      $field_config = FieldConfig::loadByName('node', 'article', $field_name);
      $field_config->setSetting('file_extensions', 'png gif jpg jpeg webp tiff')->save();
      $this->drupalGet('node/add/article');
@@ -199,10 +199,10 @@ index dd2e6929a97..9edb33ecb8f 100644
  
  }
 diff --git a/core/modules/image/tests/src/Kernel/ImageItemTest.php b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-index 55f2503686d..08a4da61e92 100644
+index a6e02177fba..6772b7036cb 100644
 --- a/core/modules/image/tests/src/Kernel/ImageItemTest.php
 +++ b/core/modules/image/tests/src/Kernel/ImageItemTest.php
-@@ -217,6 +217,48 @@ public function testImageUriDirectories(): void {
+@@ -219,6 +219,48 @@ public function testImageUriDirectories(): void {
      $this->validateImageUriForDirectory('custom_directory/subdir', 'public://custom_directory/subdir/');
    }
  
@@ -252,7 +252,7 @@ index 55f2503686d..08a4da61e92 100644
     * Tests display_default.
     */
 diff --git a/core/modules/media_library/src/Form/FileUploadForm.php b/core/modules/media_library/src/Form/FileUploadForm.php
-index e9e25f108fc..85a628ec58e 100644
+index 892f76dbc10..a2dc87833b6 100644
 --- a/core/modules/media_library/src/Form/FileUploadForm.php
 +++ b/core/modules/media_library/src/Form/FileUploadForm.php
 @@ -5,7 +5,6 @@
