@@ -909,4 +909,128 @@ class UserPostingRightsEditFormTest extends ExistingSiteBase {
     $this->assertEquals(1, $table[$domain_row_key]['report']['#default_value']);
   }
 
+  /**
+   * Test buildForm shows rights with allowed content types filtering disabled.
+   *
+   * The form uses filter_by_allowed_content_types: FALSE in buildForm to show
+   * all rights regardless of allowed content types.
+   */
+  public function testBuildFormShowsRightsForNonAllowedContentTypes(): void {
+    // Create a source that only allows job content.
+    $jobOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Job Only Source',
+      'field_allowed_content_types' => [
+        // Job only.
+        ['value' => 0],
+      ],
+    ]);
+
+    // Add user posting rights for all content types (including
+    // non-allowed ones).
+    $jobOnlySource->get('field_user_posting_rights')->appendItem([
+      'id' => $this->testUser->id(),
+      // Allowed for job (allowed content type).
+      'job' => 2,
+      // Trusted for training (non-allowed content type).
+      'training' => 3,
+      // Blocked for report (non-allowed content type).
+      'report' => 1,
+    ]);
+    $jobOnlySource->save();
+
+    $container = $this->container;
+    $form = UserPostingRightsEditForm::create($container);
+    $form_state = new FormState();
+
+    $built_form = $form->buildForm([], $form_state, $this->testUser);
+
+    // Verify the form shows the source with all rights (including non-allowed).
+    $table = $built_form['rights']['table'];
+    $row_key = 'user_' . $jobOnlySource->id();
+    $this->assertArrayHasKey($row_key, $table, 'Should show source even with non-allowed content types');
+
+    // Verify all rights are shown (not filtered).
+    $this->assertEquals(2, $table[$row_key]['job']['#default_value'], 'Should show job rights');
+    $this->assertEquals(3, $table[$row_key]['training']['#default_value'], 'Should show training rights even though not allowed');
+    $this->assertEquals(1, $table[$row_key]['report']['#default_value'], 'Should show report rights even though not allowed');
+  }
+
+  /**
+   * Test buildForm shows domain rights with content types filtering disabled.
+   */
+  public function testBuildFormShowsDomainRightsForNonAllowedContentTypes(): void {
+    // Create a source that only allows report content.
+    $reportOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Report Only Source',
+      'field_allowed_content_types' => [
+        // Report only.
+        ['value' => 1],
+      ],
+    ]);
+
+    // Add domain posting rights for all content types.
+    $reportOnlySource->get('field_domain_posting_rights')->appendItem([
+      'domain' => $this->testDomain,
+      // Allowed for job (non-allowed content type).
+      'job' => 2,
+      // Trusted for training (non-allowed content type).
+      'training' => 3,
+      // Blocked for report (allowed content type).
+      'report' => 1,
+    ]);
+    $reportOnlySource->save();
+
+    $container = $this->container;
+    $form = UserPostingRightsEditForm::create($container);
+    $form_state = new FormState();
+
+    $built_form = $form->buildForm([], $form_state, $this->testUser);
+
+    // Verify the form shows the source with all rights (including non-allowed).
+    $table = $built_form['rights']['table'];
+    $row_key = 'domain_' . $reportOnlySource->id();
+    $this->assertArrayHasKey($row_key, $table, 'Should show source even with non-allowed content types');
+
+    // Verify all rights are shown (not filtered).
+    $this->assertEquals(2, $table[$row_key]['job']['#default_value'], 'Should show job rights even though not allowed');
+    $this->assertEquals(3, $table[$row_key]['training']['#default_value'], 'Should show training rights even though not allowed');
+    $this->assertEquals(1, $table[$row_key]['report']['#default_value'], 'Should show report rights');
+  }
+
+  /**
+   * Test buildForm with source that has no allowed content types.
+   */
+  public function testBuildFormWithNoAllowedContentTypes(): void {
+    // Create a source with no allowed content types.
+    $noTypesSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'No Types Source',
+      // No field_allowed_content_types - this is intentional for testing.
+    ]);
+
+    // Add user posting rights.
+    $noTypesSource->get('field_user_posting_rights')->appendItem([
+      'id' => $this->testUser->id(),
+      'job' => 2,
+      'training' => 3,
+      'report' => 1,
+    ]);
+    $noTypesSource->save();
+
+    $container = $this->container;
+    $form = UserPostingRightsEditForm::create($container);
+    $form_state = new FormState();
+
+    $built_form = $form->buildForm([], $form_state, $this->testUser);
+
+    // Verify the form still shows the source (because filtering is disabled).
+    $table = $built_form['rights']['table'];
+    $row_key = 'user_' . $noTypesSource->id();
+    $this->assertArrayHasKey($row_key, $table, 'Should show source even with no allowed content types');
+
+    // Verify all rights are shown.
+    $this->assertEquals(2, $table[$row_key]['job']['#default_value'], 'Should show job rights');
+    $this->assertEquals(3, $table[$row_key]['training']['#default_value'], 'Should show training rights');
+    $this->assertEquals(1, $table[$row_key]['report']['#default_value'], 'Should show report rights');
+  }
+
 }

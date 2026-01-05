@@ -56,8 +56,10 @@ class UserPostingRightsEditForm extends PostingRightsEditFormBase {
     $form_state->set('user', $user);
 
     // Get user posting rights and domain posting rights separately.
-    $user_sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser($user);
-    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user);
+    // We do not filter by allowed content types here because we want to show
+    // the rights as selected by the user.
+    $user_sources = $this->userPostingRightsManager->getSourcesWithUserPostingRightsForUser($user, filter_by_allowed_content_types: FALSE);
+    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user, filter_by_allowed_content_types: FALSE);
 
     // Build the existing rights table.
     $user_entity = $this->entityTypeManager->getStorage('user')->load($user->id());

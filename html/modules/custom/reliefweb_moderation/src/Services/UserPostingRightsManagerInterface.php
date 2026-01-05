@@ -62,11 +62,19 @@ interface UserPostingRightsManagerInterface {
    *   List of source ids. Limit the returned rights to the given sources.
    * @param bool $check_privileged_domains
    *   Whether to check privileged domains for default posting rights.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Posting rights as an associative array keyed by source id.
    */
-  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = [], bool $check_privileged_domains = TRUE): array;
+  public function getUserPostingRights(
+    ?AccountInterface $account = NULL,
+    array $sources = [],
+    bool $check_privileged_domains = TRUE,
+    bool $filter_by_allowed_content_types = TRUE,
+  ): array;
 
   /**
    * Get domain posting rights for an account.
@@ -77,11 +85,19 @@ interface UserPostingRightsManagerInterface {
    *   List of source ids. Limit the returned rights to the given sources.
    * @param bool $check_privileged_domains
    *   Whether to check privileged domains for default posting rights.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Domain posting rights as an associative array keyed by source id.
    */
-  public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array;
+  public function getDomainPostingRights(
+    AccountInterface $account,
+    array $sources = [],
+    bool $check_privileged_domains = TRUE,
+    bool $filter_by_allowed_content_types = TRUE,
+  ): array;
 
   /**
    * Check if a domain is in the privileged domains list.
@@ -192,6 +208,9 @@ interface UserPostingRightsManagerInterface {
    *   How to combine the bundle rights conditions.
    * @param ?int $limit
    *   Number of sources to retrieve.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Associative array with the source IDs as keys.
@@ -201,6 +220,7 @@ interface UserPostingRightsManagerInterface {
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array;
 
   /**
@@ -214,6 +234,9 @@ interface UserPostingRightsManagerInterface {
    *   How to combine the bundle rights conditions.
    * @param ?int $limit
    *   Number of sources to retrieve.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Associative array with the source IDs as keys.
@@ -223,6 +246,7 @@ interface UserPostingRightsManagerInterface {
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array;
 
   /**
@@ -236,6 +260,9 @@ interface UserPostingRightsManagerInterface {
    *   How to combine the bundle rights conditions.
    * @param ?int $limit
    *   Number of sources to retrieve.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Associative array with the source IDs as keys and the corresponding
@@ -246,6 +273,7 @@ interface UserPostingRightsManagerInterface {
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array;
 
   /**
