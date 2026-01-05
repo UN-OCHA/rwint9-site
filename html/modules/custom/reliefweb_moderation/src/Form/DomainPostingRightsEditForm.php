@@ -91,7 +91,9 @@ class DomainPostingRightsEditForm extends PostingRightsEditFormBase {
     }
 
     // Get existing domain posting rights for this domain.
-    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain($domain);
+    // We do not filter by allowed content types here because we want to show
+    // the rights as selected by the user.
+    $domain_sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain($domain, filter_by_allowed_content_types: FALSE);
 
     // Build the rights table.
     $form['rights'] = [

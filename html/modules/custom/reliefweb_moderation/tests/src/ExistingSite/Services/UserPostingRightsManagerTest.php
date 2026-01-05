@@ -1718,6 +1718,68 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
+   * Test getSourcesWithDomainPostingRightsForDomain - unfiltered.
+   */
+  public function testGetSourcesWithDomainPostingRightsForDomainFilterByAllowedContentTypes(): void {
+    // Create a source that only allows job content but has domain posting
+    // rights for all types.
+    $jobOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Job Only Source with Domain Rights',
+      'field_allowed_content_types' => [
+        // Job only.
+        ['value' => 0],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed for all content types.
+          'job' => 2,
+          'training' => 2,
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    // Test with filter_by_allowed_content_types = TRUE (default).
+    $sources_filtered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR',
+      NULL,
+      TRUE
+    );
+
+    $this->assertArrayHasKey($jobOnlySource->id(), $sources_filtered, 'Should include job-only source');
+    $this->assertEquals(2, $sources_filtered[$jobOnlySource->id()]['job'], 'Should keep job rights for allowed content type');
+    $this->assertEquals(0, $sources_filtered[$jobOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type when filtered');
+    $this->assertEquals(0, $sources_filtered[$jobOnlySource->id()]['report'], 'Should reset report rights for non-allowed content type when filtered');
+
+    // Test with filter_by_allowed_content_types = FALSE.
+    $sources_unfiltered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR',
+      NULL,
+      FALSE
+    );
+
+    $this->assertArrayHasKey($jobOnlySource->id(), $sources_unfiltered, 'Should include job-only source');
+    $this->assertEquals(2, $sources_unfiltered[$jobOnlySource->id()]['job'], 'Should keep job rights when not filtered');
+    $this->assertEquals(2, $sources_unfiltered[$jobOnlySource->id()]['training'], 'Should keep training rights when not filtered');
+    $this->assertEquals(2, $sources_unfiltered[$jobOnlySource->id()]['report'], 'Should keep report rights when not filtered');
+
+    // Test default behavior (filter_by_allowed_content_types = TRUE).
+    $sources_default = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForDomain(
+      'example.com',
+      ['job' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertEquals(0, $sources_default[$jobOnlySource->id()]['training'], 'Default behavior should filter by allowed content types');
+    $this->assertEquals(0, $sources_default[$jobOnlySource->id()]['report'], 'Default behavior should filter by allowed content types');
+  }
+
+  /**
    * Test getSourcesWithDomainPostingRightsForUser method.
    */
   public function testGetSourcesWithDomainPostingRightsForUser(): void {
@@ -1795,6 +1857,114 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     $sources = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser($user_different_domain);
     $this->assertEmpty($sources, 'User with different domain should have no domain posting rights');
+  }
+
+  /**
+   * Test getSourcesWithDomainPostingRightsForUser - filtered.
+   */
+  public function testGetSourcesWithDomainPostingRightsForUserFilterByAllowedContentTypes(): void {
+    // Create a source that only allows report content but has domain posting
+    // rights for all types.
+    $reportOnlySource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'Report Only Source with Domain Rights',
+      'field_allowed_content_types' => [
+        // Report only.
+        ['value' => 1],
+      ],
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed for all content types.
+          'job' => 2,
+          'training' => 2,
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    // Test with filter_by_allowed_content_types = TRUE (default).
+    $sources_filtered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['report' => [2, 3]],
+      'OR',
+      NULL,
+      TRUE
+    );
+
+    $this->assertArrayHasKey($reportOnlySource->id(), $sources_filtered, 'Should include report-only source');
+    $this->assertEquals(0, $sources_filtered[$reportOnlySource->id()]['job'], 'Should reset job rights for non-allowed content type when filtered');
+    $this->assertEquals(0, $sources_filtered[$reportOnlySource->id()]['training'], 'Should reset training rights for non-allowed content type when filtered');
+    $this->assertEquals(2, $sources_filtered[$reportOnlySource->id()]['report'], 'Should keep report rights for allowed content type when filtered');
+
+    // Test with filter_by_allowed_content_types = FALSE.
+    $sources_unfiltered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['report' => [2, 3]],
+      'OR',
+      NULL,
+      FALSE
+    );
+
+    $this->assertArrayHasKey($reportOnlySource->id(), $sources_unfiltered, 'Should include report-only source');
+    $this->assertEquals(2, $sources_unfiltered[$reportOnlySource->id()]['job'], 'Should keep job rights when not filtered');
+    $this->assertEquals(2, $sources_unfiltered[$reportOnlySource->id()]['training'], 'Should keep training rights when not filtered');
+    $this->assertEquals(2, $sources_unfiltered[$reportOnlySource->id()]['report'], 'Should keep report rights when not filtered');
+
+    // Test default behavior (filter_by_allowed_content_types = TRUE).
+    $sources_default = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['report' => [2, 3]],
+      'OR'
+    );
+
+    $this->assertEquals(0, $sources_default[$reportOnlySource->id()]['job'], 'Default behavior should filter by allowed content types');
+    $this->assertEquals(0, $sources_default[$reportOnlySource->id()]['training'], 'Default behavior should filter by allowed content types');
+    $this->assertEquals(2, $sources_default[$reportOnlySource->id()]['report'], 'Default behavior should keep allowed content type rights');
+
+    // Test with source that has no allowed content types.
+    $noTypesSource = $this->createTerm($this->sourceVocabulary, [
+      'name' => 'No Types Source with Domain Rights',
+      // No field_allowed_content_types - this is intentional for testing.
+      'field_domain_posting_rights' => [
+        [
+          'domain' => 'example.com',
+          // Allowed for all content types.
+          'job' => 2,
+          'training' => 2,
+          'report' => 2,
+        ],
+      ],
+    ]);
+
+    // With filtering enabled, all rights should be reset to 0.
+    $sources_no_types_filtered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR',
+      NULL,
+      TRUE
+    );
+
+    if (isset($sources_no_types_filtered[$noTypesSource->id()])) {
+      $this->assertEquals(0, $sources_no_types_filtered[$noTypesSource->id()]['job'], 'Should reset all rights for source with no allowed content types when filtered');
+      $this->assertEquals(0, $sources_no_types_filtered[$noTypesSource->id()]['training'], 'Should reset all rights for source with no allowed content types when filtered');
+      $this->assertEquals(0, $sources_no_types_filtered[$noTypesSource->id()]['report'], 'Should reset all rights for source with no allowed content types when filtered');
+    }
+
+    // With filtering disabled, all rights should be preserved.
+    $sources_no_types_unfiltered = $this->userPostingRightsManager->getSourcesWithDomainPostingRightsForUser(
+      $this->testUser,
+      ['job' => [2, 3]],
+      'OR',
+      NULL,
+      FALSE
+    );
+
+    if (isset($sources_no_types_unfiltered[$noTypesSource->id()])) {
+      $this->assertEquals(2, $sources_no_types_unfiltered[$noTypesSource->id()]['job'], 'Should keep all rights for source with no allowed content types when not filtered');
+      $this->assertEquals(2, $sources_no_types_unfiltered[$noTypesSource->id()]['training'], 'Should keep all rights for source with no allowed content types when not filtered');
+      $this->assertEquals(2, $sources_no_types_unfiltered[$noTypesSource->id()]['report'], 'Should keep all rights for source with no allowed content types when not filtered');
+    }
   }
 
   /**

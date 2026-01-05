@@ -229,19 +229,14 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Get the posting rights per sources for an account.
-   *
-   * @param \Drupal\Core\Session\AccountInterface|null $account
-   *   A user's account object or the current user if NULL.
-   * @param array<int> $sources
-   *   List of source ids. Limit the returned rights to the given sources.
-   * @param bool $check_privileged_domains
-   *   Whether to check privileged domains for default posting rights.
-   *
-   * @return array<int, array<string, mixed>>
-   *   Posting rights as an associative array keyed by source id.
+   * {@inheritdoc}
    */
-  public function getUserPostingRights(?AccountInterface $account = NULL, array $sources = [], bool $check_privileged_domains = TRUE): array {
+  public function getUserPostingRights(
+    ?AccountInterface $account = NULL,
+    array $sources = [],
+    bool $check_privileged_domains = TRUE,
+    bool $filter_by_allowed_content_types = TRUE,
+  ): array {
     $account = $account ?: $this->currentUser;
 
     // Static cache key for account/sources/check_privileged_domains.
@@ -294,7 +289,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     }
 
     // Filter results based on allowed content types.
-    $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    if ($filter_by_allowed_content_types) {
+      $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    }
 
     // Add default rights for non matched sources.
     // Check if user's domain is in the allowed list to determine default
@@ -329,19 +326,14 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Get domain posting rights for an account.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   A user's account object.
-   * @param array<int> $sources
-   *   List of source ids. Limit the returned rights to the given sources.
-   * @param bool $check_privileged_domains
-   *   Whether to check privileged domains for default posting rights.
-   *
-   * @return array<int, array<string, mixed>>
-   *   Domain posting rights as an associative array keyed by source id.
+   * {@inheritdoc}
    */
-  public function getDomainPostingRights(AccountInterface $account, array $sources = [], bool $check_privileged_domains = TRUE): array {
+  public function getDomainPostingRights(
+    AccountInterface $account,
+    array $sources = [],
+    bool $check_privileged_domains = TRUE,
+    bool $filter_by_allowed_content_types = TRUE,
+  ): array {
     $results = [];
 
     // Get user's email domain.
@@ -422,7 +414,10 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     }
 
     // Filter results based on allowed content types.
-    return $this->filterPostingRightsByAllowedContentTypes($results);
+    if ($filter_by_allowed_content_types) {
+      $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    }
+    return $results;
   }
 
   /**
@@ -793,6 +788,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    *   How to combine the bundle rights conditions.
    * @param ?int $limit
    *   Number of sources to retrieve.
+   * @param bool $filter_by_allowed_content_types
+   *   Whether to filter the results by allowed content types.
+   *   Defaults to TRUE.
    *
    * @return array<int, array<string, mixed>>
    *   Associative array with the source IDs as keys and the corresponding
@@ -803,41 +801,28 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array {
     // Fetch the user posting rights.
-    $results = $this->getSourcesWithUserPostingRightsForUser($account, $bundles, $operator, $limit);
+    $results = $this->getSourcesWithUserPostingRightsForUser($account, $bundles, $operator, $limit, $filter_by_allowed_content_types);
 
     // Fetch domain posting rights to merge with user posting rights.
     // We use the `+` operator to merge the results so that user posting rights
     // take precedence over domain posting rights.
-    $results += $this->getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit);
+    $results += $this->getSourcesWithDomainPostingRightsForUser($account, $bundles, $operator, $limit, $filter_by_allowed_content_types);
 
     return $results;
   }
 
   /**
-   * Get the sources the user has user posting rights for.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   User for which to retrieve the sources.
-   * @param array<string, array<int>> $bundles
-   *   Bundle rights filters in the form of an associative array with the
-   *   bundles (job, training, report) as keys and a list of rights (0, 1, 2, 3)
-   *   as values.
-   * @param string $operator
-   *   How to combine the bundle rights conditions.
-   * @param ?int $limit
-   *   Number of sources to retrieve.
-   *
-   * @return array<int, array<string, mixed>>
-   *   Associative array with the source IDs as keys and the corresponding
-   *   posting rights as values.
+   * {@inheritdoc}
    */
   public function getSourcesWithUserPostingRightsForUser(
     AccountInterface $account,
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array {
     // Get user posting rights.
     $table = $this->getFieldTableName('taxonomy_term', 'field_user_posting_rights');
@@ -877,32 +862,21 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
 
     // Filter results based on allowed content types.
-    return $this->filterPostingRightsByAllowedContentTypes($results);
+    if ($filter_by_allowed_content_types) {
+      $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    }
+    return $results;
   }
 
   /**
-   * Get the sources the user has domain posting rights for.
-   *
-   * @param \Drupal\Core\Session\AccountInterface $account
-   *   User for which to retrieve the sources.
-   * @param array<string, array<int>> $bundles
-   *   Bundle rights filters in the form of an associative array with the
-   *   bundles (job, training, report) as keys and a list of rights (0, 1, 2, 3)
-   *   as values.
-   * @param string $operator
-   *   How to combine the bundle rights conditions.
-   * @param ?int $limit
-   *   Number of sources to retrieve.
-   *
-   * @return array<int, array<string, mixed>>
-   *   Associative array with the source IDs as keys and the corresponding
-   *   posting rights as values.
+   * {@inheritdoc}
    */
   public function getSourcesWithDomainPostingRightsForUser(
     AccountInterface $account,
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array {
     // Get user's email domain.
     $user = $this->entityTypeManager->getStorage('user')->load($account->id());
@@ -953,7 +927,10 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
 
     // Filter results based on allowed content types.
-    return $this->filterPostingRightsByAllowedContentTypes($results);
+    if ($filter_by_allowed_content_types) {
+      $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    }
+    return $results;
   }
 
   /**
@@ -964,6 +941,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     array $bundles = [],
     string $operator = 'AND',
     ?int $limit = NULL,
+    bool $filter_by_allowed_content_types = TRUE,
   ): array {
     // Normalize domain.
     $domain = DomainHelper::normalizeDomain($domain);
@@ -1009,7 +987,10 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $results = $query->execute()?->fetchAllAssoc('entity_id', FetchAs::Associative) ?? [];
 
     // Filter results based on allowed content types.
-    return $this->filterPostingRightsByAllowedContentTypes($results);
+    if ($filter_by_allowed_content_types) {
+      $results = $this->filterPostingRightsByAllowedContentTypes($results);
+    }
+    return $results;
   }
 
   /**
