@@ -1,0 +1,223 @@
+{
+    "_hash": "a7672ba08af058f6d830f01b7042c038a20f5b164bf6df97512cc37a3cb15ad4",
+    "patches": {
+        "drupal/amazon_ses": [
+            {
+                "package": "drupal/amazon_ses",
+                "description": "Client credentials expired for long running tasks",
+                "url": "PATCHES/amazon_ses-3446425-token-refresh.patch",
+                "sha256": "41ad0f3e37279514e61e0f24940f7f2fe4c894a993dd7412ccbd74913be5372e",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/amazon_ses",
+                "description": "PHP warning in test form",
+                "url": "PATCHES/amazon_ses-3508814-test-form-fix.patch",
+                "sha256": "f5feba7fab1cd76827b5f2350c2a476f7be65fcc36c9196eecf7a97f114277c9",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/core": [
+            {
+                "package": "drupal/core",
+                "description": "https://www.drupal.org/project/drupal/issues/3008292",
+                "url": "PATCHES/core--drupal--3008292-image-upload-validators.patch",
+                "sha256": "ee8308493934f495d8298e096fd68e563b163da1c13b7b7fe30de543d2b790c9",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "https://www.drupal.org/project/drupal/issues/3143617",
+                "url": "PATCHES/core--drupal--3143617-pager-parameter.patch",
+                "sha256": "1af4063f6958cfe6c397789cdd32b4ba5aef6e932197951ca3aed6c2a5d0b794",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/core",
+                "description": "https://www.drupal.org/project/drupal/issues/3418098",
+                "url": "PATCHES/core--drupal--3418098-php-mailer.patch",
+                "sha256": "145be561756f95f2a2778a51298222d15ab986104bf13aeab448901f8b9c3b3a",
+                "depth": 2,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/guidelines": [
+            {
+                "package": "drupal/guidelines",
+                "description": "Drupal 10 compatibility",
+                "url": "PATCHES/guidelines-drupal-10-compatibility.patch",
+                "sha256": "47644c1f7753a42842ad3fb3783b3efe7744b564b022b2f0c309a92c2a153f43",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/imageapi_optimize_webp": [
+            {
+                "package": "drupal/imageapi_optimize_webp",
+                "description": "Fix derivatives for webp source images",
+                "url": "PATCHES/imageapi_optimize_webp-webp-source-image.patch",
+                "sha256": "d569843481f6af47f189e18fc552efd2a2ede1d0ba234676be48e273a52f6653",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/imageapi_optimize_webp",
+                "description": "Support imagemagick toolkit",
+                "url": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch",
+                "sha256": "a0275281c110ebc7c9909d3a68757ec67a0216e8127110e5712dffde773bb180",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/jsonlog": [
+            {
+                "package": "drupal/jsonlog",
+                "description": "Direct logging to Elastic cluster",
+                "url": "PATCHES/jsonlog--3460929--elastic-direct-logging.patch",
+                "sha256": "37f7fca9bd74fd0c524dcdb44569083467aa3895f2c3f67723379553b8cdb1d8",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/maintenance200": [
+            {
+                "package": "drupal/maintenance200",
+                "description": "Drupal 11 compatibility",
+                "url": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch",
+                "sha256": "10e7faee8f6ba7673206fa74dfcda703b2c28546bacf742d138c9fa16d774ffe",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/openid_connect": [
+            {
+                "package": "drupal/openid_connect",
+                "description": "Handle case if user is in blocked state after SSO Authorization",
+                "url": "PATCHES/openid_connect-3390668-6.patch",
+                "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/openid_connect_windows_aad": [
+            {
+                "package": "drupal/openid_connect_windows_aad",
+                "description": "Failed to get authentication tokens for Windows Azure AD",
+                "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
+                "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/username_enumeration_prevention": [
+            {
+                "package": "drupal/username_enumeration_prevention",
+                "description": "Avoid leaking the path via Drupal.settings json",
+                "url": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch",
+                "sha256": "d69c3af6d81a028ee001324682c5ddce14124632b4a83e240cd2f838905ede87",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drush/drush": [
+            {
+                "package": "drush/drush",
+                "description": "https://humanitarian.atlassian.net/browse/OPS-8026",
+                "url": "PATCHES/drush--timeout-override.patch",
+                "sha256": "d637f756db92bf2eaf43f516cdb28b510d76a4b3af735a4eeddfa735d3effdb5",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drush/drush",
+                "description": "PHP 8.3 compatibility",
+                "url": "PATCHES/drush--6242-php83-compatibility.patch",
+                "sha256": "345690ab2c2d7f926cc17ce6fb3b556bd41f27a1a1128666a56695217b8d69a1",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "spipu/html2pdf": [
+            {
+                "package": "spipu/html2pdf",
+                "description": "Remove promo link",
+                "url": "PATCHES/remove-tcpdf-footer.patch",
+                "sha256": "bfc219d206876300abf77e4f979f73ccda77ef8c9b4adc5b00156f55d5e3dee2",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "unocha/common_design": [
+            {
+                "package": "unocha/common_design",
+                "description": "https://humanitarian.atlassian.net/browse/CD-519",
+                "url": "PATCHES/common_design--default-logo-remove.patch",
+                "sha256": "a487a4a5252c685f94de4205af658441384256bf49f52942a2bb76d9167be470",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth": [
+            {
+                "package": "drupal/social_auth",
+                "description": "Return either string or null",
+                "url": "https://git.drupalcode.org/project/social_auth/-/merge_requests/34.diff",
+                "sha256": "991cd706aebb29cc221f387d9e2595deabba9da7e09c9a1fa7f392517f5b59ef",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth_linkedin": [
+            {
+                "package": "drupal/social_auth_linkedin",
+                "description": "https://www.drupal.org/project/social_auth_linkedin/issues/3399739",
+                "url": "https://git.drupalcode.org/project/social_auth_linkedin/-/merge_requests/4.diff",
+                "sha256": "80e48fc12fbb25fe7414c63bbb18d3517d594deaf0529e3a0f080c45f9e42051",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ]
+    }
+}
