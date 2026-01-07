@@ -31,6 +31,12 @@ buildlog.txt
 /local/.env
 /local/shared/settings/settings.site.php
 
+# Ignore local composer cache.
+/.composer
+
+# Ignore local notes.
+localnotes/
+
 ###> squizlabs/php_codesniffer ###
 /.phpcs-cache
 /coverage
