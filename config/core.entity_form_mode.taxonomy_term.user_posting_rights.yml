@@ -6,6 +6,6 @@ dependencies:
     - taxonomy
 id: taxonomy_term.user_posting_rights
 label: 'User posting rights'
-description: ''
+description: null
 targetEntityType: taxonomy_term
 cache: true
