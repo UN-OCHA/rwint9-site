@@ -6,6 +6,6 @@ dependencies:
     - taxonomy
 id: taxonomy_term.profile
 label: Profile
-description: ''
+description: null
 targetEntityType: taxonomy_term
 cache: true
