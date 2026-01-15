@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "563d86899867863ffdabf039516bbc15",
+    "content-hash": "2a9f97306524b78f8f1ca36db21ae571",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4089,26 +4089,29 @@
         },
         {
             "name": "drupal/social_auth_entra_id",
-            "version": "dev-1.0.x",
+            "version": "2.0.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/social_auth_entra_id.git",
-                "reference": "140a9edf669d723f1ddca78ccb9e7af233c22c7e"
+                "reference": "2.0.0"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/social_auth_entra_id-2.0.0.zip",
+                "reference": "2.0.0",
+                "shasum": "f8eaf75980adc8392c9cf394e789500cf396fe6f"
             },
             "require": {
                 "drupal/core": "^9 || ^10 || ^11"
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-1.0.x": "1.0.x-dev"
-                },
                 "drupal": {
-                    "version": "1.0.3+12-dev",
-                    "datestamp": "1762884874",
+                    "version": "2.0.0",
+                    "datestamp": "1768413143",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Dev releases are not covered by Drupal security advisories."
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -20209,7 +20212,6 @@
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 20,
         "drupal/openid_connect_windows_aad": 10,
-        "drupal/social_auth_entra_id": 20,
         "drupal/webhooks": 15
     },
     "prefer-stable": true,
