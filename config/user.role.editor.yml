@@ -22,6 +22,7 @@ dependencies:
     - taxonomy.vocabulary.disaster
     - taxonomy.vocabulary.source
     - taxonomy.vocabulary.tag
+    - user.role.advertiser
     - user.role.authenticated
     - user.role.contributor
     - user.role.submitter
