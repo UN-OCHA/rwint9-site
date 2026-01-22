@@ -118,16 +118,16 @@
         },
         {
             "name": "aws/aws-sdk-php",
-            "version": "3.369.13",
+            "version": "3.369.17",
             "source": {
                 "type": "git",
                 "url": "https://github.com/aws/aws-sdk-php.git",
-                "reference": "bedc36250c92b8287be855a2d25427fb0e065483"
+                "reference": "8bdccd2f8e54c5cd170b22f52414171e19226fd1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/bedc36250c92b8287be855a2d25427fb0e065483",
-                "reference": "bedc36250c92b8287be855a2d25427fb0e065483",
+                "url": "https://api.github.com/repos/aws/aws-sdk-php/zipball/8bdccd2f8e54c5cd170b22f52414171e19226fd1",
+                "reference": "8bdccd2f8e54c5cd170b22f52414171e19226fd1",
                 "shasum": ""
             },
             "require": {
@@ -209,9 +209,9 @@
             "support": {
                 "forum": "https://github.com/aws/aws-sdk-php/discussions",
                 "issues": "https://github.com/aws/aws-sdk-php/issues",
-                "source": "https://github.com/aws/aws-sdk-php/tree/3.369.13"
+                "source": "https://github.com/aws/aws-sdk-php/tree/3.369.17"
             },
-            "time": "2026-01-14T19:13:46+00:00"
+            "time": "2026-01-21T19:09:32+00:00"
         },
         {
             "name": "brick/math",
@@ -1295,16 +1295,16 @@
         },
         {
             "name": "dompdf/php-font-lib",
-            "version": "1.0.1",
+            "version": "1.0.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dompdf/php-font-lib.git",
-                "reference": "6137b7d4232b7f16c882c75e4ca3991dbcf6fe2d"
+                "reference": "a6e9a688a2a80016ac080b97be73d3e10c444c9a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dompdf/php-font-lib/zipball/6137b7d4232b7f16c882c75e4ca3991dbcf6fe2d",
-                "reference": "6137b7d4232b7f16c882c75e4ca3991dbcf6fe2d",
+                "url": "https://api.github.com/repos/dompdf/php-font-lib/zipball/a6e9a688a2a80016ac080b97be73d3e10c444c9a",
+                "reference": "a6e9a688a2a80016ac080b97be73d3e10c444c9a",
                 "shasum": ""
             },
             "require": {
@@ -1312,7 +1312,7 @@
                 "php": "^7.1 || ^8.0"
             },
             "require-dev": {
-                "symfony/phpunit-bridge": "^3 || ^4 || ^5 || ^6"
+                "phpunit/phpunit": "^7.5 || ^8 || ^9 || ^10 || ^11 || ^12"
             },
             "type": "library",
             "autoload": {
@@ -1334,9 +1334,9 @@
             "homepage": "https://github.com/dompdf/php-font-lib",
             "support": {
                 "issues": "https://github.com/dompdf/php-font-lib/issues",
-                "source": "https://github.com/dompdf/php-font-lib/tree/1.0.1"
+                "source": "https://github.com/dompdf/php-font-lib/tree/1.0.2"
             },
-            "time": "2024-12-02T14:37:59+00:00"
+            "time": "2026-01-20T14:10:26+00:00"
         },
         {
             "name": "drupal/admin_denied",
@@ -3021,17 +3021,17 @@
         },
         {
             "name": "drupal/key",
-            "version": "1.21.0",
+            "version": "1.22.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/key.git",
-                "reference": "8.x-1.21"
+                "reference": "8.x-1.22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/key-8.x-1.21.zip",
-                "reference": "8.x-1.21",
-                "shasum": "1e493e73bd41e70831821929b97bfb43818202fe"
+                "url": "https://ftp.drupal.org/files/projects/key-8.x-1.22.zip",
+                "reference": "8.x-1.22",
+                "shasum": "14b4b8ce1917dcbcf2d67955564b8b484f30cdda"
             },
             "require": {
                 "drupal/core": "^9.1 || ^10 || ^11"
@@ -3045,8 +3045,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.21",
-                    "datestamp": "1766353546",
+                    "version": "8.x-1.22",
+                    "datestamp": "1768921252",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -6648,16 +6648,16 @@
         },
         {
             "name": "laravel/prompts",
-            "version": "v0.3.9",
+            "version": "v0.3.10",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/prompts.git",
-                "reference": "5c41bf0555b7cfefaad4e66d3046675829581ac4"
+                "reference": "360ba095ef9f51017473505191fbd4ab73e1cab3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/prompts/zipball/5c41bf0555b7cfefaad4e66d3046675829581ac4",
-                "reference": "5c41bf0555b7cfefaad4e66d3046675829581ac4",
+                "url": "https://api.github.com/repos/laravel/prompts/zipball/360ba095ef9f51017473505191fbd4ab73e1cab3",
+                "reference": "360ba095ef9f51017473505191fbd4ab73e1cab3",
                 "shasum": ""
             },
             "require": {
@@ -6701,9 +6701,9 @@
             "description": "Add beautiful and user-friendly forms to your command-line applications.",
             "support": {
                 "issues": "https://github.com/laravel/prompts/issues",
-                "source": "https://github.com/laravel/prompts/tree/v0.3.9"
+                "source": "https://github.com/laravel/prompts/tree/v0.3.10"
             },
-            "time": "2026-01-07T21:00:29+00:00"
+            "time": "2026-01-13T20:29:29+00:00"
         },
         {
             "name": "lcobucci/jwt",
@@ -15392,16 +15392,16 @@
         },
         {
             "name": "doctrine/event-manager",
-            "version": "2.0.1",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/event-manager.git",
-                "reference": "b680156fa328f1dfd874fd48c7026c41570b9c6e"
+                "reference": "c07799fcf5ad362050960a0fd068dded40b1e312"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/event-manager/zipball/b680156fa328f1dfd874fd48c7026c41570b9c6e",
-                "reference": "b680156fa328f1dfd874fd48c7026c41570b9c6e",
+                "url": "https://api.github.com/repos/doctrine/event-manager/zipball/c07799fcf5ad362050960a0fd068dded40b1e312",
+                "reference": "c07799fcf5ad362050960a0fd068dded40b1e312",
                 "shasum": ""
             },
             "require": {
@@ -15411,10 +15411,10 @@
                 "doctrine/common": "<2.9"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^12",
-                "phpstan/phpstan": "^1.8.8",
-                "phpunit/phpunit": "^10.5",
-                "vimeo/psalm": "^5.24"
+                "doctrine/coding-standard": "^14",
+                "phpdocumentor/guides-cli": "^1.4",
+                "phpstan/phpstan": "^2.1.32",
+                "phpunit/phpunit": "^10.5.58"
             },
             "type": "library",
             "autoload": {
@@ -15463,7 +15463,7 @@
             ],
             "support": {
                 "issues": "https://github.com/doctrine/event-manager/issues",
-                "source": "https://github.com/doctrine/event-manager/tree/2.0.1"
+                "source": "https://github.com/doctrine/event-manager/tree/2.1.0"
             },
             "funding": [
                 {
@@ -15479,7 +15479,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2024-05-22T20:47:39+00:00"
+            "time": "2026-01-17T22:40:21+00:00"
         },
         {
             "name": "doctrine/instantiator",
@@ -16581,16 +16581,16 @@
         },
         {
             "name": "open-telemetry/exporter-otlp",
-            "version": "1.3.3",
+            "version": "1.3.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/exporter-otlp.git",
-                "reference": "07b02bc71838463f6edcc78d3485c04b48fb263d"
+                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/07b02bc71838463f6edcc78d3485c04b48fb263d",
-                "reference": "07b02bc71838463f6edcc78d3485c04b48fb263d",
+                "url": "https://api.github.com/repos/opentelemetry-php/exporter-otlp/zipball/62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
+                "reference": "62e680d587beb42e5247aa6ecd89ad1ca406e8ca",
                 "shasum": ""
             },
             "require": {
@@ -16641,7 +16641,7 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-11-13T08:04:37+00:00"
+            "time": "2026-01-15T09:31:34+00:00"
         },
         {
             "name": "open-telemetry/gen-otlp-protobuf",
@@ -16708,16 +16708,16 @@
         },
         {
             "name": "open-telemetry/sdk",
-            "version": "1.10.0",
+            "version": "1.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sdk.git",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99"
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
-                "reference": "3dfc3d1ad729ec7eb25f1b9a4ae39fe779affa99",
+                "url": "https://api.github.com/repos/opentelemetry-php/sdk/zipball/d91f21addcdb42da9a451c002777f8318432461a",
+                "reference": "d91f21addcdb42da9a451c002777f8318432461a",
                 "shasum": ""
             },
             "require": {
@@ -16801,20 +16801,20 @@
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-11-25T10:59:15+00:00"
+            "time": "2026-01-15T11:21:03+00:00"
         },
         {
             "name": "open-telemetry/sem-conv",
-            "version": "1.37.0",
+            "version": "1.38.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/opentelemetry-php/sem-conv.git",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1"
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/8da7ec497c881e39afa6657d72586e27efbd29a1",
-                "reference": "8da7ec497c881e39afa6657d72586e27efbd29a1",
+                "url": "https://api.github.com/repos/opentelemetry-php/sem-conv/zipball/e613bc640a407def4991b8a936a9b27edd9a3240",
+                "reference": "e613bc640a407def4991b8a936a9b27edd9a3240",
                 "shasum": ""
             },
             "require": {
@@ -16854,11 +16854,11 @@
             ],
             "support": {
                 "chat": "https://app.slack.com/client/T08PSQ7BQ/C01NFPCV44V",
-                "docs": "https://opentelemetry.io/docs/php",
+                "docs": "https://opentelemetry.io/docs/languages/php",
                 "issues": "https://github.com/open-telemetry/opentelemetry-php/issues",
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
-            "time": "2025-09-03T12:08:10+00:00"
+            "time": "2026-01-21T04:14:03+00:00"
         },
         {
             "name": "pdepend/pdepend",
@@ -17643,11 +17643,11 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "2.1.33",
+            "version": "2.1.36",
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/9e800e6bee7d5bd02784d4c6069b48032d16224f",
-                "reference": "9e800e6bee7d5bd02784d4c6069b48032d16224f",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/2132e5e2361d11d40af4c17faa16f043269a4cf3",
+                "reference": "2132e5e2361d11d40af4c17faa16f043269a4cf3",
                 "shasum": ""
             },
             "require": {
@@ -17692,7 +17692,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2025-12-05T10:24:31+00:00"
+            "time": "2026-01-21T13:58:26+00:00"
         },
         {
             "name": "phpstan/phpstan-deprecation-rules",
@@ -18131,16 +18131,16 @@
         },
         {
             "name": "phpunit/phpunit",
-            "version": "11.5.46",
+            "version": "11.5.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "75dfe79a2aa30085b7132bb84377c24062193f33"
+                "reference": "fe3665c15e37140f55aaf658c81a2eb9030b6d89"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/75dfe79a2aa30085b7132bb84377c24062193f33",
-                "reference": "75dfe79a2aa30085b7132bb84377c24062193f33",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/fe3665c15e37140f55aaf658c81a2eb9030b6d89",
+                "reference": "fe3665c15e37140f55aaf658c81a2eb9030b6d89",
                 "shasum": ""
             },
             "require": {
@@ -18154,7 +18154,7 @@
                 "phar-io/manifest": "^2.0.4",
                 "phar-io/version": "^3.2.1",
                 "php": ">=8.2",
-                "phpunit/php-code-coverage": "^11.0.11",
+                "phpunit/php-code-coverage": "^11.0.12",
                 "phpunit/php-file-iterator": "^5.1.0",
                 "phpunit/php-invoker": "^5.0.1",
                 "phpunit/php-text-template": "^4.0.1",
@@ -18212,7 +18212,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/phpunit/issues",
                 "security": "https://github.com/sebastianbergmann/phpunit/security/policy",
-                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.46"
+                "source": "https://github.com/sebastianbergmann/phpunit/tree/11.5.48"
             },
             "funding": [
                 {
@@ -18236,7 +18236,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-12-06T08:01:15+00:00"
+            "time": "2026-01-16T16:26:27+00:00"
         },
         {
             "name": "react/promise",
