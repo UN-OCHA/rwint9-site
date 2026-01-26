@@ -17,3 +17,4 @@ disabled_roles:
   api_user: '0'
   topic_editor: '0'
   submitter: '0'
+  advertiser: '0'

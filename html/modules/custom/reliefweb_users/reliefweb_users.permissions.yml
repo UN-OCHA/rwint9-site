@@ -2,6 +2,10 @@ view reliefweb admin menu:
   title: 'View reliefweb admin menu'
   description: 'Allow users to view the reliefwebadmin menu.'
 
+edit username:
+  title: 'Edit username'
+  description: 'Allow users to edit the username of user accounts.'
+
 manage user roles:
   title: 'Manage user roles'
   description: 'Allow users to manager user roles on other accounts.'

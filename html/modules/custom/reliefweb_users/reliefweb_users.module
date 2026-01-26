@@ -93,6 +93,16 @@ function reliefweb_users_form_user_form_alter(array &$form, FormStateInterface $
   // Only people who can administrate other accounts can add notes.
   $form['field_notes']['#access'] = $user->hasPermission('administer users');
 
+  // Restrict edition of the username.
+  if (isset($form['account']['name'])) {
+    if (!$user->hasPermission('edit username')) {
+      $form['account']['name']['#access'] = FALSE;
+    }
+    else {
+      $form['account']['name']['#description'] = t("Maximum 60 characters using letters, numbers, spaces, and <code>@ + _ . ' -</code> with no leading, trailing, or consecutive spaces.");
+    }
+  }
+
   $form['account']['mail']['#title'] = t('Email');
   $form['account']['mail']['#description'] = t('Email address used for notifications and contact.');
 
