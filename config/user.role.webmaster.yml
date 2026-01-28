@@ -26,7 +26,6 @@ dependencies:
     - filter
     - guidelines
     - ocha_ai
-    - ocha_ai_chat
     - ocha_content_classification
     - reliefweb_anti_spam
     - reliefweb_bookmarks
@@ -45,7 +44,6 @@ permissions:
   - 'access administration pages'
   - 'access any reliefweb api user dashboard'
   - 'access editorial guidelines'
-  - 'access ocha ai chat'
   - 'access role capabilities overview'
   - 'access taxonomy overview'
   - 'add content to books'
@@ -132,7 +130,6 @@ permissions:
   - 'guideline_list revert revisions'
   - 'guideline_list view revisions'
   - 'import organization records'
-  - 'manage ocha ai chat config'
   - 'requeue node job for ocha content classification'
   - 'requeue node report for ocha content classification'
   - 'revert all guideline revisions'
@@ -146,7 +143,6 @@ permissions:
   - 'view moderation information'
   - 'view moderation information revision message author'
   - 'view ocha ai admin config menu'
-  - 'view ocha ai chat logs'
   - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view the administration theme'

@@ -1,9 +1,9 @@
-# ReliefWeb - Drupal 10 version
+# ReliefWeb - Drupal 11 version
 
-This is the drupal 10 codebase for the [ReliefWeb](https://reliefweb.int) site.
+This is the drupal 11 codebase for the [ReliefWeb](https://reliefweb.int) site.
 
 > ReliefWeb is the largest humanitarian information portal in the world. Founded
-in 1996, the portal now hosts more than 850,000 humanitarian situation reports,
+in 1996, the portal now hosts more than 1,000,000 humanitarian situation reports,
 press releases, evaluations, guidelines, assessments, maps and infographics.
 
 ## Content
@@ -104,15 +104,13 @@ drush rapi-i --alias job --verbose
 drush rw-job:index --verbose
 
 cget ocha_ai.settings --include-overridden
-cget ocha_ai_tag.settings --include-overridden
-cget ocha_ai_chat.settings --include-overridden
 cget reliefweb_api.settings --include-overridden
 
-cset ocha_ai.settings plugins.source.reliefweb.api_url https://dev.api-reliefweb-int.ahconu.org/v1
-cset ocha_ai.settings plugins.source.reliefweb.converter_url https://xxx:xxx@dev.reliefweb-int.ahconu.org/search/converter/json
-cset reliefweb_api.settings api_url https://dev.api-reliefweb-int.ahconu.org/v1
-cset reliefweb_api.settings api_url_external https://dev.api-reliefweb-int.ahconu.org/v1
-cset reliefweb_api.settings website: https://dev.reliefweb-int.ahconu.org
+cset ocha_ai.settings plugins.source.reliefweb.api_url https://rwint-api-local.test/v2
+cset ocha_ai.settings plugins.source.reliefweb.converter_url https://rwint-local.test/search/converter/json
+cset reliefweb_api.settings api_url https://rwint-api-local.test/v2
+cset reliefweb_api.settings api_url_external https://rwint-api-local.test/v2
+cset reliefweb_api.settings website: https:/rwint-local.test
 
 queue:list
 queue:run --verbose reliefweb_job_tagger

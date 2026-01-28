@@ -21,7 +21,7 @@ class ContentProcessorPluginManager extends DefaultPluginManager implements Cont
   /**
    * Static cache for the plugin instances.
    *
-   * @var \Drupal\ocha_ai_chat\Plugin\PluginInterface[]
+   * @var \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface[]
    */
   protected array $instances = [];
 
