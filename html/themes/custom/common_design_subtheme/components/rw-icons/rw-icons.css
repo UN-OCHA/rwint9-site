@@ -1,5 +1,5 @@
 :root {
-  --rw-icons-sprite: url("/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg?v=1.0.3");
+  --rw-icons-sprite: url("/themes/custom/common_design_subtheme/components/rw-icons/img/rw-icons-sprite.svg?v=1.0.4");
   --rw-icons--common--12--dark-blue--x: 0;
   --rw-icons--common--12--dark-red--x: -12px;
   --rw-icons--common--12--dark-grey--x: -24px;
@@ -441,34 +441,4 @@
   --rw-icons--ai--avatar--32--dark-grey: var(--rw-icons-sprite) -956px 0 no-repeat;
   --rw-icons--ai--avatar--48--dark-grey: var(--rw-icons-sprite) -988px 0 no-repeat;
   --rw-icons--ai--avatar--64--dark-grey: var(--rw-icons-sprite) -1036px 0 no-repeat;
-  --rw-icons--chat--16--dark-blue--x: -1100px;
-  --rw-icons--chat--16--dark-red--x: -1116px;
-  --rw-icons--chat--16--dark-grey--x: -1132px;
-  --rw-icons--chat--40--dark-blue--x: -1148px;
-  --rw-icons--chat--40--dark-red--x: -1188px;
-  --rw-icons--chat--40--dark-grey--x: -1228px;
-  --rw-icons--chat--chat--16--dark-blue: var(--rw-icons-sprite) -1100px 0 no-repeat;
-  --rw-icons--chat--chat--16--dark-red: var(--rw-icons-sprite) -1116px 0 no-repeat;
-  --rw-icons--chat--chat--16--dark-grey: var(--rw-icons-sprite) -1132px 0 no-repeat;
-  --rw-icons--chat--chat--40--dark-blue: var(--rw-icons-sprite) -1148px 0 no-repeat;
-  --rw-icons--chat--chat--40--dark-red: var(--rw-icons-sprite) -1188px 0 no-repeat;
-  --rw-icons--chat--chat--40--dark-grey: var(--rw-icons-sprite) -1228px 0 no-repeat;
-  --rw-icons--chat--copy--16--dark-blue: var(--rw-icons-sprite) -1100px -16px no-repeat;
-  --rw-icons--chat--copy--16--dark-red: var(--rw-icons-sprite) -1116px -16px no-repeat;
-  --rw-icons--chat--copy--16--dark-grey: var(--rw-icons-sprite) -1132px -16px no-repeat;
-  --rw-icons--chat--copy--40--dark-blue: var(--rw-icons-sprite) -1148px -40px no-repeat;
-  --rw-icons--chat--copy--40--dark-red: var(--rw-icons-sprite) -1188px -40px no-repeat;
-  --rw-icons--chat--copy--40--dark-grey: var(--rw-icons-sprite) -1228px -40px no-repeat;
-  --rw-icons--chat--thumbs-down--16--dark-blue: var(--rw-icons-sprite) -1100px -32px no-repeat;
-  --rw-icons--chat--thumbs-down--16--dark-red: var(--rw-icons-sprite) -1116px -32px no-repeat;
-  --rw-icons--chat--thumbs-down--16--dark-grey: var(--rw-icons-sprite) -1132px -32px no-repeat;
-  --rw-icons--chat--thumbs-down--40--dark-blue: var(--rw-icons-sprite) -1148px -80px no-repeat;
-  --rw-icons--chat--thumbs-down--40--dark-red: var(--rw-icons-sprite) -1188px -80px no-repeat;
-  --rw-icons--chat--thumbs-down--40--dark-grey: var(--rw-icons-sprite) -1228px -80px no-repeat;
-  --rw-icons--chat--thumbs-up--16--dark-blue: var(--rw-icons-sprite) -1100px -48px no-repeat;
-  --rw-icons--chat--thumbs-up--16--dark-red: var(--rw-icons-sprite) -1116px -48px no-repeat;
-  --rw-icons--chat--thumbs-up--16--dark-grey: var(--rw-icons-sprite) -1132px -48px no-repeat;
-  --rw-icons--chat--thumbs-up--40--dark-blue: var(--rw-icons-sprite) -1148px -120px no-repeat;
-  --rw-icons--chat--thumbs-up--40--dark-red: var(--rw-icons-sprite) -1188px -120px no-repeat;
-  --rw-icons--chat--thumbs-up--40--dark-grey: var(--rw-icons-sprite) -1228px -120px no-repeat;
 }

@@ -39,7 +39,6 @@ module:
   inline_entity_form: 0
   inline_form_errors: 0
   json_ld_schema: 0
-  jsonlog: 0
   key: 0
   language: 0
   link: 0
@@ -61,7 +60,6 @@ module:
   mysql: 0
   node: 0
   ocha_ai: 0
-  ocha_ai_chat: 0
   ocha_content_classification: 0
   ocha_entraid: 0
   ocha_monitoring: 0
