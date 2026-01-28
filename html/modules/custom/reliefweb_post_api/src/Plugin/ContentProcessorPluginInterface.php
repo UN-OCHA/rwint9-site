@@ -74,7 +74,7 @@ interface ContentProcessorPluginInterface {
    * @return string
    *   The JSON schema.
    *
-   * @throws \Drupal\ocha_ai_chat\Plugin\ContentProcessorException
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
    *   An exception if the schema could not be loaded.
    */
   public function getJsonSchema(): string;

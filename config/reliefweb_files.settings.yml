@@ -1,3 +1,5 @@
+_core:
+  default_config_hash: p51VTBEaJE9L5iY3Imqr82p6ym3rNeOGMoKQ3VsimvA
 docstore_url: ''
 docstore_provider_uuid: ''
 docstore_api_key: ''
@@ -10,5 +12,3 @@ duplicate_detection:
   max_files: 20
   minimum_should_match: 80%
   skip_access_check: false
-_core:
-  default_config_hash: p51VTBEaJE9L5iY3Imqr82p6ym3rNeOGMoKQ3VsimvA

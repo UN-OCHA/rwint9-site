@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   config:
+    - user.role.advertiser
     - user.role.authenticated
     - user.role.contributor
     - user.role.submitter

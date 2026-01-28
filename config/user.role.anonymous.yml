@@ -4,7 +4,6 @@ status: true
 dependencies:
   module:
     - media
-    - ocha_ai_chat
     - ocha_entraid
     - system
 _core:
@@ -15,6 +14,5 @@ weight: 0
 is_admin: false
 permissions:
   - 'access content'
-  - 'access ocha ai chat'
   - 'access ocha entraid direct login'
   - 'view media'

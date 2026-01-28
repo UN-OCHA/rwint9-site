@@ -34,36 +34,6 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
   public function buildForm(array $form, FormStateInterface $form_state): array {
     $config = $this->config('reliefweb_ai.settings');
 
-    // OCHA AI Chat settings section.
-    $form['ocha_ai_chat'] = [
-      '#type' => 'details',
-      '#title' => $this->t('OCHA AI Chat Settings'),
-      '#open' => TRUE,
-      '#tree' => TRUE,
-    ];
-
-    $form['ocha_ai_chat']['allow_for_anonymous'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Allow anonymous user to access the chat'),
-      '#description' => $this->t('Check this box to allow anonymous users to access the AI chat functionality.'),
-      '#default_value' => $config->get('ocha_ai_chat.allow_for_anonymous') ?? FALSE,
-    ];
-
-    $form['ocha_ai_chat']['instructions_replace'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Replace chat instructions'),
-      '#description' => $this->t('If checked, replace the chat instructions when the chat is disabled (error, anonymous access etc.), otherwise append the extra instructions.'),
-      '#default_value' => $config->get('ocha_ai_chat.instructions_replace') ?? FALSE,
-    ];
-
-    $form['ocha_ai_chat']['login_instructions'] = [
-      '#type' => 'textarea',
-      '#title' => $this->t('Login or register instructions'),
-      '#description' => $this->t('Instructions displayed to anonymous users for login or registration.'),
-      '#default_value' => $config->get('ocha_ai_chat.login_instructions') ?? '',
-      '#rows' => 4,
-    ];
-
     // Language Detection settings section.
     $form['language_detection'] = [
       '#type' => 'details',
@@ -278,14 +248,6 @@ class ReliefWebAiSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $config = $this->config('reliefweb_ai.settings');
-
-    // Save OCHA AI Chat settings.
-    $config->set('ocha_ai_chat.allow_for_anonymous',
-      $form_state->getValue(['ocha_ai_chat', 'allow_for_anonymous']));
-    $config->set('ocha_ai_chat.instructions_replace',
-      $form_state->getValue(['ocha_ai_chat', 'instructions_replace']));
-    $config->set('ocha_ai_chat.login_instructions',
-      $form_state->getValue(['ocha_ai_chat', 'login_instructions']));
 
     // Save Language Detection settings.
     $config->set('language_detection.tag',

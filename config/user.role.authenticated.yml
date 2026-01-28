@@ -10,7 +10,6 @@ dependencies:
     - filter
     - media
     - node
-    - ocha_ai_chat
     - reliefweb_bookmarks
     - reliefweb_form
     - reliefweb_moderation
@@ -24,7 +23,6 @@ weight: 1
 is_admin: false
 permissions:
   - 'access content'
-  - 'access ocha ai chat'
   - 'bookmark content'
   - 'clone content entities'
   - 'manage own subscriptions'
