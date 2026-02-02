@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\reliefweb_import\Attribute\ReliefWebImporter;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginBase;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
+use Drupal\reliefweb_utility\Helpers\DateHelper;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 
@@ -764,7 +765,6 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
       // Query the UNHCR API.
       $query = http_build_query([
-        'API_KEY' => $api_key,
         'order' => [$order_property => 'desc'],
         'limit' => $limit,
       ]);
@@ -772,6 +772,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       $url = rtrim($api_url, '/') . '/' . trim($list_endpoint, '?/') . '?' . $query;
 
       $response = $this->httpClient->get($url, [
+        'headers' => [
+          'X-AUTH-TOKEN' => $api_key,
+        ],
         'connect_timeout' => $timeout,
         'timeout' => $timeout,
       ]);
@@ -1059,6 +1062,8 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the publication date.
     $published = $document['publishDate'] ?? $document['created'] ?? NULL;
+    // Convert to ISO 8601 format.
+    $published = DateHelper::format($published, 'custom', 'c');
 
     // Retrieve the document languages and default to English if none of the
     // supported languages were found.
