@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a9f97306524b78f8f1ca36db21ae571",
+    "content-hash": "9ac05a914db511d0968256df7e95d81e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4085,6 +4085,53 @@
             "support": {
                 "source": "https://git.drupalcode.org/project/social_auth",
                 "issues": "https://www.drupal.org/project/issues/social_auth"
+            }
+        },
+        {
+            "name": "drupal/social_auth_account_verification",
+            "version": "1.0.0-rc1",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/social_auth_account_verification.git",
+                "reference": "1.0.0-rc1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/social_auth_account_verification-1.0.0-rc1.zip",
+                "reference": "1.0.0-rc1",
+                "shasum": "bd6d7d988aeda6fac9d5e576cc58a92e68ebd06f"
+            },
+            "require": {
+                "drupal/core": "^11",
+                "drupal/social_auth": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "drupal": {
+                    "version": "1.0.0-rc1",
+                    "datestamp": "1770165678",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Project has not opted into security advisory coverage!"
+                    }
+                },
+                "installer-name": "social_auth_account_verification"
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "orakili",
+                    "homepage": "https://www.drupal.org/user/1287634"
+                }
+            ],
+            "description": "Adds email verification step for social auth registration to prevent bot accounts",
+            "homepage": "https://www.drupal.org/project/social_auth_account_verification",
+            "support": {
+                "source": "https://git.drupalcode.org/project/social_auth_account_verification",
+                "issues": "https://www.drupal.org/project/issues/social_auth_account_verification"
             }
         },
         {
@@ -20212,6 +20259,7 @@
         "drupal/inline_entity_form": 5,
         "drupal/mimemail": 20,
         "drupal/openid_connect_windows_aad": 10,
+        "drupal/social_auth_account_verification": 5,
         "drupal/webhooks": 15
     },
     "prefer-stable": true,
