@@ -55,6 +55,17 @@ plugins:
       prompt_template: ''
       api_secret: ''
       role_arn: ''
+    aws_bedrock_nova_2_lite_v1:
+      model: 'us.amazon.nova-2-lite-v1:0'
+      endpoint: ''
+      version: ''
+      region: us-east-1
+      api_key: ''
+      max_tokens: 512
+      prompt_template: ''
+      api_secret: ''
+      role_arn: ''
+      thinking_mode: none
     azure_openai:
       model: gpt-3.5-turbo
       endpoint: REPLACE_WITH_ENDPOINT
