@@ -166,6 +166,19 @@ class UserPostsPage extends ModerationPage {
   }
 
   /**
+   * Check the access to the page for the current user.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account to check access for.
+   *
+   * @return \Drupal\Core\Access\AccessResultInterface
+   *   The access result.
+   */
+  public function checkCurrentUserPostsPageAccess(AccountInterface $account) {
+    return AccessResult::allowedIf($account->hasPermission('view own posts'));
+  }
+
+  /**
    * Redirect the current user to the its posts page.
    *
    * @return \Symfony\Component\HttpFoundation\RedirectResponse
