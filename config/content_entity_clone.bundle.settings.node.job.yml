@@ -1,0 +1,23 @@
+enabled: true
+local_task_label: 'Make a copy of this job'
+fields:
+  title:
+    id: copy_values
+  body:
+    id: copy_values
+  field_career_categories:
+    id: copy_values
+  field_city:
+    id: copy_values
+  field_country:
+    id: copy_values
+  field_how_to_apply:
+    id: copy_values
+  field_job_experience:
+    id: copy_values
+  field_job_type:
+    id: copy_values
+  field_source:
+    id: copy_values
+  field_theme:
+    id: copy_values
