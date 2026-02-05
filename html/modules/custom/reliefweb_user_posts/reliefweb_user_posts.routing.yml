@@ -19,8 +19,10 @@ reliefweb_user_posts.content.current_user:
   path: '/user/posts'
   defaults:
     _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::currentUserPostsPage'
+    _title: 'My posts'
   requirements:
     _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkCurrentUserPostsPageAccess'
 reliefweb_user_posts.autocomplete:
   path: '/user/{user}/posts/autocomplete/{filter}'
   defaults:
