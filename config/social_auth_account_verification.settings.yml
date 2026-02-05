@@ -1,0 +1,18 @@
+_core:
+  default_config_hash: GGBjOPeR7sMLDVMmi3rcXuS--fiVawm1qy5imgDzEbQ
+email_subject: 'Verify your account at [site:name]'
+email_body: "Hello [user:display-name],\r\n\r\nPlease verify your account by entering the following code:\r\n\r\n[verification:code]\r\n\r\nThis code will expire in 60 minutes.\r\n\r\nIf you did not create this account, please ignore this email.\r\n\r\n--  [site:name] team"
+code_expiration_minutes: 60
+max_attempts: 5
+session_key_prefix: social_auth_account_verification_token_
+session_token_expiration: 1800
+url_timeout: 86400
+message_link_expired: 'This verification link has expired. Please request a new one.'
+message_code_expired: 'Your verification code has expired. Please request a new one.'
+message_no_verification_required: 'This account does not require verification.'
+message_invalid_verification: 'Invalid verification.'
+message_verified_can_login: 'Your account has been verified successfully! You can now log in.'
+message_verified_pending_approval: 'Your email has been verified successfully! Your account is pending administrator approval. You will be notified once your account has been activated.'
+message_code_resent: 'A new verification code has been sent to your email address.'
+message_verification_form_intro: 'We sent a verification code to <strong>@email</strong>. Please enter the code below to verify your account.'
+message_send_failed: 'Failed to send verification code. Please try again later.'
