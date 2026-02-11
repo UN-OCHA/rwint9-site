@@ -356,7 +356,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     $csv = [];
     $handle = @fopen('public://most-read/most-read.csv', 'r');
     if ($handle) {
-      while (($row = fgetcsv($handle, 100)) !== FALSE) {
+      while (($row = fgetcsv($handle, 100, escape: "\\")) !== FALSE) {
         if (isset($row[1]) && $this->validateCsvLine($row[1])) {
           $csv[$row[0]] = $row;
         }
@@ -386,7 +386,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
     }
 
     foreach ($csv as $row) {
-      fputcsv($handle, $row);
+      fputcsv($handle, $row, escape: "\\");
     }
 
     if (is_resource($handle)) {

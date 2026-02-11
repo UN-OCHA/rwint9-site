@@ -297,9 +297,9 @@ class ReliefWebReportingCommands extends DrushCommands {
       $handle = fopen('php://memory', 'r+');
       foreach ($records as $index => $record) {
         if ($index === 0) {
-          fputcsv($handle, array_keys($record), "\t");
+          fputcsv($handle, array_keys($record), "\t", escape: "\\");
         }
-        fputcsv($handle, array_values($record), "\t");
+        fputcsv($handle, array_values($record), "\t", escape: "\\");
       }
       rewind($handle);
       $csv = trim(stream_get_contents($handle));
@@ -399,8 +399,8 @@ class ReliefWebReportingCommands extends DrushCommands {
     else {
       // Convert to CSV.
       $handle = fopen('php://memory', 'r+');
-      fputcsv($handle, array_keys($data), "\t");
-      fputcsv($handle, array_values($data), "\t");
+      fputcsv($handle, array_keys($data), "\t", escape: "\\");
+      fputcsv($handle, array_values($data), "\t", escape: "\\");
       rewind($handle);
       $csv = trim(stream_get_contents($handle));
       fclose($handle);
@@ -730,7 +730,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     // Write the headers to the TSV file.
-    fputcsv($file, array_values($properties), "\t");
+    fputcsv($file, array_values($properties), "\t", escape: "\\");
 
     try {
       $count = 0;
@@ -759,7 +759,7 @@ class ReliefWebReportingCommands extends DrushCommands {
         // Flatten and write to the TSV file.
         foreach ($items as $item) {
           $row = $this->flattenReportData($item, $properties);
-          if (!fputcsv($file, $row, "\t")) {
+          if (!fputcsv($file, $row, "\t", escape: "\\")) {
             $this->logger->error('Unable to write TSV row');
           }
         }
@@ -1067,12 +1067,12 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     // Write the headers to the TSV file.
-    fputcsv($file, array_keys(reset($data)), "\t");
+    fputcsv($file, array_keys(reset($data)), "\t", escape: "\\");
 
     try {
       // Flatten and write to the TSV file.
       foreach ($data as $row) {
-        if (!fputcsv($file, $row, "\t")) {
+        if (!fputcsv($file, $row, "\t", escape: "\\")) {
           $this->logger->error('Unable to write TSV row');
         }
       }

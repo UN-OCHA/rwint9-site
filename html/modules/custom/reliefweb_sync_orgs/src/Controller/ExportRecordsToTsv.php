@@ -69,9 +69,9 @@ class ExportRecordsToTsv extends ControllerBase {
 
     // Convert to TSV.
     $handle = fopen('php://memory', 'r+');
-    fputcsv($handle, $headers, "\t");
+    fputcsv($handle, $headers, "\t", escape: "\\");
     foreach ($data as $row) {
-      fputcsv($handle, array_values($row), "\t");
+      fputcsv($handle, array_values($row), "\t", escape: "\\");
     }
     rewind($handle);
     $csv = trim(stream_get_contents($handle));
