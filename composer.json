@@ -86,7 +86,7 @@
         "opis/json-schema": "^2.2",
         "orakili/composer-drupal-info-file-patch-helper": "^2",
         "pelago/emogrifier": "^8.2",
-        "reliefweb/api-indexer": "^v2.9",
+        "reliefweb/api-indexer": "^3",
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
         "spipu/html2pdf": "^5.2",
