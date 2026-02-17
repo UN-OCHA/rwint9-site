@@ -865,7 +865,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $file->save();
 
     // Populate the image field.
-    [$width, $height] = @getimagesize($file->getFileUri());
+    [$width, $height] = @getimagesize($file->getFileUri()) ?: [NULL, NULL];
 
     $item->setValue([
       'target_id' => $file->id(),
