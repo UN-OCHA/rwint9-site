@@ -54,8 +54,8 @@ class ExportRecordsToTsvTest extends ImportBase {
 
     $records = [];
     // Get the header row.
-    $header = fgetcsv($stream, 0, "\t");
-    while ($line = fgetcsv($stream, 0, "\t")) {
+    $header = fgetcsv($stream, 0, "\t", escape: "\\");
+    while ($line = fgetcsv($stream, 0, "\t", escape: "\\")) {
       $row = [];
       foreach ($line as $key => $value) {
         $row[$header[$key]] = $value;
