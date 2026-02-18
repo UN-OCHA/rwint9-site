@@ -1,0 +1,26 @@
+diff --git a/src/Entity/SensorConfig.php b/src/Entity/SensorConfig.php
+index 0000000..0000000 100644
+--- a/src/Entity/SensorConfig.php
++++ b/src/Entity/SensorConfig.php
+@@ -322,7 +322,7 @@ class SensorConfig extends ConfigEntityBase implements SensorConfigInterface {
+    * {@inheritdoc}
+    */
+   public function isEnabled() {
+-    return (boolean) $this->status;
++    return (bool) $this->status;
+   }
+ 
+   /**
+diff --git a/src/SensorPlugin/SensorPluginBase.php b/src/SensorPlugin/SensorPluginBase.php
+index 0000000..0000000 100644
+--- a/src/SensorPlugin/SensorPluginBase.php
++++ b/src/SensorPlugin/SensorPluginBase.php
+@@ -110,7 +110,7 @@ abstract class SensorPluginBase extends PluginBase implements SensorPluginInter
+    * {@inheritdoc}
+    */
+   public function isEnabled() {
+-    return (boolean) $this->sensorConfig->isEnabled();
++    return (bool) $this->sensorConfig->isEnabled();
+   }
+ 
+   /**

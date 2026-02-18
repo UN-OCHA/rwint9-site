@@ -1,5 +1,5 @@
 {
-    "_hash": "a7672ba08af058f6d830f01b7042c038a20f5b164bf6df97512cc37a3cb15ad4",
+    "_hash": "610a59b1db6186cedd33ba2e1d03a0886e370d2ce678d25c6dc2ae18ffa9ed81",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -113,6 +113,30 @@
                 }
             }
         ],
+        "drupal/monitoring": [
+            {
+                "package": "drupal/monitoring",
+                "description": "PHP 8.5 canonical cast compatibility",
+                "url": "PATCHES/monitoring--php85-canonical-cast.patch",
+                "sha256": "95c7190d958a30fc35f5adb939bf800ffd59b3c423f9041c46e8739b4bec2727",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/pathauto": [
+            {
+                "package": "drupal/pathauto",
+                "description": "PHP 8.5 null array offset compatibility",
+                "url": "PATCHES/pathauto--php85-null-array-offset.patch",
+                "sha256": "e1a2809db0f18b231c09078409b42f0c35ab20dbe1cb13eb441c79e6832bce5d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/openid_connect": [
             {
                 "package": "drupal/openid_connect",
@@ -131,6 +155,18 @@
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/svg_image": [
+            {
+                "package": "drupal/svg_image",
+                "description": "PHP 8.5 canonical cast compatibility",
+                "url": "PATCHES/svg_image--php85-canonical-cast.patch",
+                "sha256": "ec7e682a6b9db1c64073a30873c1e061550c291640c087450f43ea8d1610a2c3",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
