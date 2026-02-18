@@ -789,7 +789,6 @@ class DomainPostingRightsOverviewFormTest extends ExistingSiteBase {
     // Use reflection to access protected method.
     $reflection = new \ReflectionClass($form);
     $method = $reflection->getMethod('formatPostingRights');
-    $method->setAccessible(TRUE);
 
     // Test all valid right codes.
     $rights = [
@@ -827,7 +826,6 @@ class DomainPostingRightsOverviewFormTest extends ExistingSiteBase {
     // Use reflection to access protected method.
     $reflection = new \ReflectionClass($form);
     $method = $reflection->getMethod('getDestination');
-    $method->setAccessible(TRUE);
 
     // Test with both filters.
     $destination = $method->invoke($form, 'example.com', 'Test Source [id:123]');

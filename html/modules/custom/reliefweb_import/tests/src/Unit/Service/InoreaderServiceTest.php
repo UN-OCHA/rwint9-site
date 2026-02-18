@@ -135,7 +135,6 @@ class InoreaderServiceTest extends TestCase {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('parseTags');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$matches]);
     $this->assertEquals($expected, $result);
@@ -252,7 +251,6 @@ class InoreaderServiceTest extends TestCase {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractAndCleanBodyFromContent');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$document, $tags, $id]);
     $this->assertEquals($expected, $result);
@@ -294,7 +292,6 @@ class InoreaderServiceTest extends TestCase {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractPdfUrl');
-    $method->setAccessible(TRUE);
 
     $html = '<a href="https://example.com/path/to/file.pdf">Link</a>';
     $tag = 'a';
@@ -310,7 +307,6 @@ class InoreaderServiceTest extends TestCase {
   public function testExtractAndCleanBodyFromContentThrowsExceptionOnEmptyBody() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractAndCleanBodyFromContent');
-    $method->setAccessible(TRUE);
 
     $document = ['summary' => ['content' => '']];
     $tags = [];
@@ -336,7 +332,6 @@ class InoreaderServiceTest extends TestCase {
 
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('downloadHtmlPage');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$url, 5]);
     $this->assertEquals($html, $result);
@@ -358,7 +353,6 @@ class InoreaderServiceTest extends TestCase {
 
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('downloadHtmlPage');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$url, 5]);
     $this->assertEquals($html, $result);
@@ -382,7 +376,6 @@ class InoreaderServiceTest extends TestCase {
 
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('downloadHtmlPage');
-    $method->setAccessible(TRUE);
 
     $this->expectException(\Exception::class);
     $method->invokeArgs($this->service, [$url, 5]);
@@ -394,7 +387,6 @@ class InoreaderServiceTest extends TestCase {
   public function testExtractPartFromHtml() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractPartFromHtml');
-    $method->setAccessible(TRUE);
 
     $html = '<div><section><p class="main">Hello World</p></section><p>Other</p></div>';
 
@@ -429,7 +421,6 @@ class InoreaderServiceTest extends TestCase {
   public function testRemoveHtmlElements() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('removeHtmlElements');
-    $method->setAccessible(TRUE);
 
     // Test case with HTML elements present in the body content.
     $htmlContent = '<p>This is a paragraph of text.</p><span>This is another element.</span>';
@@ -492,7 +483,6 @@ class InoreaderServiceTest extends TestCase {
   public function testTryToExtractPdfFromHtml() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('tryToExtractPdfFromHtml');
-    $method->setAccessible(TRUE);
 
     $page_url = 'https://example.com/page.html';
 
@@ -617,7 +607,6 @@ class InoreaderServiceTest extends TestCase {
   public function testRewritePdfLink($pdf, $tags, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('rewritePdfLink');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$pdf, $tags]);
     $this->assertEquals($expected, $result);
@@ -758,7 +747,6 @@ class InoreaderServiceTest extends TestCase {
   public function testMergeTags($tags, $extra_tags, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('mergeTags');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$tags, $extra_tags]);
     $this->assertEquals($expected, $result);
@@ -909,7 +897,6 @@ class InoreaderServiceTest extends TestCase {
   public function testExtractPdfUrlUsingSelectors($html, $selectors, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('extractPdfUrlUsingSelectors');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$html, $selectors]);
     $this->assertEquals($expected, $result);
@@ -984,7 +971,6 @@ class InoreaderServiceTest extends TestCase {
   public function testMakePdfLinkAbsolute($pdf, $page_url, $expected) {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('makePdfLinkAbsolute');
-    $method->setAccessible(TRUE);
 
     $result = $method->invokeArgs($this->service, [$pdf, $page_url]);
     $this->assertEquals($expected, $result);
@@ -996,7 +982,6 @@ class InoreaderServiceTest extends TestCase {
   public function testIsMultiValueTag() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('isMultiValueTag');
-    $method->setAccessible(TRUE);
     $this->assertTrue($method->invokeArgs($this->service, ['wrapper']));
     $this->assertFalse($method->invokeArgs($this->service, ['status']));
   }
@@ -1007,7 +992,6 @@ class InoreaderServiceTest extends TestCase {
   public function testFixLegacyPuppeteer2Tag() {
     $reflection = new \ReflectionClass($this->service);
     $method = $reflection->getMethod('fixLegacyPuppeteer2Tag');
-    $method->setAccessible(TRUE);
     $tags = ['puppeteer' => 'foo', 'puppeteer2' => 'bar'];
     $result = $method->invokeArgs($this->service, [$tags]);
     $this->assertEquals('foo|bar', $result['puppeteer']);

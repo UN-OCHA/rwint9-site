@@ -3058,7 +3058,6 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   protected function invokeProtectedMethod(string $methodName, array $arguments = []) {
     $reflection = new \ReflectionClass($this->userPostingRightsManager);
     $method = $reflection->getMethod($methodName);
-    $method->setAccessible(TRUE);
 
     return $method->invokeArgs($this->userPostingRightsManager, $arguments);
   }
