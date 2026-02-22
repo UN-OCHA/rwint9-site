@@ -205,7 +205,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $api_url = $this->getPluginSetting('api_url');
       $api_key = $this->getPluginSetting('api_key');
       $max_age = max(1, $this->getPluginSetting('max_age', 3, FALSE));
-      $last_update = date('Y-m-d', strtotime('-' . $max_age . ' day'));
+      $last_update = gmdate('Y-m-d', strtotime('-' . $max_age . ' day'));
 
       // Query the Log Cluster API.
       $query = http_build_query([

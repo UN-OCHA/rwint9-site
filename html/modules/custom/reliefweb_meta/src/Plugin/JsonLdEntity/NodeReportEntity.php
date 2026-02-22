@@ -105,7 +105,7 @@ class NodeReportEntity extends BaseEntity {
     // Use the creation date as fallback if the original publication date is not
     // set.
     if (empty($publication_date)) {
-      $publication_date = date('Y-m-d', (int) $entity->getCreatedTime());
+      $publication_date = gmdate('Y-m-d', (int) $entity->getCreatedTime());
     }
     $schema->datePublished($publication_date);
 

@@ -268,10 +268,10 @@ class ListOrganizations extends FormBase {
           'data' => $record['message'] ?? '',
         ],
         'created' => [
-          'data' => date('Y-m-d H:i', (int) $record['created']),
+          'data' => gmdate('Y-m-d H:i', (int) $record['created']),
         ],
         'changed'  => [
-          'data' => date('Y-m-d H:i', (int) $record['changed']),
+          'data' => gmdate('Y-m-d H:i', (int) $record['changed']),
         ],
         'operations' => [
           'data' => [

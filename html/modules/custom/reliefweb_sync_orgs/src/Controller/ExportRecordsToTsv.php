@@ -42,7 +42,7 @@ class ExportRecordsToTsv extends ControllerBase {
   public function export() {
     $data = $this->importExportService->getRecordsForExport($this->entityTypeManager());
 
-    $filename = 'reliefweb_sync_orgs_records_' . date('Ymd_His') . '.tsv';
+    $filename = 'reliefweb_sync_orgs_records_' . gmdate('Ymd_His') . '.tsv';
     $headers = [
       'Source',
       'ID',

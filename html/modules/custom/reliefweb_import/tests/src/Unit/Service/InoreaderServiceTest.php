@@ -794,7 +794,7 @@ class InoreaderServiceTest extends TestCase {
     $this->assertEquals('Test Title', $result['title']);
     $this->assertEquals('', $result['body']);
     $this->assertEquals('https://example.com/test.pdf', $result['origin']);
-    $this->assertEquals('2024-07-03T19:46:40+10:00', $result['published']);
+    $this->assertEquals('2024-07-03T09:46:40+00:00', $result['published']);
     $this->assertEquals([123], $result['source']);
     $this->assertEquals([267], $result['language']);
     $this->assertEquals([254], $result['country']);

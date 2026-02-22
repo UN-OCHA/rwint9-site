@@ -2347,7 +2347,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $this->testSource->id()],
       ],
       'moderation_status' => 'draft',
-      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+      'field_job_closing_date' => gmdate('Y-m-d', strtotime('+2 days')),
     ]);
 
     // Set the entity to pending status (simulating the moderation status).
@@ -2509,10 +2509,10 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $trusted_training_source->id()],
       ],
       'moderation_status' => 'draft',
-      'field_registration_deadline' => date('Y-m-d', strtotime('+2 days')),
+      'field_registration_deadline' => gmdate('Y-m-d', strtotime('+2 days')),
       'field_training_date' => [
-        'start' => date('Y-m-d', strtotime('+3 days')),
-        'end' => date('Y-m-d', strtotime('+4 days')),
+        'start' => gmdate('Y-m-d', strtotime('+3 days')),
+        'end' => gmdate('Y-m-d', strtotime('+4 days')),
       ],
     ]);
 
@@ -2690,7 +2690,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $this->testSource->id()],
       ],
       'moderation_status' => 'draft',
-      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+      'field_job_closing_date' => gmdate('Y-m-d', strtotime('+2 days')),
     ]);
 
     $job_entity_no_role->set('moderation_status', 'pending');
@@ -2781,7 +2781,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $allowed_job_source->id()],
       ],
       'moderation_status' => 'draft',
-      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+      'field_job_closing_date' => gmdate('Y-m-d', strtotime('+2 days')),
     ]);
 
     $job_entity->set('moderation_status', 'pending');
@@ -2863,7 +2863,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $trusted_job_source->id()],
       ],
       'moderation_status' => 'draft',
-      'field_job_closing_date' => date('Y-m-d', strtotime('+2 days')),
+      'field_job_closing_date' => gmdate('Y-m-d', strtotime('+2 days')),
     ]);
 
     // Move to pending and save first to simulate workflow before update.
@@ -2893,7 +2893,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
         ['target_id' => $trusted_job_source->id()],
       ],
       'moderation_status' => 'draft',
-      'field_job_closing_date' => date('Y-m-d', strtotime('-2 days')),
+      'field_job_closing_date' => gmdate('Y-m-d', strtotime('-2 days')),
     ]);
 
     // Move to pending and save first.

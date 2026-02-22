@@ -217,7 +217,7 @@ class JobFeedsImporterTest extends ExistingSiteBase {
     $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=1');
     $this->assertStringContainsStringIgnoringCase('imported from', $job->getRevisionLogMessage());
     $this->assertSame($job->title->value, 'Head of Supply Chain');
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
     $this->assertSame($job->field_job_closing_date->value, $year . '-10-05');
 
     // Import jobs again, triggering updates.
