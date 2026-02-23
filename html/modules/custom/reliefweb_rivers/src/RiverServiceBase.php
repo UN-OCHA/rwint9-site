@@ -499,6 +499,9 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function validateView($view) {
+    if (empty($view)) {
+      return NULL;
+    }
     $views = $this->getViews();
     return isset($views[$view]) ? $view : NULL;
   }
