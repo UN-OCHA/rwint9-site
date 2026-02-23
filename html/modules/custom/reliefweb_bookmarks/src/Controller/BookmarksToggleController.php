@@ -139,17 +139,8 @@ class BookmarksToggleController extends ControllerBase {
       $url->setOptions($link_options);
       $link = Link::fromTextAndUrl($link_data['title'], $url);
 
-      // To ensure consistent styling, we render the message here because that
-      // will not be done by Ajax.
-      $message_build = [
-        '#theme' => 'status_messages',
-        '#message_list' => [
-          'status' => [$message],
-        ],
-      ];
-
       $response = new AjaxResponse();
-      $response->addCommand(new MessageCommand($this->renderer->renderRoot($message_build)));
+      $response->addCommand(new MessageCommand($message));
       $response->addCommand(new ReplaceCommand('#' . $link_data['attributes']['id'], $link->toString()));
 
       return $response;
