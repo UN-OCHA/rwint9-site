@@ -565,15 +565,17 @@ class ReliefWebReportingCommands extends DrushCommands {
     $index = 'reports';
 
     // Options to retrieve the report resources.
-    $indexer_options = new Options(reliefweb_api_get_indexer_base_options());
+    $indexer_base_options = reliefweb_api_get_indexer_base_options();
+    $indexer_base_options['bundle'] = $bundle;
+    $indexer_options = Options::fromArray($indexer_base_options);
 
     // Create the database connection.
-    $dbname = $indexer_options->get('database');
-    $host = $indexer_options->get('mysql-host');
-    $port = $indexer_options->get('mysql-port');
+    $dbname = $indexer_options->database;
+    $host = $indexer_options->mysqlHost;
+    $port = $indexer_options->mysqlPort;
     $dsn = "mysql:dbname={$dbname};host={$host};port={$port};charset=utf8";
-    $user = $indexer_options->get('mysql-user');
-    $password = $indexer_options->get('mysql-pass');
+    $user = $indexer_options->mysqlUser;
+    $password = $indexer_options->mysqlPass;
     $connection = new DatabaseConnection($dsn, $user, $password);
 
     // Create a new reference handler.
@@ -581,13 +583,13 @@ class ReliefWebReportingCommands extends DrushCommands {
 
     // Create a new elasticsearch handler.
     $elasticsearch = new Elasticsearch(
-      $indexer_options->get('elasticsearch'),
-      $indexer_options->get('base-index-name'),
-      $indexer_options->get('tag'),
+      $indexer_options->elasticsearch,
+      $indexer_options->baseIndexName,
+      $indexer_options->tag,
     );
 
     // Create a new field processor object to prepare items before indexing.
-    $processor = new Processor($indexer_options->get('website'), $connection, $references);
+    $processor = new Processor($indexer_options->website, $connection, $references);
 
     // Create a new resource to get the report data.
     $resource = new ReportExtended(
