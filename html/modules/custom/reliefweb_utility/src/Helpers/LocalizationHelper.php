@@ -262,7 +262,13 @@ class LocalizationHelper {
    */
   protected static function createNumberFormatter($language) {
     if (function_exists('numfmt_create')) {
-      return numfmt_create($language, \NumberFormatter::DECIMAL) ?: FALSE;
+      try {
+        return numfmt_create($language, \NumberFormatter::DECIMAL) ?: FALSE;
+      }
+      catch (\ValueError) {
+        // If the language is invalid, we return FALSE.
+        return FALSE;
+      }
     }
     return FALSE;
   }

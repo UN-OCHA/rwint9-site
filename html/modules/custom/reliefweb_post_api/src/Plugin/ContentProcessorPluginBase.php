@@ -706,7 +706,10 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // file UUID so that we can determine if they need to be updated.
     $existing = [];
     foreach ($field as $item) {
-      $existing[$item->getUuid()] = $item;
+      $field_item_uuid = $item->getUuid();
+      if (!empty($field_item_uuid)) {
+        $existing[$field_item_uuid] = $item;
+      }
     }
 
     // Process the attachments.
@@ -865,7 +868,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $file->save();
 
     // Populate the image field.
-    [$width, $height] = @getimagesize($file->getFileUri());
+    [$width, $height] = @getimagesize($file->getFileUri()) ?: [NULL, NULL];
 
     $item->setValue([
       'target_id' => $file->id(),

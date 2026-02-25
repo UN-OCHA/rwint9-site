@@ -306,13 +306,13 @@ class NodeTrainingEntityTest extends ExistingSiteBase {
       'moderation_status' => 'published',
       'field_registration_deadline' => [
         [
-          'value' => date('Y-m-d', strtotime('+1 year')),
+          'value' => gmdate('Y-m-d', strtotime('+1 year')),
         ],
       ],
       'field_training_date' => [
         [
-          'value' => date('Y-m-d', strtotime('+1 year')),
-          'end_value' => date('Y-m-d', strtotime('+1 year + 1 month')),
+          'value' => gmdate('Y-m-d', strtotime('+1 year')),
+          'end_value' => gmdate('Y-m-d', strtotime('+1 year + 1 month')),
         ],
       ],
     ]);

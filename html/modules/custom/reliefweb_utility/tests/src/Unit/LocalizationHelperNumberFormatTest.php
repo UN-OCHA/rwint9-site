@@ -53,7 +53,7 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
   #[DataProvider('providerFormatNumber')]
   public function testFormatNumber($language, $number, $expected) {
     $formatted = LocalizationHelper::formatNumber($number, $language);
-    $this->assertEquals($formatted, $expected);
+    $this->assertEquals($expected, $formatted);
   }
 
   /**
@@ -69,7 +69,7 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
   #[DataProvider('providerFormatNumberNoNumberFormatter')]
   public function testFormatNumberNoNumberFormatter($language, $number, $expected) {
     $formatted = LocalizationHelperStubNoNumberFormatter::formatNumber($number, $language);
-    $this->assertEquals($formatted, $expected);
+    $this->assertEquals($expected, $formatted);
   }
 
   /**
@@ -91,11 +91,12 @@ class LocalizationHelperNumberFormatTest extends UnitTestCase {
         // Narrow non breaking space.
         "123\xE2\x80\xAF456",
       ],
-      // Returns unformatted number.
+      // Returns number formatted by `number_format` when the language is
+      // invalid since there is no localized number formatter for the language.
       [
         'invalid_language',
         123456,
-        '123456',
+        '123,456',
       ],
       // Defaults to current language (FR).
       [

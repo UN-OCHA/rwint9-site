@@ -20,7 +20,7 @@
         }
     ],
     "require": {
-        "php": ">=8.2",
+        "php": ">=8.5",
         "composer/installers": "^2",
         "cweagans/composer-patches": "^2.0",
         "drupal/admin_denied": "^2.0",
@@ -85,8 +85,8 @@
         "nitotm/efficient-language-detector": "^3.0",
         "opis/json-schema": "^2.2",
         "orakili/composer-drupal-info-file-patch-helper": "^2",
-        "pelago/emogrifier": "^7.0",
-        "reliefweb/api-indexer": "^v2.9",
+        "pelago/emogrifier": "^8.2",
+        "reliefweb/api-indexer": "^3",
         "reliefweb/simple-autocomplete": "^v1.3",
         "reliefweb/simple-datepicker": "^v1.3",
         "spipu/html2pdf": "^5.2",
@@ -109,7 +109,7 @@
         "drupaltest/queue-runner-trait": "^1.2",
         "kint-php/kint": "^5.0",
         "mikey179/vfsstream": "^1.6",
-        "phpcompatibility/php-compatibility": "^9.3",
+        "phpcompatibility/php-compatibility": "^10@alpha",
         "phpmd/phpmd": "^2.11",
         "phpspec/prophecy-phpunit": "^2",
         "phpunit/php-code-coverage": "^11",

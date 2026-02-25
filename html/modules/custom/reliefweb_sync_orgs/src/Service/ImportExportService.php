@@ -67,7 +67,7 @@ class ImportExportService {
     catch (\Exception $e) {
       throw new \Exception("Unable to read from file: $filename - " . $e->getMessage(), 0, $e);
     }
-    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure']);
+    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'], escape: "\\");
 
     // Replace all spaces with underscores.
     $header_lowercase = array_map(function ($value) {
@@ -75,7 +75,7 @@ class ImportExportService {
     }, $header);
 
     // Get data.
-    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'])) {
+    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'], escape: "\\")) {
       $data = [];
       for ($i = 0; $i < count($row); $i++) {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
@@ -135,7 +135,7 @@ class ImportExportService {
     catch (\Exception $e) {
       throw new \Exception("Unable to read from file: $filename - " . $e->getMessage(), 0, $e);
     }
-    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure']);
+    $header = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'], escape: "\\");
 
     // Replace all spaces with underscores.
     $header_lowercase = array_map(function ($value) {
@@ -143,7 +143,7 @@ class ImportExportService {
     }, $header);
 
     // Get data.
-    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'])) {
+    while ($row = fgetcsv($f, NULL, $enclosure_info['delimiter'], $enclosure_info['enclosure'], escape: "\\")) {
       $data = [];
       for ($i = 0; $i < count($row); $i++) {
         $data[$header_lowercase[$i]] = trim($row[$i] ?? '');
@@ -207,8 +207,8 @@ class ImportExportService {
         'id' => $record['id'],
         'name' => $name,
         'status' => $record['status'],
-        'created' => date('Y-m-d H:i:s', $record['created']),
-        'changed' => date('Y-m-d H:i:s', $record['changed']),
+        'created' => gmdate('Y-m-d H:i:s', $record['created']),
+        'changed' => gmdate('Y-m-d H:i:s', $record['changed']),
         'message' => $record['message'],
         'term_name' => '',
         'term_id' => '',
@@ -288,11 +288,11 @@ class ImportExportService {
     $enclosures = ['"', "'"];
 
     foreach ($delimiters as $delim) {
-      $fields = str_getcsv($header, $delim);
+      $fields = str_getcsv($header, $delim, escape: "\\");
       if (count($fields) > 1) {
         $delimiter = $delim;
         foreach ($enclosures as $enc) {
-          $fields = str_getcsv($header, $delimiter, $enc);
+          $fields = str_getcsv($header, $delimiter, $enc, escape: "\\");
           if (strpos($header, $enc) !== FALSE && count($fields) > 1) {
             $enclosure = $enc;
             break;
@@ -303,7 +303,7 @@ class ImportExportService {
         if ($enclosure === NULL) {
           $row = fgets($file_handle);
           foreach ($enclosures as $enc) {
-            $fields = str_getcsv($row, $delimiter, $enc);
+            $fields = str_getcsv($row, $delimiter, $enc, escape: "\\");
             if (strpos($row, $enc) !== FALSE && count($fields) > 1) {
               $enclosure = $enc;
               break;

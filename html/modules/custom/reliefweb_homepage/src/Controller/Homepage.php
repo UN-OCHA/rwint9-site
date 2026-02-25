@@ -275,7 +275,7 @@ class Homepage extends ControllerBase {
     $handle = @fopen('public://most-read/most-read.csv', 'r');
     if ($handle !== FALSE) {
       // Find the line corresponding to the entity id.
-      while (($row = fgetcsv($handle, 100)) !== FALSE) {
+      while (($row = fgetcsv($handle, 100, escape: "\\")) !== FALSE) {
         if (count($row) === 2 && $row[0] == 'front') {
           $ids = array_slice(explode(',', $row[1]), 0, $limit);
           break;

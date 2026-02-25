@@ -22,11 +22,20 @@
         "drupal/maintenance200": {
             "Drupal 11 compatibility": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch"
         },
+        "drupal/monitoring": {
+            "PHP 8.5 canonical cast compatibility": "PATCHES/monitoring--php85-canonical-cast.patch"
+        },
+        "drupal/pathauto": {
+            "PHP 8.5 null array offset compatibility": "PATCHES/pathauto--php85-null-array-offset.patch"
+        },
         "drupal/openid_connect": {
             "Handle case if user is in blocked state after SSO Authorization": "PATCHES/openid_connect-3390668-6.patch"
         },
         "drupal/openid_connect_windows_aad": {
             "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch"
+        },
+        "drupal/svg_image": {
+            "PHP 8.5 canonical cast compatibility": "PATCHES/svg_image--php85-canonical-cast.patch"
         },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"

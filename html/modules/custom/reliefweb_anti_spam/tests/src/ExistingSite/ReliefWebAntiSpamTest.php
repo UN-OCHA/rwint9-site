@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_anti_spam\ExistingSite;
 
 use PHPUnit\Framework\Attributes\CoversNothing;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 
 /**
@@ -13,6 +14,7 @@ use weitzman\DrupalTestTraits\ExistingSiteBase;
  */
 #[CoversNothing]
 #[Group('reliefweb_anti_spam')]
+#[RunTestsInSeparateProcesses]
 class ReliefWebAntiSpamTest extends ExistingSiteBase {
 
   /**

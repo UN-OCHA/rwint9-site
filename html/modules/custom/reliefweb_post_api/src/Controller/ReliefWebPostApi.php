@@ -304,9 +304,13 @@ class ReliefWebPostApi extends ControllerBase {
     if ($same_day && $request_count >= $quota) {
       // Next valid time to retry is the next day (UTC).
       $date = $request_date
+        ->setTimezone(new \DateTimeZone('UTC'))
         ->add(new \DateInterval('P1D'))
         ->setTime(0, 0, 1)
-        ->format(\DateTimeInterface::RFC7231);
+        // RFC7231 format is required by the HTTP spec but
+        // DateTimeInterface::RFC7231 is deprecated in PHP 8.5+ so we use
+        // the equivalent explicit string format.
+        ->format('D, d M Y H:i:s \G\M\T');
       throw new TooManyRequestsHttpException($date, 'Daily quota exceeded.');
     }
 

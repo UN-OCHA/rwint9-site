@@ -6,6 +6,7 @@ simple_address: false
 sitestyle: true
 textonly: false
 linkonly: false
+user_plaintext_field: ''
 format: html
 preserve_class: false
 advanced:

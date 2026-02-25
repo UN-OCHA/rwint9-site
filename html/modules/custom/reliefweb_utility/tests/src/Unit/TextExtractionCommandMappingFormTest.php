@@ -679,7 +679,6 @@ class TextExtractionCommandMappingFormTest extends UnitTestCase {
   public function testCleanCommands() {
     $reflection = new \ReflectionClass($this->form);
     $method = $reflection->getMethod('cleanCommands');
-    $method->setAccessible(TRUE);
 
     $commands = [
       [
@@ -737,7 +736,6 @@ class TextExtractionCommandMappingFormTest extends UnitTestCase {
   public function testCleanCommand() {
     $reflection = new \ReflectionClass($this->form);
     $method = $reflection->getMethod('cleanCommand');
-    $method->setAccessible(TRUE);
 
     $command = [
       'mimetype' => '  application/pdf  ',
@@ -764,7 +762,6 @@ class TextExtractionCommandMappingFormTest extends UnitTestCase {
   public function testCleanCommandWithEmptyValues() {
     $reflection = new \ReflectionClass($this->form);
     $method = $reflection->getMethod('cleanCommand');
-    $method->setAccessible(TRUE);
 
     $command = [
       'mimetype' => '',
@@ -791,7 +788,6 @@ class TextExtractionCommandMappingFormTest extends UnitTestCase {
   public function testCleanCommandWithMissingKeys() {
     $reflection = new \ReflectionClass($this->form);
     $method = $reflection->getMethod('cleanCommand');
-    $method->setAccessible(TRUE);
 
     $command = [
       'mimetype' => 'application/pdf',

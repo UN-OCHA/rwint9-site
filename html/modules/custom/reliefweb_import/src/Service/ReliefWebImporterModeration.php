@@ -129,6 +129,16 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  protected function getOrderInformation() {
+    $headers = $this->getHeaders();
+    return [
+      'headers' => $headers,
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getRows(array $results) {
     if (empty($results['records'])) {
       return [];
@@ -137,7 +147,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     $records = $results['records'];
 
     /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
-    $entities = $results['entities'];
+    $entities = $results['entities'] ?? [];
 
     $status_types = reliefweb_import_status_type_values();
     $editorial_flows = reliefweb_import_editorial_flow_values();
@@ -145,7 +155,15 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
     // Prepare the table rows' data from the entities.
     $rows = [];
     foreach ($records as $record) {
-      $entity = $entities[$record['entity_id']] ?? NULL;
+      if (!is_array($record)) {
+        continue;
+      }
+      if (isset($record['entity_id'], $entities[$record['entity_id']])) {
+        $entity = $entities[$record['entity_id']];
+      }
+      else {
+        $entity = NULL;
+      }
 
       $cells = [];
 
@@ -262,7 +280,7 @@ class ReliefWebImporterModeration extends ModerationServiceBase {
         '#markup' => $record['status'],
       ];
 
-      if (isset($status_types[$record['status_type']])) {
+      if (isset($record['status_type'], $status_types[$record['status_type']])) {
         $cells['status']['label']['#markup'] .= ' (' . $status_types[$record['status_type']]['label'] . ')';
       }
       elseif (!empty($record['status_type'])) {
