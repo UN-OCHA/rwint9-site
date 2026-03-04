@@ -1,0 +1,90 @@
+diff --git a/src/User/UserManager.php b/src/User/UserManager.php
+index 28149df..9ff1627 100644
+--- a/src/User/UserManager.php
++++ b/src/User/UserManager.php
+@@ -213,6 +213,21 @@ public function createUser(SocialAuthUserInterface $user): User|false {
+         ->getStorage('user')
+         ->create($fields);
+ 
++      // Validate the user entity before saving to ensure username compliance.
++      $violations = $new_user->validate();
++      if ($violations->count() > 0) {
++        foreach ($violations as $violation) {
++          $this->loggerFactory
++            ->get($this->getPluginId())
++            ->error('User validation failed: @message', [
++              '@message' => $violation->getMessage(),
++            ]);
++        }
++
++        $this->messenger->addError($this->t('You could not be authenticated, please contact the administrator.'));
++        return FALSE;
++      }
++
+       $new_user->save();
+ 
+       $this->loggerFactory
+@@ -483,8 +498,11 @@ public function downloadProfilePic(string $picture_url, string $id, ?string $dir
+    */
+   protected function generateUniqueUsername(string $name): string {
+     $max_length = 60;
++
++    // Sanitize the username to comply with Drupal's username constraints.
++    $name = $this->sanitizeUsername($name);
++
+     $name = mb_substr($name, 0, $max_length);
+-    $name = str_replace(' ', '', $name);
+     $name = strtolower($name);
+ 
+     // Add a trailing number if needed to make username unique.
+@@ -503,6 +521,50 @@ protected function generateUniqueUsername(string $name): string {
+     return trim($candidate);
+   }
+ 
++  /**
++   * Sanitizes a username to comply with Drupal's username constraints.
++   *
++   * Removes or replaces characters that are not allowed in Drupal usernames.
++   * This includes control characters, disallowed Unicode ranges, and
++   * consecutive spaces.
++   *
++   * @param string $name
++   *   The raw username from the provider.
++   *
++   * @return string
++   *   The sanitized username.
++   *
++   * @see \Drupal\user\Plugin\Validation\Constraint\UserNameConstraintValidator
++   */
++  protected function sanitizeUsername(string $name): string {
++    // Trim leading and trailing whitespace.
++    $name = trim($name);
++
++    // Remove control characters (U+0000 - U+001F).
++    $name = preg_replace('/[\x{0}-\x{1F}]/u', '', $name);
++
++    // Remove disallowed Unicode ranges that Drupal rejects.
++    // Includes: soft hyphen, various space/format characters, BOM, etc.
++    $name = preg_replace('/[\x{80}-\x{A0}\x{AD}\x{2000}-\x{200F}\x{2028}-\x{202F}\x{205F}-\x{206F}\x{FEFF}\x{FF01}-\x{FF60}\x{FFF9}-\x{FFFD}]/u', '', $name);
++
++    // Remove characters not in the allowed set.
++    // Allowed: a-z, A-Z, 0-9, spaces, and @+_.'- and valid Unicode (U+00C0-F7).
++    $name = preg_replace('/[^\x{80}-\x{F7} a-zA-Z0-9@+_.\'-]/u', '', $name);
++
++    // Replace multiple consecutive spaces with a single space.
++    $name = preg_replace('/\s{2,}/', ' ', $name);
++
++    // Trim again in case sanitization left leading/trailing spaces.
++    $name = trim($name);
++
++    // If the name is empty after sanitization, generate a fallback.
++    if (empty($name)) {
++      $name = 'user_' . bin2hex(random_bytes(4));
++    }
++
++    return $name;
++  }
++
+   /**
+    * Returns an array of fields to initialize the creation of the user.
+    *
