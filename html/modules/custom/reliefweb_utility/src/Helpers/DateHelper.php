@@ -65,7 +65,7 @@ class DateHelper {
    *   Defaults to 'medium'.
    * @param string $format
    *   If $type is 'custom', a PHP date format string suitable for input to
-   *   date(). Use a backslash to escape ordinary text, so it does not get
+   *   gmdate(). Use a backslash to escape ordinary text, so it does not get
    *   interpreted as date format characters.
    * @param string|null $timezone
    *   Time zone as described at https://php.net/manual/timezones.php

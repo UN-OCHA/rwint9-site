@@ -181,7 +181,6 @@ class ReportFormAlterTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
-    $method->setAccessible(TRUE);
     $method->invokeArgs($service, [&$form, $formState]);
   }
 
@@ -218,7 +217,6 @@ class ReportFormAlterTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
-    $method->setAccessible(TRUE);
     $method->invokeArgs($service, [&$form, $formState]);
   }
 
@@ -283,7 +281,6 @@ class ReportFormAlterTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
-    $method->setAccessible(TRUE);
     $method->invokeArgs($service, [&$form, $formState]);
   }
 
@@ -330,7 +327,6 @@ class ReportFormAlterTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
-    $method->setAccessible(TRUE);
     $method->invokeArgs($service, [&$form, $formState]);
   }
 
@@ -502,7 +498,6 @@ class ReportFormAlterTest extends UnitTestCase {
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
-    $method->setAccessible(TRUE);
     $method->invokeArgs($service, [&$form, $formState]);
   }
 

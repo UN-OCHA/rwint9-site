@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Drupal\reliefweb_reporting\ApiIndexerResource;
 
 use RWAPIIndexer\Database\DatabaseConnection;
@@ -31,9 +33,9 @@ class ReportExtended extends Report {
    * {@inheritdoc}
    */
   public function __construct(
-    $bundle,
-    $entity_type,
-    $index,
+    string $bundle,
+    string $entity_type,
+    string $index,
     Elasticsearch $elasticsearch,
     DatabaseConnection $connection,
     Processor $processor,
@@ -67,7 +69,7 @@ class ReportExtended extends Report {
   /**
    * {@inheritdoc}
    */
-  public function processItem(&$item) {
+  public function processItem(array &$item): void {
     parent::processItem($item);
 
     if (isset($item['origin_type'])) {
@@ -83,7 +85,7 @@ class ReportExtended extends Report {
   /**
    * {@inheritdoc}
    */
-  public function getItems($limit = NULL, $offset = NULL, ?array $ids = NULL) {
+  public function getItems(?int $limit = NULL, ?int $offset = NULL, ?array $ids = NULL): array {
     $items = parent::getItems($limit, $offset, $ids);
 
     $this->updateUserData($items);
@@ -177,11 +179,12 @@ class ReportExtended extends Report {
    *
    * @param array<mixed> $items
    *   Entity items to update.
-   * @param array<mixed> $ids
-   *   Entity ids to update.
+   * @param array<int|string, mixed>|null $ids
+   *   Entity ids to update, or NULL to derive from $items.
    */
-  public function updateImporterData(array &$items, array $ids = []): void {
-    if (empty($ids)) {
+  public function updateImporterData(array &$items, ?array $ids = NULL): void {
+    if ($ids === NULL || empty($ids)) {
+      $ids = [];
       foreach ($items as $item) {
         if (isset($item['id'])) {
           $ids[] = $item['id'];

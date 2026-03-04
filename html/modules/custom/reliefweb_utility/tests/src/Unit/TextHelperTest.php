@@ -297,7 +297,6 @@ class TextHelperTest extends UnitTestCase {
     // Use reflection to access the protected method.
     $reflection = new \ReflectionClass(TextHelper::class);
     $method = $reflection->getMethod('calculateUnicodeLevenshteinDistance');
-    $method->setAccessible(TRUE);
 
     // Test identical strings.
     $this->assertEquals(0, $method->invoke(NULL, 'hello', 'hello'));

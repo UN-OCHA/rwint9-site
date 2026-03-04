@@ -1,0 +1,13 @@
+diff --git a/svg_image.module b/svg_image.module
+index 0000000..0000000 100644
+--- a/svg_image.module
++++ b/svg_image.module
+@@ -109,7 +109,7 @@ function svg_image_image_dimensions(ImageInterface $image) {
+         if ($svg) {
+           foreach ($svg->attributes() as $attribute => $value) {
+             if (in_array($attribute, $neededVariables)) {
+-              $variables[$attribute] = (integer) $value;
++              $variables[$attribute] = (int) $value;
+             }
+           }
+         }

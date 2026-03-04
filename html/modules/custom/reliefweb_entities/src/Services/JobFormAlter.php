@@ -24,6 +24,9 @@ class JobFormAlter extends EntityFormAlterServiceBase {
     // Force shorter titles.
     $form['title']['widget'][0]['value']['#maxlength'] = 150;
 
+    // Add formatting widget to the title field.
+    $form['title']['widget'][0]['value']['#attributes']['data-with-formatting'] = 'text';
+
     // @todo review if that is still needed when introducing the WYSIWYG.
     // Add the WYSIWYG to the body and how to apply fields.
     $form['body']['#attributes']['data-with-wysiwyg'] = '';

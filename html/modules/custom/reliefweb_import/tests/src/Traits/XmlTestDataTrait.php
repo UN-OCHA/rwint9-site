@@ -16,7 +16,7 @@ trait XmlTestDataTrait {
    *   XML data.
    */
   private function getTestXml1(): string {
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
  <link>https://www.aplitrak.com?adid=1</link>
@@ -69,7 +69,7 @@ XML;
    *   XML data.
    */
   private function getTestXml2(): string {
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
  <link>https://www.aplitrak.com?adid=1</link>
@@ -121,7 +121,7 @@ XML;
    *   XML data.
    */
   private function getTestXml3(): string {
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
 
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
@@ -165,7 +165,7 @@ XML;
    *   XML data.
    */
   private function getTestXml5(): string {
-    $year = date('Y') - 1;
+    $year = gmdate('Y') - 1;
 
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
@@ -193,7 +193,7 @@ XML;
    *   XML data.
    */
   private function getTestXml6(): string {
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
 
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>
@@ -220,7 +220,7 @@ XML;
    *   XML data.
    */
   private function getTestXml7(): string {
-    $year = date('Y') + 1;
+    $year = gmdate('Y') + 1;
 
     return <<<XML
 <?xml version="1.0" standalone="yes"?><channel><item>

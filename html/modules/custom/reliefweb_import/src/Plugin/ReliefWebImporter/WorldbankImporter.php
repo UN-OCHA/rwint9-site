@@ -157,7 +157,7 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
       $api_url = $this->getPluginSetting('api_url');
       $themes_to_import = max(1, $this->getPluginSetting('themes_to_import', 3, FALSE));
       $max_age = max(1, $this->getPluginSetting('max_age', 3, FALSE));
-      $last_update = date('Y-m-d', strtotime('-' . $max_age . ' day'));
+      $last_update = gmdate('Y-m-d', strtotime('-' . $max_age . ' day'));
 
       // Get the list of themes to import.
       $themes_to_import = [];

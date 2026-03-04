@@ -77,7 +77,6 @@ class ReportTest extends UnitTestCase {
     $this->mailManager->expects($this->never())->method('mail');
 
     $method = new \ReflectionMethod(Report::class, 'sendPublicationNotification');
-    $method->setAccessible(TRUE);
     $method->invoke($report);
   }
 
@@ -118,7 +117,6 @@ class ReportTest extends UnitTestCase {
     $this->mailManager->expects($this->never())->method('mail');
 
     $method = new \ReflectionMethod(Report::class, 'sendPublicationNotification');
-    $method->setAccessible(TRUE);
     $method->invoke($report);
   }
 
@@ -160,7 +158,6 @@ class ReportTest extends UnitTestCase {
     $this->mailManager->expects($this->never())->method('mail');
 
     $method = new \ReflectionMethod(Report::class, 'sendPublicationNotification');
-    $method->setAccessible(TRUE);
     $method->invoke($report);
   }
 
@@ -239,7 +236,6 @@ class ReportTest extends UnitTestCase {
       );
 
     $method = new \ReflectionMethod(Report::class, 'sendPublicationNotification');
-    $method->setAccessible(TRUE);
     $method->invoke($report);
   }
 

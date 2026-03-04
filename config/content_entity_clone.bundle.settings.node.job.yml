@@ -5,8 +5,6 @@ fields:
     id: copy_values
   body:
     id: copy_values
-  field_career_categories:
-    id: copy_values
   field_city:
     id: copy_values
   field_country:
@@ -18,6 +16,4 @@ fields:
   field_job_type:
     id: copy_values
   field_source:
-    id: copy_values
-  field_theme:
     id: copy_values

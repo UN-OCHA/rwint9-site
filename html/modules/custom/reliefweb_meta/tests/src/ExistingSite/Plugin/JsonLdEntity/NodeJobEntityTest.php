@@ -160,7 +160,7 @@ class NodeJobEntityTest extends ExistingSiteBase {
       'moderation_status' => 'published',
       'field_job_closing_date' => [
         [
-          'value' => date('Y-m-d', strtotime('+1 year')),
+          'value' => gmdate('Y-m-d', strtotime('+1 year')),
         ],
       ],
     ]);

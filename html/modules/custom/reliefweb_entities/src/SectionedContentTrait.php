@@ -289,7 +289,7 @@ trait SectionedContentTrait {
     }
 
     // Find the line corresponding to the entity id.
-    while (($row = fgetcsv($handle, 100)) !== FALSE) {
+    while (($row = fgetcsv($handle, 100, escape: "\\")) !== FALSE) {
       if (count($row) === 2 && $row[0] == $entity_id) {
         $ids = explode(',', $row[1]);
         break;

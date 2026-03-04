@@ -297,9 +297,9 @@ class ReliefWebReportingCommands extends DrushCommands {
       $handle = fopen('php://memory', 'r+');
       foreach ($records as $index => $record) {
         if ($index === 0) {
-          fputcsv($handle, array_keys($record), "\t");
+          fputcsv($handle, array_keys($record), "\t", escape: "\\");
         }
-        fputcsv($handle, array_values($record), "\t");
+        fputcsv($handle, array_values($record), "\t", escape: "\\");
       }
       rewind($handle);
       $csv = trim(stream_get_contents($handle));
@@ -399,8 +399,8 @@ class ReliefWebReportingCommands extends DrushCommands {
     else {
       // Convert to CSV.
       $handle = fopen('php://memory', 'r+');
-      fputcsv($handle, array_keys($data), "\t");
-      fputcsv($handle, array_values($data), "\t");
+      fputcsv($handle, array_keys($data), "\t", escape: "\\");
+      fputcsv($handle, array_values($data), "\t", escape: "\\");
       rewind($handle);
       $csv = trim(stream_get_contents($handle));
       fclose($handle);
@@ -565,15 +565,17 @@ class ReliefWebReportingCommands extends DrushCommands {
     $index = 'reports';
 
     // Options to retrieve the report resources.
-    $indexer_options = new Options(reliefweb_api_get_indexer_base_options());
+    $indexer_base_options = reliefweb_api_get_indexer_base_options();
+    $indexer_base_options['bundle'] = $bundle;
+    $indexer_options = Options::fromArray($indexer_base_options);
 
     // Create the database connection.
-    $dbname = $indexer_options->get('database');
-    $host = $indexer_options->get('mysql-host');
-    $port = $indexer_options->get('mysql-port');
+    $dbname = $indexer_options->database;
+    $host = $indexer_options->mysqlHost;
+    $port = $indexer_options->mysqlPort;
     $dsn = "mysql:dbname={$dbname};host={$host};port={$port};charset=utf8";
-    $user = $indexer_options->get('mysql-user');
-    $password = $indexer_options->get('mysql-pass');
+    $user = $indexer_options->mysqlUser;
+    $password = $indexer_options->mysqlPass;
     $connection = new DatabaseConnection($dsn, $user, $password);
 
     // Create a new reference handler.
@@ -581,13 +583,13 @@ class ReliefWebReportingCommands extends DrushCommands {
 
     // Create a new elasticsearch handler.
     $elasticsearch = new Elasticsearch(
-      $indexer_options->get('elasticsearch'),
-      $indexer_options->get('base-index-name'),
-      $indexer_options->get('tag'),
+      $indexer_options->elasticsearch,
+      $indexer_options->baseIndexName,
+      $indexer_options->tag,
     );
 
     // Create a new field processor object to prepare items before indexing.
-    $processor = new Processor($indexer_options->get('website'), $connection, $references);
+    $processor = new Processor($indexer_options->website, $connection, $references);
 
     // Create a new resource to get the report data.
     $resource = new ReportExtended(
@@ -730,7 +732,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     // Write the headers to the TSV file.
-    fputcsv($file, array_values($properties), "\t");
+    fputcsv($file, array_values($properties), "\t", escape: "\\");
 
     try {
       $count = 0;
@@ -759,7 +761,7 @@ class ReliefWebReportingCommands extends DrushCommands {
         // Flatten and write to the TSV file.
         foreach ($items as $item) {
           $row = $this->flattenReportData($item, $properties);
-          if (!fputcsv($file, $row, "\t")) {
+          if (!fputcsv($file, $row, "\t", escape: "\\")) {
             $this->logger->error('Unable to write TSV row');
           }
         }
@@ -1067,12 +1069,12 @@ class ReliefWebReportingCommands extends DrushCommands {
     }
 
     // Write the headers to the TSV file.
-    fputcsv($file, array_keys(reset($data)), "\t");
+    fputcsv($file, array_keys(reset($data)), "\t", escape: "\\");
 
     try {
       // Flatten and write to the TSV file.
       foreach ($data as $row) {
-        if (!fputcsv($file, $row, "\t")) {
+        if (!fputcsv($file, $row, "\t", escape: "\\")) {
           $this->logger->error('Unable to write TSV row');
         }
       }

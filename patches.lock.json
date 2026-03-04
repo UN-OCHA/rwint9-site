@@ -1,5 +1,5 @@
 {
-    "_hash": "a7672ba08af058f6d830f01b7042c038a20f5b164bf6df97512cc37a3cb15ad4",
+    "_hash": "b9ead7fed9bbb6b2aebee23c3c561dd8f934194dfaf6dcd18d2f0096ca891340",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -113,6 +113,30 @@
                 }
             }
         ],
+        "drupal/monitoring": [
+            {
+                "package": "drupal/monitoring",
+                "description": "PHP 8.5 canonical cast compatibility",
+                "url": "PATCHES/monitoring--php85-canonical-cast.patch",
+                "sha256": "95c7190d958a30fc35f5adb939bf800ffd59b3c423f9041c46e8739b4bec2727",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/pathauto": [
+            {
+                "package": "drupal/pathauto",
+                "description": "PHP 8.5 null array offset compatibility",
+                "url": "PATCHES/pathauto--php85-null-array-offset.patch",
+                "sha256": "e1a2809db0f18b231c09078409b42f0c35ab20dbe1cb13eb441c79e6832bce5d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
         "drupal/openid_connect": [
             {
                 "package": "drupal/openid_connect",
@@ -131,6 +155,18 @@
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/svg_image": [
+            {
+                "package": "drupal/svg_image",
+                "description": "PHP 8.5 canonical cast compatibility",
+                "url": "PATCHES/svg_image--php85-canonical-cast.patch",
+                "sha256": "ec7e682a6b9db1c64073a30873c1e061550c291640c087450f43ea8d1610a2c3",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -201,6 +237,28 @@
                 "description": "Return either string or null",
                 "url": "https://git.drupalcode.org/project/social_auth/-/merge_requests/34.diff",
                 "sha256": "991cd706aebb29cc221f387d9e2595deabba9da7e09c9a1fa7f392517f5b59ef",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/social_auth",
+                "description": "https://www.drupal.org/project/social_auth/issues/3568935",
+                "url": "PATCHES/social_auth-username-validation-3568935.patch",
+                "sha256": "a90f3d164c4705fd57e0d0a8d73b10eb8fba8c97d46ddae4b0a35d995bee612a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth_entra_id": [
+            {
+                "package": "drupal/social_auth_entra_id",
+                "description": "https://www.drupal.org/project/social_auth_entra_id/issues/3571910",
+                "url": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch",
+                "sha256": "47f0594b04cccf3d9d2879b98453e140cbb1d88654087295da7fb23ceacb54c4",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

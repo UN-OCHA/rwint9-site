@@ -301,7 +301,7 @@ class InoreaderService {
 
     // Retrieve the publication date.
     $published = $document['published'] ?? time();
-    $published = date('c', $published);
+    $published = gmdate('c', $published);
 
     $origin_title = trim($this->sanitizeText($document['origin']['title'] ?? ''));
     $sources = [];

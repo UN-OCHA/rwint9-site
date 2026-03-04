@@ -306,8 +306,8 @@ trait DocumentTrait {
     // Search for documents 2 days around the publication date.
     if ($this->hasField('field_original_publication_date') && !$this->field_original_publication_date->isEmpty()) {
       $date = (int) $this->field_original_publication_date->first()->getValue();
-      $query[] = 'date.original:[' . date(DATE_ATOM, $date - 2 * 24 * 60 * 60) .
-                 ' TO ' . date(DATE_ATOM, $date + 2 * 24 * 60 * 60) . ']';
+      $query[] = 'date.original:[' . gmdate(DATE_ATOM, $date - 2 * 24 * 60 * 60) .
+                 ' TO ' . gmdate(DATE_ATOM, $date + 2 * 24 * 60 * 60) . ']';
     }
 
     return '(' . implode(' AND ', $query) . ')';
