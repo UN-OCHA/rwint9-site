@@ -30,9 +30,12 @@ class ReliefWebFile extends FormatterBase {
         $languages = reliefweb_files_get_languages();
 
         $version = '';
-        if (isset($languages[$item->getFileLanguage()])) {
+        $language = $item->getFileLanguage();
+        // We skip the "other" language (ot) because "other version" is more
+        // confusing than no version indication.
+        if (!empty($language) && $language !== 'ot' && isset($languages[$language])) {
           $version = $this->t('@language version', [
-            '@language' => $languages[$item->getFileLanguage()],
+            '@language' => $languages[$language],
           ]);
         }
 
