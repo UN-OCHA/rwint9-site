@@ -1,5 +1,5 @@
 {
-    "_hash": "ad7e954eed05e0f564a654042ff9558e775489d77753ff0b212c0fb75b99181f",
+    "_hash": "5b80a53db374575fe63dc7bf920646c553f6b70b66c8c72c91bd0492c8c01b99",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -153,6 +153,16 @@
                 "description": "Incorrect context in hook_redirect_logout_alter",
                 "url": "PATCHES/openid_connect-3577436-mr191.patch",
                 "sha256": "3ab9ffcd23bcaf4f12c1e657a15f349e703ef56694c25bfd13a7b28be4cad42d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Remove form ID in user logout confirmation to prevent drupalLogout failing in tests",
+                "url": "PATCHES/openid_connect-3577169-mr189.patch",
+                "sha256": "7878507a6bbd281dcfc1187c0989098ec65955fa47c3c69001a7feafaf86342c",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
