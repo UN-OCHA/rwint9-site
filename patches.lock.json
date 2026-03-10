@@ -1,5 +1,5 @@
 {
-    "_hash": "b9ead7fed9bbb6b2aebee23c3c561dd8f934194dfaf6dcd18d2f0096ca891340",
+    "_hash": "5b80a53db374575fe63dc7bf920646c553f6b70b66c8c72c91bd0492c8c01b99",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -147,6 +147,26 @@
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Incorrect context in hook_redirect_logout_alter",
+                "url": "PATCHES/openid_connect-3577436-mr191.patch",
+                "sha256": "3ab9ffcd23bcaf4f12c1e657a15f349e703ef56694c25bfd13a7b28be4cad42d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Remove form ID in user logout confirmation to prevent drupalLogout failing in tests",
+                "url": "PATCHES/openid_connect-3577169-mr189.patch",
+                "sha256": "7878507a6bbd281dcfc1187c0989098ec65955fa47c3c69001a7feafaf86342c",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
             }
         ],
         "drupal/openid_connect_windows_aad": [
@@ -155,6 +175,16 @@
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect_windows_aad",
+                "description": "Prompt schema mismatch with parent plugin",
+                "url": "PATCHES/openid_connect_windows_aad-3577142-mr46.patch",
+                "sha256": "6b4bd440d50bc5cbe1f60ec835652aaec7d2dabc5e9836b478f1085a95fe12c8",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

@@ -1,0 +1,13 @@
+diff --git a/src/Service/LogoutService.php b/src/Service/LogoutService.php
+index 0afe2cc39eb023ad6cba65f590ce4e874346ff35..f22b54eb018f39f103750679b8f5380f0885de58 100644
+--- a/src/Service/LogoutService.php
++++ b/src/Service/LogoutService.php
+@@ -108,7 +108,7 @@ class LogoutService {
+       );
+     }
+ 
+-    $clientName = $provider?->getPlugin()?->getPluginId() ?? 'unknown';
++    $clientName = $provider?->id() ?? 'unknown';
+ 
+     $rsp = ['response' => &$response];
+     $context = ['client' => $clientName];

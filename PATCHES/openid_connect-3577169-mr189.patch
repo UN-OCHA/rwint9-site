@@ -1,0 +1,18 @@
+diff --git a/src/Form/UserLogoutConfirmation.php b/src/Form/UserLogoutConfirmation.php
+index 8591df5..d69d560 100644
+--- a/src/Form/UserLogoutConfirmation.php
++++ b/src/Form/UserLogoutConfirmation.php
+@@ -30,13 +30,6 @@ final class UserLogoutConfirmation extends UserLogoutConfirm {
+     protected readonly LogoutService $logoutService,
+   ) {}
+ 
+-  /**
+-   * {@inheritDoc}
+-   */
+-  public function getFormId(): string {
+-    return 'openid_connect_user_logout';
+-  }
+-
+   /**
+    * {@inheritDoc}
+    */
