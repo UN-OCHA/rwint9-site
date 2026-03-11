@@ -37,6 +37,19 @@
             "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
             "Prompt schema mismatch with parent plugin": "PATCHES/openid_connect_windows_aad-3577142-mr46.patch"
         },
+        "drupal/social_api": {
+          "https://www.drupal.org/project/social_api/issues/3492428": "PATCHES/social_api-3492428-mr13.patch"
+        },
+        "drupal/social_auth": {
+          "Return either string or null": "PATCHES/social_auth-3496656-mr34.patch",
+          "https://www.drupal.org/project/social_auth/issues/3568935": "PATCHES/social_auth-username-validation-3568935.patch"
+        },
+        "drupal/social_auth_entra_id": {
+          "https://www.drupal.org/project/social_auth_entra_id/issues/3571910": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch"
+        },
+        "drupal/social_auth_linkedin": {
+          "https://www.drupal.org/project/social_auth_linkedin/issues/3399739": "PATCHES/social_auth_linkedin-3399739-mr4.patch"
+        },
         "drupal/svg_image": {
             "PHP 8.5 canonical cast compatibility": "PATCHES/svg_image--php85-canonical-cast.patch"
         },
@@ -52,16 +65,6 @@
         },
         "unocha/common_design": {
             "https://humanitarian.atlassian.net/browse/CD-519": "PATCHES/common_design--default-logo-remove.patch"
-        },
-        "drupal/social_auth": {
-          "Return either string or null": "https://git.drupalcode.org/project/social_auth/-/merge_requests/34.diff",
-          "https://www.drupal.org/project/social_auth/issues/3568935": "PATCHES/social_auth-username-validation-3568935.patch"
-        },
-        "drupal/social_auth_entra_id": {
-          "https://www.drupal.org/project/social_auth_entra_id/issues/3571910": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch"
-        },
-        "drupal/social_auth_linkedin": {
-          "https://www.drupal.org/project/social_auth_linkedin/issues/3399739": "https://git.drupalcode.org/project/social_auth_linkedin/-/merge_requests/4.diff"
         }
     }
 }
