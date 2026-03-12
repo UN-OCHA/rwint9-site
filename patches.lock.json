@@ -1,5 +1,5 @@
 {
-    "_hash": "dd10ed858708c4c7f49ce517c24969f49d866f25be5fcc2fc7a5b951197eaa53",
+    "_hash": "c139aa12c6450159c3a704b3a95e6fea0266795db44df1d1e65fc08fbd9d0983",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -179,16 +179,6 @@
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
-            },
-            {
-                "package": "drupal/openid_connect_windows_aad",
-                "description": "Prompt schema mismatch with parent plugin",
-                "url": "PATCHES/openid_connect_windows_aad-3577142-mr46.patch",
-                "sha256": "6b4bd440d50bc5cbe1f60ec835652aaec7d2dabc5e9836b478f1085a95fe12c8",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
             }
         ],
         "drupal/social_api": [
@@ -230,7 +220,7 @@
                 "package": "drupal/social_auth_entra_id",
                 "description": "https://www.drupal.org/project/social_auth_entra_id/issues/3571910",
                 "url": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch",
-                "sha256": "47f0594b04cccf3d9d2879b98453e140cbb1d88654087295da7fb23ceacb54c4",
+                "sha256": "9b72a9cb3b476f642652f590b22003a11b271b49db5cdb30bbc3154ed43cf3e9",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
