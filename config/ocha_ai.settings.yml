@@ -56,7 +56,7 @@ plugins:
       api_secret: ''
       role_arn: ''
     aws_bedrock_nova_2_lite_v1:
-      model: 'us.amazon.nova-2-lite-v1:0'
+      model: 'global.amazon.nova-2-lite-v1:0'
       endpoint: ''
       version: ''
       region: us-east-1
@@ -66,14 +66,17 @@ plugins:
       api_secret: ''
       role_arn: ''
       thinking_mode: none
-    azure_openai:
-      model: gpt-3.5-turbo
-      endpoint: REPLACE_WITH_ENDPOINT
-      version: '2023-05-15'
-      region: REPLACE_WITH_REGION
-      api_key: REPLACE_WITH_KEY
+    aws_bedrock_nova_2_pro_v1:
+      model: 'global.amazon.nova-2-pro-v1:0'
+      endpoint: ''
+      version: ''
+      region: us-east-1
+      api_key: ''
       max_tokens: 512
-      prompt_template: "Based solely on the information below, please answer the user's question. Please do not make things up and say you don't know if you cannot answer.\r\n\r\n{{ context }}"
+      prompt_template: ''
+      api_secret: ''
+      role_arn: ''
+      thinking_mode: none
   embedding:
     aws_bedrock:
       model: amazon.titan-embed-text-v1
