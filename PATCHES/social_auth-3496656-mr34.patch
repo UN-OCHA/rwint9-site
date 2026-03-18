@@ -1,0 +1,43 @@
+diff --git a/src/AuthManager/OAuth2Manager.php b/src/AuthManager/OAuth2Manager.php
+index 69a0a437505bb6ee4b60a517ae30e670eb6b7de6..5fe5db5c843112f5b02e1be03b3d45375d25855e 100755
+--- a/src/AuthManager/OAuth2Manager.php
++++ b/src/AuthManager/OAuth2Manager.php
+@@ -59,7 +59,7 @@ public function getExtraDetails(string $method = 'GET', ?string $domain = NULL):
+   /**
+    * {@inheritdoc}
+    */
+-  public function getScopes(): string {
++  public function getScopes(): ?string {
+     if ($this->scopes === NULL) {
+       $this->scopes = $this->settings->get('scopes');
+     }
+@@ -70,7 +70,7 @@ public function getScopes(): string {
+   /**
+    * {@inheritdoc}
+    */
+-  public function getEndPoints(): string {
++  public function getEndPoints(): ?string {
+     if ($this->endPoints === NULL) {
+       $this->endPoints = $this->settings->get('endpoints');
+     }
+diff --git a/src/AuthManager/OAuth2ManagerInterface.php b/src/AuthManager/OAuth2ManagerInterface.php
+index 6207f86a6fe8d4406acdacfa4de498eeab5bc1ad..3c54851ede5b82ffe59108f7e0cf25646a4637c3 100755
+--- a/src/AuthManager/OAuth2ManagerInterface.php
++++ b/src/AuthManager/OAuth2ManagerInterface.php
+@@ -47,7 +47,7 @@ public function requestEndPoint(string $method, string $path, ?string $domain =
+    * @return string
+    *   Data points separated by comma.
+    */
+-  public function getScopes(): string;
++  public function getScopes(): ?string;
+ 
+   /**
+    * Gets the API endpoints to be requested.
+@@ -55,6 +55,6 @@ public function getScopes(): string;
+    * @return string
+    *   API endpoints separated in different lines.
+    */
+-  public function getEndPoints(): string;
++  public function getEndPoints(): ?string;
+ 
+ }

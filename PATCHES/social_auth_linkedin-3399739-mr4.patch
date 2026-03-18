@@ -1,0 +1,71 @@
+diff --git a/src/LinkedInAuthManager.php b/src/LinkedInAuthManager.php
+index c17244102a0b9bf152910e47740cc0506176244c..925a2c5b030ef79858dd85b1c56a27967127b3ff 100644
+--- a/src/LinkedInAuthManager.php
++++ b/src/LinkedInAuthManager.php
+@@ -7,7 +7,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+ use Drupal\social_auth\AuthManager\OAuth2Manager;
+ use Drupal\social_auth\User\SocialAuthUser;
+ use Drupal\social_auth\User\SocialAuthUserInterface;
++use GuzzleHttp\RequestOptions;
+ use League\OAuth2\Client\Provider\Exception\IdentityProviderException;
++use League\OAuth2\Client\Token\AccessToken;
+ use Symfony\Component\HttpFoundation\RequestStack;
+ 
+ /**
+@@ -55,27 +57,46 @@ class LinkedInAuthManager extends OAuth2Manager {
+    */
+   public function getUserInfo(): SocialAuthUserInterface {
+     if (!$this->user) {
+-      /** @var \League\OAuth2\Client\Provider\LinkedInResourceOwner $owner */
+-      $owner = $this->client->getResourceOwner($this->getAccessToken());
++      $token = $this->getAccessToken();
++      $owner = $this->getUserByToken($token);
+       $this->user = new SocialAuthUser(
+-        trim("{$owner->getFirstName()} {$owner->getLastName()}"),
+-        $owner->getId(),
+-        $this->getAccessToken(),
+-        $owner->getEmail(),
+-        $owner->getImageUrl(),
++        trim($owner->name),
++        $owner->sub,
++        $token,
++        $owner->email,
++        $owner->picture,
+         $this->getExtraDetails()
+       );
+-      $this->user->setFirstName($owner->getFirstName());
+-      $this->user->setLastName($owner->getLastName());
++      $this->user->setFirstName($owner->given_name);
++      $this->user->setLastName($owner->family_name);
+     }
+     return $this->user;
+   }
+ 
++  /**
++   * Get current user details with access token.
++   *
++   * @param \League\OAuth2\Client\Token\AccessToken $token
++   *   The token to use to access linked in API.
++   *
++   * @return object
++   *   The result of the user info query.
++   */
++  protected function getUserByToken(AccessToken $token): object {
++    $response = $this->client->getHttpClient()->get('https://api.linkedin.com/v2/userinfo', [
++      RequestOptions::HEADERS => [
++        'Authorization' => 'Bearer ' . $token,
++      ],
++    ]);
++
++    return json_decode($response->getBody());
++  }
++
+   /**
+    * {@inheritdoc}
+    */
+   public function getAuthorizationUrl(): string {
+-    $scopes = ['r_liteprofile', 'r_emailaddress'];
++    $scopes = ['openid', 'profile', 'email'];
+ 
+     $extra_scopes = $this->getScopes();
+     if ($extra_scopes) {

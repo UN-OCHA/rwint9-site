@@ -1,5 +1,5 @@
 {
-    "_hash": "b9ead7fed9bbb6b2aebee23c3c561dd8f934194dfaf6dcd18d2f0096ca891340",
+    "_hash": "c139aa12c6450159c3a704b3a95e6fea0266795db44df1d1e65fc08fbd9d0983",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -147,6 +147,26 @@
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Incorrect context in hook_redirect_logout_alter",
+                "url": "PATCHES/openid_connect-3577436-mr191.patch",
+                "sha256": "3ab9ffcd23bcaf4f12c1e657a15f349e703ef56694c25bfd13a7b28be4cad42d",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/openid_connect",
+                "description": "Remove form ID in user logout confirmation to prevent drupalLogout failing in tests",
+                "url": "PATCHES/openid_connect-3577169-mr189.patch",
+                "sha256": "7878507a6bbd281dcfc1187c0989098ec65955fa47c3c69001a7feafaf86342c",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
             }
         ],
         "drupal/openid_connect_windows_aad": [
@@ -155,6 +175,64 @@
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_api": [
+            {
+                "package": "drupal/social_api",
+                "description": "https://www.drupal.org/project/social_api/issues/3492428",
+                "url": "PATCHES/social_api-3492428-mr13.patch",
+                "sha256": "f201723bbd24ba243de854adc57dd476ae0e70f63ccf70194337584bdf9ebdd8",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth": [
+            {
+                "package": "drupal/social_auth",
+                "description": "Return either string or null",
+                "url": "PATCHES/social_auth-3496656-mr34.patch",
+                "sha256": "991cd706aebb29cc221f387d9e2595deabba9da7e09c9a1fa7f392517f5b59ef",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/social_auth",
+                "description": "https://www.drupal.org/project/social_auth/issues/3568935",
+                "url": "PATCHES/social_auth-username-validation-3568935.patch",
+                "sha256": "a90f3d164c4705fd57e0d0a8d73b10eb8fba8c97d46ddae4b0a35d995bee612a",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth_entra_id": [
+            {
+                "package": "drupal/social_auth_entra_id",
+                "description": "https://www.drupal.org/project/social_auth_entra_id/issues/3571910",
+                "url": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch",
+                "sha256": "9b72a9cb3b476f642652f590b22003a11b271b49db5cdb30bbc3154ed43cf3e9",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/social_auth_linkedin": [
+            {
+                "package": "drupal/social_auth_linkedin",
+                "description": "https://www.drupal.org/project/social_auth_linkedin/issues/3399739",
+                "url": "PATCHES/social_auth_linkedin-3399739-mr4.patch",
+                "sha256": "80e48fc12fbb25fe7414c63bbb18d3517d594deaf0529e3a0f080c45f9e42051",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
@@ -225,52 +303,6 @@
                 "description": "https://humanitarian.atlassian.net/browse/CD-519",
                 "url": "PATCHES/common_design--default-logo-remove.patch",
                 "sha256": "a487a4a5252c685f94de4205af658441384256bf49f52942a2bb76d9167be470",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/social_auth": [
-            {
-                "package": "drupal/social_auth",
-                "description": "Return either string or null",
-                "url": "https://git.drupalcode.org/project/social_auth/-/merge_requests/34.diff",
-                "sha256": "991cd706aebb29cc221f387d9e2595deabba9da7e09c9a1fa7f392517f5b59ef",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/social_auth",
-                "description": "https://www.drupal.org/project/social_auth/issues/3568935",
-                "url": "PATCHES/social_auth-username-validation-3568935.patch",
-                "sha256": "a90f3d164c4705fd57e0d0a8d73b10eb8fba8c97d46ddae4b0a35d995bee612a",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/social_auth_entra_id": [
-            {
-                "package": "drupal/social_auth_entra_id",
-                "description": "https://www.drupal.org/project/social_auth_entra_id/issues/3571910",
-                "url": "PATCHES/social_auth_entra_id-use-social-auth-framework-3571910.patch",
-                "sha256": "47f0594b04cccf3d9d2879b98453e140cbb1d88654087295da7fb23ceacb54c4",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/social_auth_linkedin": [
-            {
-                "package": "drupal/social_auth_linkedin",
-                "description": "https://www.drupal.org/project/social_auth_linkedin/issues/3399739",
-                "url": "https://git.drupalcode.org/project/social_auth_linkedin/-/merge_requests/4.diff",
-                "sha256": "80e48fc12fbb25fe7414c63bbb18d3517d594deaf0529e3a0f080c45f9e42051",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
