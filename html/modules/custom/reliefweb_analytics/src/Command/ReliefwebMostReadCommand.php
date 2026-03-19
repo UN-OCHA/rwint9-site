@@ -347,7 +347,7 @@ class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManager
   protected function updateCsv($results) {
     // Clean the results.
     foreach ($results as $key => $value) {
-      if (isset($value[1]) && $this->validateCsvLine($value[1])) {
+      if (!isset($value[1]) || !$this->validateCsvLine($value[1])) {
         unset($results[$key]);
       }
     }
