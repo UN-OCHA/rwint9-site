@@ -18,6 +18,7 @@ jobs:
         github_access_token: ${{ secrets.PAT }}
         patch_branch: ${{ github.head_ref || github.ref_name }}
         patch_maintainers: ${{ vars.DRUPAL_MAINTAINERS }}
+        patch_packages: "drupal/* unocha/* drush/* league/* weitzman/drupal-test-traits"
         slack_bot_token: ${{ secrets.SLACK_BOT_TOKEN }}
         slack_channel_name: ${{ vars.SLACK_CHANNEL }}
         source_directory: html/modules/custom,html/themes/custom
