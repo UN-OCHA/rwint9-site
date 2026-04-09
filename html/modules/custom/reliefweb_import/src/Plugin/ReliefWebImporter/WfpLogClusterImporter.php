@@ -214,7 +214,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
         'page_size' => $limit,
       ]);
 
-      $url = rtrim($api_url, '/') . '/?' . $query;
+      // No slash before "?" — API Gateway treats `/documents/?` differently
+      // from `/documents?` now.
+      $url = rtrim($api_url, '/') . '?' . $query;
 
       $response = $this->httpClient->get($url, [
         'connect_timeout' => $timeout,
