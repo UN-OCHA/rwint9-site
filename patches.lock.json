@@ -1,5 +1,5 @@
 {
-    "_hash": "c139aa12c6450159c3a704b3a95e6fea0266795db44df1d1e65fc08fbd9d0983",
+    "_hash": "6d213da79e060d07008099f9f58cb5677576bffeeb39cda50eb162f747099a1b",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -130,7 +130,7 @@
                 "package": "drupal/pathauto",
                 "description": "PHP 8.5 null array offset compatibility",
                 "url": "PATCHES/pathauto--php85-null-array-offset.patch",
-                "sha256": "e1a2809db0f18b231c09078409b42f0c35ab20dbe1cb13eb441c79e6832bce5d",
+                "sha256": "1b886fe901ca93ad94b43860728e8258daf57c4d01ebcb48135ab526f60cdff8",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
