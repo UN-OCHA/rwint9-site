@@ -7,7 +7,7 @@ dependencies:
 id: job
 label: Job
 type: 'canonical_entities:node'
-pattern: 'job/[node:nid]/[node:title]'
+pattern: '/job/[node:nid]/[node:title]'
 selection_criteria:
   140bd801-78ac-4a99-8477-c5d2ce4e73d6:
     id: 'entity_bundle:node'

@@ -7,7 +7,7 @@ dependencies:
 id: book_page
 label: 'Book page'
 type: 'canonical_entities:node'
-pattern: '[node:title]'
+pattern: '/[node:title]'
 selection_criteria:
   3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2:
     id: 'entity_bundle:node'
