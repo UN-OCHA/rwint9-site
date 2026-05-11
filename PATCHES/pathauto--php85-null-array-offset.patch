@@ -1,33 +1,36 @@
 diff --git a/src/PathautoGenerator.php b/src/PathautoGenerator.php
-index 0000000..0000000 100644
+index 8d60e57..5d91697 100644
 --- a/src/PathautoGenerator.php
 +++ b/src/PathautoGenerator.php
-@@ -315,20 +315,22 @@ class PathautoGenerator implements PathautoGeneratorInterface {
-    * {@inheritdoc}
+@@ -343,7 +343,7 @@ class PathautoGenerator implements PathautoGeneratorInterface {
     */
    public function getPatternByEntity(EntityInterface $entity) {
--    $langcode = $entity->language()->getId();
+     $langcode = $entity->language()->getId();
 -    if (!isset($this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode])) {
-+    $entity_type_id = $entity->getEntityTypeId() ?? '';
-+    $entity_id = $entity->id() ?? '';
-+    $langcode = $entity->language()->getId() ?? '';
-+    if (!isset($this->patterns[$entity_type_id][$entity_id][$langcode])) {
++    if ($entity->id() === NULL || !isset($this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode])) {
        foreach ($this->getPatternByEntityType($entity->getEntityTypeId()) as $pattern) {
          if ($pattern->applies($entity)) {
--          $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = $pattern;
-+          $this->patterns[$entity_type_id][$entity_id][$langcode] = $pattern;
-           break;
+           // Fetch the translated pattern string if a language-specific config
+@@ -356,7 +356,7 @@ class PathautoGenerator implements PathautoGeneratorInterface {
+               $pattern->setPattern($translated);
+             }
+           }
+-          if ($entity->isNew()) {
++          if ($entity->id() === NULL || $entity->isNew()) {
+             return $pattern;
+           }
+           $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = $pattern;
+@@ -364,11 +364,11 @@ class PathautoGenerator implements PathautoGeneratorInterface {
          }
        }
        // If still not set.
 -      if (!isset($this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode])) {
--        $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = NULL;
-+      if (!isset($this->patterns[$entity_type_id][$entity_id][$langcode])) {
-+        $this->patterns[$entity_type_id][$entity_id][$langcode] = NULL;
++      if ($entity->id() !== NULL && !isset($this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode])) {
+         $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] = NULL;
        }
      }
 -    return $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode];
-+    return $this->patterns[$entity_type_id][$entity_id][$langcode];
++    return $entity->id() !== NULL ? $this->patterns[$entity->getEntityTypeId()][$entity->id()][$langcode] : NULL;
    }
  
    /**
