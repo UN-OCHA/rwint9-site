@@ -43,20 +43,24 @@ class Training extends Node implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public static function addFieldConstraints(&$fields) {
-    // The training end date cannot be before the start date.
-    $fields['field_training_date']->addConstraint('DateEndAfterStart');
+    if (isset($fields['field_training_date'])) {
+      // The training end date cannot be before the start date.
+      $fields['field_training_date']->addConstraint('DateEndAfterStart');
 
-    // The training dates cannot be in the past.
-    $fields['field_training_date']->addConstraint('DateNotInPast', [
-      'statuses' => ['pending', 'published'],
-      'permission' => 'edit any training content',
-    ]);
+      // The training dates cannot be in the past.
+      $fields['field_training_date']->addConstraint('DateNotInPast', [
+        'statuses' => ['pending', 'published'],
+        'permission' => 'edit any training content',
+      ]);
+    }
 
-    // The registration deadline cannot be in the past.
-    $fields['field_registration_deadline']->addConstraint('DateNotInPast', [
-      'statuses' => ['pending', 'published'],
-      'permission' => 'edit any training content',
-    ]);
+    if (isset($fields['field_registration_deadline'])) {
+      // The registration deadline cannot be in the past.
+      $fields['field_registration_deadline']->addConstraint('DateNotInPast', [
+        'statuses' => ['pending', 'published'],
+        'permission' => 'edit any training content',
+      ]);
+    }
   }
 
   /**
