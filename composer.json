@@ -93,7 +93,7 @@
         "symfony/dom-crawler": "*",
         "symfony/uid": "^6.2",
         "unocha/common_design": "^9.4",
-        "unocha/gtm_barebones": "^1.1",
+        "unocha/gtm_barebones": "^2.0",
         "unocha/ocha_ai": "^1.11",
         "unocha/ocha_content_classification": "^1.1",
         "unocha/ocha_entraid": "^1.0",
