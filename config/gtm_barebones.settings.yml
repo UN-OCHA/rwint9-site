@@ -1,5 +1,7 @@
 _core:
   default_config_hash: SKvdm9tOuxLJtYkf6Z96GCWJSQBUxJ_4D01Q1NAVpH4
-container_id: ''
-environment_id: ''
-environment_token: ''
+containers:
+  default:
+    container_id: ''
+    environment_id: ''
+    environment_token: ''
