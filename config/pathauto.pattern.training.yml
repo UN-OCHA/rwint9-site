@@ -7,7 +7,7 @@ dependencies:
 id: training
 label: Training
 type: 'canonical_entities:node'
-pattern: 'training/[node:nid]/[node:title]'
+pattern: '/training/[node:nid]/[node:title]'
 selection_criteria:
   5eabdf04-0f4f-4dd4-a921-2a506dae29b8:
     id: 'entity_bundle:node'

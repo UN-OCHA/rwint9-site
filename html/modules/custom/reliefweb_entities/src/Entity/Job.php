@@ -41,30 +41,36 @@ class Job extends Node implements BundleEntityInterface, EntityModeratedInterfac
    * {@inheritdoc}
    */
   public static function addFieldConstraints(&$fields) {
-    // The city field cannot have a value if the country field is empty.
-    $fields['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
-      'otherFieldName' => 'field_country',
-    ]);
+    if (isset($fields['field_city'])) {
+      // The city field cannot have a value if the country field is empty.
+      $fields['field_city']->addConstraint('EmptyIfOtherFieldEmpty', [
+        'otherFieldName' => 'field_country',
+      ]);
 
-    // Restrict the city length if not empty.
-    $fields['field_city']->addConstraint('TextLengthWithinRange', [
-      'skipIfEmpty' => TRUE,
-      'min' => 3,
-      'max' => 255,
-    ]);
+      // Restrict the city length if not empty.
+      $fields['field_city']->addConstraint('TextLengthWithinRange', [
+        'skipIfEmpty' => TRUE,
+        'min' => 3,
+        'max' => 255,
+      ]);
+    }
 
-    // Closing date cannot be in the past.
-    // @todo remove this constraint and add it to the form only as we want to
-    // be able to save expired jobs for example when importing.
-    $fields['field_job_closing_date']->addConstraint('DateNotInPast', [
-      'statuses' => ['pending', 'published'],
-      'permission' => 'edit any job content',
-    ]);
+    if (isset($fields['field_job_closing_date'])) {
+      // Closing date cannot be in the past.
+      // @todo remove this constraint and add it to the form only as we want to
+      // be able to save expired jobs for example when importing.
+      $fields['field_job_closing_date']->addConstraint('DateNotInPast', [
+        'statuses' => ['pending', 'published'],
+        'permission' => 'edit any job content',
+      ]);
+    }
 
-    // Limit to 3 themes max.
-    $fields['field_theme']->addConstraint('MaxNumberOfValues', [
-      'max' => 3,
-    ]);
+    if (isset($fields['field_theme'])) {
+      // Limit to 3 themes max.
+      $fields['field_theme']->addConstraint('MaxNumberOfValues', [
+        'max' => 3,
+      ]);
+    }
   }
 
   /**

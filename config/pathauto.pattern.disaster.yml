@@ -8,7 +8,7 @@ dependencies:
 id: disaster
 label: Disaster
 type: 'canonical_entities:taxonomy_term'
-pattern: 'disaster/[term:field_glide]'
+pattern: '/disaster/[term:field_glide]'
 selection_criteria:
   3366e40d-d392-435b-aea7-6cfdeae0811b:
     id: 'entity_bundle:taxonomy_term'
