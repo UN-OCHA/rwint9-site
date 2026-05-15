@@ -112,6 +112,8 @@ function reliefweb_api_get_indexer_base_options() {
   // Drupal database.
   $database = $connection_info['default'];
 
+  $pdo_options = (isset($database['pdo']) && is_array($database['pdo'])) ? $database['pdo'] : [];
+
   // Config.
   $config = \Drupal::config('reliefweb_api.settings');
 
@@ -123,6 +125,7 @@ function reliefweb_api_get_indexer_base_options() {
     'mysql-user' => (string) ($database['username'] ?? ''),
     'mysql-pass' => (string) ($database['password'] ?? ''),
     'database' => (string) ($database['database'] ?? ''),
+    'pdo-options' => $pdo_options,
     'base-index-name' => (string) ($config->get('base_index_name') ?? ($database['database'] ?? '')),
     'website' => (string) ($config->get('website') ?? 'https://' . \Drupal::request()->getHost()),
     'replicas' => (int) ($config->get('replicas') ?? 0),
