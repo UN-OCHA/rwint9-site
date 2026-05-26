@@ -576,7 +576,8 @@ class ReliefWebReportingCommands extends DrushCommands {
     $dsn = "mysql:dbname={$dbname};host={$host};port={$port};charset=utf8";
     $user = $indexer_options->mysqlUser;
     $password = $indexer_options->mysqlPass;
-    $connection = new DatabaseConnection($dsn, $user, $password);
+    $pdo_options = $indexer_options->pdoOptions;
+    $connection = new DatabaseConnection($dsn, $user, $password, $pdo_options);
 
     // Create a new reference handler.
     $references = new References();
