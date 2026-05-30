@@ -54,6 +54,12 @@ function reliefweb_api_entity_delete(EntityInterface $entity) {
  *   Whether to delete the entity from the index or not.
  */
 function reliefweb_api_handle_entity(EntityInterface $entity, $delete = FALSE) {
+  // Allow callers to skip indexing for this save (ephemeral entity property).
+  if (!$delete && !empty($entity->skip_reliefweb_api_indexing)) {
+    unset($entity->skip_reliefweb_api_indexing);
+    return;
+  }
+
   // Extract the entity information.
   $entity_id = $entity->id();
   $bundle = $entity->bundle();
