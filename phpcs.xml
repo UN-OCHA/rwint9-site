@@ -2,7 +2,10 @@
 <ruleset name="drupal_core">
   <description>Default PHP CodeSniffer configuration for Drupal core.</description>
   <file>.</file>
-  <arg name="extensions" value="inc,info,install,module,php,profile,test,theme,js"/>
+  <arg name="extensions" value="inc,info,install,module,php,profile,test,theme,js,twig,yml"/>
+
+  <!-- Tell phpcs to parse files as PHP 8.5 so new syntax is recognised. -->
+  <config name="php_version" value="80500"/>
 
   <!--Exclude third party code.-->
   <exclude-pattern>./vendor/*</exclude-pattern>
