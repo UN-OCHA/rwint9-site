@@ -6,6 +6,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
 use Drupal\Core\Http\ClientFactory;
+use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drush\Commands\DrushCommands;
@@ -55,18 +56,27 @@ class ReliefWebFilesCommands extends DrushCommands {
   protected $httpClientFactory;
 
   /**
+   * The state service.
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
    * {@inheritdoc}
    */
   public function __construct(
     FileSystemInterface $file_system,
     ReliefWebFileDuplicationInterface $file_duplication,
     EntityTypeManagerInterface $entity_type_manager,
+    StateInterface $state,
     Connection $database,
     ClientFactory $http_client_factory,
   ) {
     $this->fileSystem = $file_system;
     $this->fileDuplication = $file_duplication;
     $this->entityTypeManager = $entity_type_manager;
+    $this->state = $state;
     $this->database = $database;
     $this->httpClientFactory = $http_client_factory;
   }
@@ -466,6 +476,10 @@ class ReliefWebFilesCommands extends DrushCommands {
    * with a structure of: attachments/XX/YY/UUID.extension where XX and YY are
    * the first 4 characters of the UUID.
    *
+   * Use --ids to limit processing to attachments on specific report nodes.
+   * Other options (--limit, --dry-run, etc.) behave unchanged when --ids is
+   * set.
+   *
    * @param array $options
    *   Additional options for the command.
    *
@@ -473,6 +487,7 @@ class ReliefWebFilesCommands extends DrushCommands {
    *
    * @option source-url The source URL to download files from, defaults to https://reliefweb.int
    * @option limit Maximum number of files to process, defaults to 0 (all)
+   * @option ids Comma-separated report node IDs to limit downloads to (e.g. 123,124)
    * @option dry-run Show what would be downloaded without actually downloading
    * @option chunk-size Number of files to process at one time, defaults to 50
    * @option timeout HTTP timeout in seconds, defaults to 30
@@ -481,6 +496,7 @@ class ReliefWebFilesCommands extends DrushCommands {
    * @usage rw-files:download-missing-files --source-url=https://staging.reliefweb.int
    * @usage rw-files:download-missing-files --limit=100 --dry-run
    * @usage rw-files:download-missing-files --chunk-size=20 --timeout=60
+   * @usage rw-files:download-missing-files --ids=123,124 --dry-run
    *
    * @validate-module-enabled reliefweb_files
    */
@@ -488,6 +504,7 @@ class ReliefWebFilesCommands extends DrushCommands {
     array $options = [
       'source-url' => 'https://reliefweb.int',
       'limit' => 0,
+      'ids' => '',
       'dry-run' => FALSE,
       'chunk-size' => 50,
       'timeout' => 60,
@@ -500,13 +517,25 @@ class ReliefWebFilesCommands extends DrushCommands {
     $chunk_size = $options['chunk-size'] ?? 50;
     $timeout = $options['timeout'] ?? 30;
 
+    $node_ids = [];
+    if (!empty($options['ids'])) {
+      $node_ids = array_values(array_unique(array_filter(
+        array_map('intval', array_map('trim', explode(',', $options['ids'])))
+      )));
+      if (empty($node_ids)) {
+        $logger->error('No valid node IDs in --ids option.');
+        return;
+      }
+      $logger->info('Limiting to report node IDs: ' . implode(', ', $node_ids));
+    }
+
     $logger->info("Starting download of missing files from: $source_url");
     if ($dry_run) {
       $logger->notice("DRY RUN MODE - No files will be downloaded");
     }
 
     // Get missing files from database.
-    $missing_files = $this->getMissingFiles($limit);
+    $missing_files = $this->getMissingFiles($limit, $node_ids);
     $total_files = count($missing_files);
 
     if ($total_files === 0) {
@@ -564,15 +593,21 @@ class ReliefWebFilesCommands extends DrushCommands {
    *
    * @param int $limit
    *   Maximum number of files to return.
+   * @param array $node_ids
+   *   Report node IDs to limit the query to. Empty for all reports.
    *
    * @return array
    *   Array of file data with uuid, filename, filemime, uri, and expected path.
    */
-  protected function getMissingFiles(int $limit = 0): array {
+  protected function getMissingFiles(int $limit = 0, array $node_ids = []): array {
     $query = $this->database->select('node__field_file', 'nff')
       ->fields('fm', ['uuid', 'filename', 'filemime', 'uri'])
       ->condition('nff.bundle', 'report', '=')
       ->distinct();
+
+    if (!empty($node_ids)) {
+      $query->condition('nff.entity_id', $node_ids, 'IN');
+    }
 
     // Join with file_managed table to get file data from UUIDs.
     $query->join('file_managed', 'fm', 'nff.field_file_file_uuid = fm.uuid');
@@ -775,6 +810,233 @@ class ReliefWebFilesCommands extends DrushCommands {
       $logger->error("Unexpected error downloading $filename: " . $exception->getMessage());
       return 'failed';
     }
+  }
+
+  /**
+   * Generate missing PDF preview images on disk.
+   *
+   * This command queries report PDF attachments that have preview metadata in
+   * the database but whose preview PNG file is missing from the local file
+   * system. It generates the preview using mutool without updating database
+   * records.
+   *
+   * The source PDF must already exist on disk (use download-missing-files
+   * first if needed).
+   *
+   * Use --ids to limit processing to attachments on specific report nodes.
+   *
+   * @param array $options
+   *   Additional options for the command.
+   *
+   * @command rw-files:generate-missing-previews
+   *
+   * @option limit Maximum number of previews to generate, defaults to 0 (all)
+   * @option ids Comma-separated report node IDs to limit processing to (e.g. 123,124)
+   * @option dry-run Show what would be generated without actually generating
+   * @option chunk-size Number of previews to process at one time, defaults to 50
+   *
+   * @usage rw-files:generate-missing-previews
+   * @usage rw-files:generate-missing-previews --limit=100 --dry-run
+   * @usage rw-files:generate-missing-previews --ids=123,124
+   * @usage rw-files:generate-missing-previews --ids=123,124 --dry-run
+   *
+   * @validate-module-enabled reliefweb_files
+   */
+  public function generateMissingPreviews(
+    array $options = [
+      'limit' => 0,
+      'ids' => '',
+      'dry-run' => FALSE,
+      'chunk-size' => 50,
+    ],
+  ): void {
+    $logger = $this->logger();
+    $limit = $options['limit'] ?? 0;
+    $dry_run = $options['dry-run'] ?? FALSE;
+    $chunk_size = $options['chunk-size'] ?? 50;
+
+    $node_ids = [];
+    if (!empty($options['ids'])) {
+      $node_ids = array_values(array_unique(array_filter(
+        array_map('intval', array_map('trim', explode(',', $options['ids'])))
+      )));
+      if (empty($node_ids)) {
+        $logger->error('No valid node IDs in --ids option.');
+        return;
+      }
+      $logger->info('Limiting to report node IDs: ' . implode(', ', $node_ids));
+    }
+
+    $logger->info('Starting generation of missing PDF previews');
+    if ($dry_run) {
+      $logger->notice('DRY RUN MODE - No previews will be generated');
+    }
+
+    $missing_previews = $this->getMissingPreviews($limit, $node_ids);
+    $total_previews = count($missing_previews);
+
+    if ($total_previews === 0) {
+      $logger->success('No missing previews found!');
+      return;
+    }
+
+    $logger->info("Found $total_previews missing previews to generate");
+
+    $generated = 0;
+    $failed = 0;
+    $skipped = 0;
+
+    $chunks = array_chunk($missing_previews, $chunk_size);
+    foreach ($chunks as $chunk_index => $chunk) {
+      $logger->info('Processing chunk ' . ($chunk_index + 1) . '/' . count($chunks) . ' (' . count($chunk) . ' previews)');
+
+      foreach ($chunk as $preview_data) {
+        $result = $this->generatePreviewFile($preview_data, $dry_run);
+        switch ($result) {
+          case 'generated':
+            $generated++;
+            break;
+
+          case 'failed':
+            $failed++;
+            break;
+
+          case 'skipped':
+            $skipped++;
+            break;
+        }
+      }
+
+      $processed = $generated + $failed + $skipped;
+      $logger->info("Progress: $processed/$total_previews previews processed (generated: $generated, failed: $failed, skipped: $skipped)");
+    }
+
+    $logger->success("Preview generation completed! Generated: $generated, Failed: $failed, Skipped: $skipped");
+  }
+
+  /**
+   * Get list of PDF previews that are missing on disk.
+   *
+   * @param int $limit
+   *   Maximum number of previews to return.
+   * @param array $node_ids
+   *   Report node IDs to limit the query to. Empty for all reports.
+   *
+   * @return array
+   *   Array of preview data with entity_id, pdf_uri, preview_uri, page,
+   *   rotation, pdf_path, and preview_path.
+   */
+  protected function getMissingPreviews(int $limit = 0, array $node_ids = []): array {
+    $query = $this->database->select('node__field_file', 'nff')
+      ->fields('nff', [
+        'entity_id',
+        'field_file_preview_page',
+        'field_file_preview_rotation',
+        'field_file_page_count',
+      ])
+      ->condition('nff.bundle', 'report', '=')
+      ->condition('fm_pdf.filemime', 'application/pdf', '=')
+      ->isNotNull('nff.field_file_preview_uuid')
+      ->condition('nff.field_file_preview_uuid', '', '<>')
+      ->condition('nff.field_file_preview_page', 1, '>=')
+      ->distinct();
+
+    $query->join('file_managed', 'fm_pdf', 'nff.field_file_file_uuid = fm_pdf.uuid');
+    $query->join('file_managed', 'fm_preview', 'nff.field_file_preview_uuid = fm_preview.uuid');
+    $query->addField('fm_pdf', 'uri', 'pdf_uri');
+    $query->addField('fm_preview', 'uri', 'preview_uri');
+
+    if (!empty($node_ids)) {
+      $query->condition('nff.entity_id', $node_ids, 'IN');
+    }
+
+    $results = $query->execute()->fetchAll();
+    $missing_previews = [];
+
+    foreach ($results as $result) {
+      $pdf_uri = $result->pdf_uri;
+      $preview_uri = $result->preview_uri;
+
+      if (empty($pdf_uri) || empty($preview_uri)) {
+        continue;
+      }
+
+      $pdf_path = $this->fileSystem->realpath($pdf_uri);
+      if (empty($pdf_path) || !file_exists($pdf_path)) {
+        continue;
+      }
+
+      $preview_path = $this->fileSystem->realpath($preview_uri);
+      if (!empty($preview_path) && file_exists($preview_path)) {
+        continue;
+      }
+
+      $page = (int) $result->field_file_preview_page;
+      $page_count = (int) ($result->field_file_page_count ?? 0);
+      if ($page_count > 0 && $page > $page_count) {
+        $page = 1;
+      }
+
+      $rotation = (int) $result->field_file_preview_rotation;
+      if (!in_array($rotation, [0, 90, -90], TRUE)) {
+        $rotation = 0;
+      }
+
+      $missing_previews[] = [
+        'entity_id' => $result->entity_id,
+        'pdf_uri' => $pdf_uri,
+        'preview_uri' => $preview_uri,
+        'page' => $page,
+        'rotation' => $rotation,
+        'pdf_path' => $pdf_path,
+        'preview_path' => $preview_path ?: $preview_uri,
+      ];
+
+      if ($limit > 0 && count($missing_previews) >= $limit) {
+        break;
+      }
+    }
+
+    return $missing_previews;
+  }
+
+  /**
+   * Generate a single preview image on disk.
+   *
+   * @param array $preview_data
+   *   Preview data array.
+   * @param bool $dry_run
+   *   Whether this is a dry run.
+   *
+   * @return string
+   *   Result: 'generated', 'failed', or 'skipped'.
+   */
+  protected function generatePreviewFile(array $preview_data, bool $dry_run = FALSE): string {
+    $logger = $this->logger();
+    $entity_id = $preview_data['entity_id'];
+    $pdf_uri = $preview_data['pdf_uri'];
+    $preview_uri = $preview_data['preview_uri'];
+    $page = $preview_data['page'];
+    $rotation = $preview_data['rotation'];
+
+    if ($dry_run) {
+      $logger->notice("Would generate preview for node $entity_id: page $page, rotation $rotation, from $pdf_uri to $preview_uri");
+      return 'skipped';
+    }
+
+    if (ReliefWebFile::extractPreviewToUri($pdf_uri, $preview_uri, $page, $rotation)) {
+      $logger->info("Generated preview for node $entity_id: $preview_uri");
+      return 'generated';
+    }
+
+    $mutool = $this->state->get('mutool', '/usr/bin/mutool');
+    if (!is_executable($mutool)) {
+      $logger->error("Failed to generate preview for node $entity_id: mutool not found or not executable at $mutool");
+    }
+    else {
+      $logger->error("Failed to generate preview for node $entity_id from $pdf_uri to $preview_uri");
+    }
+    return 'failed';
   }
 
 }
