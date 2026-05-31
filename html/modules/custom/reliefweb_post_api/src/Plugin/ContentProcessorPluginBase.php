@@ -271,14 +271,14 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $this->setField($entity, 'field_post_api_hash', $hash);
 
     // Set the new status.
-    $status = match(TRUE) {
+    $status = match (TRUE) {
       !empty($data['status']) => $data['status'],
       default => $provider->getDefaultResourceStatus(),
     };
     $entity->setModerationStatus($status);
 
     // Set the log message based on whether it was updated or created.
-    $message = match(TRUE) {
+    $message = match (TRUE) {
       $entity->isNew() =>  'Automatic creation from Post API.',
       !empty($data['partial']) => 'Automatic partial update from Post API.',
       default => 'Automatic update from Post API.',
