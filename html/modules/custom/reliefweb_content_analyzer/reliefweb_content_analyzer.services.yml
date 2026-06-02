@@ -1,0 +1,7 @@
+services:
+  reliefweb_content_analyzer.report_series_matcher:
+    class: Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface:
+    '@reliefweb_content_analyzer.report_series_matcher'

@@ -1,0 +1,6 @@
+reliefweb_content_analyzer.settings:
+  title: 'ReliefWeb content analyzer'
+  description: 'Configure report series matching automation and matcher settings.'
+  route_name: reliefweb_content_analyzer.settings
+  parent: system.admin_config_content
+  weight: 50

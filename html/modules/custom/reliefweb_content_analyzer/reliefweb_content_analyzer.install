@@ -1,0 +1,88 @@
+<?php
+
+/**
+ * @file
+ * Install file for the reliefweb_content_analyzer module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ *
+ * Defines the reliefweb_report_series_match table for fresh installs.
+ */
+function reliefweb_content_analyzer_schema(): array {
+  $schema['reliefweb_report_series_match'] = [
+    'description' => 'Records successful report series matching on entity creation.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'entity_type_id' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'bundle' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'revision_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'series_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'tagging_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'data' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'entity' => ['entity_type_id', 'entity_id'],
+    ],
+    'indexes' => [
+      'created' => ['created'],
+      'series_confidence' => ['series_confidence'],
+      'tagging_confidence' => ['tagging_confidence'],
+    ],
+  ];
+
+  return $schema;
+}

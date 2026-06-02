@@ -1,0 +1,12 @@
+access report series matching:
+  title: 'Access report series matching'
+  description: 'Allow users to run and inspect report series matching on report nodes.'
+
+apply report series matching automation on form create:
+  title: 'Apply report series matching automation on form create'
+  description: 'When site automation for editorial form reports is enabled, run automated series matching on new report saves created via the form.'
+
+administer reliefweb content analyzer settings:
+  title: 'Administer ReliefWeb content analyzer settings'
+  description: 'Configure report series matching automation, confidence thresholds, and matcher algorithm settings.'
+  restrict access: true

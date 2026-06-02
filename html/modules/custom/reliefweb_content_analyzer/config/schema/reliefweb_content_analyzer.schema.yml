@@ -1,0 +1,130 @@
+reliefweb_content_analyzer.settings:
+  type: config_object
+  label: 'ReliefWeb content analyzer settings'
+  mapping:
+    report_series_matching:
+      type: mapping
+      label: 'Report series matching'
+      mapping:
+        workflow:
+          type: mapping
+          label: 'Report series matching workflow settings'
+          mapping:
+            automation_enabled_form_created:
+              type: boolean
+              label: 'Enable automated series matching for reports created via the editorial form'
+            automation_enabled_imported:
+              type: boolean
+              label: 'Enable automated series matching for reports submitted via the Post API or an import pipeline'
+            minimum_series_confidence:
+              type: float
+              label: 'Minimum series confidence score required to apply a series match'
+            minimum_tagging_confidence:
+              type: float
+              label: 'Minimum tagging confidence below which the tagging tier is forced to low'
+            series_confidence_tiers:
+              type: mapping
+              label: 'Series confidence tier thresholds'
+              mapping:
+                high:
+                  type: float
+                  label: 'High tier lower bound'
+                medium:
+                  type: float
+                  label: 'Medium tier lower bound'
+            tagging_confidence_tiers:
+              type: mapping
+              label: 'Tagging confidence tier thresholds'
+              mapping:
+                high:
+                  type: float
+                  label: 'High tier lower bound'
+                medium:
+                  type: float
+                  label: 'Medium tier lower bound'
+            moderation_by_outcome_tier:
+              type: mapping
+              label: 'Moderation state per outcome tier'
+              mapping:
+                low:
+                  type: string
+                  label: 'Moderation state for low outcome tier'
+                medium:
+                  type: string
+                  label: 'Moderation state for medium outcome tier'
+                high:
+                  type: string
+                  label: 'Moderation state for high outcome tier'
+            skip_series_match_moderation_statuses:
+              type: sequence
+              label: 'Moderation states at detect presave for which series matching is skipped'
+              sequence:
+                type: string
+                label: 'Moderation state machine name'
+            restrictiveness_order:
+              type: sequence
+              label: 'Ordered list of moderation states, most restrictive first'
+              sequence:
+                type: string
+                label: 'Moderation state machine name'
+        matcher:
+          type: mapping
+          label: 'Report series matcher algorithm settings'
+          mapping:
+            minimum_series_report_count:
+              type: integer
+              label: 'Minimum reports in a cluster for series confidence'
+            series_candidate_date_range_months:
+              type: integer
+              label: 'Candidate lookback window in months'
+            series_candidate_limit:
+              type: integer
+              label: 'Maximum series candidates to retrieve'
+            ai_title_source_length_limit:
+              type: integer
+              label: 'Maximum source text length for title AI generation'
+            ai_title_example_line_count:
+              type: integer
+              label: 'Number of example titles for title AI generation'
+            ai_title_description_template:
+              type: string
+              label: 'Structured output title field description template'
+            pattern_token_counts:
+              type: sequence
+              label: 'Token counts for title pattern generation'
+              sequence:
+                type: integer
+                label: 'Token count'
+            candidate_clustering_tagging_weight:
+              type: float
+              label: 'Tagging weight in candidate clustering'
+            candidate_clustering_title_weight:
+              type: float
+              label: 'Title weight in candidate clustering'
+            candidate_clustering_similarity_threshold:
+              type: float
+              label: 'Minimum combined similarity for clustering edges'
+            cluster_scoring_size_weight:
+              type: float
+              label: 'Cluster size weight in best-cluster selection'
+            cluster_scoring_pattern_score_weight:
+              type: float
+              label: 'Pattern score weight in best-cluster selection'
+            cluster_scoring_tagging_consistency_weight:
+              type: float
+              label: 'Tagging consistency weight in best-cluster selection'
+            cluster_comparison_field_names:
+              type: sequence
+              label: 'Fields used for cluster comparison'
+              sequence:
+                type: string
+                label: 'Field machine name'
+            recency_field_name:
+              type: string
+              label: 'Field used to determine candidate recency'
+            report_entity_field_names_to_copy:
+              type: sequence
+              label: 'Report fields copied from series candidates'
+              sequence:
+                type: string
+                label: 'Field machine name'
