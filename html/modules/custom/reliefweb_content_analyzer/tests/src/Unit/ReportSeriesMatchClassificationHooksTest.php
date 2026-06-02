@@ -8,9 +8,7 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
@@ -27,23 +25,10 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface;
 use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchWorkflowConfigFixture;
-use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
-
-/**
- * Combined interface for test entity mocks.
- *
- * A single createMock() target that satisfies all instanceof checks in
- * the hook class: ContentEntityInterface, EntityModeratedInterface, and
- * RevisionLogInterface.
- */
-interface SeriesMatchTestEntityInterface extends
-  ContentEntityInterface,
-  EntityModeratedInterface,
-  RevisionLogInterface {}
 
 /**
  * Tests ReportSeriesMatchClassificationHooks presave and after-save behaviors.
@@ -740,8 +725,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     );
 
     // The interim draft moderation clause is present.
-    $draft_clause = 'Moderation status: draft (original: published, '
-      . 'reason: interim while applying series tagging).';
+    $draft_clause = 'Moderation status: draft (original: published, reason: interim while applying series tagging).';
     $this->assertStringContainsString($draft_clause, $capturedMessage);
   }
 
@@ -828,8 +812,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
 
     $this->assertNotEmpty($capturedMessages);
     $final = end($capturedMessages);
-    $high_clause = 'Moderation status: to-review (original: to-review, '
-      . 'reason: high-confidence series match).';
+    $high_clause = 'Moderation status: to-review (original: to-review, reason: high-confidence series match).';
     $this->assertStringContainsString($high_clause, $final);
   }
 
@@ -870,8 +853,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     // Revision log records the actual applied status, original, and reason.
     $this->assertNotEmpty($capturedMessages);
     $final = end($capturedMessages);
-    $low_clause = 'Moderation status: pending (original: published, '
-      . 'reason: low-confidence series match).';
+    $low_clause = 'Moderation status: pending (original: published, reason: low-confidence series match).';
     $this->assertStringContainsString($low_clause, $final);
   }
 
@@ -950,24 +932,21 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
         'targetModeration' => 'published',
         'appliedModeration' => 'to-review',
         'baseline' => 'to-review',
-        'expected' => 'Moderation status: to-review (original: to-review, '
-          . 'reason: high-confidence series match).',
+        'expected' => 'Moderation status: to-review (original: to-review, reason: high-confidence series match).',
       ],
       'low tier status downgraded' => [
         'outcomeTier' => 'low',
         'targetModeration' => 'pending',
         'appliedModeration' => 'pending',
         'baseline' => 'published',
-        'expected' => 'Moderation status: pending (original: published, '
-          . 'reason: low-confidence series match).',
+        'expected' => 'Moderation status: pending (original: published, reason: low-confidence series match).',
       ],
       'medium tier status kept' => [
         'outcomeTier' => 'medium',
         'targetModeration' => 'to-review',
         'appliedModeration' => 'to-review',
         'baseline' => 'to-review',
-        'expected' => 'Moderation status: to-review (original: to-review, '
-          . 'reason: medium-confidence series match).',
+        'expected' => 'Moderation status: to-review (original: to-review, reason: medium-confidence series match).',
       ],
     ];
   }

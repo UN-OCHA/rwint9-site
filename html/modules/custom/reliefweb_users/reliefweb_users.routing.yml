@@ -4,6 +4,8 @@ user.email.confirmation:
     _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::redirectConfirmation'
     _title: 'Redirect to confirm user email'
   requirements:
+    # Public callback: access is validated by uid/timestamp/hash in controller
+    # logic.
     _access: 'TRUE'
     user: \d+
   options:
@@ -16,6 +18,8 @@ user.email.confirmation.process:
     _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::processConfirmation'
     _title: 'Confirm user email'
   requirements:
+    # Public callback: access is validated by uid/timestamp/hash in controller
+    # logic.
     _access: 'TRUE'
     user: \d+
   options:

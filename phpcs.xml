@@ -18,4 +18,8 @@
 
   <rule ref="Drupal" />
   <rule ref="DrupalPractice" />
+
+  <rule ref="Generic.PHP.DisallowShortOpenTag">
+    <exclude-pattern>*.twig</exclude-pattern>
+  </rule>
 </ruleset>

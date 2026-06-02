@@ -203,9 +203,9 @@ class SeriesMatchResultTest extends UnitTestCase {
   /**
    * Builds a passed-minimum result with specific tagging field sources.
    *
-   * @param array<string, SeriesMatchFieldUpdateSource> $fieldSources
+   * @param array<string, \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource> $fieldSources
    *   Field name → provenance enum.
-   * @param SeriesMatchTitleSource $titleSource
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $titleSource
    *   Title provenance.
    */
   private function buildResultWithTagging(
