@@ -609,6 +609,7 @@ class ReliefWebFilesCommands extends DrushCommands {
 
     // Join with file_managed table to get file data from UUIDs.
     $query->join('file_managed', 'fm', 'nff.field_file_file_uuid = fm.uuid');
+    $query->orderBy('fm.fid', 'DESC');
 
     // Don't apply limit here - we need to check all files first to find missing
     // ones.
@@ -939,6 +940,7 @@ class ReliefWebFilesCommands extends DrushCommands {
 
     $query->join('file_managed', 'fm_pdf', 'nff.field_file_file_uuid = fm_pdf.uuid');
     $query->join('file_managed', 'fm_preview', 'nff.field_file_preview_uuid = fm_preview.uuid');
+    $query->orderBy('fm_pdf.fid', 'DESC');
     $query->addField('fm_pdf', 'uri', 'pdf_uri');
     $query->addField('fm_preview', 'uri', 'preview_uri');
 
