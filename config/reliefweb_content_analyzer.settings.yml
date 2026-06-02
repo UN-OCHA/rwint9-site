@@ -1,0 +1,62 @@
+_core:
+  default_config_hash: ckusuYiKT6X2b5Y1Jvj-bbK9NtPZq2-vfEsLWZtBB6M
+report_series_matching:
+  workflow:
+    automation_enabled_form_created: true
+    automation_enabled_imported: true
+    minimum_series_confidence: 0.65
+    minimum_tagging_confidence: 0.4
+    series_confidence_tiers:
+      high: 0.8
+      medium: 0.6
+    tagging_confidence_tiers:
+      high: 0.8
+      medium: 0.6
+    moderation_by_outcome_tier:
+      low: pending
+      medium: to-review
+      high: published
+    skip_series_match_moderation_statuses:
+      - refused
+    restrictiveness_order:
+      - refused
+      - draft
+      - on-hold
+      - pending
+      - to-review
+      - embargoed
+      - reference
+      - published
+  matcher:
+    minimum_series_report_count: 3
+    series_candidate_date_range_months: 18
+    series_candidate_limit: 30
+    ai_title_source_length_limit: 2000
+    ai_title_example_line_count: 5
+    ai_title_description_template: |-
+      Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:
+      @examples
+    pattern_token_counts:
+      - 10
+      - 8
+      - 6
+      - 4
+    candidate_clustering_tagging_weight: 0.5
+    candidate_clustering_title_weight: 0.5
+    candidate_clustering_similarity_threshold: 0.6
+    cluster_scoring_size_weight: 0.3333333333
+    cluster_scoring_pattern_score_weight: 0.3333333333
+    cluster_scoring_tagging_consistency_weight: 0.3333333333
+    cluster_comparison_field_names:
+      - field_primary_country
+      - field_content_format
+      - field_language
+    recency_field_name: field_original_publication_date
+    report_entity_field_names_to_copy:
+      - field_primary_country
+      - field_country
+      - field_language
+      - field_content_format
+      - field_theme
+      - field_disaster
+      - field_disaster_type

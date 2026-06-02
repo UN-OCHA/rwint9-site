@@ -6,6 +6,7 @@ dependencies:
     - node.type.report
   module:
     - node
+    - reliefweb_content_analyzer
     - reliefweb_entities
     - reliefweb_files
     - reliefweb_moderation
@@ -17,6 +18,7 @@ is_admin: null
 permissions:
   - 'access own reliefweb private files'
   - 'apply posting rights'
+  - 'apply report series matching automation on form create'
   - 'check for duplicate files'
   - 'create report content'
   - 'edit affiliated report content'
