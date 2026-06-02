@@ -519,9 +519,7 @@ class ReliefWebFilesCommands extends DrushCommands {
 
     $node_ids = [];
     if (!empty($options['ids'])) {
-      $node_ids = array_values(array_unique(array_filter(
-        array_map('intval', array_map('trim', explode(',', $options['ids'])))
-      )));
+      $node_ids = $this->parseNodeIds($options['ids']);
       if (empty($node_ids)) {
         $logger->error('No valid node IDs in --ids option.');
         return;
@@ -857,9 +855,7 @@ class ReliefWebFilesCommands extends DrushCommands {
 
     $node_ids = [];
     if (!empty($options['ids'])) {
-      $node_ids = array_values(array_unique(array_filter(
-        array_map('intval', array_map('trim', explode(',', $options['ids'])))
-      )));
+      $node_ids = $this->parseNodeIds($options['ids']);
       if (empty($node_ids)) {
         $logger->error('No valid node IDs in --ids option.');
         return;
@@ -1037,6 +1033,27 @@ class ReliefWebFilesCommands extends DrushCommands {
       $logger->error("Failed to generate preview for node $entity_id from $pdf_uri to $preview_uri");
     }
     return 'failed';
+  }
+
+  /**
+   * Parse comma-separated report node IDs from a Drush --ids option.
+   *
+   * @param string $ids
+   *   Comma-separated IDs (e.g. "123, 124").
+   *
+   * @return int[]
+   *   Unique non-zero IDs, first occurrence order preserved.
+   */
+  protected function parseNodeIds(string $ids): array {
+    $node_ids = [];
+    foreach (explode(',', $ids) as $part) {
+      $id = trim($part);
+      // Only add positive integer IDs to the array.
+      if (!empty($id) && ctype_digit($id)) {
+        $node_ids[$id] = (int) $id;
+      }
+    }
+    return array_values($node_ids);
   }
 
 }
