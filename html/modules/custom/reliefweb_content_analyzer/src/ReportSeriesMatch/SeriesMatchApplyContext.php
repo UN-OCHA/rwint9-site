@@ -9,10 +9,10 @@ use Drupal\Core\Entity\EntityInterface;
 /**
  * Ephemeral per-request context for the two-save series match flow.
  *
- * Attached to the entity as a single dynamic property
- * (reliefweb_report_series_match_context) and carries all state needed across
- * entityPresave → entityAfterSave → entityPresaveModerationAfterPostingRights
- * → skipClassificationAlter without storing twelve individual properties.
+ * Stored in a WeakMap keyed by entity object identity and carries all state
+ * needed across entityPresave → entityAfterSave →
+ * entityPresaveModerationAfterPostingRights → skipClassificationAlter without
+ * storing twelve individual dynamic properties on the entity.
  *
  * Detect-time fields (result, outcome, revision log, pre-draft moderation) are
  * fixed at construction. Flow flags and appliedModerationStatus mutate as the
@@ -21,9 +21,11 @@ use Drupal\Core\Entity\EntityInterface;
 class SeriesMatchApplyContext {
 
   /**
-   * The entity property name used to attach and retrieve this context.
+   * Per-entity apply contexts for the current request.
+   *
+   * @var \WeakMap<\Drupal\Core\Entity\EntityInterface, self>|null
    */
-  const ENTITY_PROPERTY = 'reliefweb_report_series_match_context';
+  private static ?\WeakMap $contexts = NULL;
 
   /**
    * Whether rev 2 has been scheduled (pendingApply) and started (applying).
@@ -131,7 +133,7 @@ class SeriesMatchApplyContext {
    *   The context, or NULL if none was attached.
    */
   public static function fromEntity(EntityInterface $entity): ?self {
-    $context = $entity->{self::ENTITY_PROPERTY} ?? NULL;
+    $context = self::contexts()[$entity] ?? NULL;
     return $context instanceof self ? $context : NULL;
   }
 
@@ -144,7 +146,27 @@ class SeriesMatchApplyContext {
    *   The context to attach.
    */
   public static function attach(EntityInterface $entity, self $context): void {
-    $entity->{self::ENTITY_PROPERTY} = $context;
+    self::contexts()[$entity] = $context;
+  }
+
+  /**
+   * Removes the context for the entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity.
+   */
+  public static function detach(EntityInterface $entity): void {
+    unset(self::contexts()[$entity]);
+  }
+
+  /**
+   * Returns the per-request context WeakMap.
+   *
+   * @return \WeakMap<\Drupal\Core\Entity\EntityInterface, self>
+   *   The context WeakMap.
+   */
+  private static function contexts(): \WeakMap {
+    return self::$contexts ??= new \WeakMap();
   }
 
 }

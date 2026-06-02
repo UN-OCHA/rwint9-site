@@ -28,6 +28,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface;
+use Drupal\reliefweb_api\Indexing\ReliefWebApiIndexingSkipStore;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -119,7 +120,7 @@ final class ReportSeriesMatchClassificationHooks {
    *   publish-path side effects (pathauto, subscriptions, webhooks, OCHA
    *   classification queue, publication notification).
    * - Attaches a SeriesMatchApplyContext to the entity for entity_after_save.
-   * - Sets skip_reliefweb_api_indexing so rev 1 is not indexed in the API.
+   * - Marks the entity for skip-once API indexing so rev 1 is not indexed.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity being saved.
@@ -163,7 +164,7 @@ final class ReportSeriesMatchClassificationHooks {
     }
 
     // Skip API indexing on rev 1; rev 2 will be indexed normally.
-    $entity->skip_reliefweb_api_indexing = TRUE;
+    ReliefWebApiIndexingSkipStore::markSkip($entity);
 
     SeriesMatchApplyContext::attach(
       $entity,
@@ -243,12 +244,14 @@ final class ReportSeriesMatchClassificationHooks {
         'Series match apply save failed for node @id: @message',
         ['@id' => $entity->id(), '@message' => $exception->getMessage()],
       );
+      SeriesMatchApplyContext::detach($entity);
       return;
     }
 
     // Insert the tracking row pointing at rev 2.
     $minimum_series = $this->workflowSettings()->minimumSeriesConfidence;
     $this->insertMatchRecord($entity, $context, $minimum_series);
+    SeriesMatchApplyContext::detach($entity);
   }
 
   /**

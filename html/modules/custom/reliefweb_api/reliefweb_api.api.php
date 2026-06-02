@@ -6,12 +6,14 @@
  */
 
 /**
- * Ephemeral entity properties used when saving content for the API index.
+ * Ephemeral entity properties and stores used when saving content for the API.
  *
  * Set on the entity before save; consumed in hook_entity_after_save():
  * - $entity->needs_reindex (bool): queue batch re-indexing for the entity.
- * - $entity->skip_reliefweb_api_indexing (bool): skip indexing for this save
- *   only (index removal on entity delete is unaffected).
+ *
+ * Skip indexing for one save only (index removal on entity delete is
+ * unaffected): call ReliefWebApiIndexingSkipStore::markSkip($entity) before
+ * save; reliefweb_api consumes the flag in hook_entity_after_save().
  */
 
 /**

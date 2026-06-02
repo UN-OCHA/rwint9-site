@@ -137,6 +137,25 @@ class SeriesMatchApplyContextTest extends UnitTestCase {
   }
 
   /**
+   * Detach removes the context so fromEntity returns NULL.
+   */
+  public function testDetach(): void {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $context = SeriesMatchApplyContext::createForDetectPass(
+      $this->buildResult(),
+      $this->buildOutcome(),
+      '',
+      NULL,
+    );
+
+    SeriesMatchApplyContext::attach($entity, $context);
+    $this->assertSame($context, SeriesMatchApplyContext::fromEntity($entity));
+
+    SeriesMatchApplyContext::detach($entity);
+    $this->assertNull(SeriesMatchApplyContext::fromEntity($entity));
+  }
+
+  /**
    * RecordAppliedModerationStatus stores the final status only.
    */
   public function testRecordAppliedModerationStatus(): void {
