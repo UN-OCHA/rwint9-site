@@ -20,6 +20,9 @@ final readonly class SeriesMatchMatcherSettings {
    *   Candidate lookback window in months.
    * @param int $seriesCandidateLimit
    *   Maximum series candidates to retrieve.
+   * @param bool $aiTitleGenerationEnabled
+   *   Whether to generate report titles with AI when the import title does not
+   *   match the series pattern.
    * @param int $aiTitleSourceLengthLimit
    *   Maximum source text length for title AI generation.
    * @param int $aiTitleExampleLineCount
@@ -51,6 +54,7 @@ final readonly class SeriesMatchMatcherSettings {
     public int $minimumSeriesReportCount,
     public int $seriesCandidateDateRangeMonths,
     public int $seriesCandidateLimit,
+    public bool $aiTitleGenerationEnabled,
     public int $aiTitleSourceLengthLimit,
     public int $aiTitleExampleLineCount,
     public string $aiTitleDescriptionTemplate,
@@ -80,6 +84,7 @@ final readonly class SeriesMatchMatcherSettings {
       minimumSeriesReportCount: self::requireInt($config, 'minimum_series_report_count'),
       seriesCandidateDateRangeMonths: self::requireInt($config, 'series_candidate_date_range_months'),
       seriesCandidateLimit: self::requireInt($config, 'series_candidate_limit'),
+      aiTitleGenerationEnabled: (bool) ($config['ai_title_generation_enabled'] ?? TRUE),
       aiTitleSourceLengthLimit: self::requireInt($config, 'ai_title_source_length_limit'),
       aiTitleExampleLineCount: self::requireInt($config, 'ai_title_example_line_count'),
       aiTitleDescriptionTemplate: self::requireString($config, 'ai_title_description_template'),

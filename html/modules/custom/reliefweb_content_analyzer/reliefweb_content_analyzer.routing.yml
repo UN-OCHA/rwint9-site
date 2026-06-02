@@ -6,6 +6,14 @@ reliefweb_content_analyzer.settings:
   requirements:
     _permission: 'administer reliefweb content analyzer settings'
 
+reliefweb_content_analyzer.report_series_match_log:
+  path: '/admin/content/report-series-match-log'
+  defaults:
+    _controller: '\Drupal\reliefweb_content_analyzer\Controller\ReportSeriesMatchLogController::overview'
+    _title: 'Report series match log'
+  requirements:
+    _permission: 'view report series match log'
+
 reliefweb_content_analyzer.report_series_match:
   path: '/node/{node}/report-series-match'
   defaults:

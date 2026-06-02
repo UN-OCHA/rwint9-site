@@ -2,6 +2,10 @@ access report series matching:
   title: 'Access report series matching'
   description: 'Allow users to run and inspect report series matching on report nodes.'
 
+view report series match log:
+  title: 'View report series match log'
+  description: 'View the paginated overview of applied report series matches for editorial log review.'
+
 apply report series matching automation on form create:
   title: 'Apply report series matching automation on form create'
   description: 'When site automation for editorial form reports is enabled, run automated series matching on new report saves created via the form.'

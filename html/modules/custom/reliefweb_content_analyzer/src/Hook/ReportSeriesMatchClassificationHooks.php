@@ -15,6 +15,7 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityOwnerInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Hook\Order\OrderBefore;
@@ -30,6 +31,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface;
 use Drupal\reliefweb_api\Indexing\ReliefWebApiIndexingSkipStore;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
@@ -82,6 +84,8 @@ final class ReportSeriesMatchClassificationHooks {
    *   The OCHA content entity classifier.
    * @param \Drupal\Core\Session\AccountInterface $currentUser
    *   The current user.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -93,6 +97,7 @@ final class ReportSeriesMatchClassificationHooks {
     protected readonly ContentEntityClassifierInterface $contentEntityClassifier,
     #[Autowire(service: 'current_user')]
     protected readonly AccountInterface $currentUser,
+    protected readonly LoggerChannelFactoryInterface $loggerFactory,
   ) {
     $this->config = $config_factory->get('reliefweb_content_analyzer.settings');
   }
@@ -239,8 +244,7 @@ final class ReportSeriesMatchClassificationHooks {
       $entity->save();
     }
     catch (\Exception $exception) {
-      // @todo inject the logger factory and use it here.
-      \Drupal::logger('reliefweb_content_analyzer')->error(
+      $this->getLogger()->error(
         'Series match apply save failed for node @id: @message',
         ['@id' => $entity->id(), '@message' => $exception->getMessage()],
       );
@@ -829,6 +833,7 @@ final class ReportSeriesMatchClassificationHooks {
     $clause = match ($source) {
       SeriesMatchTitleSource::KeptOriginalPatternMatch => 'series-pattern title',
       SeriesMatchTitleSource::AiGenerated => 'AI-generated title',
+      SeriesMatchTitleSource::AiDisabled => 'title unchanged (AI disabled)',
       SeriesMatchTitleSource::FailedNoCandidateTitles => 'title not generated',
       SeriesMatchTitleSource::FailedNoSourceText => 'title not generated (no source text)',
       SeriesMatchTitleSource::FailedAi => 'title generation failed',
@@ -1030,6 +1035,16 @@ final class ReportSeriesMatchClassificationHooks {
       'cluster_score_tagging' => $evidence->clusterScoreTagging,
       'lookback_months' => $evidence->lookbackMonths,
     ];
+  }
+
+  /**
+   * Get the logger.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   The logger.
+   */
+  protected function getLogger(): LoggerInterface {
+    return $this->loggerFactory->get('reliefweb_content_analyzer');
   }
 
 }

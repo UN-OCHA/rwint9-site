@@ -71,14 +71,21 @@ final class ReportSeriesMatchForm extends FormBase {
    */
   protected function buildEntityReferenceElement(NodeInterface $node): array {
     $title_text = $node->label();
+    $node_id = $node->id();
+
     if ($title_text === '' || $title_text === NULL) {
-      $title_text = (string) $this->t('Report ID @id', [
-        '@id' => (string) ($node->id() ?? $this->t('unsaved')),
-      ]);
+      $title_text = match ($node_id) {
+        NULL => $this->t('Unsaved report'),
+        default => $this->t('Report ID @node_id', ['@node_id' => $node_id]),
+      };
     }
 
     return [
-      '#markup' => '<p><strong>' . Html::escape((string) $this->t('Title')) . ':</strong> ' . Html::escape((string) $title_text) . '</p>',
+      '#type' => 'inline_template',
+      '#template' => '<p><strong>{% trans %}Title{% endtrans %}:</strong> {{ title }}</p>',
+      '#context' => [
+        'title' => (string) $title_text,
+      ],
     ];
   }
 
@@ -141,29 +148,7 @@ final class ReportSeriesMatchForm extends FormBase {
     );
     $outcome = SeriesMatchOutcome::resolve($result, $workflow);
 
-    $description_parts = [$this->t('Series candidate reports for this content.')];
-    if ($outcome !== NULL) {
-      $description_parts[] = $this->t('Series: @series_confidence%  Tagging: @tagging_confidence%  Outcome: @outcome_tier  Projected moderation: @status', [
-        '@series_confidence' => number_format($outcome->seriesConfidence * 100, 1),
-        '@tagging_confidence' => number_format($outcome->taggingConfidence * 100, 1),
-        '@outcome_tier' => $outcome->outcomeTier,
-        '@status' => $outcome->targetModerationStatus,
-      ]);
-    }
-    else {
-      $series_confidence = $result->calculateSeriesConfidence();
-      $tagging_confidence = $result->calculateTaggingConfidence();
-      if ($series_confidence !== NULL || $tagging_confidence !== NULL) {
-        $description_parts[] = $this->t('Series: @series_confidence%  Tagging: @tagging_confidence%', [
-          '@series_confidence' => $series_confidence !== NULL ? number_format($series_confidence * 100, 1) . '%' : $this->t('n/a'),
-          '@tagging_confidence' => $tagging_confidence !== NULL ? number_format($tagging_confidence * 100, 1) . '%' : $this->t('n/a'),
-        ]);
-      }
-    }
-
-    $form['description'] = [
-      '#markup' => '<p>' . implode(' ', array_map('strval', $description_parts)) . '</p>',
-    ];
+    $form['description'] = $this->buildResultsDescription($result, $outcome);
 
     $form['proposed_updates'] = $this->buildUpdatedFieldsDetails($result);
     if ($result->debug !== NULL) {
@@ -188,6 +173,42 @@ final class ReportSeriesMatchForm extends FormBase {
     ];
 
     return $form;
+  }
+
+  /**
+   * Builds the results page description from match outcome data.
+   */
+  protected function buildResultsDescription(SeriesMatchResult $result, ?SeriesMatchOutcome $outcome): array {
+    if ($outcome !== NULL) {
+      return [
+        '#type' => 'inline_template',
+        '#template' => '<p>{% trans %}Series candidate reports found for this content.</p><p><strong>Series:</strong> {{ series_confidence }}% - <strong>Tagging:</strong> {{ tagging_confidence }}% - <strong>Outcome:</strong> {{ outcome_tier }} - <strong>Projected moderation:</strong> {{ status }}{% endtrans %}</p>',
+        '#context' => [
+          'series_confidence' => number_format($outcome->seriesConfidence * 100, 1),
+          'tagging_confidence' => number_format($outcome->taggingConfidence * 100, 1),
+          'outcome_tier' => $outcome->outcomeTier,
+          'status' => $outcome->targetModerationStatus,
+        ],
+      ];
+    }
+
+    $series_confidence = $result->calculateSeriesConfidence();
+    $tagging_confidence = $result->calculateTaggingConfidence();
+    if ($series_confidence === NULL && $tagging_confidence === NULL) {
+      return [
+        '#type' => 'inline_template',
+        '#template' => '<p>{% trans %}No series candidate reports found for this content.{% endtrans %}</p>',
+      ];
+    }
+
+    return [
+      '#type' => 'inline_template',
+      '#template' => '<p>{% trans %}Series candidate reports found for this content.</p><p><strong>Series:</strong> {{ series_confidence }} - <strong>Tagging:</strong> {{ tagging_confidence }}{% endtrans %}</p>',
+      '#context' => [
+        'series_confidence' => $series_confidence !== NULL ? number_format($series_confidence * 100, 1) . '%' : 'n/a',
+        'tagging_confidence' => $tagging_confidence !== NULL ? number_format($tagging_confidence * 100, 1) . '%' : 'n/a',
+      ],
+    ];
   }
 
   /**
@@ -299,6 +320,7 @@ final class ReportSeriesMatchForm extends FormBase {
     $label = match ($title_source) {
       SeriesMatchTitleSource::KeptOriginalPatternMatch => (string) $this->t('Kept original (matches candidate pattern)'),
       SeriesMatchTitleSource::AiGenerated => (string) $this->t('AI generated'),
+      SeriesMatchTitleSource::AiDisabled => (string) $this->t('AI title generation disabled'),
       SeriesMatchTitleSource::FailedNoCandidateTitles => (string) $this->t('Failed: no candidate titles'),
       SeriesMatchTitleSource::FailedNoSourceText => (string) $this->t('Failed: no source text'),
       SeriesMatchTitleSource::FailedAi => (string) $this->t('Failed: AI error'),
@@ -342,9 +364,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
     $this->appendDebugRows($rows, $debug, $evidence, $status, $proposal);
 
-    $dl = '';
+    $items = [];
     foreach ($rows as [$label, $value]) {
-      $dl .= '<dt>' . Html::escape((string) $label) . '</dt><dd>' . Html::escape((string) $value) . '</dd>';
+      $items[] = [
+        'label' => (string) $label,
+        'value' => (string) $value,
+      ];
     }
 
     return [
@@ -352,7 +377,11 @@ final class ReportSeriesMatchForm extends FormBase {
       '#title' => $this->t('Match diagnostics'),
       '#open' => FALSE,
       'content' => [
-        '#markup' => '<dl class="reliefweb-series-match-diagnostics">' . $dl . '</dl>',
+        '#type' => 'inline_template',
+        '#template' => '<dl class="reliefweb-series-match-diagnostics">{% for item in items %}<dt>{{ item.label }}</dt><dd>{{ item.value }}</dd>{% endfor %}</dl>',
+        '#context' => [
+          'items' => $items,
+        ],
       ],
     ];
   }

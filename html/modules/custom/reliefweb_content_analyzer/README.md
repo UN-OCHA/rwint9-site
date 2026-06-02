@@ -13,6 +13,8 @@ The final moderation status is adjusted based on confidence: a high-confidence m
 
 Inspect the match result on the **Report series matching** tab of any report: `/node/{nid}/report-series-match` (requires the `access report series matching` permission).
 
+Review applied matches on the **Report series match log** page: `/admin/content/report-series-match-log` (requires the `view report series match log` permission).
+
 ### For site administrators
 
 Configure automation, confidence thresholds, and matching parameters at `/admin/config/content/reliefweb-content-analyzer` (requires `administer reliefweb content analyzer settings`).

@@ -11,6 +11,7 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\FieldItemListInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_content_analyzer\Hook\ReportSeriesMatchClassificationHooks;
@@ -29,6 +30,7 @@ use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchWorkflowConf
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -95,6 +97,9 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     ?ContentEntityClassifierInterface $classifier = NULL,
     ?AccountInterface $account = NULL,
   ): ReportSeriesMatchClassificationHooks {
+    $logger_factory = $this->createStub(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($this->createStub(LoggerInterface::class));
+
     return new ReportSeriesMatchClassificationHooks(
       $this->buildConfigFactory($config_values),
       $matcher ?? $this->createStub(ReportSeriesMatcherInterface::class),
@@ -103,6 +108,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
       $this->createStub(TimeInterface::class),
       $classifier ?? $this->createStub(ContentEntityClassifierInterface::class),
       $account ?? $this->buildAccountWithFormAutomationPermission(),
+      $logger_factory,
     );
   }
 

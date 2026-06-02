@@ -29,6 +29,7 @@ report_series_matching:
     minimum_series_report_count: 3
     series_candidate_date_range_months: 18
     series_candidate_limit: 30
+    ai_title_generation_enabled: true
     ai_title_source_length_limit: 2000
     ai_title_example_line_count: 5
     ai_title_description_template: "Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:\n@examples"

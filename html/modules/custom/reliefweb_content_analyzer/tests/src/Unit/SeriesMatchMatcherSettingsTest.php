@@ -25,6 +25,7 @@ class SeriesMatchMatcherSettingsTest extends UnitTestCase {
       SeriesMatchMatcherConfigFixture::defaults(),
     );
 
+    $this->assertTrue($settings->aiTitleGenerationEnabled);
     $this->assertSame(30, $settings->seriesCandidateLimit);
     $this->assertSame(18, $settings->seriesCandidateDateRangeMonths);
     $this->assertSame([10, 8, 6, 4], $settings->patternTokenCounts);
@@ -36,6 +37,17 @@ class SeriesMatchMatcherSettingsTest extends UnitTestCase {
       'field_primary_country',
       $settings->reportEntityFieldNamesToCopy,
     );
+  }
+
+  /**
+   * Omitted ai_title_generation_enabled defaults to enabled.
+   */
+  public function testAiTitleGenerationEnabledDefaultsTrue(): void {
+    $config = SeriesMatchMatcherConfigFixture::defaults();
+    unset($config['ai_title_generation_enabled']);
+
+    $settings = SeriesMatchMatcherSettings::fromConfigArray($config);
+    $this->assertTrue($settings->aiTitleGenerationEnabled);
   }
 
   /**

@@ -2052,6 +2052,14 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
+    if (!$this->matcherSettings()->aiTitleGenerationEnabled) {
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::AiDisabled,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
     return $this->generateReportTitleWithAi($entity, $candidate_titles);
   }
 

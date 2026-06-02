@@ -11,6 +11,7 @@ enum SeriesMatchTitleSource: string {
 
   case KeptOriginalPatternMatch = 'kept_original_pattern_match';
   case AiGenerated = 'ai_generated';
+  case AiDisabled = 'ai_disabled';
   case FailedNoCandidateTitles = 'failed_no_candidate_titles';
   case FailedNoSourceText = 'failed_no_source_text';
   case FailedAi = 'failed_ai';

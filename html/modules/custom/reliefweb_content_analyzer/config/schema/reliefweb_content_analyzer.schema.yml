@@ -80,6 +80,9 @@ reliefweb_content_analyzer.settings:
             series_candidate_limit:
               type: integer
               label: 'Maximum series candidates to retrieve'
+            ai_title_generation_enabled:
+              type: boolean
+              label: 'Enable AI title generation for report series matching'
             ai_title_source_length_limit:
               type: integer
               label: 'Maximum source text length for title AI generation'

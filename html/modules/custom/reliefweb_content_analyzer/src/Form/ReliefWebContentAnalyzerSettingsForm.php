@@ -242,6 +242,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['matcher']['ai_title_generation_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable AI title generation'),
+      '#description' => $this->t('When disabled, import titles that do not already match the series pattern are left unchanged.'),
+      '#default_value' => $matcher['ai_title_generation_enabled'] ?? TRUE,
+    ];
+
     $form['matcher']['ai_title_source_length_limit'] = [
       '#type' => 'number',
       '#title' => $this->t('AI title source text length limit'),
@@ -503,6 +510,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'minimum_series_report_count' => (int) $matcher_values['minimum_series_report_count'],
       'series_candidate_date_range_months' => (int) $matcher_values['series_candidate_date_range_months'],
       'series_candidate_limit' => (int) $matcher_values['series_candidate_limit'],
+      'ai_title_generation_enabled' => (bool) $matcher_values['ai_title_generation_enabled'],
       'ai_title_source_length_limit' => (int) $matcher_values['ai_title_source_length_limit'],
       'ai_title_example_line_count' => (int) $matcher_values['ai_title_example_line_count'],
       'ai_title_description_template' => (string) $matcher_values['ai_title_description_template'],
