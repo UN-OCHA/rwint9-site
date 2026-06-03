@@ -532,6 +532,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
 
   /**
    * Validates a value is within the unit interval.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param string[] $parents
+   *   Form value parents for the element being validated.
+   * @param string $message
+   *   Error message when the value is out of range.
    */
   private function validateUnitInterval(
     FormStateInterface $form_state,
@@ -577,6 +584,9 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
   /**
    * Parses comma-separated pattern token counts.
    *
+   * @param string $raw
+   *   Comma-separated token count string from the form.
+   *
    * @return int[]|null
    *   Parsed counts, or NULL when invalid.
    */
@@ -600,6 +610,9 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
    *
    * @param string[] $sequence
    *   Config sequence values.
+   *
+   * @return string
+   *   Newline-separated lines for textarea display.
    */
   private function sequenceToLines(array $sequence): string {
     return implode("\n", $sequence);
@@ -607,6 +620,9 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
 
   /**
    * Converts textarea lines to a trimmed config sequence.
+   *
+   * @param string $raw
+   *   Raw textarea value from the form.
    *
    * @return string[]
    *   Non-empty trimmed lines.

@@ -402,6 +402,9 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
 
   /**
    * Returns typed matcher settings loaded from config.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchMatcherSettings
+   *   Matcher settings from reliefweb_content_analyzer.settings.
    */
   protected function matcherSettings(): SeriesMatchMatcherSettings {
     return $this->matcherSettings ??= SeriesMatchMatcherSettings::fromConfigArray(

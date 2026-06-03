@@ -166,6 +166,9 @@ class SeriesMatchResultTest extends UnitTestCase {
 
   /**
    * Data provider: all failed/skipped title sources that map to band 0.25.
+   *
+   * @return array<string, array{0: \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource}>
+   *   Title source enum cases for failed title scoring.
    */
   public static function failedTitleSourceProvider(): array {
     return [
@@ -178,6 +181,20 @@ class SeriesMatchResultTest extends UnitTestCase {
 
   /**
    * Builds a passed-minimum result with specific evidence values.
+   *
+   * @param float $bestClusterShare
+   *   Best cluster share for series scoring.
+   * @param float $clusterScore
+   *   Composite cluster score.
+   * @param int $clusterCount
+   *   Number of clusters.
+   * @param int $bothSignalsCount
+   *   Candidates matching both title and URL signals.
+   * @param int $mergedAfterLimitCount
+   *   Candidate count after applying the retrieval limit.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
+   *   Result with the given evidence values.
    */
   private function buildResultWithEvidence(
     float $bestClusterShare,
@@ -207,6 +224,9 @@ class SeriesMatchResultTest extends UnitTestCase {
    *   Field name → provenance enum.
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $titleSource
    *   Title provenance.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
+   *   Result with the given tagging field sources and title source.
    */
   private function buildResultWithTagging(
     array $fieldSources,

@@ -114,6 +114,9 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
 
   /**
    * Builds an account stub that grants form-created automation permission.
+   *
+   * @return \Drupal\Core\Session\AccountInterface
+   *   Account stub granting form automation permission only.
    */
   private function buildAccountWithFormAutomationPermission(): AccountInterface {
     $account = $this->createStub(AccountInterface::class);
@@ -125,6 +128,9 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
 
   /**
    * Builds an account stub that denies all permissions.
+   *
+   * @return \Drupal\Core\Session\AccountInterface
+   *   Account stub that denies every permission check.
    */
   private function buildAccountWithoutPermissions(): AccountInterface {
     $account = $this->createStub(AccountInterface::class);

@@ -31,6 +31,15 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Constructs a ReportSeriesMatchForm.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface $reportSeriesMatcher
+   *   Series matcher service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   Entity type manager for loading candidates and terms.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   Field manager for report field labels and definitions.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
+   *   Date formatter for candidate created dates.
    */
   public function __construct(
     protected ReportSeriesMatcherInterface $reportSeriesMatcher,
@@ -60,6 +69,9 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Gets the node from the route.
+   *
+   * @return \Drupal\node\NodeInterface|null
+   *   The report node from the route, or NULL when missing or wrong type.
    */
   protected function getNodeFromRoute(): ?NodeInterface {
     $node = $this->getRouteMatch()->getParameter('node');
@@ -68,6 +80,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Builds a short line with the entity title for page context.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The report node being matched.
+   *
+   * @return array
+   *   Render array for the entity context line.
    */
   protected function buildEntityReferenceElement(NodeInterface $node): array {
     $title_text = $node->label();
@@ -133,6 +151,18 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Builds the results view after matching has run.
+   *
+   * @param array $form
+   *   The form structure.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param \Drupal\node\NodeInterface $node
+   *   The report node being matched.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result to display.
+   *
+   * @return array
+   *   Form render array for the results view.
    */
   protected function buildResultsForm(
     array $form,
@@ -177,6 +207,14 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Builds the results page description from match outcome data.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome|null $outcome
+   *   Resolved outcome when workflow settings allow scoring.
+   *
+   * @return array
+   *   Render array for the results description.
    */
   protected function buildResultsDescription(SeriesMatchResult $result, ?SeriesMatchOutcome $outcome): array {
     if ($outcome !== NULL) {
@@ -213,6 +251,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Renders series candidates as a collapsible details element.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return array
+   *   Render array for the candidates details element.
    */
   protected function buildCandidatesDetails(SeriesMatchResult $result): array {
     $candidate_ids = $result->evidence->candidateIds;
@@ -263,6 +307,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Renders proposed updated fields as a collapsible details element.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return array
+   *   Render array for the proposed updates details element.
    */
   protected function buildUpdatedFieldsDetails(SeriesMatchResult $result): array {
     $rows = [];
@@ -289,6 +339,14 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Human-readable provenance for a proposed field update.
+   *
+   * @param string $field_name
+   *   Field machine name.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return string
+   *   Human-readable source label.
    */
   protected function formatFieldUpdateSource(string $field_name, SeriesMatchResult $result): string {
     if ($field_name === 'title') {
@@ -310,6 +368,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Human-readable title decision including AI duration when applicable.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return string
+   *   Human-readable title source label.
    */
   protected function formatTitleSource(SeriesMatchResult $result): string {
     $title_source = $result->proposal->titleSource;
@@ -337,6 +401,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Renders match diagnostics as a collapsible details element.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return array
+   *   Render array for the diagnostics details element, or empty when no debug.
    */
   protected function buildDiagnosticsDetails(SeriesMatchResult $result): array {
     $debug = $result->debug;
@@ -543,6 +613,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Gets the report field label from field definitions.
+   *
+   * @param string $field_name
+   *   Field machine name.
+   *
+   * @return string
+   *   Field label or machine name when undefined.
    */
   protected function getReportFieldLabel(string $field_name): string {
     if ($field_name === 'title') {
@@ -564,6 +640,9 @@ final class ReportSeriesMatchForm extends FormBase {
    *   Field machine name.
    * @param null|string|string[]|int[] $value
    *   Suggested value.
+   *
+   * @return string
+   *   Formatted value for display.
    */
   protected function formatUpdatedFieldValue(string $field_name, null|string|array $value): string {
     if ($value === NULL) {
@@ -587,6 +666,12 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Checks if the given report field references taxonomy terms.
+   *
+   * @param string $field_name
+   *   Field machine name.
+   *
+   * @return bool
+   *   TRUE when the field is a taxonomy term reference.
    */
   protected function isTaxonomyReferenceField(string $field_name): bool {
     $definitions = $this->entityFieldManager->getFieldDefinitions('node', 'report');
@@ -620,6 +705,11 @@ final class ReportSeriesMatchForm extends FormBase {
 
   /**
    * Clears stored results so the user can run matching again.
+   *
+   * @param array $form
+   *   The form structure.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
   public function resetMatching(array &$form, FormStateInterface $form_state): void {
     $form_state->set('match_result', NULL);

@@ -29,6 +29,9 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    *
    * @param array<string, mixed> $matcher_overrides
    *   Values to merge over the default matcher config.
+   *
+   * @return \Drupal\Core\Config\ConfigFactoryInterface
+   *   Config factory stub returning matcher settings.
    */
   private function buildConfigFactory(array $matcher_overrides = []): ConfigFactoryInterface {
     $matcher = array_merge(SeriesMatchMatcherConfigFixture::defaults(), $matcher_overrides);
@@ -52,6 +55,9 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    *
    * @param array<string, mixed> $matcher_overrides
    *   Optional overrides for matcher config.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher
+   *   Matcher with stubbed dependencies.
    */
   private function buildMatcher(array $matcher_overrides = []): ReportSeriesMatcher {
     return new ReportSeriesMatcher(
@@ -84,6 +90,16 @@ class ReportSeriesMatcherTest extends UnitTestCase {
 
   /**
    * Invokes a protected method on a specific matcher instance.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher $matcher
+   *   Matcher instance to invoke on.
+   * @param string $method_name
+   *   Method name.
+   * @param mixed ...$args
+   *   Method arguments.
+   *
+   * @return mixed
+   *   Method return value.
    */
   private function invokeProtectedWithMatcher(
     ReportSeriesMatcher $matcher,

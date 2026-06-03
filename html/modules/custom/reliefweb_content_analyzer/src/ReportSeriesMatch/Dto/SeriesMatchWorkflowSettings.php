@@ -53,6 +53,9 @@ final readonly class SeriesMatchWorkflowSettings {
    *
    * @throws \InvalidArgumentException
    *   When a required key is missing or has an invalid type.
+   *
+   * @return self
+   *   Typed workflow settings instance.
    */
   public static function fromConfigArray(array $config): self {
     return new self(
@@ -75,6 +78,9 @@ final readonly class SeriesMatchWorkflowSettings {
    *   Raw workflow config.
    * @param string $key
    *   Config key.
+   *
+   * @return bool
+   *   Parsed boolean value.
    */
   private static function requireBool(array $config, string $key): bool {
     if (!array_key_exists($key, $config)) {
@@ -93,6 +99,9 @@ final readonly class SeriesMatchWorkflowSettings {
    *   Raw workflow config.
    * @param string $key
    *   Config key.
+   *
+   * @return float
+   *   Parsed float value.
    */
   private static function requireFloat(array $config, string $key): float {
     if (!array_key_exists($key, $config)) {

@@ -25,6 +25,11 @@ final class ReportSeriesMatchLogController extends ControllerBase {
 
   /**
    * Constructs a ReportSeriesMatchLogController.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   Database connection for match log queries.
+   * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
+   *   Date formatter for recorded timestamps.
    */
   public function __construct(
     protected Connection $database,
@@ -244,6 +249,12 @@ final class ReportSeriesMatchLogController extends ControllerBase {
 
   /**
    * Formats a confidence score as a percentage string.
+   *
+   * @param float $confidence
+   *   Confidence score between 0.0 and 1.0.
+   *
+   * @return string
+   *   Percentage string with one decimal place.
    */
   protected function formatConfidence(float $confidence): string {
     return number_format($confidence * 100, 1) . '%';
@@ -254,6 +265,9 @@ final class ReportSeriesMatchLogController extends ControllerBase {
    *
    * @param array<string, mixed> $data
    *   Decoded record payload.
+   *
+   * @return string
+   *   Outcome tier label or "n/a".
    */
   protected function formatOutcome(array $data): string {
     $tier = $data['outcome_tier'] ?? NULL;
@@ -269,6 +283,9 @@ final class ReportSeriesMatchLogController extends ControllerBase {
    *
    * @param array<string, mixed> $data
    *   Decoded record payload.
+   *
+   * @return string
+   *   Applied or target moderation status label.
    */
   protected function formatModeration(array $data): string {
     $applied = $data['applied_moderation_status'] ?? NULL;
@@ -288,6 +305,9 @@ final class ReportSeriesMatchLogController extends ControllerBase {
    *
    * @param array<string, mixed> $data
    *   Decoded record payload.
+   *
+   * @return string
+   *   Whether AI generated the title, with duration when available.
    */
   protected function formatAiTitle(array $data): string {
     $proposal = $data['proposal'] ?? NULL;
@@ -315,6 +335,9 @@ final class ReportSeriesMatchLogController extends ControllerBase {
    *
    * @param array<string, mixed> $data
    *   Decoded record payload.
+   *
+   * @return string
+   *   Cluster size and lookback summary, or "n/a".
    */
   protected function formatCandidateSummary(array $data): string {
     $evidence = $data['evidence'] ?? NULL;

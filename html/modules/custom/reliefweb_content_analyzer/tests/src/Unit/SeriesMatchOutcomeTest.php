@@ -66,6 +66,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
 
   /**
    * Data provider for tier mapping tests.
+   *
+   * @return array<string, array{0: float, 1: float, 2: string, 3: string}>
+   *   Series score, tagging score, expected series tier, expected tagging tier.
    */
   public static function tierProvider(): array {
     return [
@@ -96,6 +99,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
 
   /**
    * Data provider for outcome tier matrix tests.
+   *
+   * @return array<string, array{0: float, 1: float, 2: string, 3: string}>
+   *   Series score, tagging score, expected outcome tier, expected moderation.
    */
   public static function outcomeTierMatrixProvider(): array {
     return [
@@ -156,6 +162,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
 
   /**
    * Data provider for moreRestrictiveStatus tests.
+   *
+   * @return array<string, array{0: string, 1: string, 2: string}>
+   *   Current status, proposed status, expected more restrictive status.
    */
   public static function restrictiveStatusProvider(): array {
     return [
@@ -248,6 +257,14 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
    *
    * Constructs evidence and a proposal whose calculateSeriesConfidence() and
    * calculateTaggingConfidence() will return the requested values exactly.
+   *
+   * @param float $series
+   *   Target series confidence score.
+   * @param float $tagging
+   *   Target tagging confidence score.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
+   *   Result with evidence and proposal tuned to the requested scores.
    */
   private function buildResult(float $series, float $tagging): SeriesMatchResult {
     // Evidence values yielding the requested series score.
@@ -292,6 +309,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
 
   /**
    * Builds the UNHCR fixture result.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
+   *   UNHCR-style high-confidence match result.
    */
   private function buildUnhcrResult(): SeriesMatchResult {
     return new SeriesMatchResult(

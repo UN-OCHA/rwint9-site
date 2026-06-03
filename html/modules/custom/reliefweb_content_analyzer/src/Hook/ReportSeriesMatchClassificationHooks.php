@@ -104,6 +104,9 @@ final class ReportSeriesMatchClassificationHooks {
 
   /**
    * Returns typed workflow settings loaded from config.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings
+   *   Workflow settings from reliefweb_content_analyzer.settings.
    */
   protected function workflowSettings(): SeriesMatchWorkflowSettings {
     return $this->workflowSettings ??= SeriesMatchWorkflowSettings::fromConfigArray(

@@ -78,6 +78,9 @@ final readonly class SeriesMatchMatcherSettings {
    *
    * @throws \InvalidArgumentException
    *   When a required key is missing or has an invalid type.
+   *
+   * @return self
+   *   Typed matcher settings instance.
    */
   public static function fromConfigArray(array $config): self {
     return new self(
@@ -108,6 +111,9 @@ final readonly class SeriesMatchMatcherSettings {
    *   Raw matcher config.
    * @param string $key
    *   Config key.
+   *
+   * @return int
+   *   Parsed integer value.
    */
   private static function requireInt(array $config, string $key): int {
     if (!array_key_exists($key, $config)) {
@@ -126,6 +132,9 @@ final readonly class SeriesMatchMatcherSettings {
    *   Raw matcher config.
    * @param string $key
    *   Config key.
+   *
+   * @return float
+   *   Parsed float value.
    */
   private static function requireFloat(array $config, string $key): float {
     if (!array_key_exists($key, $config)) {
@@ -144,6 +153,9 @@ final readonly class SeriesMatchMatcherSettings {
    *   Raw matcher config.
    * @param string $key
    *   Config key.
+   *
+   * @return string
+   *   Parsed string value.
    */
   private static function requireString(array $config, string $key): string {
     if (!array_key_exists($key, $config)) {
