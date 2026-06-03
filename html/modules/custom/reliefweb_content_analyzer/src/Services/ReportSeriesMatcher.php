@@ -1416,6 +1416,66 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
+   * Returns a regex-safe alternation of month names.
+   *
+   * Includes full and abbreviated names in English, French, Spanish, Russian,
+   * Chinese, and Arabic. Built once per request.
+   *
+   * @return string
+   *   A regex-safe alternation of month names.
+   */
+  private static function getDateLikePatternMonthAlternation(): string {
+    static $alternation = NULL;
+    if ($alternation !== NULL) {
+      return $alternation;
+    }
+
+    $names = [
+      // English full.
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December',
+      // English abbreviated.
+      'Jan', 'Feb', 'Mar', 'Apr', 'Jun', 'Jul', 'Aug',
+      'Sep', 'Sept', 'Oct', 'Nov', 'Dec',
+      // French full.
+      'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+      'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre',
+      // French abbreviated.
+      'janv.', 'févr.', 'avr.', 'juil.', 'sept.', 'oct.', 'nov.', 'déc.',
+      // Spanish full.
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+      // Spanish abbreviated.
+      'ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.',
+      'jul.', 'ago.', 'dic.',
+      // Russian nominative.
+      'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
+      'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь',
+      // Russian genitive (e.g. "27 апреля 2026").
+      'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+      'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+      // Chinese full and numeric month.
+      '一月', '二月', '三月', '四月', '五月', '六月',
+      '七月', '八月', '九月', '十月', '十一月', '十二月',
+      '1月', '2月', '3月', '4月', '5月', '6月',
+      '7月', '8月', '9月', '10月', '11月', '12月',
+      // Arabic.
+      'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+      'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر',
+    ];
+
+    $names = array_values(array_unique($names));
+    usort($names, static fn(string $a, string $b): int => strlen($b) <=> strlen($a));
+
+    $alternation = implode('|', array_map(
+      static fn(string $name): string => preg_quote($name, '/'),
+      $names,
+    ));
+
+    return $alternation;
+  }
+
+  /**
    * Convert a string to a SQL LIKE pattern.
    *
    * Escapes the string for SQL LIKE and replaces variable date and number parts
@@ -1433,20 +1493,30 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     // Escape the string for SQL LIKE.
     $string = $this->database->escapeLike($string);
 
-    // @todo expand to support other languages and short month names.
-    $months = 'January|February|March|April|May|June|July|August|September|October|November|December';
+    $months = self::getDateLikePatternMonthAlternation();
+    $optional_de = '(?:de\s+)?';
+    $optional_le = '(?:le\s+)?';
+    $optional_fi = '(?:في\s+)?';
+    $day = '(?:1er|1ère|1e|\d{1,2})';
 
     // Date and number replacements.
     $replacements = [
       // Date patterns (most specific first).
+      // Chinese: 2026年4月27日 (no leading \b — CJK text may appear directly
+      // before the year).
+      '/(?<![0-9])\d{4}年\d{1,2}月\d{1,2}日/u' => $wildcard,
+
+      // Chinese: 2026年4月 or 2026年十二月.
+      '/(?<![0-9])\d{4}年(?:' . $months . '|\d{1,2}月)/u' => $wildcard,
+
       // Numeric day range + month + year: "02 - 06 May 2026".
-      '/\b\d{1,2}\s*[-–—]\s*\d{1,2}\s+(?:' . $months . ')\s+\d{4}\b/iu' => $wildcard,
+      '/\b\d{1,2}\s*[-–—]\s*\d{1,2}\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
-      // Day + month name + year: "27 April 2026".
-      '/\b\d{1,2}\s+(?:' . $months . ')\s+\d{4}\b/iu' => $wildcard,
+      // Day + month name + year: "27 April 2026", "le 1er avril 2026".
+      '/\b' . $optional_le . $optional_fi . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
-      // Month name + year: "December 2025".
-      '/\b(?:' . $months . ')\s+\d{4}\b/iu' => $wildcard,
+      // Month name + year: "December 2025", "diciembre de 2025".
+      '/\b(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
       // Numeric dates: 2026-04-27, 27/04/2026, 27.04.2026.
       '/\b\d{1,4}[-\/\.]\d{1,2}[-\/\.]\d{2,4}\b/u' => $wildcard,
