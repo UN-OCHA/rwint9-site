@@ -14038,16 +14038,16 @@
         },
         {
             "name": "unocha/ocha_ai",
-            "version": "v1.20.0",
+            "version": "v1.21.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/ocha_ai.git",
-                "reference": "7f95809102a852fcdfd608c569dd55ef15bd1a9d"
+                "reference": "5323ea0d9b47a12afb790bb80f0e38390f31375d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/7f95809102a852fcdfd608c569dd55ef15bd1a9d",
-                "reference": "7f95809102a852fcdfd608c569dd55ef15bd1a9d",
+                "url": "https://api.github.com/repos/UN-OCHA/ocha_ai/zipball/5323ea0d9b47a12afb790bb80f0e38390f31375d",
+                "reference": "5323ea0d9b47a12afb790bb80f0e38390f31375d",
                 "shasum": ""
             },
             "require": {
@@ -14077,9 +14077,9 @@
             "description": "OCHA AI module",
             "support": {
                 "issues": "https://github.com/UN-OCHA/ocha_ai/issues",
-                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.20.0"
+                "source": "https://github.com/UN-OCHA/ocha_ai/tree/v1.21.0"
             },
-            "time": "2026-04-08T01:41:29+00:00"
+            "time": "2026-06-04T08:15:53+00:00"
         },
         {
             "name": "unocha/ocha_content_classification",
