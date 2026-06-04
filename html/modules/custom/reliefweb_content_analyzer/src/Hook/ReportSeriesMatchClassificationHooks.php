@@ -833,16 +833,11 @@ final class ReportSeriesMatchClassificationHooks {
     ?SeriesMatchTitleSource $source,
     ?float $title_ai_duration_seconds = NULL,
   ): string {
-    $clause = match ($source) {
-      SeriesMatchTitleSource::KeptOriginalPatternMatch => 'series-pattern title',
-      SeriesMatchTitleSource::AiGenerated => 'AI-generated title',
-      SeriesMatchTitleSource::AiDisabled => 'title unchanged (AI disabled)',
-      SeriesMatchTitleSource::FailedNoCandidateTitles => 'title not generated',
-      SeriesMatchTitleSource::FailedNoSourceText => 'title not generated (no source text)',
-      SeriesMatchTitleSource::FailedAi => 'title generation failed',
-      SeriesMatchTitleSource::FailedEmptyAiOutput => 'title generation failed (empty output)',
-      default => 'title unchanged',
-    };
+    if ($source === NULL) {
+      return 'title unchanged';
+    }
+
+    $clause = $source->revisionLogClause();
 
     if ($source === SeriesMatchTitleSource::AiGenerated
       && $title_ai_duration_seconds !== NULL) {

@@ -93,7 +93,7 @@ final class ReportSeriesMatchLogController extends ControllerBase {
       $this->t('Tagging'),
       $this->t('Outcome'),
       $this->t('Moderation'),
-      $this->t('AI title'),
+      $this->t('Title'),
       $this->t('Candidates'),
     ];
   }
@@ -301,13 +301,13 @@ final class ReportSeriesMatchLogController extends ControllerBase {
   }
 
   /**
-   * Formats whether AI generated the series title.
+   * Formats the title outcome from stored proposal data.
    *
    * @param array<string, mixed> $data
    *   Decoded record payload.
    *
    * @return string
-   *   Whether AI generated the title, with duration when available.
+   *   Title outcome label, with AI duration when applicable.
    */
   protected function formatAiTitle(array $data): string {
     $proposal = $data['proposal'] ?? NULL;
@@ -315,19 +315,49 @@ final class ReportSeriesMatchLogController extends ControllerBase {
       return (string) $this->t('n/a');
     }
 
-    $title_source = $proposal['title_source'] ?? NULL;
-    if ($title_source !== SeriesMatchTitleSource::AiGenerated->value) {
-      return (string) $this->t('No');
+    $title_source = SeriesMatchTitleSource::tryFromStored(
+      is_string($proposal['title_source'] ?? NULL) ? $proposal['title_source'] : NULL,
+    );
+    if ($title_source === NULL) {
+      return (string) $this->t('n/a');
     }
 
-    $duration = $proposal['title_ai_duration_seconds'] ?? NULL;
-    if (is_numeric($duration)) {
-      return (string) $this->t('Yes (@duration s)', [
-        '@duration' => number_format((float) $duration, 1),
-      ]);
+    if ($title_source === SeriesMatchTitleSource::AiGenerated) {
+      $duration = $proposal['title_ai_duration_seconds'] ?? NULL;
+      if (is_numeric($duration)) {
+        return (string) $this->t('Generated (@duration s)', [
+          '@duration' => number_format((float) $duration, 1),
+        ]);
+      }
+
+      return (string) $this->t('Generated');
     }
 
-    return (string) $this->t('Yes');
+    return (string) $this->t('Unchanged (@reason)', [
+      '@reason' => $this->formatTitleUnchangedReason($title_source),
+    ]);
+  }
+
+  /**
+   * Returns a translatable reason phrase for unchanged title outcomes.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $source
+   *   The title source enum case.
+   *
+   * @return string
+   *   Translated reason text, or empty for AI-generated titles.
+   */
+  protected function formatTitleUnchangedReason(SeriesMatchTitleSource $source): string {
+    return (string) match ($source) {
+      SeriesMatchTitleSource::KeptOriginalPatternMatch => $this->t('matches series pattern'),
+      SeriesMatchTitleSource::SkippedAiDisabled => $this->t('AI disabled'),
+      SeriesMatchTitleSource::SkippedNoAttachmentText => $this->t('no attachment text'),
+      SeriesMatchTitleSource::FailedNoCandidateTitles => $this->t('no candidate titles'),
+      SeriesMatchTitleSource::FailedUnsupportedAiPlugin => $this->t('unsupported AI plugin'),
+      SeriesMatchTitleSource::FailedAiCallError => $this->t('AI call error'),
+      SeriesMatchTitleSource::FailedEmptyAiOutput => $this->t('empty AI output'),
+      SeriesMatchTitleSource::AiGenerated => '',
+    };
   }
 
   /**

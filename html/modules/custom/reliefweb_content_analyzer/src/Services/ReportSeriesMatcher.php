@@ -2109,9 +2109,9 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   ): array {
     $candidate_titles = $this->getCandidateTitles($candidate_ids, $metadata);
     if (empty($candidate_titles)) {
-      $this->getLogger()->warning('Report title generation skipped: no candidate titles.');
+      $this->getLogger()->warning('Report title unchanged: no candidate titles.');
       return [
-        'title' => NULL,
+        'title' => $original_title,
         'source' => SeriesMatchTitleSource::FailedNoCandidateTitles,
         'aiDurationSeconds' => NULL,
       ];
@@ -2128,12 +2128,12 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     if (!$this->matcherSettings()->aiTitleGenerationEnabled) {
       return [
         'title' => $original_title,
-        'source' => SeriesMatchTitleSource::AiDisabled,
+        'source' => SeriesMatchTitleSource::SkippedAiDisabled,
         'aiDurationSeconds' => NULL,
       ];
     }
 
-    return $this->generateReportTitleWithAi($entity, $candidate_titles);
+    return $this->generateReportTitleWithAi($entity, $original_title, $candidate_titles);
   }
 
   /**
@@ -2195,6 +2195,8 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The report entity to generate the title for.
+   * @param string $original_title
+   *   The original title of the report.
    * @param string[] $candidate_titles
    *   The candidate titles to use as examples.
    *
@@ -2203,12 +2205,13 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    */
   protected function generateReportTitleWithAi(
     EntityInterface $entity,
+    string $original_title,
     array $candidate_titles,
   ): array {
     if ($candidate_titles === []) {
-      $this->getLogger()->warning('Report title AI generation skipped: no example titles from candidates.');
+      $this->getLogger()->warning('Report title unchanged: no candidate titles.');
       return [
-        'title' => NULL,
+        'title' => $original_title,
         'source' => SeriesMatchTitleSource::FailedNoCandidateTitles,
         'aiDurationSeconds' => NULL,
       ];
@@ -2217,10 +2220,10 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $file = $this->getFirstFile($entity);
     $source = $file !== NULL ? trim($file->extractText(1)) : '';
     if ($source === '') {
-      $this->getLogger()->warning('Report title AI generation skipped: no source text or original title.');
+      $this->getLogger()->warning('Report title unchanged: no attachment text.');
       return [
-        'title' => NULL,
-        'source' => SeriesMatchTitleSource::FailedNoSourceText,
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedNoAttachmentText,
         'aiDurationSeconds' => NULL,
       ];
     }
@@ -2266,12 +2269,12 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     try {
       $plugin = $this->completionPluginManager->getPlugin($settings['plugin_id']);
       if (!$plugin->hasCapability(CompletionCapability::StructuredOutput)) {
-        $this->getLogger()->error('Report title AI generation failed: plugin @plugin does not support structured output.', [
+        $this->getLogger()->error('Report title unchanged: unsupported AI plugin (@plugin).', [
           '@plugin' => $settings['plugin_id'],
         ]);
         return [
-          'title' => NULL,
-          'source' => SeriesMatchTitleSource::FailedAi,
+          'title' => $original_title,
+          'source' => SeriesMatchTitleSource::FailedUnsupportedAiPlugin,
           'aiDurationSeconds' => NULL,
         ];
       }
@@ -2286,20 +2289,20 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       $ai_duration = microtime(TRUE) - $start;
     }
     catch (\Exception $exception) {
-      $this->getLogger()->error('Report title AI generation failed: @message', [
+      $this->getLogger()->error('Report title unchanged: AI call error (@message).', [
         '@message' => $exception->getMessage(),
       ]);
       return [
-        'title' => NULL,
-        'source' => SeriesMatchTitleSource::FailedAi,
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedAiCallError,
         'aiDurationSeconds' => NULL,
       ];
     }
 
     if ($output === NULL || empty($output['title']) || !is_string($output['title'])) {
-      $this->getLogger()->warning('Report title AI generation returned no title.');
+      $this->getLogger()->warning('Report title unchanged: empty AI output.');
       return [
-        'title' => NULL,
+        'title' => $original_title,
         'source' => SeriesMatchTitleSource::FailedEmptyAiOutput,
         'aiDurationSeconds' => $ai_duration ?? NULL,
       ];
@@ -2308,7 +2311,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $title = trim($output['title']);
     if ($title === '') {
       return [
-        'title' => NULL,
+        'title' => $original_title,
         'source' => SeriesMatchTitleSource::FailedEmptyAiOutput,
         'aiDurationSeconds' => $ai_duration ?? NULL,
       ];

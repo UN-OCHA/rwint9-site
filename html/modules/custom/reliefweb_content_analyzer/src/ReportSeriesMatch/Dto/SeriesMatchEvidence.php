@@ -79,4 +79,21 @@ final readonly class SeriesMatchEvidence {
     return clone($this, $props);
   }
 
+  /**
+   * Returns cluster count and lookback months for display summaries.
+   *
+   * @return array{count: int, months: int}|null
+   *   Summary parts when both values are available, otherwise NULL.
+   */
+  public function similarReportsSummary(): ?array {
+    if ($this->bestClusterSize <= 0 || $this->lookbackMonths <= 0) {
+      return NULL;
+    }
+
+    return [
+      'count' => $this->bestClusterSize,
+      'months' => $this->lookbackMonths,
+    ];
+  }
+
 }

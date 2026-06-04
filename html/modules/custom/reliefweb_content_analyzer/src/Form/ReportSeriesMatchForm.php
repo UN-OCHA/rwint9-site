@@ -16,6 +16,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchDebugTrac
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchAttentionLevel;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
@@ -181,10 +182,10 @@ final class ReportSeriesMatchForm extends FormBase {
     $form['description'] = $this->buildResultsDescription($result, $outcome);
 
     $form['proposed_updates'] = $this->buildUpdatedFieldsDetails($result);
+    $form['candidates'] = $this->buildCandidatesDetails($result);
     if ($result->debug !== NULL) {
       $form['diagnostics'] = $this->buildDiagnosticsDetails($result);
     }
-    $form['candidates'] = $this->buildCandidatesDetails($result);
 
     $form['actions'] = ['#type' => 'actions'];
     $form['actions']['again'] = [
@@ -217,11 +218,14 @@ final class ReportSeriesMatchForm extends FormBase {
    *   Render array for the results description.
    */
   protected function buildResultsDescription(SeriesMatchResult $result, ?SeriesMatchOutcome $outcome): array {
+    $series_summary = $this->formatSeriesMatchSummary($result);
+
     if ($outcome !== NULL) {
       return [
         '#type' => 'inline_template',
-        '#template' => '<p>{% trans %}Series candidate reports found for this content.</p><p><strong>Series:</strong> {{ series_confidence }}% - <strong>Tagging:</strong> {{ tagging_confidence }}% - <strong>Outcome:</strong> {{ outcome_tier }} - <strong>Projected moderation:</strong> {{ status }}{% endtrans %}</p>',
+        '#template' => '<p>{% trans %}Series candidate reports found for this content{% endtrans %}{% if series_summary %} ({{ series_summary }}){% endif %}.</p><p><strong>Series confidence:</strong> {{ series_confidence }}% - <strong>Tagging confidence:</strong> {{ tagging_confidence }}% - <strong>Outcome:</strong> {{ outcome_tier }} - <strong>Projected moderation:</strong> {{ status }}</p>',
         '#context' => [
+          'series_summary' => $series_summary,
           'series_confidence' => number_format($outcome->seriesConfidence * 100, 1),
           'tagging_confidence' => number_format($outcome->taggingConfidence * 100, 1),
           'outcome_tier' => $outcome->outcomeTier,
@@ -241,12 +245,34 @@ final class ReportSeriesMatchForm extends FormBase {
 
     return [
       '#type' => 'inline_template',
-      '#template' => '<p>{% trans %}Series candidate reports found for this content.</p><p><strong>Series:</strong> {{ series_confidence }} - <strong>Tagging:</strong> {{ tagging_confidence }}{% endtrans %}</p>',
+      '#template' => '<p>{% trans %}Series candidate reports found for this content{% endtrans %}{% if series_summary %} ({{ series_summary }}){% endif %}.</p><p><strong>Series confidence:</strong> {{ series_confidence }} - <strong>Tagging confidence:</strong> {{ tagging_confidence }}</p>',
       '#context' => [
+        'series_summary' => $series_summary,
         'series_confidence' => $series_confidence !== NULL ? number_format($series_confidence * 100, 1) . '%' : 'n/a',
         'tagging_confidence' => $tagging_confidence !== NULL ? number_format($tagging_confidence * 100, 1) . '%' : 'n/a',
       ],
     ];
+  }
+
+  /**
+   * Formats the similar-reports summary for the results description.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return string
+   *   Summary text, or empty when cluster data is unavailable.
+   */
+  protected function formatSeriesMatchSummary(SeriesMatchResult $result): string {
+    $summary = $result->evidence->similarReportsSummary();
+    if ($summary === NULL) {
+      return '';
+    }
+
+    return (string) $this->t('@count similar reports over @months months', [
+      '@count' => $summary['count'],
+      '@months' => $summary['months'],
+    ]);
   }
 
   /**
@@ -318,6 +344,7 @@ final class ReportSeriesMatchForm extends FormBase {
     $rows = [];
     foreach ($result->proposal->updatedFields as $field_name => $value) {
       $rows[] = [
+        $this->formatFieldUpdateAttention($field_name, $result),
         $this->getReportFieldLabel($field_name),
         $this->formatUpdatedFieldValue($field_name, $value),
         $this->formatFieldUpdateSource($field_name, $result),
@@ -330,9 +357,77 @@ final class ReportSeriesMatchForm extends FormBase {
       '#open' => TRUE,
       'content' => [
         '#theme' => 'table',
-        '#header' => [$this->t('Field'), $this->t('Value'), $this->t('Source')],
+        '#header' => [
+          $this->t('Status'),
+          $this->t('Field'),
+          $this->t('Value'),
+          $this->t('Source'),
+        ],
         '#rows' => $rows,
         '#empty' => $this->t('No proposed field updates.'),
+      ],
+      'legend' => [
+        '#type' => 'inline_template',
+        '#template' => '<p class="reliefweb-series-match-attention-legend"><small>{{ legend }}</small></p>',
+        '#context' => [
+          'legend' => $this->buildFieldUpdateAttentionLegend(),
+        ],
+      ],
+    ];
+  }
+
+  /**
+   * Builds the attention-level legend for the proposed updates table.
+   *
+   * @return string
+   *   Legend text with emoji indicators.
+   */
+  protected function buildFieldUpdateAttentionLegend(): string {
+    $parts = [];
+    foreach (SeriesMatchAttentionLevel::cases() as $level) {
+      $parts[] = $level->indicator() . ' ' . $this->formatAttentionLevelLabel($level);
+    }
+
+    return implode(' · ', $parts);
+  }
+
+  /**
+   * Renders the attention indicator for a proposed field update row.
+   *
+   * @param string $field_name
+   *   Field machine name.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return array
+   *   Render array for the status table cell.
+   */
+  protected function formatFieldUpdateAttention(string $field_name, SeriesMatchResult $result): array {
+    if ($field_name === 'title') {
+      $title_source = $result->proposal->titleSource;
+      if ($title_source === NULL) {
+        return ['data' => ''];
+      }
+      $level = $title_source->attentionLevel();
+    }
+    else {
+      $source = $result->proposal->updatedFieldSources[$field_name] ?? NULL;
+      if ($source === NULL) {
+        return ['data' => ''];
+      }
+      $level = $source->attentionLevel();
+    }
+
+    $label = $this->formatAttentionLevelLabel($level);
+
+    return [
+      'data' => [
+        '#type' => 'inline_template',
+        '#template' => '<span title="{{ label }}" aria-label="{{ label }}">{{ indicator }}</span>',
+        '#context' => [
+          'indicator' => $level->indicator(),
+          'label' => $label,
+        ],
       ],
     ];
   }
@@ -381,22 +476,57 @@ final class ReportSeriesMatchForm extends FormBase {
       return '';
     }
 
-    $label = match ($title_source) {
-      SeriesMatchTitleSource::KeptOriginalPatternMatch => (string) $this->t('Kept original (matches candidate pattern)'),
-      SeriesMatchTitleSource::AiGenerated => (string) $this->t('AI generated'),
-      SeriesMatchTitleSource::AiDisabled => (string) $this->t('AI title generation disabled'),
-      SeriesMatchTitleSource::FailedNoCandidateTitles => (string) $this->t('Failed: no candidate titles'),
-      SeriesMatchTitleSource::FailedNoSourceText => (string) $this->t('Failed: no source text'),
-      SeriesMatchTitleSource::FailedAi => (string) $this->t('Failed: AI error'),
-      SeriesMatchTitleSource::FailedEmptyAiOutput => (string) $this->t('Failed: empty AI output'),
-    };
-
-    if ($title_source === SeriesMatchTitleSource::AiGenerated
-      && $result->proposal->titleAiDurationSeconds !== NULL) {
-      $label .= ' (' . number_format($result->proposal->titleAiDurationSeconds, 2) . 's)';
+    if ($title_source === SeriesMatchTitleSource::AiGenerated) {
+      $label = (string) $this->t('AI generated');
+      if ($result->proposal->titleAiDurationSeconds !== NULL) {
+        $label .= ' (' . number_format($result->proposal->titleAiDurationSeconds, 2) . 's)';
+      }
+      return $label;
     }
 
-    return $label;
+    return (string) $this->t('Original title kept (@reason)', [
+      '@reason' => $this->formatTitleUnchangedReason($title_source),
+    ]);
+  }
+
+  /**
+   * Returns a translatable attention-level label for UI display.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchAttentionLevel $level
+   *   The attention level.
+   *
+   * @return string
+   *   Translated label text.
+   */
+  protected function formatAttentionLevelLabel(SeriesMatchAttentionLevel $level): string {
+    return (string) match ($level) {
+      SeriesMatchAttentionLevel::Ok => $this->t('High confidence'),
+      SeriesMatchAttentionLevel::Info => $this->t('Review suggested'),
+      SeriesMatchAttentionLevel::Warning => $this->t('Weaker source'),
+      SeriesMatchAttentionLevel::Error => $this->t('Not applied / failed'),
+    };
+  }
+
+  /**
+   * Returns a translatable reason phrase for unchanged title outcomes.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $source
+   *   The title source enum case.
+   *
+   * @return string
+   *   Translated reason text, or empty for AI-generated titles.
+   */
+  protected function formatTitleUnchangedReason(SeriesMatchTitleSource $source): string {
+    return (string) match ($source) {
+      SeriesMatchTitleSource::KeptOriginalPatternMatch => $this->t('matches series pattern'),
+      SeriesMatchTitleSource::SkippedAiDisabled => $this->t('AI disabled'),
+      SeriesMatchTitleSource::SkippedNoAttachmentText => $this->t('no attachment text'),
+      SeriesMatchTitleSource::FailedNoCandidateTitles => $this->t('no candidate titles'),
+      SeriesMatchTitleSource::FailedUnsupportedAiPlugin => $this->t('unsupported AI plugin'),
+      SeriesMatchTitleSource::FailedAiCallError => $this->t('AI call error'),
+      SeriesMatchTitleSource::FailedEmptyAiOutput => $this->t('empty AI output'),
+      SeriesMatchTitleSource::AiGenerated => '',
+    };
   }
 
   /**

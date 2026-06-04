@@ -172,10 +172,11 @@ class SeriesMatchResultTest extends UnitTestCase {
    */
   public static function failedTitleSourceProvider(): array {
     return [
-      'no candidate titles' => [SeriesMatchTitleSource::FailedNoCandidateTitles],
-      'no source text'      => [SeriesMatchTitleSource::FailedNoSourceText],
-      'ai error'            => [SeriesMatchTitleSource::FailedAi],
-      'empty ai output'     => [SeriesMatchTitleSource::FailedEmptyAiOutput],
+      'no candidate titles'   => [SeriesMatchTitleSource::FailedNoCandidateTitles],
+      'no attachment text'    => [SeriesMatchTitleSource::SkippedNoAttachmentText],
+      'unsupported ai plugin' => [SeriesMatchTitleSource::FailedUnsupportedAiPlugin],
+      'ai call error'         => [SeriesMatchTitleSource::FailedAiCallError],
+      'empty ai output'       => [SeriesMatchTitleSource::FailedEmptyAiOutput],
     ];
   }
 

@@ -86,7 +86,7 @@ final readonly class SeriesMatchResult {
    * - Field provenance (70%): average weight per field based on source type.
    *   AllCandidates=1.0, Merged=0.75, MostRecent=0.50, Skipped=0.0.
    * - Title band (30%): KeptOriginalPatternMatch=1.0, AiGenerated=0.65,
-   *   failed or skipped=0.25.
+   *   other title outcomes=0.25.
    *
    * @return float|null
    *   A score between 0.0 and 1.0, or NULL when the proposal is not scorable.

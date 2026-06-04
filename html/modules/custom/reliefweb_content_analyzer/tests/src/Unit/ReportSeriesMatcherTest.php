@@ -8,12 +8,15 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher;
 use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchMatcherConfigFixture;
 use Drupal\Tests\UnitTestCase;
+use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
@@ -396,6 +399,86 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     );
 
     $this->assertSame($expected, $actual);
+  }
+
+  /**
+   * Keeps original title when AI is skipped for missing attachment text.
+   */
+  public function testGenerateReportTitleSkipsWhenNoAttachmentText(): void {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity->method('hasField')->with('field_file')->willReturn(FALSE);
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($logger);
+
+    $database = $this->createMock(Connection::class);
+    $database->method('escapeLike')->willReturnArgument(0);
+
+    $matcher = new ReportSeriesMatcher(
+      $this->buildConfigFactory(),
+      $logger_factory,
+      $this->createMock(EntityFieldManagerInterface::class),
+      $this->createMock(TimeInterface::class),
+      $database,
+      $this->createMock(CompletionPluginManagerInterface::class),
+    );
+
+    $original_title = 'Annual Review 2026';
+    $metadata = [
+      101 => ['title' => 'Monthly Update January 2026'],
+    ];
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'generateReportTitle',
+      $entity,
+      $original_title,
+      [101],
+      $metadata,
+    );
+
+    $this->assertSame($original_title, $result['title']);
+    $this->assertSame(SeriesMatchTitleSource::SkippedNoAttachmentText, $result['source']);
+    $this->assertNull($result['aiDurationSeconds']);
+  }
+
+  /**
+   * Keeps original title when generation fails for missing candidate titles.
+   */
+  public function testGenerateReportTitleKeepsOriginalWhenNoCandidateTitles(): void {
+    $entity = $this->createMock(ContentEntityInterface::class);
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($logger);
+
+    $matcher = new ReportSeriesMatcher(
+      $this->buildConfigFactory(),
+      $logger_factory,
+      $this->createMock(EntityFieldManagerInterface::class),
+      $this->createMock(TimeInterface::class),
+      $this->createMock(Connection::class),
+      $this->createMock(CompletionPluginManagerInterface::class),
+    );
+
+    $original_title = 'Annual Review 2026';
+    $metadata = [
+      101 => ['title' => ''],
+    ];
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'generateReportTitle',
+      $entity,
+      $original_title,
+      [101],
+      $metadata,
+    );
+
+    $this->assertSame($original_title, $result['title']);
+    $this->assertSame(SeriesMatchTitleSource::FailedNoCandidateTitles, $result['source']);
+    $this->assertNull($result['aiDurationSeconds']);
   }
 
 }

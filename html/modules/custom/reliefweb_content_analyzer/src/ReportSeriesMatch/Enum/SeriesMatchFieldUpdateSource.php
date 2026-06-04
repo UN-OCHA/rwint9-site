@@ -14,4 +14,16 @@ enum SeriesMatchFieldUpdateSource: string {
   case Merged = 'merged';
   case Skipped = 'skipped';
 
+  /**
+   * Returns the editor attention level for this field update source.
+   */
+  public function attentionLevel(): SeriesMatchAttentionLevel {
+    return match ($this) {
+      self::AllCandidates => SeriesMatchAttentionLevel::Ok,
+      self::Merged => SeriesMatchAttentionLevel::Info,
+      self::MostRecent => SeriesMatchAttentionLevel::Warning,
+      self::Skipped => SeriesMatchAttentionLevel::Error,
+    };
+  }
+
 }
