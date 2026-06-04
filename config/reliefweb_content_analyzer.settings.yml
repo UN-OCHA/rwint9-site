@@ -31,11 +31,19 @@ report_series_matching:
     minimum_series_report_count: 3
     series_candidate_date_range_months: 18
     series_candidate_limit: 30
+    ai_title_generation_enabled: true
     ai_title_source_length_limit: 2000
     ai_title_example_line_count: 5
     ai_title_description_template: |-
       Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:
       @examples
+    ai_title_inference:
+      plugin_id: aws_bedrock_nova_lite_v1
+      temperature: 0.0
+      top_p: 0.9
+      max_tokens: 512
+      thinking_mode: none
+      system_prompt: 'Generate a title for this humanitarian report that matches the series naming style shown in the structured output schema. Use the `structured_output` tool.'
     pattern_token_counts:
       - 10
       - 8

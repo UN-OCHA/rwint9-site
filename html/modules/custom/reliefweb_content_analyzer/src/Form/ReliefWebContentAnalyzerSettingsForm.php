@@ -7,6 +7,8 @@ namespace Drupal\reliefweb_content_analyzer\Form;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
+use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,10 +26,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
    *   Report moderation service for status select options.
    * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
    *   Entity field manager for field name validation.
+   * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completionPluginManager
+   *   OCHA AI completion plugin manager.
    */
   public function __construct(
     protected readonly ReportModeration $reportModeration,
     protected readonly EntityFieldManagerInterface $entityFieldManager,
+    protected readonly CompletionPluginManagerInterface $completionPluginManager,
   ) {}
 
   /**
@@ -37,6 +42,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     return new static(
       $container->get('reliefweb_moderation.report.moderation'),
       $container->get('entity_field.manager'),
+      $container->get('plugin.manager.ocha_ai.completion'),
     );
   }
 
@@ -274,6 +280,76 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $inference = $matcher['ai_title_inference'];
+    $completion_plugin_options = $this->structuredOutputPluginOptions();
+    $stored_plugin_id = (string) $inference['plugin_id'];
+    if ($stored_plugin_id !== '' && !isset($completion_plugin_options[$stored_plugin_id])) {
+      $completion_plugin_options[$stored_plugin_id] = $stored_plugin_id . ' (' . $this->t('not available') . ')';
+    }
+    $form['matcher']['ai_title_inference'] = [
+      '#type' => 'details',
+      '#title' => $this->t('AI title inference'),
+      '#open' => FALSE,
+      '#tree' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['plugin_id'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Inference plugin'),
+      '#options' => $completion_plugin_options,
+      '#default_value' => $inference['plugin_id'],
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['temperature'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Temperature'),
+      '#description' => $this->t('Controls randomness in the AI response. Lower values make output more focused and deterministic.'),
+      '#default_value' => $inference['temperature'],
+      '#min' => 0,
+      '#max' => 2,
+      '#step' => 0.1,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['top_p'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Nucleus sampling (top_p)'),
+      '#description' => $this->t('Controls diversity via nucleus sampling. Lower values focus on more probable tokens.'),
+      '#default_value' => $inference['top_p'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['max_tokens'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max tokens'),
+      '#description' => $this->t('Maximum number of tokens to generate in the response.'),
+      '#default_value' => $inference['max_tokens'],
+      '#min' => 1,
+      '#max' => 4096,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['thinking_mode'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Thinking mode'),
+      '#default_value' => $inference['thinking_mode'],
+      '#options' => [
+        'none' => $this->t('None'),
+        'low' => $this->t('Low'),
+        'medium' => $this->t('Medium'),
+        'high' => $this->t('High'),
+      ],
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['system_prompt'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('System prompt'),
+      '#description' => $this->t('The system prompt that defines the AI behavior for title generation.'),
+      '#default_value' => $inference['system_prompt'],
+      '#rows' => 4,
+      '#required' => TRUE,
+    ];
+
     $form['matcher']['pattern_token_counts'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Pattern token counts'),
@@ -458,6 +534,47 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
         ]),
       );
     }
+
+    $temperature = (float) $form_state->getValue(['matcher', 'ai_title_inference', 'temperature']);
+    if ($temperature < 0 || $temperature > 2) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][temperature',
+        $this->t('Temperature must be between 0 and 2.'),
+      );
+    }
+
+    $top_p = (float) $form_state->getValue(['matcher', 'ai_title_inference', 'top_p']);
+    if ($top_p < 0 || $top_p > 1) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][top_p',
+        $this->t('Top_p must be between 0 and 1.'),
+      );
+    }
+
+    $max_tokens = (int) $form_state->getValue(['matcher', 'ai_title_inference', 'max_tokens']);
+    if ($max_tokens < 1 || $max_tokens > 4096) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][max_tokens',
+        $this->t('Max tokens must be between 1 and 4096.'),
+      );
+    }
+
+    $completion_plugin_options = $this->structuredOutputPluginOptions();
+    if ($completion_plugin_options === []) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][plugin_id',
+        $this->t('No completion plugins with structured output support are available.'),
+      );
+    }
+    else {
+      $plugin_id = (string) $form_state->getValue(['matcher', 'ai_title_inference', 'plugin_id']);
+      if (!isset($completion_plugin_options[$plugin_id])) {
+        $form_state->setErrorByName(
+          'matcher][ai_title_inference][plugin_id',
+          $this->t('The inference plugin must support structured output.'),
+        );
+      }
+    }
   }
 
   /**
@@ -514,6 +631,14 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'ai_title_source_length_limit' => (int) $matcher_values['ai_title_source_length_limit'],
       'ai_title_example_line_count' => (int) $matcher_values['ai_title_example_line_count'],
       'ai_title_description_template' => (string) $matcher_values['ai_title_description_template'],
+      'ai_title_inference' => [
+        'plugin_id' => trim((string) $matcher_values['ai_title_inference']['plugin_id']),
+        'temperature' => (float) $matcher_values['ai_title_inference']['temperature'],
+        'top_p' => (float) $matcher_values['ai_title_inference']['top_p'],
+        'max_tokens' => (int) $matcher_values['ai_title_inference']['max_tokens'],
+        'thinking_mode' => (string) $matcher_values['ai_title_inference']['thinking_mode'],
+        'system_prompt' => (string) $matcher_values['ai_title_inference']['system_prompt'],
+      ],
       'pattern_token_counts' => $form_state->getValue(['matcher', 'pattern_token_counts_parsed']),
       'candidate_clustering_tagging_weight' => (float) $matcher_values['candidate_clustering_tagging_weight'],
       'candidate_clustering_title_weight' => (float) $matcher_values['candidate_clustering_title_weight'],
@@ -637,6 +762,22 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       }
     }
     return $sequence;
+  }
+
+  /**
+   * Completion plugins that support structured output.
+   *
+   * @return array<string, string>
+   *   Plugin ID => label options for select elements.
+   */
+  private function structuredOutputPluginOptions(): array {
+    $options = [];
+    foreach ($this->completionPluginManager->getAvailablePlugins() as $plugin) {
+      if ($plugin->hasCapability(CompletionCapability::StructuredOutput)) {
+        $options[$plugin->getPluginId()] = $plugin->getPluginLabel();
+      }
+    }
+    return $options;
   }
 
   /**

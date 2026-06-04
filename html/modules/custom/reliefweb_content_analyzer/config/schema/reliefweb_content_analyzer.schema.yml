@@ -92,6 +92,28 @@ reliefweb_content_analyzer.settings:
             ai_title_description_template:
               type: string
               label: 'Structured output title field description template'
+            ai_title_inference:
+              type: mapping
+              label: 'AI inference settings for report title generation'
+              mapping:
+                plugin_id:
+                  type: string
+                  label: 'OCHA AI completion plugin ID'
+                temperature:
+                  type: float
+                  label: 'Temperature'
+                top_p:
+                  type: float
+                  label: 'Nucleus sampling (top_p)'
+                max_tokens:
+                  type: integer
+                  label: 'Max tokens'
+                thinking_mode:
+                  type: string
+                  label: 'Thinking mode'
+                system_prompt:
+                  type: text
+                  label: 'System prompt'
             pattern_token_counts:
               type: sequence
               label: 'Token counts for title pattern generation'

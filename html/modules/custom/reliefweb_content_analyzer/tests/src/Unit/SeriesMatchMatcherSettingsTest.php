@@ -37,6 +37,9 @@ class SeriesMatchMatcherSettingsTest extends UnitTestCase {
       'field_primary_country',
       $settings->reportEntityFieldNamesToCopy,
     );
+    $this->assertSame('aws_bedrock_nova_lite_v1', $settings->aiTitleInference->pluginId);
+    $this->assertSame(0.0, $settings->aiTitleInference->temperature);
+    $this->assertSame(512, $settings->aiTitleInference->maxTokens);
   }
 
   /**

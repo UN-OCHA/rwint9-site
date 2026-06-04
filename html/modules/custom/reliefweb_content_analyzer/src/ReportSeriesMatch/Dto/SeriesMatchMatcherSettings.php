@@ -29,6 +29,8 @@ final readonly class SeriesMatchMatcherSettings {
    *   Number of example titles for title AI generation.
    * @param string $aiTitleDescriptionTemplate
    *   Structured output title field description template.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\AiTitleInferenceSettings $aiTitleInference
+   *   AI inference settings for report title generation.
    * @param list<int> $patternTokenCounts
    *   Token counts for title pattern generation.
    * @param float $candidateClusteringTaggingWeight
@@ -58,6 +60,7 @@ final readonly class SeriesMatchMatcherSettings {
     public int $aiTitleSourceLengthLimit,
     public int $aiTitleExampleLineCount,
     public string $aiTitleDescriptionTemplate,
+    public AiTitleInferenceSettings $aiTitleInference,
     public array $patternTokenCounts,
     public float $candidateClusteringTaggingWeight,
     public float $candidateClusteringTitleWeight,
@@ -91,6 +94,9 @@ final readonly class SeriesMatchMatcherSettings {
       aiTitleSourceLengthLimit: self::requireInt($config, 'ai_title_source_length_limit'),
       aiTitleExampleLineCount: self::requireInt($config, 'ai_title_example_line_count'),
       aiTitleDescriptionTemplate: self::requireString($config, 'ai_title_description_template'),
+      aiTitleInference: AiTitleInferenceSettings::fromConfigArray(
+        self::requireMapping($config, 'ai_title_inference'),
+      ),
       patternTokenCounts: self::requireIntList($config, 'pattern_token_counts'),
       candidateClusteringTaggingWeight: self::requireFloat($config, 'candidate_clustering_tagging_weight'),
       candidateClusteringTitleWeight: self::requireFloat($config, 'candidate_clustering_title_weight'),
@@ -102,6 +108,27 @@ final readonly class SeriesMatchMatcherSettings {
       recencyFieldName: self::requireString($config, 'recency_field_name'),
       reportEntityFieldNamesToCopy: self::requireStringList($config, 'report_entity_field_names_to_copy'),
     );
+  }
+
+  /**
+   * Reads a required mapping from matcher config.
+   *
+   * @param array<string, mixed> $config
+   *   Raw matcher config.
+   * @param string $key
+   *   Config key.
+   *
+   * @return array<string, mixed>
+   *   Nested config array.
+   */
+  private static function requireMapping(array $config, string $key): array {
+    if (!array_key_exists($key, $config)) {
+      throw new \InvalidArgumentException("Matcher config missing required key: {$key}.");
+    }
+    if (!is_array($config[$key])) {
+      throw new \InvalidArgumentException("Matcher config key {$key} must be an array.");
+    }
+    return $config[$key];
   }
 
   /**

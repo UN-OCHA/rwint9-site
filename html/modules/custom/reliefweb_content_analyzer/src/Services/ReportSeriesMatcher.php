@@ -596,22 +596,13 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
-   * Hardcoded inference settings for report title AI generation.
+   * Inference settings for report title AI generation.
    *
    * @return InferenceSettings
-   *   Inference settings.
-   *
-   * @todo Read from config or the node_report classification workflow.
+   *   Inference settings from reliefweb_content_analyzer.settings.
    */
   protected function getReportTitleAiInferenceSettings(): array {
-    return [
-      'plugin_id' => 'aws_bedrock_nova_lite_v1',
-      'temperature' => 0.0,
-      'top_p' => 0.9,
-      'max_tokens' => 512,
-      'thinking_mode' => 'none',
-      'system_prompt' => 'Generate a title for this humanitarian report that matches the series naming style shown in the structured output schema. Use the `structured_output` tool.',
-    ];
+    return $this->matcherSettings()->aiTitleInference->toInferenceArray();
   }
 
   /**
