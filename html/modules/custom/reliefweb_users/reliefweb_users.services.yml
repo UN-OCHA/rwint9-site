@@ -10,3 +10,9 @@ services:
   reliefweb_users.user_role_assignment:
     class: Drupal\reliefweb_users\Service\UserRoleAssignment
     arguments: ['@entity_type.manager', '@account_switcher', '@logger.factory', '@database', '@state', '@reliefweb_moderation.user_posting_rights']
+  reliefweb_users.inactive_user_deletion:
+    class: Drupal\reliefweb_users\Service\InactiveUserDeletionService
+    autowire: true
+
+  Drupal\reliefweb_users\Service\InactiveUserDeletionServiceInterface:
+    '@reliefweb_users.inactive_user_deletion'
