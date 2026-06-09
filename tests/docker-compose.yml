@@ -10,7 +10,7 @@ volumes:
 
 services:
   elasticsearch:
-    image: public.ecr.aws/unocha/elasticsearch:8.19.10
+    image: public.ecr.aws/unocha/elasticsearch:8.19.16
     hostname: rwint-test-elasticsearch
     container_name: rwint-test-elasticsearch
     ulimits:
