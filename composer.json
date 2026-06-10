@@ -75,7 +75,7 @@
         "drush/drush": "^13",
         "elasticsearch/elasticsearch": "^8",
         "eliashaeussler/transient-logger": "^1.0",
-        "google/analytics-data": "^0.8.4",
+        "google/analytics-data": "^0.24",
         "google/apiclient": "^2.17",
         "google/auth": "^1.21",
         "league/commonmark": "^2.2",
