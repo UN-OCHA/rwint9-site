@@ -9,7 +9,7 @@ use Drupal\Core\Site\Settings;
 use Drupal\Core\State\StateInterface;
 use Drupal\path_alias\AliasRepositoryInterface;
 use Drush\Commands\DrushCommands;
-use Google\Analytics\Data\V1beta\BetaAnalyticsDataClient;
+use Google\Analytics\Data\V1beta\Client\BetaAnalyticsDataClient;
 use Google\Analytics\Data\V1beta\DateRange;
 use Google\Analytics\Data\V1beta\Dimension;
 use Google\Analytics\Data\V1beta\Filter;
@@ -18,7 +18,9 @@ use Google\Analytics\Data\V1beta\Filter\StringFilter\MatchType;
 use Google\Analytics\Data\V1beta\FilterExpression;
 use Google\Analytics\Data\V1beta\FilterExpressionList;
 use Google\Analytics\Data\V1beta\Metric;
+use Google\Analytics\Data\V1beta\OrderBy;
 use Google\Analytics\Data\V1beta\OrderBy\MetricOrderBy;
+use Google\Analytics\Data\V1beta\RunReportRequest;
 use Google\ApiCore\ApiException;
 
 /**
@@ -174,7 +176,7 @@ class ReliefwebMostReadCommand extends DrushCommands {
    *
    * @command reliefweb_analytics:countries-all
    * @usage reliefweb_analytics:countries-all
-   *   Send emails.
+   *   Get the most read reports by country.
    * @validate-module-enabled reliefweb_analytics
    * @aliases reliefweb-mostread-countries-all
    */
@@ -289,7 +291,7 @@ class ReliefwebMostReadCommand extends DrushCommands {
    *
    * @command reliefweb_analytics:disasters-all
    * @usage reliefweb_analytics:disasters-all
-   *   Send emails.
+   *   Get the most read reports by disaster.
    * @validate-module-enabled reliefweb_analytics
    * @aliases reliefweb-mostread-disasters-all
    */
@@ -427,7 +429,7 @@ class ReliefwebMostReadCommand extends DrushCommands {
 
     try {
       $start = microtime(TRUE);
-      $response = $this->getGa4Client()->runReport($parameters);
+      $response = $this->getGa4Client()->runReport(new RunReportRequest($parameters));
 
       // Make sure it takes at least a second.
       $end = microtime(TRUE);
@@ -512,7 +514,7 @@ class ReliefwebMostReadCommand extends DrushCommands {
 
     try {
       $start = microtime(TRUE);
-      $response = $this->getGa4Client()->runReport($parameters);
+      $response = $this->getGa4Client()->runReport(new RunReportRequest($parameters));
 
       // Make sure it takes at least a second.
       $end = microtime(TRUE);
@@ -719,8 +721,8 @@ class ReliefwebMostReadCommand extends DrushCommands {
     return [
       'property' => 'properties/' . Settings::get('reliefweb_analytics_property_id', ''),
       'limit' => $limit,
-      'returnPropertyQuota' => TRUE,
-      'dateRanges' => [
+      'return_property_quota' => TRUE,
+      'date_ranges' => [
         // Using "daterange_" as prefix because "date_range_" is reserved.
         new DateRange([
           'start_date' => '28daysAgo',
@@ -751,9 +753,12 @@ class ReliefwebMostReadCommand extends DrushCommands {
         new Metric(['name' => 'activeUsers']),
       ],
       'order_bys' => [
-        new MetricOrderBy(['metric_name' => 'activeUsers']),
+        new OrderBy([
+          'metric' => new MetricOrderBy(['metric_name' => 'activeUsers']),
+          'desc' => TRUE,
+        ]),
       ],
-      'dimensionFilter' => new FilterExpression([
+      'dimension_filter' => new FilterExpression([
         'and_group' => new FilterExpressionList([
           'expressions' => $expressions,
         ]),
@@ -767,7 +772,7 @@ class ReliefwebMostReadCommand extends DrushCommands {
   protected function getHomePagePayload() {
     $payload = $this->buildPayload(NULL, $this->state->get('reliefweb_analytics_most_read_single_limit', 1000));
 
-    $payload['dateRanges'] = [
+    $payload['date_ranges'] = [
       new DateRange([
         'start_date' => $this->state->get('reliefweb_analytics_most_read_homepage_start_date', 'yesterday'),
         'end_date' => 'today',
