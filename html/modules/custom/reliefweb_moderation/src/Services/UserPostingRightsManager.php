@@ -16,6 +16,7 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -44,7 +45,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   /**
    * Default domain posting rights.
    *
-   * @var array<string, string>
+   * @var array<string, \Drupal\reliefweb_moderation\Enum\PostingRight>
    */
   protected array $defaultDomainPostingRights = [];
 
@@ -138,25 +139,17 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    *
    * @todo consolidate with the other posting rights methods once ported.
    */
-  public function getEntityAuthorPostingRights(EntityInterface $entity): string {
+  public function getEntityAuthorPostingRights(EntityInterface $entity): ?PostingRight {
     if (!$entity->hasField('field_source') || !($entity instanceof EntityOwnerInterface)) {
-      return 'unknown';
+      return NULL;
     }
 
     $source_item_list = $entity->get('field_source');
     if (!$source_item_list instanceof EntityReferenceFieldItemList) {
-      return 'unknown';
+      return NULL;
     }
 
-    /** @var array<string, int> $rights */
-    $rights = [
-      'unverified' => 0,
-      'blocked' => 0,
-      'allowed' => 0,
-      'trusted' => 0,
-    ];
-    /** @var array<int, string> $rights_keys */
-    $rights_keys = array_keys($rights);
+    $counts = array_fill_keys(PostingRight::values(), 0);
 
     $bundle = $entity->bundle();
     $uid = $entity->getOwnerId();
@@ -164,6 +157,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $domain = DomainHelper::extractDomainFromEmail($email);
 
     $source_entities = $source_item_list->referencedEntities();
+    $eligible_source_count = 0;
     foreach ($source_entities as $source_entity) {
       if (!($source_entity instanceof ContentEntityInterface)) {
         continue;
@@ -175,8 +169,8 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         continue;
       }
 
-      // Default to unverified if the owner has no right defined for the source.
-      $right = 'unverified';
+      $eligible_source_count++;
+      $right = PostingRight::Unverified;
       $user_right_found = FALSE;
 
       // First check user posting rights.
@@ -184,7 +178,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         foreach ($source_entity->get('field_user_posting_rights') as $item) {
           // No strict equality as $uid can be a numeric string or an integer.
           if ($item->get('id')->getValue() == $uid) {
-            $right = $rights_keys[$item->get($bundle)->getValue()] ?? 'unverified';
+            $right = PostingRight::fromValue($item->get($bundle)->getValue());
             $user_right_found = TRUE;
             break;
           }
@@ -196,7 +190,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         $domain_right_found = FALSE;
         foreach ($source_entity->get('field_domain_posting_rights') as $item) {
           if ($item->get('domain')->getValue() === $domain) {
-            $right = $rights_keys[$item->get($bundle)->getValue()] ?? 'unverified';
+            $right = PostingRight::fromValue($item->get($bundle)->getValue());
             $domain_right_found = TRUE;
             break;
           }
@@ -204,28 +198,27 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         // If no domain posting rights found and domain is in allowed list,
         // use the default domain posting rights.
         if (!$domain_right_found && $this->isDomainPrivileged($domain)) {
-          $default_code = $this->getDefaultDomainPostingRightCode($bundle);
-          $right = $rights_keys[$default_code] ?? 'unverified';
+          $right = $this->getDefaultDomainPostingRightValue($bundle);
         }
       }
 
-      $rights[$right]++;
+      $counts[$right->value]++;
     }
 
     // Compute the consolidated right for the user.
-    if ($rights['blocked'] > 0) {
-      return 'blocked';
+    if ($counts[PostingRight::Blocked->value] > 0) {
+      return PostingRight::Blocked;
     }
-    elseif ($rights['unverified'] > 0) {
-      return 'unverified';
+    if ($counts[PostingRight::Unverified->value] > 0) {
+      return PostingRight::Unverified;
     }
-    elseif (count($source_entities) > 0 && $rights['trusted'] === count($source_entities)) {
-      return 'trusted';
+    if ($eligible_source_count > 0 && $counts[PostingRight::Trusted->value] === $eligible_source_count) {
+      return PostingRight::Trusted;
     }
-    elseif ($rights['allowed'] > 0) {
-      return 'allowed';
+    if ($counts[PostingRight::Allowed->value] > 0) {
+      return PostingRight::Allowed;
     }
-    return 'unverified';
+    return PostingRight::Unverified;
   }
 
   /**
@@ -297,7 +290,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // Check if user's domain is in the allowed list to determine default
     // rights.
     // Default to unverified.
-    $default_codes = array_fill_keys(self::SUPPORTED_CONTENT_TYPES, 0);
+    $default_codes = array_fill_keys(self::SUPPORTED_CONTENT_TYPES, PostingRight::Unverified->value);
     if (!empty($account->id()) && $check_privileged_domains) {
       $user = $this->entityTypeManager->getStorage('user')->load($account->id());
       if ($user && $user->getEmail()) {
@@ -406,9 +399,9 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       foreach ($missing_sources as $tid) {
         $results[$tid] = [
           'tid' => $tid,
-          'job' => 0,
-          'training' => 0,
-          'report' => 0,
+          'job' => PostingRight::Unverified->value,
+          'training' => PostingRight::Unverified->value,
+          'report' => PostingRight::Unverified->value,
         ];
       }
     }
@@ -441,25 +434,6 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   }
 
   /**
-   * Convert string posting right to numeric code.
-   *
-   * @param string $right
-   *   Posting right as string ('unverified', 'blocked', 'allowed', 'trusted').
-   *
-   * @return int
-   *   Numeric code (0 = unverified, 1 = blocked, 2 = allowed, 3 = trusted).
-   */
-  protected function getPostingRightCode(string $right): int {
-    return match ($right) {
-      'blocked' => 1,
-      'allowed' => 2,
-      'trusted' => 3,
-      // Unverified.
-      default => 0,
-    };
-  }
-
-  /**
    * {@inheritdoc}
    */
   public function getDefaultDomainPostingRights(): array {
@@ -472,7 +446,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         $defaults = [];
       }
       foreach (self::SUPPORTED_CONTENT_TYPES as $bundle) {
-        $this->defaultDomainPostingRights[$bundle] = $this->sanitizePostingRight($defaults[$bundle] ?? 'unverified');
+        $this->defaultDomainPostingRights[$bundle] = PostingRight::fromMachineName($defaults[$bundle] ?? NULL);
       }
     }
     return $this->defaultDomainPostingRights;
@@ -481,17 +455,16 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getDefaultDomainPostingRightValue(string $bundle): string {
+  public function getDefaultDomainPostingRightValue(string $bundle): PostingRight {
     $defaults = $this->getDefaultDomainPostingRights();
-    return $defaults[$bundle] ?? 'unverified';
+    return $defaults[$bundle] ?? PostingRight::Unverified;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getDefaultDomainPostingRightCode(string $bundle): int {
-    $default_right = $this->getDefaultDomainPostingRightValue($bundle);
-    return $this->getPostingRightCode($default_right);
+    return $this->getDefaultDomainPostingRightValue($bundle)->value;
   }
 
   /**
@@ -500,19 +473,12 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   public function getDefaultDomainPostingRightCodes(): array {
     if (empty($this->defaultDomainPostingRightsCodes)) {
       $defaults = $this->getDefaultDomainPostingRights();
-      $this->defaultDomainPostingRightsCodes = array_map([$this, 'getPostingRightCode'], $defaults);
+      $this->defaultDomainPostingRightsCodes = array_map(
+        static fn(PostingRight $right): int => $right->value,
+        $defaults,
+      );
     }
     return $this->defaultDomainPostingRightsCodes;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function sanitizePostingRight(?string $right): string {
-    return match ($right) {
-      'blocked', 'allowed', 'trusted', 'unverified' => $right,
-      default => 'unverified',
-    };
   }
 
   /**
@@ -589,9 +555,10 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // for types not allowed for the source.
     foreach ($results as $tid => $data) {
       $allowed_types = $allowed_content_types[$tid] ?? [];
-      $data['job'] = isset($allowed_types['job']) ? (int) ($data['job'] ?? 0) : 0;
-      $data['report'] = isset($allowed_types['report']) ? (int) ($data['report'] ?? 0) : 0;
-      $data['training'] = isset($allowed_types['training']) ? (int) ($data['training'] ?? 0) : 0;
+      $unverified_value = PostingRight::Unverified->value;
+      $data['job'] = isset($allowed_types['job']) ? (int) ($data['job'] ?? $unverified_value) : $unverified_value;
+      $data['report'] = isset($allowed_types['report']) ? (int) ($data['report'] ?? $unverified_value) : $unverified_value;
+      $data['training'] = isset($allowed_types['training']) ? (int) ($data['training'] ?? $unverified_value) : $unverified_value;
       $results[$tid] = $data;
     }
 
@@ -621,46 +588,41 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     // Not a job, training nor report or no sources, 'unverified'.
     if (empty($account->id()) || ($bundle !== 'job' && $bundle !== 'training' && $bundle !== 'report') || empty($sources)) {
       return [
-        'code' => 0,
-        'name' => 'unverified',
+        'right' => PostingRight::Unverified,
         'sources' => $sources,
       ];
     }
 
     // Get the current user's posting rights for the selected sources.
-    $rights = [];
+    $rights = array_fill_keys(PostingRight::values(), []);
     foreach ($this->getUserPostingRights($account, $sources) as $tid => $data) {
-      $rights[$data[$bundle] ?? 0][] = $tid;
+      $rights[PostingRight::fromValue($data[$bundle] ?? PostingRight::Unverified->value)->value][] = $tid;
     }
 
     // Blocked for some sources.
-    if (!empty($rights[1])) {
+    if (!empty($rights[PostingRight::Blocked->value])) {
       return [
-        'code' => 1,
-        'name' => 'blocked',
-        'sources' => $rights[1],
+        'right' => PostingRight::Blocked,
+        'sources' => $rights[PostingRight::Blocked->value],
       ];
     }
     // Unverified for some sources.
-    elseif (!empty($rights[0])) {
+    if (!empty($rights[PostingRight::Unverified->value])) {
       return [
-        'code' => 0,
-        'name' => 'unverified',
-        'sources' => $rights[0],
+        'right' => PostingRight::Unverified,
+        'sources' => $rights[PostingRight::Unverified->value],
       ];
     }
     // Trusted for all the sources.
-    elseif (isset($rights[3]) && count($rights[3]) === count($sources)) {
+    if (count($rights[PostingRight::Trusted->value]) === count($sources)) {
       return [
-        'code' => 3,
-        'name' => 'trusted',
+        'right' => PostingRight::Trusted,
         'sources' => $sources,
       ];
     }
     // Allowed or trusted for all sources.
     return [
-      'code' => 2,
-      'name' => 'allowed',
+      'right' => PostingRight::Allowed,
       'sources' => $sources,
     ];
   }
@@ -725,20 +687,18 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
     // Check if the user is allowed or blocked.
     foreach ($this->getUserPostingRights($account, $sources, FALSE) as $data) {
-      $right = $data[$bundle] ?? 0;
+      $right = PostingRight::fromValue($data[$bundle] ?? PostingRight::Unverified->value);
       // If the user is blocked for one of the sources always disallow even
       // if the user is the owner of the document, except for drafts since
       // drafts are work in progress that do not require editorial review.
-      //
-      // No strict equality as $right can be a numeric string or an integer.
-      if ($right == 1) {
+      if ($right->isBlocked()) {
         return $owner && $status === 'draft';
       }
       // Allowed for at least one of the sources. That means that in the
       // case of joint ads, being allowed to post for one of the sources
       // is enough to be considered having posting rights on the document
       // (unless blocked for one of the sources, of course).
-      elseif ($right > 1) {
+      if ($right->isAllowedOrTrusted()) {
         $allowed = TRUE;
       }
     }
@@ -771,7 +731,11 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
       throw new \InvalidArgumentException("Invalid bundle: $bundle. Must be 'job', 'training', or 'report'.");
     }
 
-    $sources = $this->getSourcesWithPostingRightsForUser($account, [$bundle => [2, 3]], limit: 1);
+    $sources = $this->getSourcesWithPostingRightsForUser(
+      $account,
+      [$bundle => [PostingRight::Allowed->value, PostingRight::Trusted->value]],
+      limit: 1,
+    );
     return !empty($sources);
   }
 
@@ -996,16 +960,16 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
   /**
    * Format a user posting right.
    *
-   * @param string $right
-   *   Right.
+   * @param \Drupal\reliefweb_moderation\Enum\PostingRight|null $right
+   *   Right, or NULL when posting rights cannot be determined.
    *
    * @return \Drupal\Component\Render\MarkupInterface
    *   Formatted right.
    */
-  public function renderRight(string $right): MarkupInterface {
+  public function renderRight(?PostingRight $right): MarkupInterface {
     $build = [
       '#theme' => 'reliefweb_moderation_user_posting_right',
-      '#right' => $right,
+      '#right' => $right?->machineName() ?? 'unknown',
     ];
     return $this->renderer->render($build);
   }
@@ -1079,24 +1043,24 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     }
 
     // Get the user's posting right for the document.
-    $rights = [0 => [], 1 => [], 2 => [], 3 => []];
+    $rights = array_fill_keys(PostingRight::values(), []);
     foreach ($this->getUserPostingRights($user, $sources) as $tid => $data) {
-      $rights[$data[$bundle] ?? 0][] = $tid;
+      $rights[PostingRight::fromValue($data[$bundle] ?? PostingRight::Unverified->value)->value][] = $tid;
     }
 
     $scenario = match (TRUE) {
       // Blocked for any source.
-      !empty($rights[1]) => 'blocked',
+      !empty($rights[PostingRight::Blocked->value]) => 'blocked',
       // Trusted for all the sources.
-      count($rights[3]) === count($sources) => 'trusted_all',
+      count($rights[PostingRight::Trusted->value]) === count($sources) => 'trusted_all',
       // Trusted for some sources with the rest allowed (since no unverified).
-      !empty($rights[3]) && empty($rights[0]) => 'trusted_some_allowed',
+      !empty($rights[PostingRight::Trusted->value]) && empty($rights[PostingRight::Unverified->value]) => 'trusted_some_allowed',
       // Trusted for some sources with some unverified sources.
-      !empty($rights[3]) && !empty($rights[0]) => 'trusted_some_unverified',
+      !empty($rights[PostingRight::Trusted->value]) && !empty($rights[PostingRight::Unverified->value]) => 'trusted_some_unverified',
       // Allowed for all the sources.
-      count($rights[2]) === count($sources) => 'allowed_all',
+      count($rights[PostingRight::Allowed->value]) === count($sources) => 'allowed_all',
       // Allowed for some sources with the rest unverified.
-      !empty($rights[2]) && !empty($rights[0]) => 'allowed_some_unverified',
+      !empty($rights[PostingRight::Allowed->value]) && !empty($rights[PostingRight::Unverified->value]) => 'allowed_some_unverified',
       // Unverified for all sources or default scenario.
       default => 'unverified_all',
     };
@@ -1119,7 +1083,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     if (
       $domain &&
       $this->isDomainPrivileged($domain) &&
-      $this->getDefaultDomainPostingRightValue($bundle) === 'allowed' &&
+      $this->getDefaultDomainPostingRightValue($bundle) === PostingRight::Allowed &&
       $scenario === 'allowed_all'
     ) {
       $scenario = 'privileged_all';
@@ -1138,24 +1102,24 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
 
     // Add messages indicating the posting rights for easier review.
     $message = '';
-    if (!empty($rights[1])) {
+    if (!empty($rights[PostingRight::Blocked->value])) {
       $message = trim($message . strtr(' Blocked user for @sources.', [
-        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[1])),
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Blocked->value])),
       ]));
     }
-    if (!empty($rights[0])) {
+    if (!empty($rights[PostingRight::Unverified->value])) {
       $message = trim($message . strtr(' Unverified user for @sources.', [
-        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[0])),
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Unverified->value])),
       ]));
     }
-    if (!empty($rights[2])) {
+    if (!empty($rights[PostingRight::Allowed->value])) {
       $message = trim($message . strtr(' Allowed user for @sources.', [
-        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[2])),
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Allowed->value])),
       ]));
     }
-    if (!empty($rights[3])) {
+    if (!empty($rights[PostingRight::Trusted->value])) {
       $message = trim($message . strtr(' Trusted user for @sources.', [
-        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[3])),
+        '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Trusted->value])),
       ]));
     }
     // Prepend the message to the revision log.

@@ -7,6 +7,7 @@ namespace Drupal\Tests\reliefweb_entities\ExistingSite;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\taxonomy\TermInterface;
 use Drupal\taxonomy\VocabularyInterface;
 use Drupal\user\Entity\User;
@@ -318,13 +319,7 @@ class RwReportBase extends ExistingSiteBase {
       default => 0,
     };
 
-    $report_right = match ($report_right) {
-      'unverified' => 0,
-      'blocked' => 1,
-      'allowed' => 2,
-      'trusted' => 3,
-      default => NULL,
-    };
+    $report_right = PostingRight::tryFromMachineName($report_right)?->value;
 
     return $this->createTerm($this->getVocabulary('source'), [
       'name' => $name,
