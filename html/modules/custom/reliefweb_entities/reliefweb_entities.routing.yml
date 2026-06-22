@@ -1,0 +1,7 @@
+reliefweb_entities.settings:
+  path: '/admin/config/content/reliefweb-entities'
+  defaults:
+    _form: '\Drupal\reliefweb_entities\Form\ReliefWebEntitiesSettingsForm'
+    _title: 'ReliefWeb Entities Settings'
+  requirements:
+    _permission: 'administer reliefweb entities settings'
