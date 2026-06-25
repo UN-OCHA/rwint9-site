@@ -127,17 +127,22 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   Entity.
    *
-   * @return string
-   *   Consolidated posting rights for the author of the entity based on the
-   *   user and domain posting rights of the sources of the entity for that
-   *   user:
-   *   - "blocked" if the user is blocked for at least one of the sources
-   *   - "unverified" if the user is unverified for at least one of the sources
-   *     or if the are no posting rights for the user in any of the sources
-   *   - "trusted" if the user is trusted for all the sources
-   *   - "allowed" if the user is allowed or trusted for the sources.
+   * @return \Drupal\reliefweb_moderation\Enum\PostingRight|null
+   *   Consolidated posting rights for the author, or NULL when posting rights
+   *   cannot be determined (missing source field, no owner, or invalid source
+   *   field type).
+   *   - PostingRight::Blocked if the user is blocked for at least one
+   *     bundle-eligible source.
+   *   - PostingRight::Unverified if the user is unverified for at least one
+   *     bundle-eligible source, if there are no posting rights for the user on
+   *     any eligible source, or if no eligible sources exist.
+   *   - PostingRight::Trusted if the trusted count equals the number of all
+   *     referenced sources (see implementation for how ineligible sources
+   *     affect this check).
+   *   - PostingRight::Allowed if the user is allowed for at least one eligible
+   *     source and none of the above conditions apply.
    *
-   * @todo consolidate with the other posting rights methods once ported.
+   * @todo see if we can consolidate with getUserConsolidatedPostingRight().
    */
   public function getEntityAuthorPostingRights(EntityInterface $entity): ?PostingRight {
     if (!$entity->hasField('field_source') || !($entity instanceof EntityOwnerInterface)) {
@@ -157,7 +162,6 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $domain = DomainHelper::extractDomainFromEmail($email);
 
     $source_entities = $source_item_list->referencedEntities();
-    $eligible_source_count = 0;
     foreach ($source_entities as $source_entity) {
       if (!($source_entity instanceof ContentEntityInterface)) {
         continue;
@@ -169,7 +173,6 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
         continue;
       }
 
-      $eligible_source_count++;
       $right = PostingRight::Unverified;
       $user_right_found = FALSE;
 
@@ -212,7 +215,7 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     if ($counts[PostingRight::Unverified->value] > 0) {
       return PostingRight::Unverified;
     }
-    if ($eligible_source_count > 0 && $counts[PostingRight::Trusted->value] === $eligible_source_count) {
+    if (!empty($source_entities) && $counts[PostingRight::Trusted->value] === count($source_entities)) {
       return PostingRight::Trusted;
     }
     if ($counts[PostingRight::Allowed->value] > 0) {
