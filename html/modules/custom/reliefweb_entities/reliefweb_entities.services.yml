@@ -46,3 +46,9 @@ services:
   reliefweb_entities.taxonomy_term.form_alter:
     class: Drupal\reliefweb_entities\Services\TaxonomyTermFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights']
+  reliefweb_entities.related_content:
+    class: Drupal\reliefweb_entities\Services\RelatedContentService
+    autowire: true
+
+  Drupal\reliefweb_entities\Services\RelatedContentServiceInterface:
+    '@reliefweb_entities.related_content'

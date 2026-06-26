@@ -10,6 +10,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\Entity\Source;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_entities\Services\RelatedContentServiceInterface;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
@@ -171,146 +172,8 @@ trait DocumentTrait {
    * @see Drupal\reliefweb_entities\DocumentInterface::getRelatedContent()
    */
   public function getRelatedContent($limit = 4) {
-    $client = \Drupal::service('reliefweb_api.client');
-    $title = $this->t('Related Content');
-    $query = [];
-
-    // Get the standard report payload but exclude the attachments and body.
-    $payload = RiverServiceBase::getRiverApiPayload('report');
-    $payload['fields']['exclude'][] = 'body-html';
-    $payload['fields']['exclude'][] = 'file';
-    $payload['limit'] = $limit;
-
-    // Disasters.
-    $disaster_ids = $this->getReferencedEntityIds('field_disaster');
-    if (!empty($disaster_ids)) {
-      $query[] = 'disaster.id:' . implode(' OR disaster.id:', $disaster_ids);
-    }
-
-    // Themes.
-    $theme_ids = $this->getReferencedEntityIds('field_theme');
-    if (!empty($theme_ids)) {
-      $query[] = 'theme.id:' . implode(' OR theme.id:', $theme_ids);
-    }
-
-    // Countries.
-    // For non report resources (ex: jobs, training), limit to countries with
-    // an ongoing humanitarian situation.
-    if ($this->bundle() !== 'report' && $this->hasField('field_country')) {
-      $country_ids = [];
-      foreach ($this->field_country->referencedEntities() as $country) {
-        if ($country->getModerationStatus() === 'ongoing') {
-          $country_ids[] = $country->id();
-        }
-      }
-    }
-    else {
-      $country_ids = $this->getReferencedEntityIds('field_country');
-    }
-    if (!empty($country_ids)) {
-      $query[] = 'primary_country.id:' . implode(' OR primary_country.id:', $country_ids);
-    }
-
-    // Get the data.
-    if (!empty($query)) {
-      if ($this->bundle() === 'report') {
-        // Exclude current report.
-        $payload['filter'] = [
-          'field' => 'id',
-          'value' => $this->id(),
-          'negate' => TRUE,
-        ];
-        // Add a sub-query to get the same report in other languages with a high
-        // boost to give it precedence over the other related content.
-        $query[] = $this->getReportInOtherLanguages() . '^100';
-      }
-
-      // Construct query string with boost.
-      $payload['query']['value'] = implode(' OR ', $query);
-
-      // Sort by score to get the most relevant documents first.
-      $payload['sort'] = ['score:desc', 'date.created:desc'];
-
-      // Get the API data.
-      $data = $client->request('reports', $payload);
-
-      // Get the list of entities from the API data.
-      $entities = RiverServiceBase::getRiverData('report', $data);
-    }
-
-    // If there is no related content, we show the latest updates.
-    if (empty($entities)) {
-      $title = $this->t('Latest Updates');
-
-      // Get the API data.
-      $data = $client->request('reports', $payload);
-
-      // Get the list of entities from the API data.
-      $entities = RiverServiceBase::getRiverData('report', $data);
-    }
-
-    return [
-      '#theme' => 'reliefweb_rivers_river',
-      '#id' => 'related',
-      '#title' => $title,
-      '#resource' => 'reports',
-      '#entities' => $entities,
-      '#cache' => [
-        'tags' => [
-          'node_list:report',
-          'taxonomy_term_list:country',
-          'taxonomy_term_list:source',
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * Get a query to find the same document in other languages.
-   *
-   * Search for documents witht the same tagging but a different language
-   * published within 2 days of the document. This is not 100% accurate but
-   * in the worst case it will surface documents that really similar to the
-   * given one which are good candidates as related content.
-   *
-   * @return array
-   *   Query requesting possible translations.
-   */
-  protected function getReportInOtherLanguages() {
-    $query = [];
-
-    // Same report in different languages should have the same tagging.
-    $fields = [
-      'primary_country' => 'primary_country',
-      'country' => 'country',
-      'source' => 'source',
-      'content_format' => 'format',
-      'theme' => 'theme',
-      'disaster' => 'disaster',
-      'disaster_type' => 'disaster_type',
-    ];
-    foreach ($fields as $field => $name) {
-      $field = 'field_' . $field;
-      $ids = $this->getReferencedEntityIds($field);
-      if (!empty($ids)) {
-        $query[] = $name . '.id:(' . implode(' AND ', $ids) . ')';
-      }
-    }
-
-    // We want the documents with the same tagging in a different language.
-    $languages = $this->getReferencedEntityIds('field_language');
-    if (!empty($languages)) {
-      $query[] = 'NOT language.id:(' . implode(' AND ', $languages) . ')';
-    }
-
-    // Search for documents 2 days around the publication date.
-    if ($this->hasField('field_original_publication_date') && !$this->field_original_publication_date->isEmpty()) {
-      $date = (int) $this->field_original_publication_date->first()->getValue();
-      $query[] = 'date.original:[' . gmdate(DATE_ATOM, $date - 2 * 24 * 60 * 60) .
-                 ' TO ' . gmdate(DATE_ATOM, $date + 2 * 24 * 60 * 60) . ']';
-    }
-
-    return '(' . implode(' AND ', $query) . ')';
+    return \Drupal::service(RelatedContentServiceInterface::class)
+      ->getRelatedContent($this, $limit);
   }
 
   /**

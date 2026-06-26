@@ -16,3 +16,27 @@ cron:
   embargoed_reports_limit: 20
   expired_jobs_limit: 20
   expired_training_limit: 20
+related_content:
+  candidate_limit: 20
+  recency_short_months: 3
+  recency_long_months: 12
+  recency_decay_exponent: 1.5
+  translation_date_window_days: 2
+  title_pattern_token_counts:
+    - 10
+    - 8
+    - 6
+    - 4
+  theme_gate_max_count: 3
+  boosts:
+    translation: 100
+    disaster_country_recent: 55
+    disaster_recent: 45
+    disaster_medium: 35
+    disaster_primary_country: 30
+    disaster_country: 28
+    disaster: 15
+    title_disaster: 40
+    title_primary_country: 30
+    country_source: 25
+    country_theme: 30

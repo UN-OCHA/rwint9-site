@@ -1,0 +1,6 @@
+reliefweb_entities.settings:
+  title: 'ReliefWeb Entities Settings'
+  description: 'Configure cron limits, related content matching, and allowed social media links.'
+  route_name: reliefweb_entities.settings
+  parent: system.admin_config_content
+  weight: 100
