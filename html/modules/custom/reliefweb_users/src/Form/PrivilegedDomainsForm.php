@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_users\Form;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\State\StateInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -90,17 +91,19 @@ class PrivilegedDomainsForm extends FormBase {
       '#tree' => TRUE,
     ];
 
+    $posting_right_options = PostingRight::machineNameOptions();
+    unset($posting_right_options[PostingRight::Blocked->machineName()]);
+
     foreach (['report', 'job', 'training'] as $bundle) {
+      $default_right = PostingRight::fromMachineName($default_domain_posting_rights[$bundle] ?? NULL);
+      if ($default_right === PostingRight::Blocked) {
+        $default_right = PostingRight::Unverified;
+      }
       $form['default_domain_posting_rights'][$bundle] = [
         '#type' => 'select',
         '#title' => $this->t('@type default', ['@type' => ucfirst($bundle)]),
-        '#options' => [
-          'blocked' => $this->t('Blocked'),
-          'unverified' => $this->t('Unverified'),
-          'allowed' => $this->t('Allowed'),
-          'trusted' => $this->t('Trusted'),
-        ],
-        '#default_value' => $default_domain_posting_rights[$bundle],
+        '#options' => $posting_right_options,
+        '#default_value' => $default_right->machineName(),
       ];
     }
 
@@ -143,11 +146,13 @@ class PrivilegedDomainsForm extends FormBase {
 
     // Save the default posting rights to state.
     $defaults = $form_state->getValue('default_domain_posting_rights') ?? [];
-    $allowed_values = ['unverified', 'allowed', 'trusted'];
     $values = [];
     foreach (['report', 'job', 'training'] as $bundle) {
-      $value = $defaults[$bundle] ?? 'unverified';
-      $values[$bundle] = in_array($value, $allowed_values, TRUE) ? $value : 'unverified';
+      $right = PostingRight::fromMachineName($defaults[$bundle] ?? NULL);
+      $values[$bundle] = match ($right) {
+        PostingRight::Blocked => PostingRight::Unverified->machineName(),
+        default => $right->machineName(),
+      };
     }
     $this->state->set('reliefweb_users_privileged_domains_default_posting_rights', $values);
 
