@@ -1,5 +1,5 @@
 {
-    "_hash": "6d213da79e060d07008099f9f58cb5677576bffeeb39cda50eb162f747099a1b",
+    "_hash": "465c1811af9dd76b0a1c91967ef0cfc551f9035aedc9b77e537340d7177d160e",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -233,18 +233,6 @@
                 "description": "https://www.drupal.org/project/social_auth_linkedin/issues/3399739",
                 "url": "PATCHES/social_auth_linkedin-3399739-mr4.patch",
                 "sha256": "80e48fc12fbb25fe7414c63bbb18d3517d594deaf0529e3a0f080c45f9e42051",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/svg_image": [
-            {
-                "package": "drupal/svg_image",
-                "description": "PHP 8.5 canonical cast compatibility",
-                "url": "PATCHES/svg_image--php85-canonical-cast.patch",
-                "sha256": "ec7e682a6b9db1c64073a30873c1e061550c291640c087450f43ea8d1610a2c3",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

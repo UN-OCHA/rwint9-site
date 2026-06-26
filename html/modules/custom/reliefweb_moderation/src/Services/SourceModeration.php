@@ -6,6 +6,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 
 /**
@@ -217,10 +218,10 @@ class SourceModeration extends ModerationServiceBase {
       // Update the posting rights field, setting everything as blocked.
       if (!$entity->get('field_user_posting_rights')->isEmpty()) {
         foreach ($entity->get('field_user_posting_rights') as $item) {
-          if ($item->get('job')->getValue() != 1 || $item->get('training')->getValue() != 1 || $item->get('report')->getValue() != 1) {
-            $item->get('job')->setValue(1);
-            $item->get('training')->setValue(1);
-            $item->get('report')->setValue(1);
+          if ($item->get('job')->getValue() != PostingRight::Blocked->value || $item->get('training')->getValue() != PostingRight::Blocked->value || $item->get('report')->getValue() != PostingRight::Blocked->value) {
+            $item->get('job')->setValue(PostingRight::Blocked->value);
+            $item->get('training')->setValue(PostingRight::Blocked->value);
+            $item->get('report')->setValue(PostingRight::Blocked->value);
             $changed = TRUE;
           }
         }

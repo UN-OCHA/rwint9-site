@@ -8,6 +8,7 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -260,12 +261,7 @@ class UserPageFilterForm extends FormBase {
    * Get the list of possible user statuses.
    */
   protected function getRights() {
-    return [
-      'unverified' => $this->t('Unverified'),
-      'blocked' => $this->t('Blocked'),
-      'allowed' => $this->t('Allowed'),
-      'trusted' => $this->t('Trusted'),
-    ];
+    return PostingRight::machineNameOptions();
   }
 
 }

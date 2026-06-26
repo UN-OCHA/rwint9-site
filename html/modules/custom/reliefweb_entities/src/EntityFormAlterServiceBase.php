@@ -17,6 +17,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
@@ -677,12 +678,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       ->load($entity->bundle())
       ->label();
 
-    $posting_rights = [
-      ['type' => 'unverified', 'label' => $this->t('Unverified')],
-      ['type' => 'blocked', 'label' => $this->t('Blocked')],
-      ['type' => 'allowed', 'label' => $this->t('Allowed')],
-      ['type' => 'trusted', 'label' => $this->t('Trusted')],
-    ];
+    $posting_rights = PostingRight::labeledCases();
 
     $build = [
       '#theme' => 'reliefweb_entities_form_user_information',
@@ -718,7 +714,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
             'taxonomy_term' => $tid,
           ])->toString(),
           'name' => $name,
-          'right' => $posting_rights[$rights[$tid][$bundle]],
+          'right' => $posting_rights[$rights[$tid][$bundle] ?? PostingRight::Unverified->value],
         ];
       }
     }
@@ -729,7 +725,7 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
       $build['#new_source'] = [
         'name' => $new_source['name'],
         'url' => $new_source['url'],
-        'right' => $posting_rights[0],
+        'right' => $posting_rights[PostingRight::Unverified->value],
       ];
     }
 
