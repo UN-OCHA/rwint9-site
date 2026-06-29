@@ -2,9 +2,6 @@
 
 namespace Drupal\reliefweb_xmlsitemap\Command;
 
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\Core\File\FileSystemInterface;
@@ -18,11 +15,7 @@ use GuzzleHttp\ClientInterface;
 /**
  * Drush commandfile.
  */
-class ReliefwebXmlsitemapCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
-
-  // Drush traits.
-  use ProcessManagerAwareTrait;
-  use SiteAliasManagerAwareTrait;
+class ReliefwebXmlsitemapCommand extends DrushCommands {
 
   /**
    * Directory for the xmlsitemap files.

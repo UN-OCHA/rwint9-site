@@ -1,4 +1,9 @@
 services:
+  reliefweb_entities.publication_notification:
+    class: Drupal\reliefweb_entities\Services\PublicationNotifier
+    arguments: ['@plugin.manager.mail', '@language_manager']
+  Drupal\reliefweb_entities\Hook\PublicationNotificationHooks:
+    arguments: ['@reliefweb_entities.publication_notification']
   reliefweb_entities.route_subscriber:
     class: 'Drupal\reliefweb_entities\Routing\RouteSubscriber'
     tags:

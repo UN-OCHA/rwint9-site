@@ -518,7 +518,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $status_mapping = $this->parseReimportStatusMapping($status_mapping_setting);
     if (!empty($status_mapping)) {
       // Update the moderation status.
-      $status = match(TRUE) {
+      $status = match (TRUE) {
         !empty($status_mapping[$status]) => $status_mapping[$status],
         !empty($status_mapping['*']) => $status_mapping['*'],
         // No status override, let the content processor decide what to use.
@@ -591,9 +591,12 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Skip if classification is not enabled for this plugin.
+    // Skip if classification is not enabled for this plugin. When enabled,
+    // leave $skip unchanged so other modules (e.g. series matching) can skip.
     $setting = $this->getPluginSetting('classification.enabled', FALSE, FALSE);
-    $skip = empty($setting);
+    if (empty($setting)) {
+      $skip = TRUE;
+    }
   }
 
   /**

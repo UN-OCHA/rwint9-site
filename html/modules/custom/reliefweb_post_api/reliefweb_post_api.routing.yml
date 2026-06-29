@@ -12,6 +12,8 @@ reliefweb_post_api.post:
     - PUT
     - DELETE
   requirements:
+    # Public route: resource/method handling and controller-level auth checks
+    # gate access.
     _access: 'TRUE'
     resource: '^[a-z][a-z_-]+[a-z]$'
     uuid: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
@@ -23,6 +25,8 @@ reliefweb_post_api.schema:
   methods:
     - GET
   requirements:
+    # Public schema endpoint serving static definitions for valid schema names
+    # only.
     _access: 'TRUE'
     schema: '^[a-z][a-z_-]+[a-z]\.json$'
 

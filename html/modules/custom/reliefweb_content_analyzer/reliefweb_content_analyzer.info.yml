@@ -1,0 +1,11 @@
+type: module
+name: 'ReliefWeb content analyzer'
+description: 'Analyzes ReliefWeb content (series matching and related helpers).'
+package: reliefweb
+core_version_requirement: ^11
+dependencies:
+  - reliefweb_files:reliefweb_files
+  - reliefweb_api:reliefweb_api
+  - reliefweb_moderation:reliefweb_moderation
+  - ocha_ai:ocha_ai
+  - ocha_content_classification:ocha_content_classification

@@ -906,7 +906,26 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE if the extraction was successful.
    */
   protected function extractPreview($source_uri, $destination_uri, $page, $rotation) {
-    $file_system = $this->getFileSystem();
+    return static::extractPreviewToUri($source_uri, $destination_uri, $page, $rotation);
+  }
+
+  /**
+   * Extract a preview image from a PDF file to a destination URI.
+   *
+   * @param string $source_uri
+   *   URI of the file from which to extract the preview.
+   * @param string $destination_uri
+   *   URI of the file preview file.
+   * @param int $page
+   *   Page to use for the preview.
+   * @param int $rotation
+   *   Rotation of the preview page.
+   *
+   * @return bool
+   *   TRUE if the extraction was successful.
+   */
+  public static function extractPreviewToUri($source_uri, $destination_uri, $page, $rotation) {
+    $file_system = \Drupal::service('file_system');
 
     // Create the previews directory to store the file.
     if (!static::prepareDirectory($destination_uri)) {
