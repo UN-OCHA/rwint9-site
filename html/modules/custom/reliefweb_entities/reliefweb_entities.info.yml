@@ -9,3 +9,5 @@ dependencies:
   - drupal:reliefweb_files
   - drupal:reliefweb_form
   - drupal:reliefweb_utility
+  - drupal:reliefweb_api
+  - drupal:reliefweb_rivers

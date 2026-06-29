@@ -976,7 +976,7 @@ function reliefweb_entities_ocha_content_classification_hide_form_fields_alter(a
       $rights = $user_posting_rights_manager->getUserConsolidatedPostingRight($user, $bundle, $sources);
 
       // Prevent hiding the fields if the user is trusted.
-      if (!empty($rights['code']) && $rights['code'] === 3) {
+      if ($rights['right']->isTrusted()) {
         // Effectively unhide the fields by resetting the array.
         $fields_to_hide = [];
       }

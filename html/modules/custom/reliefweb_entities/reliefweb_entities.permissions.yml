@@ -17,3 +17,8 @@ requeue report for classification on change:
 check for duplicate files:
   title: 'Check for duplicate files'
   description: 'Check for potential duplicate files when editing reports.'
+
+administer reliefweb entities settings:
+  title: 'Administer ReliefWeb Entities settings'
+  description: 'Configure ReliefWeb Entities settings including cron limits and related content matching.'
+  restrict access: true

@@ -10,6 +10,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\UserInterface;
@@ -100,6 +101,7 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     // Attach the library used manipulate the field.
     $elements['#attached']['library'][] = 'reliefweb_fields/reliefweb-user-posting-rights';
+    $elements['#attached']['drupalSettings']['reliefwebPostingRights']['labels'] = PostingRight::jsLabels();
 
     return $elements;
   }
@@ -250,9 +252,9 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
     $data['status'] = intval($data['status'], 10);
     // Blocked users are not allowed to post.
     if ($data['status'] === 0) {
-      $data['report'] = 1;
-      $data['job'] = 1;
-      $data['training'] = 1;
+      $data['report'] = PostingRight::Blocked->value;
+      $data['job'] = PostingRight::Blocked->value;
+      $data['training'] = PostingRight::Blocked->value;
     }
 
     $data['privileged'] = $privileged ? 1 : 0;
@@ -385,6 +387,8 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
     $uid = $user->id();
     $blocked = $user->isBlocked();
+    $blocked_right = PostingRight::Blocked->value;
+    $unverified_right = PostingRight::Unverified->value;
     $original_entity = $user->getOriginal();
     $email_changed = isset($original_entity) && $user->getEmail() !== $original_entity->getEmail();
     $message = '';
@@ -455,9 +459,9 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
         if ($op === 'update') {
           $query->condition($query
             ->orConditionGroup()
-            ->condition($field_name . '.job', 1, '<>')
-            ->condition($field_name . '.training', 1, '<>')
-            ->condition($field_name . '.report', 1, '<>'));
+            ->condition($field_name . '.job', $blocked_right, '<>')
+            ->condition($field_name . '.training', $blocked_right, '<>')
+            ->condition($field_name . '.report', $blocked_right, '<>'));
         }
 
         $ids = $query?->execute();
@@ -482,10 +486,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
               }
               // Set the rights to 'blocked' if the account is blocked.
               elseif ($blocked) {
-                if ($item['job'] != 1 || $item['training'] != 1 || $item['report'] != 1) {
-                  $items[$delta]['job'] = 1;
-                  $items[$delta]['training'] = 1;
-                  $items[$delta]['report'] = 1;
+                if ($item['job'] != $blocked_right || $item['training'] != $blocked_right || $item['report'] != $blocked_right) {
+                  $items[$delta]['job'] = $blocked_right;
+                  $items[$delta]['training'] = $blocked_right;
+                  $items[$delta]['report'] = $blocked_right;
                   if (!empty($item['notes'])) {
                     $items[$delta]['notes'] .= ' ' . $message;
                   }
@@ -498,10 +502,10 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
               // Reset the rights to 'unverified' if the email changed but
               // preserve the 'blocked' rights.
               elseif ($email_changed) {
-                if ($item['job'] > 1 || $item['training'] > 1 || $item['report'] > 1) {
-                  $items[$delta]['job'] = $item['job'] == 1 ? 1 : 0;
-                  $items[$delta]['training'] = $item['training'] == 1 ? 1 : 0;
-                  $items[$delta]['report'] = $item['report'] == 1 ? 1 : 0;
+                if ($item['job'] > $blocked_right || $item['training'] > $blocked_right || $item['report'] > $blocked_right) {
+                  $items[$delta]['job'] = $item['job'] == $blocked_right ? $blocked_right : $unverified_right;
+                  $items[$delta]['training'] = $item['training'] == $blocked_right ? $blocked_right : $unverified_right;
+                  $items[$delta]['report'] = $item['report'] == $blocked_right ? $blocked_right : $unverified_right;
                   if (!empty($item['notes'])) {
                     $items[$delta]['notes'] .= ' ' . $message;
                   }
@@ -608,9 +612,9 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
    */
   protected static function getDefaultPostingRightCode(string $bundle, bool $privileged): int {
     if ($privileged) {
-      return static::getDefaultPostingRightCodes()[$bundle] ?? 0;
+      return static::getDefaultPostingRightCodes()[$bundle] ?? PostingRight::Unverified->value;
     }
-    return 0;
+    return PostingRight::Unverified->value;
   }
 
 }
