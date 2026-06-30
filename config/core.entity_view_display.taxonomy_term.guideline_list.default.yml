@@ -1,0 +1,34 @@
+uuid: 4dfbb097-a344-4781-b2de-f2c749d449d9
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.guideline_list.field_role
+    - taxonomy.vocabulary.guideline_list
+id: taxonomy_term.guideline_list.default
+targetEntityType: taxonomy_term
+bundle: guideline_list
+mode: default
+content:
+  field_role:
+    type: entity_reference_label
+    label: inline
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  name:
+    type: string
+    label: hidden
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  content_moderation_control: true
+  description: true
+  langcode: true
+  moderation_status: true
+  search_api_excerpt: true

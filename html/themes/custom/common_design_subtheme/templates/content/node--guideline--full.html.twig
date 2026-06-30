@@ -1,0 +1,41 @@
+{#
+/**
+ * @file
+ * Theme override for guideline node full view.
+ *
+ * @see template_preprocess_node()
+ * @see common_design_preprocess_node()
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-article') }}
+
+{{ local_tasks }}
+<article{{ attributes
+  .addClass([
+    'node',
+    'node--' ~ node.bundle(),
+    'node--full',
+    'node--' ~ node.bundle() ~ '--full',
+    'rw-article',
+    'rw-article--' ~ node.bundle(),
+    'rw-document',
+  ])
+  .setAttribute('data-id', node.id())
+}}>
+  <header class="rw-article__header">
+    {{ title|merge({'#title_attributes': title_attributes.addClass('rw-article__title')}) }}
+  </header>
+
+  <div class="rw-article__content rw-article__content--simple">
+    {{ node.getLinkToGuidelines() }}
+    {% set list_link = node.getGuidelineListLink() %}
+    {% if list_link %}
+      <p><strong>{% trans %}Guideline list:{% endtrans %}</strong> {{ list_link }}</p>
+    {% endif %}
+    <hr>
+    {{ content.field_description.0|render|sanitize_html(false, 1) }}
+    {{ content|without(['field_description']) }}
+  </div>
+</article>
+
+{{ node.getHistory() }}
