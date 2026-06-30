@@ -51,7 +51,7 @@ class UserPostsPageFilterForm extends ModerationPageFilterForm {
       return [];
     }
 
-    $pattern = match(count($links)) {
+    $pattern = match (count($links)) {
       3 => 'Create a new @link1, a new @link2 or a new @link3',
       2 => 'Create a new @link1 or a new @link2',
       1 => 'Create a new @link1',

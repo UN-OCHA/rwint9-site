@@ -4,4 +4,4 @@ description: 'Handles file attachments and integration with the OCHA Document St
 package: reliefweb
 core_version_requirement: ^10 || ^11
 dependencies:
-  - reliefweb_api
+  - reliefweb_api:reliefweb_api

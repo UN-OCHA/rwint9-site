@@ -3,4 +3,3 @@ reliefweb_post_api_provider.add:
   title: 'Add provider'
   appears_on:
     - entity.reliefweb_post_api_provider.collection
-

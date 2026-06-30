@@ -8,7 +8,6 @@ use Drupal\Core\Entity\EntityInterface;
 use Drupal\reliefweb_meta\BaseEntity;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Spatie\SchemaOrg\EventAttendanceModeEnumeration;
-use Spatie\SchemaOrg\EventStatusType;
 use Spatie\SchemaOrg\Course;
 use Spatie\SchemaOrg\CourseInstance;
 use Spatie\SchemaOrg\EducationEvent;
@@ -88,7 +87,7 @@ class NodeTrainingEntity extends BaseEntity {
       $training_type_id === 4608 => Schema::EducationEvent(),
       // Conference/Lecture.
       $training_type_id === 21006 => Schema::EducationEvent(),
-      // Training/Workshop
+      // Training/Workshop.
       $training_type_id === 4609 => Schema::EducationEvent(),
       // Other.
       default => Schema::course(),
