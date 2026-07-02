@@ -23,6 +23,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
@@ -1026,13 +1027,6 @@ class EntityHistory {
       'modified-notes' => $this->t('Modified Notes'),
     ];
 
-    $rights = [
-      0 => 'unverified',
-      1 => 'blocked',
-      2 => 'allowed',
-      3 => 'trusted',
-    ];
-
     // Check if something changed for the users that are in both current and
     // previous revisions.
     foreach (array_intersect_key($current, $previous) as $key => $item) {
@@ -1042,8 +1036,8 @@ class EntityHistory {
       foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
-            '@before' => $this->userPostingRightsManager->renderRight($rights[$previous_item[$type]]),
-            '@after' => $this->userPostingRightsManager->renderRight($rights[$current_item[$type]]),
+            '@before' => $this->userPostingRightsManager->renderRight(PostingRight::fromValue($previous_item[$type])),
+            '@after' => $this->userPostingRightsManager->renderRight(PostingRight::fromValue($current_item[$type])),
           ]);
           $categories['modified-' . $type][] = $item;
         }
@@ -1084,9 +1078,9 @@ class EntityHistory {
           // Add the rights when a user is added.
           if ($category === 'added') {
             $markup[] = '(job: @job, training: @training, report: @report)';
-            $replacements['@job'] = $this->userPostingRightsManager->renderRight($rights[$item['job']]);
-            $replacements['@training'] = $this->userPostingRightsManager->renderRight($rights[$item['training']]);
-            $replacements['@report'] = $this->userPostingRightsManager->renderRight($rights[$item['report']]);
+            $replacements['@job'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['job']));
+            $replacements['@training'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['training']));
+            $replacements['@report'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['report']));
           }
 
           // Add the rights changes.
@@ -1158,13 +1152,6 @@ class EntityHistory {
       'modified-notes' => $this->t('Modified Notes'),
     ];
 
-    $rights = [
-      0 => 'unverified',
-      1 => 'blocked',
-      2 => 'allowed',
-      3 => 'trusted',
-    ];
-
     // Check if something changed for the domains that are in both current and
     // previous revisions.
     foreach (array_intersect_key($current, $previous) as $key => $item) {
@@ -1174,8 +1161,8 @@ class EntityHistory {
       foreach (['job', 'training', 'report'] as $type) {
         if ($previous_item[$type] !== $current_item[$type]) {
           $item['change'] = new FormattableMarkup('@before &rarr; @after', [
-            '@before' => $this->userPostingRightsManager->renderRight($rights[$previous_item[$type]]),
-            '@after' => $this->userPostingRightsManager->renderRight($rights[$current_item[$type]]),
+            '@before' => $this->userPostingRightsManager->renderRight(PostingRight::fromValue($previous_item[$type])),
+            '@after' => $this->userPostingRightsManager->renderRight(PostingRight::fromValue($current_item[$type])),
           ]);
           $categories['modified-' . $type][] = $item;
         }
@@ -1208,9 +1195,9 @@ class EntityHistory {
           // Add the rights when a domain is added.
           if ($category === 'added') {
             $markup[] = '(job: @job, training: @training, report: @report)';
-            $replacements['@job'] = $this->userPostingRightsManager->renderRight($rights[$item['job']]);
-            $replacements['@training'] = $this->userPostingRightsManager->renderRight($rights[$item['training']]);
-            $replacements['@report'] = $this->userPostingRightsManager->renderRight($rights[$item['report']]);
+            $replacements['@job'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['job']));
+            $replacements['@training'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['training']));
+            $replacements['@report'] = $this->userPostingRightsManager->renderRight(PostingRight::fromValue($item['report']));
           }
 
           // Add the rights changes.

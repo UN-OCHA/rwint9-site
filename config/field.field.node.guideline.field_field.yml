@@ -1,0 +1,21 @@
+uuid: ec0d8e13-1847-432b-bee7-882feea0ce8f
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_field
+    - node.type.guideline
+  module:
+    - reliefweb_guidelines
+id: node.guideline.field_field
+field_name: field_field
+entity_type: node
+bundle: guideline
+label: Field
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: guideline_field_target

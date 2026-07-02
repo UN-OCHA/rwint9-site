@@ -1,0 +1,23 @@
+uuid: f37e275a-d748-4b27-87a9-1211238676a4
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_weight
+    - node.type.guideline
+id: node.guideline.field_weight
+field_name: field_weight
+entity_type: node
+bundle: guideline
+label: Weight
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

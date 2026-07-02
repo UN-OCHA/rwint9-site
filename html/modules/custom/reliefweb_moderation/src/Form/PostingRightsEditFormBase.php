@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_moderation\Form;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\taxonomy\TermInterface;
@@ -47,12 +48,7 @@ abstract class PostingRightsEditFormBase extends FormBase {
    *   Array of rights options.
    */
   protected function getRightsOptions(): array {
-    return [
-      0 => $this->t('Unverified'),
-      1 => $this->t('Blocked'),
-      2 => $this->t('Allowed'),
-      3 => $this->t('Trusted'),
-    ];
+    return PostingRight::options();
   }
 
   /**

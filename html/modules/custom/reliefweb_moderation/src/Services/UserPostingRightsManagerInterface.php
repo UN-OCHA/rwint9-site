@@ -9,6 +9,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 
 /**
  * Interface for the user posting rights manager.
@@ -48,10 +49,11 @@ interface UserPostingRightsManagerInterface {
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   Entity.
    *
-   * @return string
-   *   Consolidated posting rights for the author of the entity.
+   * @return \Drupal\reliefweb_moderation\Enum\PostingRight|null
+   *   Consolidated posting rights for the author of the entity, or NULL when
+   *   posting rights cannot be determined.
    */
-  public function getEntityAuthorPostingRights(EntityInterface $entity): string;
+  public function getEntityAuthorPostingRights(EntityInterface $entity): ?PostingRight;
 
   /**
    * Get the posting rights per sources for an account.
@@ -142,8 +144,9 @@ interface UserPostingRightsManagerInterface {
    * @param array<int> $sources
    *   List of sources. Limit the returned rights to the given sources.
    *
-   * @return array<string, mixed>
-   *   Associative array with the right code and name.
+   * @return array{right: \Drupal\reliefweb_moderation\Enum\PostingRight, sources: list<int>}
+   *   Associative array with the consolidated right and the source IDs for
+   *   which that right applies.
    */
   public function getUserConsolidatedPostingRight(AccountInterface $account, string $bundle, array $sources): array;
 
@@ -279,13 +282,13 @@ interface UserPostingRightsManagerInterface {
   /**
    * Format a user posting right.
    *
-   * @param string $right
-   *   Right.
+   * @param \Drupal\reliefweb_moderation\Enum\PostingRight|null $right
+   *   Right, or NULL when posting rights cannot be determined.
    *
    * @return \Drupal\Component\Render\MarkupInterface
    *   Formatted right.
    */
-  public function renderRight(string $right): MarkupInterface;
+  public function renderRight(?PostingRight $right): MarkupInterface;
 
   /**
    * Get the user posting rights to moderation status mapping.
@@ -331,20 +334,9 @@ interface UserPostingRightsManagerInterface {
   public function getSupportedContentTypes(): array;
 
   /**
-   * Sanitize a posting right value.
-   *
-   * @param string|null $right
-   *   Posting right value.
-   *
-   * @return string
-   *   Sanitized posting right.
-   */
-  public function sanitizePostingRight(?string $right): string;
-
-  /**
    * Get default domain posting rights.
    *
-   * @return array<string, string>
+   * @return array<string, \Drupal\reliefweb_moderation\Enum\PostingRight>
    *   Default posting rights keyed by bundle.
    */
   public function getDefaultDomainPostingRights(): array;
@@ -355,10 +347,10 @@ interface UserPostingRightsManagerInterface {
    * @param string $bundle
    *   Content bundle.
    *
-   * @return string
+   * @return \Drupal\reliefweb_moderation\Enum\PostingRight
    *   Default posting right value.
    */
-  public function getDefaultDomainPostingRightValue(string $bundle): string;
+  public function getDefaultDomainPostingRightValue(string $bundle): PostingRight;
 
   /**
    * Get default domain posting rights code.

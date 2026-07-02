@@ -9,6 +9,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Drupal\reliefweb_moderation\Services\JobModeration;
 use Drupal\reliefweb_moderation\Services\TrainingModeration;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -242,10 +243,10 @@ class PostingRightsStatusMappingForm extends ConfigFormBase {
         '#type' => 'table',
         '#header' => [
           ['data' => $this->t('Scenario'), 'class' => ['scenario-cell']],
-          ['data' => $this->t('Blocked'), 'class' => ['rights-cell', 'rights-cell--blocked']],
-          ['data' => $this->t('Trusted'), 'class' => ['rights-cell', 'rights-cell--trusted']],
-          ['data' => $this->t('Allowed'), 'class' => ['rights-cell', 'rights-cell--allowed']],
-          ['data' => $this->t('Unverified'), 'class' => ['rights-cell', 'rights-cell--unverified']],
+          ['data' => PostingRight::Blocked->label(), 'class' => ['rights-cell', 'rights-cell--blocked']],
+          ['data' => PostingRight::Trusted->label(), 'class' => ['rights-cell', 'rights-cell--trusted']],
+          ['data' => PostingRight::Allowed->label(), 'class' => ['rights-cell', 'rights-cell--allowed']],
+          ['data' => PostingRight::Unverified->label(), 'class' => ['rights-cell', 'rights-cell--unverified']],
           ['data' => $this->t('Privileged'), 'class' => ['rights-cell', 'rights-cell--privileged']],
           ['data' => $this->t('Report Status'), 'class' => ['status-cell', 'status-cell--report']],
           ['data' => $this->t('Job Status'), 'class' => ['status-cell', 'status-cell--job']],

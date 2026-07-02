@@ -12,7 +12,7 @@ use Drupal\reliefweb_guidelines\GuidelineLoadTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Controller for the guidelines.
+ * Controller for the guidelines page.
  */
 class GuidelineSinglePageController extends ControllerBase {
 
@@ -65,22 +65,20 @@ class GuidelineSinglePageController extends ControllerBase {
   public function getPageContent() {
     $list = $this->getGuidelineList();
 
-    $build = [
+    return [
       '#theme' => 'reliefweb_guidelines_list',
       '#title' => $this->t('Guidelines'),
       '#guidelines' => array_filter($list, function ($item) {
         return !empty($item['title']) && !empty($item['children']);
       }),
       '#cache' => [
-        'tags' => ['guideline_list'],
+        'tags' => ['node_list:guideline', 'taxonomy_term_list:guideline_list'],
         'contexts' => ['user.permissions', 'user.roles'],
       ],
       '#attached' => [
         'library' => ['reliefweb_guidelines/reliefweb-guidelines'],
       ],
     ];
-
-    return $build;
   }
 
   /**
@@ -89,27 +87,23 @@ class GuidelineSinglePageController extends ControllerBase {
    * @return array
    *   The list of guidelines to render.
    */
-  protected function getGuidelineList() {
+  protected function getGuidelineList(): array {
     $list = [];
-    $storage = $this->entityTypeManager()->getStorage('guideline');
+    $storage = $this->entityTypeManager()->getStorage('node');
 
-    // Retrieve the guideline lists accessible to the current user.
     $guideline_list_ids = $this->getAccessibleGuidelineListIds($this->currentUser());
     if (empty($guideline_list_ids)) {
       return [];
     }
 
-    // Generate the cache ID based on the list of guideline lists.
     $cache_id = $this->getGuidelineListCacheId($guideline_list_ids);
-
-    // Attempt to get the data from the cache.
     $cache = $this->cache->get($cache_id);
     if (isset($cache->data)) {
       return $cache->data;
     }
 
-    /** @var \Drupal\reliefweb_guidelines\Entity\GuidelineList[] $guideline_lists */
-    $guideline_lists = $this->loadOrderedGuidelines($guideline_list_ids);
+    /** @var \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList[] $guideline_lists */
+    $guideline_lists = $this->entityTypeManager()->getStorage('taxonomy_term')->loadMultiple($guideline_list_ids);
 
     $is_admin = $this->isUserAdmin($this->currentUser());
 
@@ -126,19 +120,19 @@ class GuidelineSinglePageController extends ControllerBase {
     $guideline_ids = $storage
       ->getQuery()
       ->condition('status', 1, '=')
-      ->condition('type', 'field_guideline', '=')
-      ->condition('parent', $guideline_list_ids, 'IN')
-      ->sort('weight', 'ASC')
+      ->condition('type', 'guideline', '=')
+      ->condition('field_guideline_list', $guideline_list_ids, 'IN')
+      ->sort('field_weight', 'ASC')
       ->accessCheck(TRUE)
       ->execute();
 
-    /** @var \Drupal\guidelines\Entity\Guideline[] $guidelines */
-    $guidelines = $this->loadOrderedGuidelines($guideline_ids);
+    /** @var \Drupal\reliefweb_guidelines\Entity\Node\Guideline[] $guidelines */
+    $guidelines = $this->entityTypeManager()->getStorage('node')->loadMultiple($guideline_ids);
 
     // Prepare the guideline children.
     foreach ($guidelines as $guideline) {
       // There's supposed to be only one hierarchical level of guidelines.
-      $parent = $guideline->getParentIds()[0] ?? NULL;
+      $parent = $guideline->field_guideline_list->target_id ?? NULL;
       if (isset($parent, $list[$parent])) {
         $id = $guideline->field_short_link->value;
         $description = $guideline->field_description->value ?? '';
@@ -163,7 +157,7 @@ class GuidelineSinglePageController extends ControllerBase {
           'description' => static::replaceLinks($description, 'blank-image'),
         ];
 
-        if ($this->currentUser->hasPermission('edit guideline entities')) {
+        if ($this->currentUser->hasPermission('edit any guideline content')) {
           $list[$parent]['children'][$id]['edit'] = $guideline->toUrl('edit-form')->toString();
         }
       }
@@ -172,26 +166,13 @@ class GuidelineSinglePageController extends ControllerBase {
     // Filter out guideline lists without children.
     $list = array_filter($list, fn($item) => isset($item['children']));
 
-    // Cache the list of letters permanently. It will be rebuilt when a source
-    // is modified.
-    $this->cache->set($cache_id, $list, CacheBackendInterface::CACHE_PERMANENT, ['guideline_list']);
+    // Cached permanently; invalidated via node_list:guideline and
+    // taxonomy_term_list:guideline_list cache tags.
+    $this->cache->set($cache_id, $list, CacheBackendInterface::CACHE_PERMANENT, [
+      'node_list:guideline',
+      'taxonomy_term_list:guideline_list',
+    ]);
     return $list;
-  }
-
-  /**
-   * Load guidelines and return them in the same order of their IDs.
-   *
-   * @param array $ids
-   *   Guideline entity IDs.
-   *
-   * @return array
-   *   Asscociative array of loaded entities keyed by their IDs.
-   */
-  protected function loadOrderedGuidelines(array $ids): array {
-    $entities = $this->entityTypeManager()->getStorage('guideline')->loadMultiple($ids);
-    $ordered_entities = array_intersect_key(array_flip($ids), $entities);
-    $ordered_entities = array_replace($ordered_entities, $entities);
-    return $ordered_entities;
   }
 
   /**
@@ -237,17 +218,18 @@ class GuidelineSinglePageController extends ControllerBase {
       return Markup::create($html);
     }
 
-    // Load the guideline name and shortlink to use for the link replacements.
+    // Load the guideline title and shortlink to use for the link replacements.
     if (!isset($mapping)) {
-      $query = \Drupal::database()->select('guideline_field_data', 'g');
-      $query->innerJoin('guideline__field_short_link', 'f', 'f.entity_id = g.id');
-      $query->fields('g', ['id', 'name']);
+      $query = \Drupal::database()->select('node_field_data', 'n');
+      $query->innerJoin('node__field_short_link', 'f', 'f.entity_id = n.nid');
+      $query->fields('n', ['nid', 'title']);
       $query->addField('f', 'field_short_link_value', 'shortlink');
+      $query->condition('n.type', 'guideline');
       $records = $query->execute() ?? [];
 
       $mapping = [];
       foreach ($records as $record) {
-        $mapping[$record->id] = $record;
+        $mapping[$record->nid] = $record;
         $mapping[$record->shortlink] = $record;
       }
     }
@@ -257,7 +239,7 @@ class GuidelineSinglePageController extends ControllerBase {
       $hosts = ['reliefweb.int' => TRUE];
       $host = \Drupal::request()->getHost();
       if ($host !== 'reliefweb.int') {
-        $hosts[\Drupal::request()->getHost()] = TRUE;
+        $hosts[$host] = TRUE;
       }
     }
 
@@ -283,13 +265,13 @@ class GuidelineSinglePageController extends ControllerBase {
         continue;
       }
 
-      // Canonical link.
-      if (preg_match('#^/?admin/structure/guideline/(\d+)$#', $path, $match) === 1) {
+      // Canonical node link.
+      if (preg_match('#^/?node/(\d+)(?:/edit)?$#', $path, $match) === 1) {
         if (isset($mapping[$match[1]])) {
           $link->setAttribute('href', '/guidelines#' . $mapping[$match[1]]->shortlink);
         }
       }
-      // Alias.
+      // Pathauto alias.
       if (preg_match('#^/?guideline/([0-9a-zA-Z]{8})(\S+)?$#', $path, $match) === 1) {
         if (isset($mapping[$match[1]])) {
           $link->setAttribute('href', '/guidelines#' . $mapping[$match[1]]->shortlink);
@@ -297,16 +279,16 @@ class GuidelineSinglePageController extends ControllerBase {
       }
 
       $title = $link->textContent;
-      // Canonical link.
-      if (preg_match('#^(\s*)/?admin/structure/guideline/(\d+)(\s*)$#', $title, $match) === 1) {
+      // Canonical node link.
+      if (preg_match('#^(\s*)/?node/(\d+)(\s*)$#', $title, $match) === 1) {
         if (isset($mapping[$match[2]])) {
-          $link->textContent = $match[1] . $mapping[$match[2]]->name . $match[3];
+          $link->textContent = $match[1] . $mapping[$match[2]]->title . $match[3];
         }
       }
-      // Alias.
+      // Pathauto alias.
       if (preg_match('#^(\s*)/?guideline/([0-9a-zA-Z]{8})(\s*)$#', $path, $match) === 1) {
         if (isset($mapping[$match[2]])) {
-          $link->textContent = $match[1] . $mapping[$match[2]]->name . $match[3];
+          $link->textContent = $match[1] . $mapping[$match[2]]->title . $match[3];
         }
       }
     }
@@ -320,7 +302,7 @@ class GuidelineSinglePageController extends ControllerBase {
           $image->setAttribute('src', static::getBlankGifUrl());
         }
         else {
-          $image->setAttribute('laoading', 'lazy');
+          $image->setAttribute('loading', 'lazy');
         }
       }
     }
@@ -352,7 +334,7 @@ class GuidelineSinglePageController extends ControllerBase {
    * @return string
    *   URL to the blank gif image.
    */
-  protected static function getBlankGifUrl() {
+  protected static function getBlankGifUrl(): string {
     static $blank_gif_url;
     if (!isset($blank_gif_url)) {
       $blank_gif_url = '/' . \Drupal::service('extension.path.resolver')

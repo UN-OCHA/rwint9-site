@@ -49,9 +49,6 @@
         "drupal/social_auth_linkedin": {
           "https://www.drupal.org/project/social_auth_linkedin/issues/3399739": "PATCHES/social_auth_linkedin-3399739-mr4.patch"
         },
-        "drupal/svg_image": {
-            "PHP 8.5 canonical cast compatibility": "PATCHES/svg_image--php85-canonical-cast.patch"
-        },
         "drupal/username_enumeration_prevention": {
             "Avoid leaking the path via Drupal.settings json": "PATCHES/username_enumeration_prevention-user-login-block-form-3312288.patch"
         },

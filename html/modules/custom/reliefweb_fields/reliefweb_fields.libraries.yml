@@ -11,6 +11,9 @@ reliefweb-user-posting-rights:
       components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.css: {}
   js:
     components/reliefweb-user-posting-rights/reliefweb-user-posting-rights.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
 
 reliefweb-domain-posting-rights:
   css:
@@ -18,6 +21,9 @@ reliefweb-domain-posting-rights:
       components/reliefweb-domain-posting-rights/reliefweb-domain-posting-rights.css: {}
   js:
     components/reliefweb-domain-posting-rights/reliefweb-domain-posting-rights.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings
 
 
 reliefweb-section-links:

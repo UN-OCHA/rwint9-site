@@ -9,6 +9,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 
@@ -97,6 +98,7 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
 
     // Attach the library used manipulate the field.
     $elements['#attached']['library'][] = 'reliefweb_fields/reliefweb-domain-posting-rights';
+    $elements['#attached']['drupalSettings']['reliefwebPostingRights']['labels'] = PostingRight::jsLabels();
 
     return $elements;
   }
@@ -320,9 +322,9 @@ class ReliefWebDomainPostingRights extends WidgetBase implements ContainerFactor
    */
   protected static function getDefaultPostingRightCode(string $bundle, bool $privileged): int {
     if ($privileged) {
-      return static::getDefaultPostingRightCodes()[$bundle] ?? 0;
+      return static::getDefaultPostingRightCodes()[$bundle] ?? PostingRight::Unverified->value;
     }
-    return 0;
+    return PostingRight::Unverified->value;
   }
 
 }

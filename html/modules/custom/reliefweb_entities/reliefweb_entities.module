@@ -586,7 +586,7 @@ function reliefweb_entities_change_submit_message(array $form, FormStateInterfac
       $statuses = array_map(fn($status) => (int) $status, $statuses);
 
       // Replace the message based on the publication status.
-      $status_message = match($statuses) {
+      $status_message = match ($statuses) {
         [0] => t('@type %title has been created but is not yet published.', $message_args),
         [1] => t('@type %title has been created and published.', $message_args),
         [1, 0] => t('@type %title has been published.', $message_args),
@@ -846,7 +846,7 @@ function reliefweb_entities_ocha_content_classification_post_entity_presave(Enti
     return;
   }
 
-  $account = match(TRUE) {
+  $account = match (TRUE) {
     $entity instanceof RevisionLogInterface => $entity->getRevisionUser(),
     $entity instanceof EntityOwnerInterface => $entity->getOwner(),
     default => \Drupal::currentUser(),
@@ -887,7 +887,7 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
     $entity->bundle(),
   );
 
-  $status = match($entity->ocha_content_classification_status) {
+  $status = match ($entity->ocha_content_classification_status) {
     // Prevent publication if the document is queued for classification.
     // If the document is already in a non-published state then keep the current
     // status. This allows for example, to quickly mark a document as refused
@@ -907,7 +907,7 @@ function reliefweb_entities_adjust_moderation_status_based_on_classification_sta
     // Ensure the new status is available otherwise default to draft or the
     // default moderation status for the entity. The point is to try to prevent
     // unsafe publication.
-    $status = match(TRUE) {
+    $status = match (TRUE) {
       isset($allowed_statuses[$status]) => $status,
       isset($allowed_statuses['draft']) => 'draft',
       default => $entity->getDefaultModerationStatus(),
@@ -976,7 +976,7 @@ function reliefweb_entities_ocha_content_classification_hide_form_fields_alter(a
       $rights = $user_posting_rights_manager->getUserConsolidatedPostingRight($user, $bundle, $sources);
 
       // Prevent hiding the fields if the user is trusted.
-      if (!empty($rights['code']) && $rights['code'] === 3) {
+      if ($rights['right']->isTrusted()) {
         // Effectively unhide the fields by resetting the array.
         $fields_to_hide = [];
       }

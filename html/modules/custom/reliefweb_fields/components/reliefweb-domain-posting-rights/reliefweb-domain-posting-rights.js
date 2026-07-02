@@ -1,14 +1,31 @@
-(function () {
+(function (Drupal) {
 
   'use strict';
 
   var t = Drupal.t;
 
   /**
+   * Get posting right labels from behavior settings.
+   *
+   * @param {Object} labels
+   *   Posting right labels keyed by stored value.
+   */
+  function getPostingRightLabels(labels) {
+    labels = labels || {};
+    var fallback = [t('Unverified'), t('Blocked'), t('Allowed'), t('Trusted')];
+    var options = [];
+    for (var i = 0; i < fallback.length; i++) {
+      options.push(labels[i] || fallback[i]);
+    }
+    return options;
+  }
+
+  /**
    * Object constructor to handle the field's logic.
    */
-  function ReliefWebDomainPostingRightsField(field) {
+  function ReliefWebDomainPostingRightsField(field, postingRightLabels) {
     this.field = field;
+    this.postingRightLabels = postingRightLabels || {};
 
     // Field containing the serialized data.
     this.data = field.querySelector('input[data-drupal-selector$="-data"]');
@@ -63,7 +80,7 @@
         selected = 'all';
       }
 
-      var options = [t('Unverified'), t('Blocked'), t('Allowed'), t('Trusted')];
+      var options = getPostingRightLabels(this.postingRightLabels);
       for (var i = 0, l = options.length; i < l; i++) {
         var option = document.createElement('option');
         option.appendChild(document.createTextNode(options[i]));
@@ -636,12 +653,13 @@
    */
   Drupal.behaviors.ReliefWebDomainPostingRights = {
     attach: function (context, settings) {
+      var labels = (settings && settings.reliefwebPostingRights && settings.reliefwebPostingRights.labels) || {};
       var fields = document.querySelectorAll('.field--type-reliefweb-domain-posting-rights:not([data-processed])');
 
       for (var i = 0, l = fields.length; i < l; i++) {
         var field = fields[i];
         field.setAttribute('data-processed', '');
-        var handler = new ReliefWebDomainPostingRightsField(field);
+        var handler = new ReliefWebDomainPostingRightsField(field, labels);
         handler.initialize();
       }
     }

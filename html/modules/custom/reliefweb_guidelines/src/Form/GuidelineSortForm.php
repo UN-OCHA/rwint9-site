@@ -3,37 +3,48 @@
 namespace Drupal\reliefweb_guidelines\Form;
 
 use Drupal\Core\Access\AccessResult;
-use Drupal\Core\Entity\ContentEntityForm;
-use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\guidelines\Entity\GuidelineInterface;
+use Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList;
+use Drupal\taxonomy\TermInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 
 /**
- * Form controller for Guideline edit forms.
- *
- * @ingroup guidelines
+ * Sort guideline nodes under a guideline list.
  */
-class GuidelineSortForm extends ContentEntityForm {
+class GuidelineSortForm extends FormBase {
 
   /**
-   * The current user account.
+   * The entity type manager.
    *
-   * @var \Drupal\Core\Session\AccountProxyInterface
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $account;
+  protected EntityTypeManagerInterface $entityTypeManager;
+
+  /**
+   * The guideline list term.
+   *
+   * @var \Drupal\taxonomy\TermInterface
+   */
+  protected TermInterface $term;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
+    $this->entityTypeManager = $entity_type_manager;
+  }
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container) {
-    // Instantiates this form class.
-    $instance = parent::create($container);
-    $instance->account = $container->get('current_user');
-    return $instance;
+    return new static(
+      $container->get('entity_type.manager')
+    );
   }
 
   /**
@@ -46,15 +57,14 @@ class GuidelineSortForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\guidelines\Entity\Guideline $guideline */
-    $guideline = $this->entity;
-
+  public function buildForm(array $form, FormStateInterface $form_state, ?GuidelineList $taxonomy_term = NULL) {
+    $this->term = $taxonomy_term;
     $form['#title'] = $this->t('Sort guidelines under %list', [
-      '%list' => $guideline->label(),
+      '%list' => $taxonomy_term->label(),
     ]);
 
-    $children = $guideline->getChildren();
+    /** @var \Drupal\reliefweb_guidelines\Entity\Node\Guideline[] $children */
+    $children = $taxonomy_term->getChildren();
     if (empty($children)) {
       $form['empty'] = [
         '#markup' => $this->t('No guideline children'),
@@ -87,7 +97,7 @@ class GuidelineSortForm extends ContentEntityForm {
       $id = $child->id();
 
       $form['items'][$id]['#attributes']['class'][] = 'draggable';
-      $form['items'][$id]['#weight'] = $child->getWeight();
+      $form['items'][$id]['#weight'] = (int) $child->field_weight->value;
 
       // Label.
       $form['items'][$id]['label'] = $child
@@ -101,11 +111,9 @@ class GuidelineSortForm extends ContentEntityForm {
           '@title' => $child->label(),
         ]),
         '#title_display' => 'invisible',
-        '#default_value' => $child->getWeight(),
+        '#default_value' => (int) $child->field_weight->value,
         '#attributes' => [
-          'class' => [
-            $group_class,
-          ],
+          'class' => [$group_class],
         ],
       ];
     }
@@ -133,42 +141,22 @@ class GuidelineSortForm extends ContentEntityForm {
   /**
    * {@inheritdoc}
    */
-  public function extractFormValues(FieldableEntityInterface $entity, array &$form, FormStateInterface $form_state) {
-    return [];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function copyFormValuesToEntity(EntityInterface $entity, array $form, FormStateInterface $form_state) {
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function validateForm(array &$form, FormStateInterface $form_state) {
-    return $this->entity;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\guidelines\Entity\Guideline $guideline */
-    $guideline = $this->entity;
-
-    $children = $guideline->getChildren();
+    /** @var \Drupal\reliefweb_guidelines\Entity\Node\Guideline[] $children */
+    $children = $this->term->getChildren();
     $new_weights = $form_state->getValue('items');
 
     foreach ($children as $child) {
-      if (isset($new_weights[$child->id()])) {
-        if ($child->getWeight() !== $new_weights[$child->id()]['weight']) {
-          $child->setWeight($new_weights[$child->id()]['weight']);
-          $child->setNewRevision(FALSE);
-          // @todo see if we can preserve the previous revision user
-          // and timestamp.
-          $child->save();
-        }
+      if (!isset($new_weights[$child->id()])) {
+        continue;
+      }
+      $weight = (int) $new_weights[$child->id()]['weight'];
+      if ((int) $child->field_weight->value !== $weight) {
+        $child->set('field_weight', $weight);
+        $child->setNewRevision(FALSE);
+        // @todo see if we can preserve the previous revision user
+        // and timestamp.
+        $child->save();
       }
     }
 
@@ -181,14 +169,14 @@ class GuidelineSortForm extends ContentEntityForm {
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   Run access checks for this account.
-   * @param \Drupal\guidelines\Entity\GuidelineInterface $guideline
-   *   The guideline entity the form is for.
+   * @param \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList $taxonomy_term
+   *   The guideline list term the form is for.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkAccess(AccountInterface $account, GuidelineInterface $guideline) {
-    return AccessResult::allowedIf($guideline->bundle() === 'guideline_list');
+  public static function checkAccess(AccountInterface $account, GuidelineList $taxonomy_term) {
+    return AccessResult::allowedIf($taxonomy_term->bundle() === 'guideline_list');
   }
 
 }

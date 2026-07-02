@@ -35,7 +35,7 @@ class ReliefWebBodyProcessor extends StripAndTrimProcessor {
       foreach ($files as $index => $file) {
         if (!empty($file['data'])) {
           $data = $file['data'];
-          $files[$index]['data'] = match($file['mimetype']) {
+          $files[$index]['data'] = match ($file['mimetype']) {
             'text/markdown' => "# $title\n\n$data",
             'text/html' =>  "<h1>$title</h1>\n$data",
             default => "$title\n\n$data",
