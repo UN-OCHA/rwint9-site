@@ -4,6 +4,7 @@ user.email.confirmation:
     _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::redirectConfirmation'
     _title: 'Redirect to confirm user email'
   requirements:
+    # Access is validated in the controller via the confirmation hash.
     _access: 'TRUE'
     user: \d+
   options:
@@ -16,6 +17,7 @@ user.email.confirmation.process:
     _controller: '\Drupal\reliefweb_users\Controller\UserEmailConfirmationController::processConfirmation'
     _title: 'Confirm user email'
   requirements:
+    # Access is validated in the controller via the confirmation hash.
     _access: 'TRUE'
     user: \d+
   options:

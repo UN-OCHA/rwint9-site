@@ -20,7 +20,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = '';
 
     $this->expectExceptionMessage('Base URL is empty.');
-    $this->jobImporter->validateBaseUrl($link);
+    $this->invokeProtectedMethod('validateBaseUrl', [$link]);
   }
 
   /**
@@ -30,7 +30,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = '';
 
     $this->expectExceptionMessage('Base URL is empty.');
-    $this->jobImporter->validateBaseUrl($link);
+    $this->invokeProtectedMethod('validateBaseUrl', [$link]);
   }
 
   /**
@@ -40,7 +40,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = 'not a link';
 
     $this->expectExceptionMessage('Base URL is not a valid link.');
-    $this->jobImporter->validateBaseUrl($link);
+    $this->invokeProtectedMethod('validateBaseUrl', [$link]);
   }
 
   /**
@@ -50,7 +50,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = '';
 
     $this->expectExceptionMessage('Feed item found without a link.');
-    $this->jobImporter->validateLink($link, '');
+    $this->invokeProtectedMethod('validateLink', [$link, '']);
   }
 
   /**
@@ -60,7 +60,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = '    ';
 
     $this->expectExceptionMessage('Feed item found without a link.');
-    $this->jobImporter->validateLink($link, '');
+    $this->invokeProtectedMethod('validateLink', [$link, '']);
   }
 
   /**
@@ -70,7 +70,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = 'not a link';
 
     $this->expectExceptionMessage('Invalid feed item link.');
-    $this->jobImporter->validateLink($link, '');
+    $this->invokeProtectedMethod('validateLink', [$link, '']);
   }
 
   /**
@@ -80,7 +80,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $link = 'https://example.com';
 
     $this->expectExceptionMessage('Invalid feed item link base.');
-    $this->jobImporter->validateLink($link, 'https://another.com');
+    $this->invokeProtectedMethod('validateLink', [$link, 'https://another.com']);
   }
 
   /**
@@ -90,7 +90,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $title = '';
 
     $this->expectExceptionMessage('Job found with empty title.');
-    $this->jobImporter->validateTitle($title);
+    $this->invokeProtectedMethod('validateTitle', [$title]);
   }
 
   /**
@@ -100,7 +100,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $title = '       ';
 
     $this->expectExceptionMessage('Job found with empty title.');
-    $this->jobImporter->validateTitle($title);
+    $this->invokeProtectedMethod('validateTitle', [$title]);
   }
 
   /**
@@ -110,7 +110,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $title = 'a';
 
     $this->expectExceptionMessage('Invalid title length.');
-    $this->jobImporter->validateTitle($title);
+    $this->invokeProtectedMethod('validateTitle', [$title]);
   }
 
   /**
@@ -120,7 +120,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $title = $this->random->sentences(100);
 
     $this->expectExceptionMessage('Invalid title length.');
-    $this->jobImporter->validateTitle($title);
+    $this->invokeProtectedMethod('validateTitle', [$title]);
   }
 
   /**
@@ -128,13 +128,13 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
    */
   public function testvalidateTitleOk(): void {
     $title = $this->random->sentences(10);
-    $this->assertEquals($title, $this->jobImporter->validateTitle($title));
+    $this->assertEquals($title, $this->invokeProtectedMethod('validateTitle', [$title]));
 
     $title = 'This is the title';
-    $this->assertEquals($title, $this->jobImporter->validateTitle('<p>' . $title . '</p>'));
+    $this->assertEquals($title, $this->invokeProtectedMethod('validateTitle', ['<p>' . $title . '</p>']));
 
     $title = 'This is the title';
-    $this->assertEquals($title, $this->jobImporter->validateTitle('    <p>   ' . $title . '   </p>   '));
+    $this->assertEquals($title, $this->invokeProtectedMethod('validateTitle', ['    <p>   ' . $title . '   </p>   ']));
   }
 
   /**
@@ -145,7 +145,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $source_id = 2865;
 
     $this->expectExceptionMessage('Job found with empty source.');
-    $this->jobImporter->validateSource($source, $source_id);
+    $this->invokeProtectedMethod('validateSource', [$source, $source_id]);
   }
 
   /**
@@ -156,7 +156,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $source_id = 2865;
 
     $this->expectExceptionMessage('Job found with non numeric source.');
-    $this->jobImporter->validateSource($source, $source_id);
+    $this->invokeProtectedMethod('validateSource', [$source, $source_id]);
   }
 
   /**
@@ -170,7 +170,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
       '@source_id' => $source_id,
       '@source' => $source,
     ]));
-    $this->jobImporter->validateSource($source, $source_id);
+    $this->invokeProtectedMethod('validateSource', [$source, $source_id]);
   }
 
   /**
@@ -180,7 +180,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $source = '2865';
     $source_id = 2865;
 
-    $this->assertEquals($source, $this->jobImporter->validateSource($source, $source_id));
+    $this->assertEquals($source, $this->invokeProtectedMethod('validateSource', [$source, $source_id]));
   }
 
   /**
@@ -190,7 +190,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $uid = ' ';
 
     $this->expectExceptionMessage('User Id is not defined.');
-    $this->jobImporter->validateUser($uid);
+    $this->invokeProtectedMethod('validateUser', [$uid]);
   }
 
   /**
@@ -200,7 +200,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $uid = 'abcd';
 
     $this->expectExceptionMessage('User Id is not numeric.');
-    $this->jobImporter->validateUser($uid);
+    $this->invokeProtectedMethod('validateUser', [$uid]);
   }
 
   /**
@@ -210,7 +210,7 @@ class JobFeedsImporterMandatoryTest extends JobFeedsImporterTestBase {
     $uid = 1;
 
     $this->expectExceptionMessage('User Id is an admin.');
-    $this->jobImporter->validateUser($uid);
+    $this->invokeProtectedMethod('validateUser', [$uid]);
   }
 
 }

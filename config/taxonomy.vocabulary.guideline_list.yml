@@ -1,0 +1,9 @@
+uuid: 08676e9c-26b9-4a91-8c08-81954d89048d
+langcode: en
+status: true
+dependencies: {  }
+name: 'Guideline list'
+vid: guideline_list
+description: 'Groups of editorial guidelines scoped by user role.'
+weight: 0
+new_revision: true

@@ -4,8 +4,8 @@ namespace Drupal\Tests\reliefweb_utility\Unit;
 
 use Drupal\Tests\UnitTestCase;
 use Drupal\reliefweb_utility\Helpers\HtmlOutliner;
-use Drupal\reliefweb_utility\Helpers\Outline;
-use Drupal\reliefweb_utility\Helpers\Section;
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\Outline;
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\Section;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 

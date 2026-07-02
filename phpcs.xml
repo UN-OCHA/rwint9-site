@@ -2,17 +2,24 @@
 <ruleset name="drupal_core">
   <description>Default PHP CodeSniffer configuration for Drupal core.</description>
   <file>.</file>
-  <arg name="extensions" value="inc,info,install,module,php,profile,test,theme,js"/>
+  <arg name="extensions" value="inc,info,install,module,php,profile,test,theme,js,twig,yml"/>
+
+  <!-- Tell phpcs to parse files as PHP 8.5 so new syntax is recognised. -->
+  <config name="php_version" value="80500"/>
 
   <!--Exclude third party code.-->
-  <exclude-pattern>./vendor/*</exclude-pattern>
-  <exclude-pattern>*.md</exclude-pattern>
-  <exclude-pattern>*.css</exclude-pattern>
-  <exclude-pattern>*.js</exclude-pattern>
+  <exclude-pattern>\./vendor/*</exclude-pattern>
+  <exclude-pattern>\.md$</exclude-pattern>
+  <exclude-pattern>\.css$</exclude-pattern>
+  <exclude-pattern>\.js$</exclude-pattern>
   <exclude-pattern>node_modules/*</exclude-pattern>
   <exclude-pattern>assets/*</exclude-pattern>
-  <exclude-pattern>gulpfile.js</exclude-pattern>
+  <exclude-pattern>gulpfile\.js$</exclude-pattern>
 
   <rule ref="Drupal" />
   <rule ref="DrupalPractice" />
+
+  <rule ref="Generic.PHP.DisallowShortOpenTag">
+    <exclude-pattern>*.twig</exclude-pattern>
+  </rule>
 </ruleset>

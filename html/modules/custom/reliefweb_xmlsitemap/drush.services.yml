@@ -4,4 +4,3 @@ services:
     arguments: ['@database', '@extension.path.resolver', '@file_system', '@http_client', '@logger.factory', '@state']
     tags:
       - { name: drush.command }
-

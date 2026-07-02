@@ -21,7 +21,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateBody($test_string);
+    $this->invokeProtectedMethod('validateBody', [$test_string]);
   }
 
   /**
@@ -33,7 +33,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000', [
       '@length' => 0,
     ]));
-    $this->jobImporter->validateBody($test_string);
+    $this->invokeProtectedMethod('validateBody', [$test_string]);
   }
 
   /**
@@ -45,7 +45,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateBody($test_string);
+    $this->invokeProtectedMethod('validateBody', [$test_string]);
   }
 
   /**
@@ -57,7 +57,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for body, @length characters found, has to be between 400 and 50000', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateBody($test_string);
+    $this->invokeProtectedMethod('validateBody', [$test_string]);
   }
 
   /**
@@ -65,7 +65,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testsanitizeTextPlain(): void {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->jobImporter->validateBody($test_string));
+    $this->assertEquals($test_string, $this->invokeProtectedMethod('validateBody', [$test_string]));
   }
 
   /**
@@ -73,7 +73,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testsanitizeTextClosingTag(): void {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->jobImporter->sanitizeText('body', $test_string . '</body>'));
+    $this->assertEquals($test_string, $this->invokeProtectedMethod('sanitizeText', ['body', $test_string . '</body>']));
   }
 
   /**
@@ -81,7 +81,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testsanitizeTextCdata(): void {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->jobImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+    $this->assertEquals($test_string, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '<![CDATA[' . $test_string . ']]>',
+    ]));
   }
 
   /**
@@ -90,7 +93,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeMarkdown(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', $test_string));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', ['body', $test_string]));
   }
 
   /**
@@ -99,7 +102,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeMarkdownWithCdata(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '<![CDATA[' . $test_string . ']]>',
+    ]));
   }
 
   /**
@@ -108,7 +114,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeMarkdownWithEncodedCdata(): void {
     $test_string = "This is a test.\n\nWith a bith of __bold__ text and a [link](https://example.test)";
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '&lt;![CDATA[' . $test_string . ']]&gt;',
+    ]));
   }
 
   /**
@@ -117,7 +126,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeHtml(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', $test_string));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', ['body', $test_string]));
   }
 
   /**
@@ -126,7 +135,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeHtmlWithCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '<![CDATA[' . $test_string . ']]>',
+    ]));
   }
 
   /**
@@ -135,7 +147,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
   public function testsanitizeHtmlWithEncodedCdata(): void {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '&lt;![CDATA[' . $test_string . ']]&gt;',
+    ]));
   }
 
   /**
@@ -145,7 +160,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $test_string = Html::escape($test_string);
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', $test_string));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', ['body', $test_string]));
   }
 
   /**
@@ -155,7 +170,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $test_string = Html::escape($test_string);
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '<![CDATA[' . $test_string . ']]>'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '<![CDATA[' . $test_string . ']]>',
+    ]));
   }
 
   /**
@@ -165,7 +183,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $test_string = '<p>This is a test.</p><p style="font-size: 16px;">With a bith of <strong>bold</strong> text and a <a unrecognized="attribute" href="https://example.test">link</a></p>';
     $test_string = Html::escape($test_string);
     $expected = "This is a test.\n\nWith a bith of **bold** text and a [link](https://example.test)";
-    $this->assertEquals($expected, $this->jobImporter->sanitizeText('body', '&lt;![CDATA[' . $test_string . ']]&gt;'));
+    $this->assertEquals($expected, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      '&lt;![CDATA[' . $test_string . ']]&gt;',
+    ]));
   }
 
   /**
@@ -173,7 +194,10 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testsanitizeTextEmbedImage(): void {
     $test_string = $this->random->sentences(300);
-    $this->assertEquals($test_string, $this->jobImporter->sanitizeText('body', $test_string . '<img src="">'));
+    $this->assertEquals($test_string, $this->invokeProtectedMethod('sanitizeText', [
+      'body',
+      $test_string . '<img src="">',
+    ]));
   }
 
   /**
@@ -181,7 +205,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testsanitizeTextPtag(): void {
     $test_string = '<p style="font-family: Arial;">The Opportunity</p>';
-    $this->assertEquals('The Opportunity', $this->jobImporter->sanitizeText('body', $test_string));
+    $this->assertEquals('The Opportunity', $this->invokeProtectedMethod('sanitizeText', ['body', $test_string]));
   }
 
   /**
@@ -195,14 +219,14 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     ];
 
     foreach ($test_strings as $test_string => $expected) {
-      $this->assertEquals($expected, $this->jobImporter->validateCity($test_string));
+      $this->assertEquals($expected, $this->invokeProtectedMethod('validateCity', [$test_string]));
     }
 
     $test_string = 'a';
     $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateCity($test_string);
+    $this->invokeProtectedMethod('validateCity', [$test_string]);
   }
 
   /**
@@ -213,7 +237,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for field_city, @length characters found, has to be between 3 and 255', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateCity($test_string);
+    $this->invokeProtectedMethod('validateCity', [$test_string]);
   }
 
   /**
@@ -228,14 +252,14 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     ];
 
     foreach ($test_strings as $test_string => $expected) {
-      $this->assertEquals($expected, $this->jobImporter->validateJobClosingDate($test_string));
+      $this->assertEquals($expected, $this->invokeProtectedMethod('validateJobClosingDate', [$test_string]));
     }
 
     $test_string = '2010-01';
     $this->expectExceptionMessage(strtr('Invalid data for field_job_closing_date, 7 characters found, format has to be yyyy-mm-dd', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateJobClosingDate($test_string);
+    $this->invokeProtectedMethod('validateJobClosingDate', [$test_string]);
   }
 
   /**
@@ -247,7 +271,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
       '@test_string' => $test_string,
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateJobClosingDate($test_string);
+    $this->invokeProtectedMethod('validateJobClosingDate', [$test_string]);
   }
 
   /**
@@ -255,13 +279,13 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
    */
   public function testValidateHowToApply(): void {
     $test_string = $this->random->sentences(50);
-    $this->assertEquals($test_string, $this->jobImporter->validateHowToApply($test_string));
+    $this->assertEquals($test_string, $this->invokeProtectedMethod('validateHowToApply', [$test_string]));
 
     $test_string = '';
     $this->expectExceptionMessage(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateHowToApply($test_string);
+    $this->invokeProtectedMethod('validateHowToApply', [$test_string]);
   }
 
   /**
@@ -272,7 +296,7 @@ class JobFeedsImporterStringTest extends JobFeedsImporterTestBase {
     $this->expectExceptionMessage(strtr('Invalid field size for field_how_to_apply, @length characters found, has to be between 100 and 10000', [
       '@length' => mb_strlen($test_string),
     ]));
-    $this->jobImporter->validateHowToApply($test_string);
+    $this->invokeProtectedMethod('validateHowToApply', [$test_string]);
   }
 
 }

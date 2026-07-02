@@ -83,7 +83,7 @@ class TermSourceEntity extends BaseEntity {
 
     if (!empty($alternate_names)) {
       $alternate_names = array_map('trim', $alternate_names);
-      $alternate_names = array_filter($alternate_names, function($value) use ($entity) {
+      $alternate_names = array_filter($alternate_names, function ($value) use ($entity) {
         return !empty($value) && $value !== $entity->label();
       });
       $alternate_names = array_values(array_unique($alternate_names));

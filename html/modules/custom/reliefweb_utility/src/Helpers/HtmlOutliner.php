@@ -2,6 +2,11 @@
 
 namespace Drupal\reliefweb_utility\Helpers;
 
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\Node;
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\Outline;
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\OutlineTarget;
+use Drupal\reliefweb_utility\Helpers\HtmlOutliner\Section;
+
 /**
  * Helper to fix the heading hierarchy of some HTML.
  *
@@ -133,7 +138,7 @@ class HtmlOutliner {
    * last section if the last section heading is implied or has a higher
    * (or equal) rank than the checked node.
    *
-   * @param \Outliner\OutlineTarget|null $outline_target
+   * @param \Drupal\reliefweb_utility\Helpers\HtmlOutliner\OutlineTarget|null $outline_target
    *   Outline target.
    * @param \DOMNode $node
    *   DOM node.
@@ -154,9 +159,9 @@ class HtmlOutliner {
    *
    * @param \DOMNode $node
    *   DOM node.
-   * @param \Outliner\OutlineTarget|null $outline_target
+   * @param \Drupal\reliefweb_utility\Helpers\HtmlOutliner\OutlineTarget|null $outline_target
    *   Current outline target.
-   * @param \Outliner\Section|null $current_section
+   * @param \Drupal\reliefweb_utility\Helpers\HtmlOutliner\Section|null $current_section
    *   Current section.
    * @param array $stack
    *   Stack to track processed elements.
@@ -259,9 +264,9 @@ class HtmlOutliner {
    *
    * @param \DOMNode $node
    *   DOM node.
-   * @param \Outliner\OutlineTarget|null $outline_target
+   * @param \Drupal\reliefweb_utility\Helpers\HtmlOutliner\OutlineTarget|null $outline_target
    *   Current outline target.
-   * @param \Outliner\Section|null $current_section
+   * @param \Drupal\reliefweb_utility\Helpers\HtmlOutliner\Section|null $current_section
    *   Current section.
    * @param array $stack
    *   Stack to track processed elements.
@@ -334,7 +339,7 @@ class HtmlOutliner {
    * @param \DOMNode|null $root
    *   Root node.
    *
-   * @return \Outliner\Outline|null
+   * @return \Drupal\reliefweb_utility\Helpers\HtmlOutliner\Outline|null
    *   Outline object.
    */
   public static function parseNode(?\DOMNode $root) {
@@ -380,7 +385,7 @@ class HtmlOutliner {
    * @param string $html
    *   HTML string.
    *
-   * @return \Outliner\Outline|null
+   * @return \Drupal\reliefweb_utility\Helpers\HtmlOutliner\Outline|null
    *   Outline object.
    */
   public static function parseHtml($html) {
@@ -566,162 +571,5 @@ class HtmlOutliner {
     $elements = static::getElementsByTagName($node, 'body');
     return count($elements) > 0 ? $elements[0] : NULL;
   }
-
-}
-
-/**
- * DOM node wrapper base class.
- */
-class Node {
-
-  /**
-   * DOM node.
-   *
-   * @var \DOMNode
-   */
-  public $node;
-
-  /**
-   * Construct the node wrapper.
-   *
-   * @param \DOMNode $node
-   *   DOM node.
-   */
-  public function __construct(\DOMNode $node) {
-    $this->node = $node;
-  }
-
-}
-
-/**
- * Section node implementation.
- */
-class Section extends Node {
-  /**
-   * Section heading.
-   *
-   * Either a DOM node or TRUE if the heading is implied.
-   *
-   * @var \DOMNode|true
-   */
-  public $heading = NULL;
-
-  /**
-   * Sub-sections.
-   *
-   * @var array
-   */
-  public $sections = [];
-
-  /**
-   * Section container.
-   *
-   * @var \Outliner\Node
-   */
-  public $container = NULL;
-
-  /**
-   * Append a sub-section.
-   *
-   * @param \Outliner\Section $section
-   *   Sub-section.
-   */
-  public function append(Section $section) {
-    $section->container = $this;
-    $this->sections[] = $section;
-  }
-
-}
-
-/**
- * Outline node implementation.
- */
-class Outline extends Node {
-  /**
-   * Sections.
-   *
-   * @var array
-   */
-  public $sections = [];
-
-  /**
-   * Construct the node wrapper.
-   *
-   * @param \DOMNode $node
-   *   DOM node.
-   * @param \Outliner\Section $section
-   *   First section of the outline.
-   */
-  public function __construct(\DOMNode $node, Section $section) {
-    $this->node = $node;
-    $this->sections[] = $section;
-  }
-
-  /**
-   * Get the last section of the outline.
-   *
-   * @return \Outliner\Section
-   *   Last outline section.
-   */
-  public function getLastSection() {
-    return !empty($this->sections) ? end($this->sections) : NULL;
-  }
-
-  /**
-   * Convert the outline to string.
-   */
-  public function __toString() {
-    return static::getHeadings($this->sections) . PHP_EOL;
-  }
-
-  /**
-   * Get the stringify version.
-   *
-   * @param array $sections
-   *   List of sections.
-   * @param int $level
-   *   Current level in the hierarchy.
-   */
-  public static function getHeadings(array $sections, $level = 0) {
-    if (empty($sections)) {
-      return '';
-    }
-    $padding = str_pad('', $level * 4);
-    $output = [];
-    foreach ($sections as $section) {
-      if (empty($section->heading) || $section->heading === TRUE) {
-        $output[] = $padding . '?? untitled section';
-      }
-      else {
-        $heading = HtmlOutliner::getRankingHeading($section->heading) ?? $section->heading;
-        $output[] = $padding . $heading->nodeName . ' ' . trim($heading->textContent);
-      }
-      if (!empty($section->sections)) {
-        $output[] = static::getHeadings($section->sections, $level + 1);
-      }
-    }
-    return implode(PHP_EOL, $output);
-  }
-
-}
-
-/**
- * Outline target node implementation.
- */
-class OutlineTarget extends Node {
-
-  /**
-   * Outline.
-   *
-   * @var \Outliner\Outline
-   */
-  public $outline = NULL;
-
-  /**
-   * Parent section.
-   *
-   * @var \Outliner\Section
-   */
-  public $parentSection = NULL;
 
 }

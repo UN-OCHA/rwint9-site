@@ -73,9 +73,6 @@ libraries-extend:
     - common_design_subtheme/rw-datepicker
 
   # Guidelines.
-  guidelines/guidelines-json:
-    - common_design_subtheme/rw-guidelines
-
   reliefweb_guidelines/reliefweb-guidelines:
     - common_design_subtheme/rw-guidelines
 
@@ -91,16 +88,10 @@ libraries-override:
   common_design/array-from-polyfill:
     js:
       js/vendor/array-from-polyfill.js: false
-  guidelines/guidelines-json:
-    js:
-      components/guidelines-json/guidelines-json.js: false
+  node/drupal.node.preview:
     css:
-      component:
-        components/guidelines-json/guidelines-json.css: false
-  guidelines/guideline.preview:
-    css:
-      component:
-        components/preview/guidelines.preview.css: components/rw-guidelines/rw-guidelines--preview.css
+      theme:
+        css/node.preview.css: components/rw-guidelines/rw-guidelines--preview.css
 
 ###
 # Custom namespace - requires Components module

@@ -1,0 +1,24 @@
+uuid: 158d19c8-cacd-4b0b-9006-a3585be25028
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_description
+    - filter.format.guideline
+    - node.type.guideline
+  module:
+    - text
+id: node.guideline.field_description
+field_name: field_description
+entity_type: node
+bundle: guideline
+label: Description
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - guideline
+field_type: text_long

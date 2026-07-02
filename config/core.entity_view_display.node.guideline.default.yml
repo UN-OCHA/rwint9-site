@@ -1,0 +1,51 @@
+uuid: 59a8cf01-ec39-40d9-815b-511f77a5aa45
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.guideline.field_description
+    - field.field.node.guideline.field_field
+    - field.field.node.guideline.field_images
+    - field.field.node.guideline.field_links
+    - field.field.node.guideline.field_short_link
+    - node.type.guideline
+  module:
+    - link
+    - text
+    - user
+id: node.guideline.default
+targetEntityType: node
+bundle: guideline
+mode: default
+content:
+  field_description:
+    type: text_default
+    label: hidden
+    settings: {  }
+    third_party_settings: {  }
+    weight: 0
+    region: content
+  field_links:
+    type: link
+    label: above
+    settings:
+      trim_length: 80
+      url_only: false
+      url_plain: false
+      rel: ''
+      target: ''
+    third_party_settings: {  }
+    weight: 1
+    region: content
+hidden:
+  content_moderation_control: true
+  field_field: true
+  field_guideline_list: true
+  field_images: true
+  field_short_link: true
+  field_weight: true
+  langcode: true
+  links: true
+  moderation_status: true
+  search_api_excerpt: true
+  title: true

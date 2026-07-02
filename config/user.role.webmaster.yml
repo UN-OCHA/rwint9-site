@@ -4,12 +4,14 @@ status: true
 dependencies:
   config:
     - filter.format.guideline
+    - node.type.guideline
     - taxonomy.vocabulary.career_category
     - taxonomy.vocabulary.content_format
     - taxonomy.vocabulary.country
     - taxonomy.vocabulary.disaster
     - taxonomy.vocabulary.disaster_type
     - taxonomy.vocabulary.feature
+    - taxonomy.vocabulary.guideline_list
     - taxonomy.vocabulary.job_experience
     - taxonomy.vocabulary.job_type
     - taxonomy.vocabulary.language
@@ -56,12 +58,14 @@ permissions:
   - 'bypass ocha content classification for node job'
   - 'bypass ocha content classification for node report'
   - 'create new books'
+  - 'create guideline content'
   - 'create terms in career_category'
   - 'create terms in content_format'
   - 'create terms in country'
   - 'create terms in disaster'
   - 'create terms in disaster_type'
   - 'create terms in feature'
+  - 'create terms in guideline_list'
   - 'create terms in job_experience'
   - 'create terms in job_type'
   - 'create terms in language'
@@ -75,13 +79,17 @@ permissions:
   - 'create terms in vulnerable_group'
   - 'delete all guideline revisions'
   - 'delete all taxonomy revisions'
+  - 'delete any guideline content'
   - 'delete guideline entities'
+  - 'delete guideline revisions'
+  - 'delete own guideline content'
   - 'delete terms in career_category'
   - 'delete terms in content_format'
   - 'delete terms in country'
   - 'delete terms in disaster'
   - 'delete terms in disaster_type'
   - 'delete terms in feature'
+  - 'delete terms in guideline_list'
   - 'delete terms in job_experience'
   - 'delete terms in job_type'
   - 'delete terms in language'
@@ -94,7 +102,9 @@ permissions:
   - 'delete terms in training_type'
   - 'delete terms in vulnerable_group'
   - 'edit archived content'
+  - 'edit any guideline content'
   - 'edit guideline entities'
+  - 'edit own guideline content'
   - 'edit refused content'
   - 'edit terms in career_category'
   - 'edit terms in content_format'
@@ -102,6 +112,7 @@ permissions:
   - 'edit terms in disaster'
   - 'edit terms in disaster_type'
   - 'edit terms in feature'
+  - 'edit terms in guideline_list'
   - 'edit terms in job_experience'
   - 'edit terms in job_type'
   - 'edit terms in language'
@@ -134,12 +145,15 @@ permissions:
   - 'requeue node report for ocha content classification'
   - 'revert all guideline revisions'
   - 'revert all taxonomy revisions'
+  - 'revert guideline revisions'
   - 'see other bookmarks'
   - 'sort all guideline'
   - 'sort editorial guidelines'
   - 'use text format guideline'
   - 'view all guideline revisions'
   - 'view all taxonomy revisions'
+  - 'view any unpublished guideline content'
+  - 'view guideline revisions'
   - 'view moderation information'
   - 'view moderation information revision message author'
   - 'view ocha ai admin config menu'

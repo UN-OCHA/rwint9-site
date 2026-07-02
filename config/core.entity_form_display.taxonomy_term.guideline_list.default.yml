@@ -1,0 +1,39 @@
+uuid: 08676e9c-26b9-4a91-8c08-81954d89048d
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.taxonomy_term.guideline_list.field_role
+    - taxonomy.vocabulary.guideline_list
+  module:
+    - path
+id: taxonomy_term.guideline_list.default
+targetEntityType: taxonomy_term
+bundle: guideline_list
+mode: default
+content:
+  field_role:
+    type: options_select
+    weight: 26
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+  name:
+    type: string_textfield
+    weight: 0
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
+  path:
+    type: path
+    weight: 30
+    region: content
+    settings: {  }
+    third_party_settings: {  }
+hidden:
+  description: true
+  langcode: true
+  moderation_status: true
+  status: true

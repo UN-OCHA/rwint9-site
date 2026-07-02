@@ -1,0 +1,23 @@
+uuid: 1c2a404f-32cb-47a9-8899-eee5eb3076d7
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.taxonomy_term.field_role
+    - taxonomy.vocabulary.guideline_list
+id: taxonomy_term.guideline_list.field_role
+field_name: field_role
+entity_type: taxonomy_term
+bundle: guideline_list
+label: Role
+description: 'Select which user roles allow access to this guideline list.'
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:user_role'
+  handler_settings:
+    target_bundles: null
+    auto_create: false
+field_type: entity_reference

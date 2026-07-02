@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   id = "guideline_field_target_default_formatter",
  *   label = @Translation("Guideline field target default formatter"),
  *   field_types = {
- *     "guideline_field_target_type"
+ *     "guideline_field_target"
  *   }
  * )
  */

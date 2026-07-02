@@ -1,0 +1,17 @@
+uuid: 59a8cf01-ec39-40d9-815b-511f77a5aa45
+langcode: en
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+name: Guideline
+type: guideline
+description: 'Editorial guideline for content forms.'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: false

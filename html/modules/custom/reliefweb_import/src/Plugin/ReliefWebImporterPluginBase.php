@@ -518,7 +518,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $status_mapping = $this->parseReimportStatusMapping($status_mapping_setting);
     if (!empty($status_mapping)) {
       // Update the moderation status.
-      $status = match(TRUE) {
+      $status = match (TRUE) {
         !empty($status_mapping[$status]) => $status_mapping[$status],
         !empty($status_mapping['*']) => $status_mapping['*'],
         // No status override, let the content processor decide what to use.

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_import\Unit;
 
-use Drupal\Tests\reliefweb_import\Unit\Stub\JobFeedsImporterStub;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionXml;
 use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use GuzzleHttp\Client;
@@ -22,27 +21,6 @@ use PHPUnit\Framework\Attributes\CoversClass;
 class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
 
   /**
-   * {@inheritdoc}
-   */
-  protected function setUp(): void {
-    parent::setUp();
-    $this->prophesizeServices();
-
-    $mock = new MockHandler([]);
-    $handlerStack = HandlerStack::create($mock);
-    $this->httpClient = new Client(['handler' => $handlerStack]);
-
-    $this->jobImporter = new JobFeedsImporterStub(
-      $this->database->reveal(),
-      $this->entityTypeManager->reveal(),
-      $this->accountSwitcher->reveal(),
-      $this->httpClient,
-      $this->loggerFactory->reveal(),
-      $this->state->reveal(),
-    );
-  }
-
-  /**
    * Tests fetching.
    */
   public function testfetchXmlException(): void {
@@ -53,10 +31,10 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
     $this->expectException(RequestException::class);
-    $this->jobImporter->fetchXml($url);
+    $this->invokeProtectedMethod('fetchXml', [$url]);
   }
 
   /**
@@ -70,10 +48,10 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
     $this->expectException(RequestException::class);
-    $this->jobImporter->fetchXml($url);
+    $this->invokeProtectedMethod('fetchXml', [$url]);
   }
 
   /**
@@ -87,10 +65,10 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
     $this->expectException(RequestException::class);
-    $this->jobImporter->fetchXml($url);
+    $this->invokeProtectedMethod('fetchXml', [$url]);
   }
 
   /**
@@ -104,10 +82,10 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
     $this->expectException(ReliefwebImportExceptionXml::class);
-    $this->jobImporter->fetchXml($url);
+    $this->invokeProtectedMethod('fetchXml', [$url]);
   }
 
   /**
@@ -121,10 +99,10 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
     $this->expectException(ReliefwebImportExceptionXml::class);
-    $this->jobImporter->fetchXml($url);
+    $this->invokeProtectedMethod('fetchXml', [$url]);
   }
 
   /**
@@ -138,9 +116,9 @@ class JobFeedsImporterXmlTest extends JobFeedsImporterTestBase {
     ]);
 
     $handlerStack = HandlerStack::create($mock);
-    $this->jobImporter->setHttpClient(new Client(['handler' => $handlerStack]));
+    $this->setHttpClient(new Client(['handler' => $handlerStack]));
 
-    $this->assertEquals('body', $this->jobImporter->fetchXml($url));
+    $this->assertEquals('body', $this->invokeProtectedMethod('fetchXml', [$url]));
   }
 
 }
