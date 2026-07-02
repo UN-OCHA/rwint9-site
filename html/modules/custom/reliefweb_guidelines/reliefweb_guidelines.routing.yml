@@ -14,6 +14,19 @@ reliefweb_guidelines.guideline_list.sort:
   requirements:
     _permission: 'sort editorial guidelines'
 
+reliefweb_guidelines.guideline.sort:
+  path: '/admin/structure/guideline_list/{taxonomy_term}/sort-guidelines'
+  defaults:
+    _title: 'Sort guidelines'
+    _form: '\Drupal\reliefweb_guidelines\Form\GuidelineSortForm'
+  requirements:
+    _permission: 'sort editorial guidelines'
+    _custom_access: '\Drupal\reliefweb_guidelines\Form\GuidelineSortForm::checkAccess'
+  options:
+    parameters:
+      taxonomy_term:
+        type: entity:taxonomy_term
+
 guidelines.form.json:
   path: '/guidelines/json/{entity_type}/{bundle}'
   defaults:

@@ -215,6 +215,8 @@ rw-guidelines:
   js:
     components/rw-guidelines/rw-guidelines.js: {}
   dependencies:
+    - core/drupal
+    - core/once
     - common_design_subtheme/rw-icons
 
 rw-headlines:

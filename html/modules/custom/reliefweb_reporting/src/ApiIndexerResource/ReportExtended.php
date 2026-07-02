@@ -152,7 +152,7 @@ class ReportExtended extends Report {
             $name = $user['name'];
             $roles = $user['roles'] ?? '';
 
-            $role = match(TRUE) {
+            $role = match (TRUE) {
               str_contains($roles, 'editor') => 'editor',
               str_contains($roles, 'contributor') => 'contributor',
               str_contains($roles, 'submitter') => 'submitter',

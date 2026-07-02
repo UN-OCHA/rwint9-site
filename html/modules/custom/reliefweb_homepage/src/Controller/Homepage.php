@@ -132,6 +132,7 @@ class Homepage extends ControllerBase {
       switch ($index) {
         case 'headlines':
           $cache_tags[] = 'reliefweb:headlines';
+          // Fall through.
         case 'disasters':
         case 'most_read':
         case 'blog':

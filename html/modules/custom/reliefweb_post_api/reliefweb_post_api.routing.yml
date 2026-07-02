@@ -12,6 +12,7 @@ reliefweb_post_api.post:
     - PUT
     - DELETE
   requirements:
+    # Access is validated in the controller via API key authentication.
     _access: 'TRUE'
     resource: '^[a-z][a-z_-]+[a-z]$'
     uuid: '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
@@ -23,6 +24,7 @@ reliefweb_post_api.schema:
   methods:
     - GET
   requirements:
+    # Public JSON schemas are served without route-level access checks.
     _access: 'TRUE'
     schema: '^[a-z][a-z_-]+[a-z]\.json$'
 

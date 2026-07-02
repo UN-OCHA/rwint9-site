@@ -17,7 +17,7 @@ use Drupal\Core\Form\OptGroup;
  *   label = @Translation("Guideline field target select widget"),
  *   multiple_values = true,
  *   field_types = {
- *     "guideline_field_target_type"
+ *     "guideline_field_target"
  *   }
  * )
  */

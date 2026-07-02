@@ -19,14 +19,12 @@ class GuidelineListSortForm extends FormBase {
    *
    * @var \Drupal\Core\Entity\EntityTypeManagerInterface
    */
-  protected $entityTypeManager;
+  protected EntityTypeManagerInterface $entityTypeManager;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(
-    EntityTypeManagerInterface $entity_type_manager,
-  ) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager) {
     $this->entityTypeManager = $entity_type_manager;
   }
 
@@ -50,12 +48,15 @@ class GuidelineListSortForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    /** @var \Drupal\reliefweb_guidelines\Entity\GuidelineList[] $entities */
-    $entities = $this->entityTypeManager
-      ->getStorage('guideline')
-      ->loadByProperties([
-        'type' => 'guideline_list',
-      ]);
+    // Load guideline lists ordered by weight.
+    $storage = $this->entityTypeManager->getStorage('taxonomy_term');
+    $ids = $storage->getQuery()
+      ->condition('vid', 'guideline_list')
+      ->sort('weight', 'ASC')
+      ->accessCheck(FALSE)
+      ->execute();
+    /** @var \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList[] $entities */
+    $entities = $storage->loadMultiple($ids);
 
     $form['#title'] = $this->t('Sort guideline lists');
 
@@ -65,11 +66,6 @@ class GuidelineListSortForm extends FormBase {
       ];
       return $form;
     }
-
-    // Sort the guideline lists by weight.
-    uasort($entities, function ($a, $b) {
-      return $a->getWeight() <=> $b->getWeight();
-    });
 
     // Build table.
     $group_class = 'group-order-weight';
@@ -112,9 +108,7 @@ class GuidelineListSortForm extends FormBase {
         '#title_display' => 'invisible',
         '#default_value' => $entity->getWeight(),
         '#attributes' => [
-          'class' => [
-            $group_class,
-          ],
+          'class' => [$group_class],
         ],
       ];
     }
@@ -143,25 +137,26 @@ class GuidelineListSortForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    /** @var \Drupal\reliefweb_guidelines\Entity\GuidelineList[] $entities */
-    $entities = $this->entityTypeManager
-      ->getStorage('guideline')
-      ->loadByProperties([
-        'type' => 'guideline_list',
-      ]);
-
+    $storage = $this->entityTypeManager->getStorage('taxonomy_term');
+    $ids = $storage->getQuery()
+      ->condition('vid', 'guideline_list')
+      ->accessCheck(FALSE)
+      ->execute();
+    /** @var \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList[] $entities */
+    $entities = $storage->loadMultiple($ids);
     $order = $form_state->getValue('order');
 
     foreach ($entities as $entity) {
       $id = $entity->id();
-      if (isset($order[$id]['weight'])) {
-        if ($entity->getWeight() !== $order[$id]['weight']) {
-          $entity->setWeight($order[$id]['weight']);
-          $entity->setNewRevision(FALSE);
-          // @todo see if we can preserve the previous revision user
-          // and timestamp.
-          $entity->save();
-        }
+      if (!isset($order[$id]['weight'])) {
+        continue;
+      }
+      if ($entity->getWeight() !== (int) $order[$id]['weight']) {
+        $entity->setWeight((int) $order[$id]['weight']);
+        $entity->setNewRevision(FALSE);
+        // @todo see if we can preserve the previous revision user
+        // and timestamp.
+        $entity->save();
       }
     }
 
