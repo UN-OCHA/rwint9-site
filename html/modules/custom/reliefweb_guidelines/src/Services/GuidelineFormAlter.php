@@ -45,11 +45,4 @@ class GuidelineFormAlter extends EntityFormAlterServiceBase {
     $form['path']['#access'] = FALSE;
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function getAllowedForms() {
-    return ['default', 'add', 'edit'];
-  }
-
 }

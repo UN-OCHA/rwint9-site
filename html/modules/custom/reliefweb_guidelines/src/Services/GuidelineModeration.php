@@ -218,7 +218,7 @@ class GuidelineModeration extends ModerationServiceBase {
     switch ($operation) {
       case 'view':
         if ($account->hasPermission('access editorial guidelines')) {
-          $access = $viewable || $account->hasPermission('view any unpublished guideline content');
+          $access = $viewable || $account->hasPermission('view any guideline content');
         }
         break;
 
