@@ -7,6 +7,7 @@ namespace Drupal\Tests\reliefweb_moderation\ExistingSite\Services;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Render\RenderContext;
 use Drupal\node\Entity\Node;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManager;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\taxonomy\Entity\Term;
@@ -284,7 +285,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   public function testGetEntityAuthorPostingRights(): void {
     // Test with valid entity that has source field.
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($this->testEntity);
-    $this->assertEquals('allowed', $rights, 'Entity with allowed job rights should return allowed');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Entity with allowed job rights should return allowed');
 
     // Test with entity without source field.
     $entity_without_source = $this->createNode([
@@ -294,7 +295,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity_without_source);
-    $this->assertEquals('unknown', $rights, 'Entity without source field should return unknown');
+    $this->assertNull($rights, 'Entity without source field should return unknown');
 
     // Test with entity that doesn't implement EntityOwnerInterface.
     $mock_entity = $this->createMock(ContentEntityInterface::class);
@@ -302,7 +303,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     $mock_entity->method('bundle')->willReturn('job');
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mock_entity);
-    $this->assertEquals('unknown', $rights, 'Entity without getOwnerId method should return unknown');
+    $this->assertNull($rights, 'Entity without getOwnerId method should return unknown');
   }
 
   /**
@@ -390,7 +391,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($multiSourceEntity);
-    $this->assertEquals('unverified', $rights, 'Entity with mixed rights should return unverified (most restrictive)');
+    $this->assertSame(PostingRight::Unverified, $rights, 'Entity with mixed rights should return unverified (most restrictive)');
 
     // Test entity with user-only and domain-only sources.
     $mixedRightsEntity = $this->createNode([
@@ -406,7 +407,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mixedRightsEntity);
-    $this->assertEquals('allowed', $rights, 'Entity with trusted and allowed rights should return allowed');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Entity with trusted and allowed rights should return allowed');
 
     // Test entity with only domain-based rights.
     $domainOnlyEntity = $this->createNode([
@@ -420,7 +421,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($domainOnlyEntity);
-    $this->assertEquals('allowed', $rights, 'Entity with only domain rights should return allowed');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Entity with only domain rights should return allowed');
   }
 
   /**
@@ -486,7 +487,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('allowed', $rights, 'Entity with whitelisted domain should return allowed');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Entity with whitelisted domain should return allowed');
 
     // Test getDomainPostingRights with whitelisted domain.
     $domain_rights = $this->userPostingRightsManager->getDomainPostingRights($this->testUser, [$this->noRightsSource->id()]);
@@ -529,7 +530,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('trusted', $rights, 'Entity with trusted whitelisted domain should return trusted');
+    $this->assertSame(PostingRight::Trusted, $rights, 'Entity with trusted whitelisted domain should return trusted');
   }
 
   /**
@@ -565,7 +566,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('blocked', $rights, 'Entity with blocked whitelisted domain should return blocked');
+    $this->assertSame(PostingRight::Blocked, $rights, 'Entity with blocked whitelisted domain should return blocked');
   }
 
   /**
@@ -602,7 +603,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('allowed', $rights, 'Should use existing domain posting rights, not default');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Should use existing domain posting rights, not default');
   }
 
   /**
@@ -638,7 +639,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('unverified', $rights, 'Entity with non-whitelisted domain should return unverified');
+    $this->assertSame(PostingRight::Unverified, $rights, 'Entity with non-whitelisted domain should return unverified');
   }
 
   /**
@@ -686,7 +687,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity);
-    $this->assertEquals('allowed', $rights, 'Entity with multiple sources should return allowed when all are allowed');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Entity with multiple sources should return allowed when all are allowed');
   }
 
   /**
@@ -861,22 +862,22 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
     $this->assertSame([
-      'report' => 'blocked',
-      'job' => 'allowed',
-      'training' => 'trusted',
+      'report' => PostingRight::Blocked,
+      'job' => PostingRight::Allowed,
+      'training' => PostingRight::Trusted,
     ], $defaults, 'Should return per-bundle defaults from state');
 
-    $this->assertSame('allowed', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('job'));
-    $this->assertSame('unverified', $this->userPostingRightsManager->getDefaultDomainPostingRightValue('unknown'), 'Unknown bundle should fall back to unverified');
+    $this->assertSame(PostingRight::Allowed, $this->userPostingRightsManager->getDefaultDomainPostingRightValue('job'));
+    $this->assertSame(PostingRight::Unverified, $this->userPostingRightsManager->getDefaultDomainPostingRightValue('unknown'), 'Unknown bundle should fall back to unverified');
 
-    $this->assertSame(2, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('job'));
-    $this->assertSame(0, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('unknown'), 'Unknown bundle should fall back to unverified code');
+    $this->assertSame(PostingRight::Allowed->value, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('job'));
+    $this->assertSame(PostingRight::Unverified->value, $this->userPostingRightsManager->getDefaultDomainPostingRightCode('unknown'), 'Unknown bundle should fall back to unverified code');
 
     $codes = $this->userPostingRightsManager->getDefaultDomainPostingRightCodes();
     $this->assertSame([
-      'report' => 1,
-      'job' => 2,
-      'training' => 3,
+      'report' => PostingRight::Blocked->value,
+      'job' => PostingRight::Allowed->value,
+      'training' => PostingRight::Trusted->value,
     ], $codes, 'Should map defaults to numeric codes');
 
     // Update state with a scalar value (applies to all bundles).
@@ -885,9 +886,9 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     $defaults = $this->userPostingRightsManager->getDefaultDomainPostingRights();
     $this->assertSame([
-      'report' => 'trusted',
-      'job' => 'trusted',
-      'training' => 'trusted',
+      'report' => PostingRight::Trusted,
+      'job' => PostingRight::Trusted,
+      'training' => PostingRight::Trusted,
     ], $defaults, 'Scalar state should be expanded to all bundles');
   }
 
@@ -1010,15 +1011,19 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
   }
 
   /**
-   * Test sanitizePostingRight method.
+   * Test PostingRight machine name parsing methods.
    */
-  public function testSanitizePostingRight(): void {
-    $this->assertSame('allowed', $this->userPostingRightsManager->sanitizePostingRight('allowed'));
-    $this->assertSame('blocked', $this->userPostingRightsManager->sanitizePostingRight('blocked'));
-    $this->assertSame('trusted', $this->userPostingRightsManager->sanitizePostingRight('trusted'));
-    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('unverified'));
-    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight('invalid'), 'Invalid values should default to unverified');
-    $this->assertSame('unverified', $this->userPostingRightsManager->sanitizePostingRight(NULL), 'NULL should default to unverified');
+  public function testFromMachineName(): void {
+    $this->assertSame(PostingRight::Allowed, PostingRight::fromMachineName('allowed'));
+    $this->assertSame(PostingRight::Blocked, PostingRight::fromMachineName('blocked'));
+    $this->assertSame(PostingRight::Trusted, PostingRight::fromMachineName('trusted'));
+    $this->assertSame(PostingRight::Unverified, PostingRight::fromMachineName('unverified'));
+    $this->assertSame(PostingRight::Unverified, PostingRight::fromMachineName('invalid'), 'Invalid values should default to unverified');
+    $this->assertSame(PostingRight::Unverified, PostingRight::fromMachineName(NULL), 'NULL should default to unverified');
+
+    $this->assertNull(PostingRight::tryFromMachineName(NULL));
+    $this->assertNull(PostingRight::tryFromMachineName('invalid'));
+    $this->assertSame(PostingRight::Allowed, PostingRight::tryFromMachineName('allowed'));
   }
 
   /**
@@ -1057,8 +1062,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       [$this->testSource->id()]
     );
 
-    $this->assertEquals(2, $rights['code'], 'Should return allowed code for job');
-    $this->assertEquals('allowed', $rights['name'], 'Should return allowed name for job');
+    $this->assertSame(PostingRight::Allowed, $rights['right'], 'Should return allowed for job');
     $this->assertContainsEquals($this->testSource->id(), $rights['sources'], 'Should include source in sources array');
 
     // Test with blocked rights.
@@ -1068,8 +1072,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       [$this->testSource->id()]
     );
 
-    $this->assertEquals(1, $rights['code'], 'Should return blocked code for report');
-    $this->assertEquals('blocked', $rights['name'], 'Should return blocked name for report');
+    $this->assertSame(PostingRight::Blocked, $rights['right'], 'Should return blocked for report');
 
     // Test with trusted rights.
     $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
@@ -1078,8 +1081,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       [$this->testSource->id()]
     );
 
-    $this->assertEquals(3, $rights['code'], 'Should return trusted code for training');
-    $this->assertEquals('trusted', $rights['name'], 'Should return trusted name for training');
+    $this->assertSame(PostingRight::Trusted, $rights['right'], 'Should return trusted for training');
 
     // Test with multiple sources including domain rights.
     $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
@@ -1095,8 +1097,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       ]
     );
 
-    $this->assertEquals(0, $rights['code'], 'Should return unverified code when any source has no rights');
-    $this->assertEquals('unverified', $rights['name'], 'Should return unverified name when any source has no rights');
+    $this->assertSame(PostingRight::Unverified, $rights['right'], 'Should return unverified when any source has no rights');
     $this->assertContainsEquals($this->noRightsSource->id(), $rights['sources'], 'Should include unverified source in sources array');
 
     // Test with multiple sources where user has mixed rights.
@@ -1111,8 +1112,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       ]
     );
 
-    $this->assertEquals(2, $rights['code'], 'Should return allowed code when mixing trusted and allowed rights');
-    $this->assertEquals('allowed', $rights['name'], 'Should return allowed name when mixing trusted and allowed rights');
+    $this->assertSame(PostingRight::Allowed, $rights['right'], 'Should return allowed when mixing trusted and allowed rights');
 
     // Test with invalid bundle.
     $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
@@ -1121,8 +1121,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       [$this->testSource->id()]
     );
 
-    $this->assertEquals(0, $rights['code'], 'Should return unverified code for invalid bundle');
-    $this->assertEquals('unverified', $rights['name'], 'Should return unverified name for invalid bundle');
+    $this->assertSame(PostingRight::Unverified, $rights['right'], 'Should return unverified for invalid bundle');
 
     // Test with empty sources.
     $rights = $this->userPostingRightsManager->getUserConsolidatedPostingRight(
@@ -1131,8 +1130,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       []
     );
 
-    $this->assertEquals(0, $rights['code'], 'Should return unverified code for empty sources');
-    $this->assertEquals('unverified', $rights['name'], 'Should return unverified name for empty sources');
+    $this->assertSame(PostingRight::Unverified, $rights['right'], 'Should return unverified for empty sources');
 
     // Test with anonymous user.
     $anonymous_user = User::getAnonymousUser();
@@ -1142,8 +1140,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       [$this->testSource->id()]
     );
 
-    $this->assertEquals(0, $rights['code'], 'Should return unverified code for anonymous user');
-    $this->assertEquals('unverified', $rights['name'], 'Should return unverified name for anonymous user');
+    $this->assertSame(PostingRight::Unverified, $rights['right'], 'Should return unverified for anonymous user');
   }
 
   /**
@@ -1976,24 +1973,29 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
 
     // Test rendering different rights within a render context.
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return $this->userPostingRightsManager->renderRight('allowed');
+      return $this->userPostingRightsManager->renderRight(PostingRight::Allowed);
     });
     $this->assertNotEmpty($rendered, 'Should render allowed right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return $this->userPostingRightsManager->renderRight('blocked');
+      return $this->userPostingRightsManager->renderRight(PostingRight::Blocked);
     });
     $this->assertNotEmpty($rendered, 'Should render blocked right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return $this->userPostingRightsManager->renderRight('trusted');
+      return $this->userPostingRightsManager->renderRight(PostingRight::Trusted);
     });
     $this->assertNotEmpty($rendered, 'Should render trusted right');
 
     $rendered = $renderer->executeInRenderContext($context, function () {
-      return $this->userPostingRightsManager->renderRight('unverified');
+      return $this->userPostingRightsManager->renderRight(PostingRight::Unverified);
     });
     $this->assertNotEmpty($rendered, 'Should render unverified right');
+
+    $rendered = $renderer->executeInRenderContext($context, function () {
+      return $this->userPostingRightsManager->renderRight(NULL);
+    });
+    $this->assertNotEmpty($rendered, 'Should render unknown right when NULL');
   }
 
   /**
@@ -2065,7 +2067,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($jobEntity);
-    $this->assertEquals('allowed', $rights, 'Job entity with job-only source should have allowed rights');
+    $this->assertSame(PostingRight::Allowed, $rights, 'Job entity with job-only source should have allowed rights');
 
     $reportEntity = $this->createNode([
       'type' => 'report',
@@ -2077,7 +2079,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($reportEntity);
-    $this->assertEquals('unverified', $rights, 'Report entity with job-only source should have unverified rights (source not allowed for reports)');
+    $this->assertSame(PostingRight::Unverified, $rights, 'Report entity with job-only source should have unverified rights (source not allowed for reports)');
 
     // Test with source that has no allowed content types.
     $noTypesSource = $this->createTerm($this->sourceVocabulary, [
@@ -2261,7 +2263,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
     ]);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($entity_with_empty_source);
-    $this->assertEquals('unverified', $rights, 'Entity with empty source field should return unknown');
+    $this->assertSame(PostingRight::Unverified, $rights, 'Entity with empty source field should return unknown');
 
     // Test with entity that has invalid source field type (mock).
     $mock_entity = $this->createMockForIntersectionOfInterfaces([
@@ -2290,7 +2292,7 @@ class UserPostingRightsManagerTest extends ExistingSiteBase {
       ->willReturn($this->testUser);
 
     $rights = $this->userPostingRightsManager->getEntityAuthorPostingRights($mock_entity);
-    $this->assertEquals('unknown', $rights, 'Entity with invalid source field type should return unknown');
+    $this->assertNull($rights, 'Entity with invalid source field type should return unknown');
   }
 
   /**

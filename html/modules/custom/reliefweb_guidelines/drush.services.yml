@@ -1,0 +1,6 @@
+services:
+  reliefweb_guidelines.commands:
+    class: Drupal\reliefweb_guidelines\Commands\ReliefWebGuidelinesCommands
+    arguments: ['@reliefweb_guidelines.migration']
+    tags:
+      - { name: drush.command }

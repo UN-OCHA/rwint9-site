@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_meta\ExistingSite\Plugin\JsonLdEntity;
 
 use Drupal\json_ld_schema\Entity\JsonLdEntityInterface;
-use Drupal\taxonomy\Entity\Term;
 use Drupal\taxonomy\Entity\Vocabulary;
 use weitzman\DrupalTestTraits\ExistingSiteBase;
 

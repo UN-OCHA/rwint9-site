@@ -1,0 +1,33 @@
+{#
+/**
+ * @file
+ * Theme override for guideline list taxonomy term full view.
+ *
+ * @see template_preprocess_taxonomy_term()
+ * @see common_design_subtheme_preprocess_taxonomy_term()
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-article') }}
+
+{{ local_tasks }}
+<article{{ attributes
+  .addClass([
+    'taxonomy-term',
+    'taxonomy-term--' ~ term.bundle(),
+    'taxonomy-term--full',
+    'taxonomy-term--' ~ term.bundle() ~ '--full',
+    'rw-page--sectioned',
+    'rw-article',
+    'rw-article--' ~ term.bundle(),
+  ])
+  .setAttribute('data-id', term.id())
+}}>
+  <header class="rw-article__header">
+    {{ title }}
+  </header>
+
+  <div class="rw-article__content rw-article__content--simple">
+    {{ content }}
+    {{ term.getGuidelineLinks() }}
+  </div>
+</article>

@@ -1,0 +1,29 @@
+uuid: 7a13ed4d-4744-4e09-8706-f20539ee5a96
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_guideline_list
+    - node.type.guideline
+    - taxonomy.vocabulary.guideline_list
+id: node.guideline.field_guideline_list
+field_name: field_guideline_list
+entity_type: node
+bundle: guideline
+label: 'Guideline list'
+description: ''
+required: true
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:taxonomy_term'
+  handler_settings:
+    target_bundles:
+      guideline_list: guideline_list
+    sort:
+      field: name
+      direction: asc
+    auto_create: false
+    auto_create_bundle: ''
+field_type: entity_reference

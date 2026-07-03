@@ -388,8 +388,10 @@ class NodeTrainingEntityTest extends ExistingSiteBase {
     $entity = $this->createNode([
       'type' => 'training',
       'title' => 'Test Training',
-      'created' => 1609459200, // 2021-01-01 00:00:00
-      'changed' => 1609545600, // 2021-01-02 00:00:00
+      // 2021-01-01 00:00:00.
+      'created' => 1609459200,
+      // 2021-01-02 00:00:00.
+      'changed' => 1609545600,
       // By default, CreateNode() sets the training date to the current date.
       // so, for the test, we need to set the training date to NULL.
       'field_training_date' => NULL,

@@ -236,8 +236,10 @@ class NodeJobEntityTest extends ExistingSiteBase {
     $entity = $this->createNode([
       'type' => 'job',
       'title' => 'Test Job',
-      'created' => 1609459200, // 2021-01-01 00:00:00
-      'changed' => 1609545600, // 2021-01-02 00:00:00
+      // 2021-01-01 00:00:00.
+      'created' => 1609459200,
+      // 2021-01-02 00:00:00.
+      'changed' => 1609545600,
     ]);
 
     $plugin = $this->getPlugin('rw_node_job');
@@ -662,7 +664,8 @@ class NodeJobEntityTest extends ExistingSiteBase {
    * Test getData with experience requirements - unknown ID (should not set).
    */
   public function testGetDataWithExperienceRequirementsUnknownId(): void {
-    // Create a term with an ID that's not one of the known IDs (258, 259, 260, 261).
+    // Create a term with an ID that's not one of the known IDs
+    // (258, 259, 260, 261).
     $experience_term = $this->createTerm($this->jobExperienceVocabulary, [
       'tid' => 999,
       'name' => 'Unknown Experience',

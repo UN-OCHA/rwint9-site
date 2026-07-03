@@ -7,6 +7,7 @@ use Drupal\Core\Field\FieldItemBase;
 use Drupal\Core\Field\FieldStorageDefinitionInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\TypedData\DataDefinition;
+use Drupal\reliefweb_moderation\Enum\PostingRight;
 
 /**
  * Plugin implementation of the 'reliefweb_domain_posting_rights' field type.
@@ -116,7 +117,7 @@ class ReliefWebDomainPostingRights extends FieldItemBase {
     $constraints[] = $constraint_manager->create('ComplexData', [
       'job' => [
         'AllowedValues' => [
-          'choices' => [0, 1, 2, 3],
+          'choices' => PostingRight::values(),
           'strict' => TRUE,
           'message' => $this->t('%name: the Job rights must be one of 0, 1, 2 or 3.', [
             '%name' => $this->getFieldDefinition()->getLabel(),
@@ -127,7 +128,7 @@ class ReliefWebDomainPostingRights extends FieldItemBase {
     $constraints[] = $constraint_manager->create('ComplexData', [
       'training' => [
         'AllowedValues' => [
-          'choices' => [0, 1, 2, 3],
+          'choices' => PostingRight::values(),
           'strict' => TRUE,
           'message' => $this->t('%name: the Training rights must be one of 0, 1, 2 or 3.', [
             '%name' => $this->getFieldDefinition()->getLabel(),
@@ -138,7 +139,7 @@ class ReliefWebDomainPostingRights extends FieldItemBase {
     $constraints[] = $constraint_manager->create('ComplexData', [
       'report' => [
         'AllowedValues' => [
-          'choices' => [0, 1, 2, 3],
+          'choices' => PostingRight::values(),
           'strict' => TRUE,
           'message' => $this->t('%name: the Report rights must be one of 0, 1, 2 or 3.', [
             '%name' => $this->getFieldDefinition()->getLabel(),

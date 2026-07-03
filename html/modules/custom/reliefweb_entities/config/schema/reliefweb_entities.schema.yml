@@ -20,3 +20,56 @@ reliefweb_entities.settings:
         expired_training_limit:
           type: integer
           label: 'Maximum number of published training to expire at once'
+    related_content:
+      type: mapping
+      label: 'Related content block settings'
+      mapping:
+        recency_short_months:
+          type: integer
+          label: 'Short recency window in months for disaster-related content'
+        recency_long_months:
+          type: integer
+          label: 'Long recency window in months for disaster-related content'
+        candidate_limit:
+          type: integer
+          label: 'Number of API candidates to fetch before PHP re-ranking'
+        recency_decay_exponent:
+          type: float
+          label: 'Exponent for recency decay applied during PHP re-ranking'
+        translation_date_window_days:
+          type: integer
+          label: 'Days around original publication date for translation matching'
+        title_pattern_token_counts:
+          type: sequence
+          label: 'Token counts for title prefix patterns'
+          sequence:
+            type: integer
+        theme_gate_max_count:
+          type: integer
+          label: 'Maximum number of themes before country+theme matching is skipped'
+        boosts:
+          type: mapping
+          label: 'Query boost weights'
+          mapping:
+            translation:
+              type: integer
+            disaster_country_recent:
+              type: integer
+            disaster_recent:
+              type: integer
+            disaster_medium:
+              type: integer
+            disaster_primary_country:
+              type: integer
+            disaster_country:
+              type: integer
+            disaster:
+              type: integer
+            title_disaster:
+              type: integer
+            title_primary_country:
+              type: integer
+            country_source:
+              type: integer
+            country_theme:
+              type: integer

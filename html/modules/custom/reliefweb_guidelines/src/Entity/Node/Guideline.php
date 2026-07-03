@@ -1,21 +1,22 @@
 <?php
 
-namespace Drupal\reliefweb_guidelines\Entity;
+namespace Drupal\reliefweb_guidelines\Entity\Node;
 
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Link;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
-use Drupal\guidelines\Entity\Guideline as GuidelineBase;
+use Drupal\node\Entity\Node;
+use Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\EntityModeratedTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 
 /**
- * Bundle class for the guideline pages.
+ * Bundle class for guideline nodes.
  */
-class Guideline extends GuidelineBase implements EntityModeratedInterface, EntityRevisionedInterface {
+class Guideline extends Node implements EntityModeratedInterface, EntityRevisionedInterface {
 
   use EntityModeratedTrait;
   use EntityRevisionedTrait;
@@ -26,12 +27,6 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
   public function preSave(EntityStorageInterface $storage) {
     parent::preSave($storage);
 
-    // Populate the field title with the guideline label.
-    if ($this->hasField('field_title')) {
-      $this->get('field_title')->setValue($this->label());
-    }
-
-    // Generate a unique short ID for the guideline.
     if ($this->hasField('field_short_link') && $this->get('field_short_link')->isEmpty()) {
       $this->get('field_short_link')->setValue(static::generateShortId());
     }
@@ -43,11 +38,11 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
    * @return string
    *   Guideline's short ID.
    */
-  public function getShortId() {
+  public function getShortId(): string {
     if ($this->hasField('field_short_link') && !$this->get('field_short_link')->isEmpty()) {
-      return $this->field_short_link->value;
+      return (string) $this->field_short_link->value;
     }
-    return $this->id();
+    return (string) $this->id();
   }
 
   /**
@@ -56,10 +51,10 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
    * @param \Drupal\Core\StringTranslation\TranslatableMarkup|string $title
    *   Link title.
    *
-   * @return \Drupal\Core\GeneratedLink|null
-   *   Link to the guidelines page.
+   * @return array|null
+   *   Render array for the link to the guidelines page.
    */
-  public function getLinkToGuidelines($title = '') {
+  public function getLinkToGuidelines($title = ''): ?array {
     $title = $title ?: new TranslatableMarkup('View on guidelines page');
     return Link::fromTextAndUrl($title, Url::fromUserInput('/guidelines', [
       'fragment' => $this->getShortId(),
@@ -67,7 +62,7 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
         'target' => '_blank',
         'rel' => 'noopener',
       ],
-    ]))?->toString();
+    ]))->toRenderable();
   }
 
   /**
@@ -76,13 +71,13 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
    * @return string
    *   Random unique short ID.
    */
-  public static function generateShortId() {
+  public static function generateShortId(): string {
     static $shortids;
     static $characters;
 
     if (!isset($shortids)) {
       $shortids = \Drupal::database()
-        ->select('guideline__field_short_link', 'f')
+        ->select('node__field_short_link', 'f')
         ->fields('f', ['field_short_link_value'])
         ->distinct()
         ->execute()
@@ -91,18 +86,15 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
     }
 
     if (!isset($characters)) {
-      // 0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.
       $characters = array_merge(range(48, 57), range(65, 90), range(97, 122));
     }
 
     $counter = 0;
     do {
-      // Prevent unlikely infinite loop.
       if ($counter === 100) {
         throw new \RuntimeException('Unable to generate a unique short ID');
       }
       $counter++;
-      // Generate a 8 characters long random string.
       $shortid = '';
       for ($i = 0; $i < 8; $i++) {
         $shortid .= chr($characters[mt_rand(0, 61)]);
@@ -121,24 +113,48 @@ class Guideline extends GuidelineBase implements EntityModeratedInterface, Entit
   }
 
   /**
-   * Get the list, this guideline belongs to.
+   * Get the list this guideline belongs to.
    *
-   * @return \Drupal\reliefweb_guidelines\Entity\GuidelineList|null
-   *   Guideline List.
+   * @return \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList|null
+   *   Guideline list term.
    */
   public function getGuidelineList() {
-    $parents = $this->getParents();
-    return !empty($parents) ? reset($parents) : NULL;
+    $list = $this->get('field_guideline_list')->entity;
+    return $list instanceof GuidelineList ? $list : NULL;
   }
 
   /**
-   * Get the list, this guideline belongs to.
+   * Get a render array for the guideline list link.
    *
    * @return array|null
    *   Link to the guideline list.
    */
-  public function getGuidelineListLink() {
+  public function getGuidelineListLink(): ?array {
     return $this->getGuidelineList()?->toLink()?->toRenderable();
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo Add granular permissions for revision history access.
+   */
+  public function getHistory() {
+    if (!$this->access('update')) {
+      return [];
+    }
+    return $this->getEntityHistoryService()->getEntityHistory($this);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @todo Add granular permissions for revision history access.
+   */
+  public function getHistoryContent() {
+    if (!$this->access('update')) {
+      return [];
+    }
+    return $this->getEntityHistoryService()->getEntityHistoryContent($this);
   }
 
 }

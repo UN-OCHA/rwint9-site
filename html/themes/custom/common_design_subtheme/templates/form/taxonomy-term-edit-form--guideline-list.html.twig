@@ -1,0 +1,50 @@
+{#
+/**
+ * @file
+ * Theme override for a guideline list taxonomy term edit form.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'description': 'Description'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.name }}
+  {{ form.field_role }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+
+{{
+  form|without([
+    'name',
+    'field_role',
+    'revision_information',
+    'actions',
+  ])
+}}
