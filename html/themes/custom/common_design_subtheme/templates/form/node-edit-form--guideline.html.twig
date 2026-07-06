@@ -53,6 +53,7 @@
 </fieldset>
 
 {{ form.revision_information }}
+{{ form.path }}
 
 {{
   form|without([
@@ -64,5 +65,7 @@
     'field_guideline_list',
     'revision_information',
     'actions',
+    'advanced',
+    'path',
   ])
 }}

@@ -1,4 +1,4 @@
 ReliefWeb Preview
 =================
 
-This component provides extra rules for the entity preview.
+This component provides styling for node and taxonomy term preview pages.

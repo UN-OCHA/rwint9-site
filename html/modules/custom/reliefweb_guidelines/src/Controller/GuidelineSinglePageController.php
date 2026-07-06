@@ -119,7 +119,7 @@ class GuidelineSinglePageController extends ControllerBase {
     // Retrieve the guidelines that are children of those guideline lists.
     $guideline_ids = $storage
       ->getQuery()
-      ->condition('status', 1, '=')
+      ->condition('moderation_status', 'published', '=')
       ->condition('type', 'guideline', '=')
       ->condition('field_guideline_list', $guideline_list_ids, 'IN')
       ->sort('field_weight', 'ASC')

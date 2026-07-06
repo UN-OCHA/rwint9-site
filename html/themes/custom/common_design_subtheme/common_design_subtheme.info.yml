@@ -91,7 +91,7 @@ libraries-override:
   node/drupal.node.preview:
     css:
       theme:
-        css/node.preview.css: components/rw-guidelines/rw-guidelines--preview.css
+        css/node.preview.css: components/rw-preview/rw-preview.css
 
 ###
 # Custom namespace - requires Components module
