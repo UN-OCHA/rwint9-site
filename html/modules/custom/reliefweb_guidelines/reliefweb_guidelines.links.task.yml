@@ -11,3 +11,9 @@ reliefweb_moderation.content.guideline_list:
   route_parameters:
     service: guideline_list
   title: Guideline Lists
+
+reliefweb_guidelines.guideline.sort:
+  title: 'Sort guidelines'
+  route_name: reliefweb_guidelines.guideline.sort
+  base_route: entity.taxonomy_term.canonical
+  weight: 15
