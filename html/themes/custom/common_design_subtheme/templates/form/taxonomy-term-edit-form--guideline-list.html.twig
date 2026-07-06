@@ -39,6 +39,7 @@
 </fieldset>
 
 {{ form.revision_information }}
+{{ form.path }}
 
 {{
   form|without([
@@ -46,5 +47,8 @@
     'field_role',
     'revision_information',
     'actions',
+    'relations',
+    'advanced',
+    'path',
   ])
 }}

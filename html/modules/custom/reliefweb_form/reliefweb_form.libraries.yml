@@ -26,11 +26,6 @@ widget.selectionlimit:
   js:
     js/widget.selectionlimit.js: {}
 
-# Guidelines form enhancements.
-form.guidelines:
-  js:
-    js/form.guidelines.js: {}
-
 # Main form enhancements.
 form.main:
   js:

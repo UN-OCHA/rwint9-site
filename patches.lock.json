@@ -1,5 +1,5 @@
 {
-    "_hash": "465c1811af9dd76b0a1c91967ef0cfc551f9035aedc9b77e537340d7177d160e",
+    "_hash": "7d60964514da6162299f8d1c9f7692c6809e4d5cb595d75c49999f316b69a14d",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -50,18 +50,6 @@
                 "url": "PATCHES/core--drupal--3418098-php-mailer.patch",
                 "sha256": "145be561756f95f2a2778a51298222d15ab986104bf13aeab448901f8b9c3b3a",
                 "depth": 2,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/guidelines": [
-            {
-                "package": "drupal/guidelines",
-                "description": "Drupal 10 compatibility",
-                "url": "PATCHES/guidelines-drupal-10-compatibility.patch",
-                "sha256": "47644c1f7753a42842ad3fb3783b3efe7744b564b022b2f0c309a92c2a153f43",
-                "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
                 }

@@ -170,7 +170,9 @@ class GuidelineListModeration extends ModerationServiceBase {
     switch ($operation) {
       case 'view':
         if ($account->hasPermission('access editorial guidelines')) {
-          $access = $viewable;
+          $access = $viewable
+            || $account->hasPermission('view any content')
+            || $account->hasPermission('edit terms in guideline_list');
         }
         break;
 
@@ -184,6 +186,12 @@ class GuidelineListModeration extends ModerationServiceBase {
 
       case 'delete':
         $access = $account->hasPermission('delete terms in guideline_list');
+        break;
+
+      case 'view_moderation_information':
+        if ($account->hasPermission('view moderation information')) {
+          $access = $account->hasPermission('edit terms in guideline_list');
+        }
         break;
     }
 

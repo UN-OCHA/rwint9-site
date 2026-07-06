@@ -36,7 +36,6 @@
         "drupal/core-recommended": "^11",
         "drupal/environment_indicator": "^4.0",
         "drupal/geofield": "^1.52",
-        "drupal/guidelines": "1.0.x-dev#1a63c54",
         "drupal/honeypot": "^2",
         "drupal/imageapi_optimize": "^4.1@beta",
         "drupal/imageapi_optimize_binaries": "^1.2@beta",
@@ -257,7 +256,6 @@
         "drupal-lenient": {
             "constraint": "^10 || ^11",
             "allowed-list": [
-                "drupal/guidelines",
                 "drupal/jsonlog",
                 "drupal/maintenance200"
             ]
