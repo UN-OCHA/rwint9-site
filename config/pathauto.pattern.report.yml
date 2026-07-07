@@ -12,11 +12,11 @@ selection_criteria:
   cac24841-112a-498c-92d9-845c71da29f6:
     id: 'entity_bundle:node'
     negate: false
-    uuid: cac24841-112a-498c-92d9-845c71da29f6
     context_mapping:
       node: node
     bundles:
       report: report
+    uuid: cac24841-112a-498c-92d9-845c71da29f6
 selection_logic: and
 weight: -7
 relationships: {  }

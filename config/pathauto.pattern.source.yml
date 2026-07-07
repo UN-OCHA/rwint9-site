@@ -13,11 +13,11 @@ selection_criteria:
   6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a:
     id: 'entity_bundle:taxonomy_term'
     negate: false
-    uuid: 6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a
     context_mapping:
       taxonomy_term: taxonomy_term
     bundles:
       source: source
+    uuid: 6ee5ca55-8fcc-4e01-a4b6-2b2f520e020a
 selection_logic: and
 weight: -2
 relationships: {  }
