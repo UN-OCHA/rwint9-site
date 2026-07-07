@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d2a6368ff6bd3241a997a5b718eae7c5",
+    "content-hash": "f5792c06b9f8189dac987270d6ce1e30",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2486,48 +2486,6 @@
                 "source": "https://git.drupalcode.org/project/geofield",
                 "issues": "https://www.drupal.org/project/issues/geofield",
                 "irc": "irc://irc.freenode.org/drupal-contribute"
-            }
-        },
-        {
-            "name": "drupal/guidelines",
-            "version": "dev-1.0.x",
-            "source": {
-                "type": "git",
-                "url": "https://git.drupalcode.org/project/guidelines.git",
-                "reference": "1a63c54"
-            },
-            "require": {
-                "drupal/core": "^10 || ^11"
-            },
-            "type": "drupal-module",
-            "extra": {
-                "branch-alias": {
-                    "dev-1.0.x": "1.0.x-dev"
-                },
-                "drupal": {
-                    "version": "1.0.5+1-dev",
-                    "datestamp": "1739356961",
-                    "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Dev releases are not covered by Drupal security advisories."
-                    }
-                }
-            },
-            "notification-url": "https://packages.drupal.org/8/downloads",
-            "license": [
-                "GPL-2.0-or-later"
-            ],
-            "authors": [
-                {
-                    "name": "attiks",
-                    "homepage": "https://www.drupal.org/user/105002"
-                }
-            ],
-            "description": "Add guidelines to entities and fields",
-            "homepage": "https://www.drupal.org/project/guidelines",
-            "support": {
-                "source": "http://cgit.drupalcode.org/guidelines",
-                "issues": "https://www.drupal.org/project/issues/guidelines"
             }
         },
         {
@@ -20449,7 +20407,6 @@
         "drupal/aws": 20,
         "drupal/components": 10,
         "drupal/config_split": 5,
-        "drupal/guidelines": 20,
         "drupal/imageapi_optimize": 10,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/inline_entity_form": 5,

@@ -31,7 +31,6 @@ dependencies:
     - book
     - contact
     - filter
-    - guidelines
     - masquerade
     - media
     - node
@@ -208,7 +207,6 @@ permissions:
   - 'view own posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
-  - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view report revisions'
   - 'view the administration theme'

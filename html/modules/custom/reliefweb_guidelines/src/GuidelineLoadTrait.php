@@ -25,7 +25,7 @@ trait GuidelineLoadTrait {
 
     $guideline_list_query = $storage
       ->getQuery()
-      ->condition('status', 1, '=')
+      ->condition('moderation_status', 'published', '=')
       ->condition('vid', 'guideline_list', '=')
       ->sort('weight', 'ASC')
       ->accessCheck(TRUE);

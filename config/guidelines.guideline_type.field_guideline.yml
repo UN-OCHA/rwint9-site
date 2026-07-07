@@ -1,7 +1,0 @@
-uuid: 33cf67f7-6536-4f60-99be-13b52a3a7124
-langcode: en
-status: true
-dependencies: {  }
-id: field_guideline
-label: 'Field guideline'
-preview_mode: 1

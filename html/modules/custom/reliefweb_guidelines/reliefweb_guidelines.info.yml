@@ -4,6 +4,7 @@ description: 'Reliefweb guidelines integration'
 package: reliefweb
 core_version_requirement: ^10 || ^11
 dependencies:
-  - drupal:reliefweb_moderation
-  - drupal:reliefweb_revisions
-  - drupal:reliefweb_utility
+  - reliefweb_entities:reliefweb_entities
+  - reliefweb_moderation:reliefweb_moderation
+  - reliefweb_revisions:reliefweb_revisions
+  - reliefweb_utility:reliefweb_utility

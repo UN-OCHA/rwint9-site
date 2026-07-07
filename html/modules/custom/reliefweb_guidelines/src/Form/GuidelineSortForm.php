@@ -169,13 +169,13 @@ class GuidelineSortForm extends FormBase {
    *
    * @param \Drupal\Core\Session\AccountInterface $account
    *   Run access checks for this account.
-   * @param \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList $taxonomy_term
+   * @param \Drupal\taxonomy\TermInterface $taxonomy_term
    *   The guideline list term the form is for.
    *
    * @return \Drupal\Core\Access\AccessResultInterface
    *   The access result.
    */
-  public static function checkAccess(AccountInterface $account, GuidelineList $taxonomy_term) {
+  public static function checkAccess(AccountInterface $account, TermInterface $taxonomy_term) {
     return AccessResult::allowedIf($taxonomy_term->bundle() === 'guideline_list');
   }
 

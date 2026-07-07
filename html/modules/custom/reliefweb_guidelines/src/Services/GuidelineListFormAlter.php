@@ -24,11 +24,4 @@ class GuidelineListFormAlter extends EntityFormAlterServiceBase {
     FormHelper::removeOptions($form, 'field_role', array_keys($roles_to_remove));
   }
 
-  /**
-   * {@inheritdoc}
-   */
-  protected function getAllowedForms() {
-    return ['default', 'add', 'edit'];
-  }
-
 }
