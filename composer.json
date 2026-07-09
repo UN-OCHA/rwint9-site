@@ -137,7 +137,8 @@
             "phpstan/extension-installer": true,
             "symfony/flex": true,
             "php-http/discovery": true,
-            "tbachert/spi": false
+            "tbachert/spi": false,
+            "symfony/runtime": true
         },
         "policy": {
             "advisories": {

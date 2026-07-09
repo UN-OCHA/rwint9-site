@@ -12,11 +12,11 @@ selection_criteria:
   3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2:
     id: 'entity_bundle:node'
     negate: false
-    uuid: 3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2
     context_mapping:
       node: node
     bundles:
       book: book
+    uuid: 3db763c8-2879-4d9f-8bc8-35cbb0c2a8c2
 selection_logic: and
 weight: -9
 relationships: {  }
