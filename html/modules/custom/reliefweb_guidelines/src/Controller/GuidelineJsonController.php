@@ -7,7 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_guidelines\Entity\Node\Guideline;
-use Drupal\reliefweb_guidelines\GuidelineLoadTrait;
+use Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
@@ -16,7 +16,12 @@ use Symfony\Component\HttpFoundation\JsonResponse;
  */
 class GuidelineJsonController extends ControllerBase {
 
-  use GuidelineLoadTrait;
+  /**
+   * The guideline access checker.
+   *
+   * @var \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker
+   */
+  protected GuidelineAccessChecker $guidelineAccessChecker;
 
   /**
    * The renderer service.
@@ -32,10 +37,12 @@ class GuidelineJsonController extends ControllerBase {
     EntityTypeManagerInterface $entity_type_manager,
     AccountInterface $current_user,
     RendererInterface $renderer,
+    GuidelineAccessChecker $guideline_access_checker,
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
+    $this->guidelineAccessChecker = $guideline_access_checker;
   }
 
   /**
@@ -45,7 +52,8 @@ class GuidelineJsonController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('current_user'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('reliefweb_guidelines.access_checker'),
     );
   }
 
@@ -63,7 +71,8 @@ class GuidelineJsonController extends ControllerBase {
   public function getFormGuidelines(string $entity_type, string $bundle): JsonResponse {
     $descriptions = [];
 
-    $guideline_list_ids = $this->getAccessibleGuidelineListIds($this->currentUser());
+    $guideline_list_ids = $this->guidelineAccessChecker
+      ->getAccessibleGuidelineListIds($this->currentUser());
     if (empty($guideline_list_ids)) {
       return new JsonResponse($descriptions);
     }

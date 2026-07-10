@@ -8,7 +8,7 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Session\AccountProxyInterface;
-use Drupal\reliefweb_guidelines\GuidelineLoadTrait;
+use Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -16,7 +16,12 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class GuidelineSinglePageController extends ControllerBase {
 
-  use GuidelineLoadTrait;
+  /**
+   * The guideline access checker.
+   *
+   * @var \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker
+   */
+  protected GuidelineAccessChecker $guidelineAccessChecker;
 
   /**
    * The default cache backend.
@@ -34,15 +39,19 @@ class GuidelineSinglePageController extends ControllerBase {
    *   The current user.
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager service.
+   * @param \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker $guideline_access_checker
+   *   The guideline access checker.
    */
   public function __construct(
     CacheBackendInterface $cache_backend,
     AccountProxyInterface $current_user,
     EntityTypeManagerInterface $entity_type_manager,
+    GuidelineAccessChecker $guideline_access_checker,
   ) {
     $this->cache = $cache_backend;
     $this->currentUser = $current_user;
     $this->entityTypeManager = $entity_type_manager;
+    $this->guidelineAccessChecker = $guideline_access_checker;
   }
 
   /**
@@ -52,7 +61,8 @@ class GuidelineSinglePageController extends ControllerBase {
     return new static(
       $container->get('cache.default'),
       $container->get('current_user'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('reliefweb_guidelines.access_checker'),
     );
   }
 
@@ -91,32 +101,42 @@ class GuidelineSinglePageController extends ControllerBase {
     $list = [];
     $storage = $this->entityTypeManager()->getStorage('node');
 
-    $guideline_list_ids = $this->getAccessibleGuidelineListIds($this->currentUser());
+    // Retrieve the IDs of the guideline lists that the user can view.
+    $guideline_list_ids = $this->guidelineAccessChecker
+      ->getAccessibleGuidelineListIds($this->currentUser());
     if (empty($guideline_list_ids)) {
       return [];
     }
 
+    // Attempt to retrieve the cached list if available.
     $cache_id = $this->getGuidelineListCacheId($guideline_list_ids);
     $cache = $this->cache->get($cache_id);
     if (isset($cache->data)) {
       return $cache->data;
     }
 
+    // Load the guideline lists.
     /** @var \Drupal\reliefweb_guidelines\Entity\Taxonomy\GuidelineList[] $guideline_lists */
     $guideline_lists = $this->entityTypeManager()->getStorage('taxonomy_term')->loadMultiple($guideline_list_ids);
 
-    $is_admin = $this->isUserAdmin($this->currentUser());
+    // Check if the user can view any guideline list.
+    $can_view_any_guideline_list = $this->guidelineAccessChecker
+      ->userCanViewAnyGuidelineList($this->currentUser());
 
+    // Set the title for each guideline list.
     foreach ($guideline_lists as $guideline_list) {
-      // Admins can see all the guidelines so we use the prefixed label to
-      // differentiate the guideline lists. For other users, they normally only
-      // see one type of guideline (ex: guidelines for editors), in which case
-      // we use ::getName() to show the non prefixed label for better
+      // For users who can view any guideline list, we use the prefixed label
+      // to differentiate the guideline lists. For other users, they normally
+      // only see one type of guideline (ex: guidelines for editors), in which
+      // case we use ::getName() to show the non prefixed label for better
       // readability.
-      $list[$guideline_list->id()]['title'] = $is_admin ? $guideline_list->label() : $guideline_list->getName();
+      $list[$guideline_list->id()]['title'] = $can_view_any_guideline_list ?
+        $guideline_list->label() :
+        $guideline_list->getName();
     }
 
-    // Retrieve the guidelines that are children of those guideline lists.
+    // Retrieve the published guidelines that are children of those guideline
+    // lists. We sort them by weight to ensure a consistent order.
     $guideline_ids = $storage
       ->getQuery()
       ->condition('moderation_status', 'published', '=')
@@ -126,6 +146,7 @@ class GuidelineSinglePageController extends ControllerBase {
       ->accessCheck(TRUE)
       ->execute();
 
+    // Load the guidelines.
     /** @var \Drupal\reliefweb_guidelines\Entity\Node\Guideline[] $guidelines */
     $guidelines = $this->entityTypeManager()->getStorage('node')->loadMultiple($guideline_ids);
 
@@ -157,7 +178,8 @@ class GuidelineSinglePageController extends ControllerBase {
           'description' => static::replaceLinks($description, 'blank-image'),
         ];
 
-        if ($this->currentUser->hasPermission('edit any guideline content')) {
+        // Add the edit link if the user can update the guideline.
+        if ($guideline->access('update', $this->currentUser())) {
           $list[$parent]['children'][$id]['edit'] = $guideline->toUrl('edit-form')->toString();
         }
       }

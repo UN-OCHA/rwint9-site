@@ -196,6 +196,7 @@ permissions:
   - 'view all taxonomy revisions'
   - 'view announcement revisions'
   - 'view any content'
+  - 'view editor guideline content'
   - 'view blog_post revisions'
   - 'view book revisions'
   - 'view entity history'

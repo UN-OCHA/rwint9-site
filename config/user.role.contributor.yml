@@ -39,4 +39,5 @@ permissions:
   - 'view entity history'
   - 'view own posts'
   - 'view own unpublished media'
+  - 'view contributor guideline content'
   - 'view report moderation information'
