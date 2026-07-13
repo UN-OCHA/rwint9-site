@@ -130,6 +130,7 @@ permissions:
   - 'view all guideline revisions'
   - 'view all taxonomy revisions'
   - 'view any guideline content'
+  - 'view any guideline list'
   - 'view moderation information'
   - 'view moderation information revision message author'
   - 'view ocha ai admin config menu'

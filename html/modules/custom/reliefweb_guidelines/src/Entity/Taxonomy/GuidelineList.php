@@ -88,7 +88,10 @@ class GuidelineList extends Term implements EntityModeratedInterface, EntityRevi
       ->accessCheck(FALSE)
       ->execute();
 
-    return $storage->loadMultiple($ids);
+    $nodes = $storage->loadMultiple($ids);
+
+    // Only return nodes that the current user has access to.
+    return array_filter($nodes, fn($node) => $node->access('view'));
   }
 
   /**

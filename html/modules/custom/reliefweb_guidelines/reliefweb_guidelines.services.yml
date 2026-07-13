@@ -1,10 +1,13 @@
 services:
+  reliefweb_guidelines.access_checker:
+    class: Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker
+    arguments: ['@entity_type.manager', '@database']
   reliefweb_moderation.guideline.moderation:
     class: Drupal\reliefweb_guidelines\Services\GuidelineModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', '@reliefweb_guidelines.access_checker']
   reliefweb_moderation.guideline_list.moderation:
     class: Drupal\reliefweb_guidelines\Services\GuidelineListModeration
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', '@reliefweb_guidelines.access_checker']
   reliefweb_entities.guideline.form_alter:
     class: Drupal\reliefweb_guidelines\Services\GuidelineFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights']
