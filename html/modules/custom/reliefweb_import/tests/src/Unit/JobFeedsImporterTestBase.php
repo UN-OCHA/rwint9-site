@@ -12,7 +12,6 @@ use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\State;
 use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use Drupal\Tests\UnitTestCase;
-use Drupal\Tests\reliefweb_import\Unit\Stub\JobFeedsImporterStub;
 use GuzzleHttp\ClientInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -68,9 +67,10 @@ class JobFeedsImporterTestBase extends UnitTestCase {
   /**
    * Reliefweb importer.
    *
-   * @var \Drupal\Tests\reliefweb_import\Unit\Stub\JobFeedsImporterStub
+   * @var \Drupal\reliefweb_import\Service\JobFeedsImporter
    */
-  protected JobFeedsImporterStub $jobImporter;
+  protected JobFeedsImporter $jobImporter;
+
   /**
    * Random helper.
    *
@@ -96,7 +96,7 @@ class JobFeedsImporterTestBase extends UnitTestCase {
   protected function setUp(): void {
     parent::setUp();
     $this->prophesizeServices();
-    $this->jobImporter = new JobFeedsImporterStub(
+    $this->jobImporter = new JobFeedsImporter(
       $this->database->reveal(),
       $this->entityTypeManager->reveal(),
       $this->accountSwitcher->reveal(),
@@ -105,6 +105,35 @@ class JobFeedsImporterTestBase extends UnitTestCase {
       $this->state->reveal(),
     );
     $this->random = new Random();
+  }
+
+  /**
+   * Invokes a protected method on the job importer.
+   *
+   * @param string $method_name
+   *   The method name.
+   * @param array $arguments
+   *   The arguments to pass to the method.
+   *
+   * @return mixed
+   *   The result of the method call.
+   */
+  protected function invokeProtectedMethod(string $method_name, array $arguments = []) {
+    $reflection = new \ReflectionClass($this->jobImporter);
+    $method = $reflection->getMethod($method_name);
+
+    return $method->invokeArgs($this->jobImporter, $arguments);
+  }
+
+  /**
+   * Sets the HTTP client on the job importer.
+   *
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   The HTTP client.
+   */
+  protected function setHttpClient(ClientInterface $http_client): void {
+    $reflection = new \ReflectionProperty(JobFeedsImporter::class, 'httpClient');
+    $reflection->setValue($this->jobImporter, $http_client);
   }
 
 }

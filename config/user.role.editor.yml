@@ -31,7 +31,6 @@ dependencies:
     - book
     - contact
     - filter
-    - guidelines
     - masquerade
     - media
     - node
@@ -199,6 +198,7 @@ permissions:
   - 'view all taxonomy revisions'
   - 'view announcement revisions'
   - 'view any content'
+  - 'view editor guideline content'
   - 'view blog_post revisions'
   - 'view book revisions'
   - 'view entity history'
@@ -210,7 +210,6 @@ permissions:
   - 'view own posts'
   - 'view own unpublished content'
   - 'view own unpublished media'
-  - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view report revisions'
   - 'view the administration theme'

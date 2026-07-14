@@ -1,20 +1,23 @@
 ReliefWeb - Guidelines module
 =============================
 
-This module extends the https://drupal.org/project/guidelines contrib module to better fit guideline entities into the ReliefWeb editorial workflow.
+This module provides editorial guidelines as `node:guideline` content and
+`taxonomy_term:guideline_list` taxonomy terms.
 
-## Guideline entities
+## Guideline content
 
-This modules provides [entity bundle classes](src/Entity) and form alteration and moderation [services](src/Services) to align guideline entities with other content entities.
-
-This also adds the `moderation_status` base field to the guideline entities.
+The module provides [entity bundle classes](src/Entity) and form alteration
+and moderation [services](src/Services) to align guidelines with other ReliefWeb
+content entities.
 
 ## Guidelines page
 
-This module provides a route (`/guidelines`) and [controller](src/Controller/GuidelineSinglePageController.php) to display the guidelines in a single page.
+This module provides a route (`/guidelines`) and
+[controller](src/Controller/GuidelineSinglePageController.php) to display the
+guidelines on a single page.
 
-## TODO
+## Form popups
 
-The https://drupal.org/project/guidelines doesn't really bring anything that couldn't be handled by nodes and requires quite a lot of customization to work with the ReliefWeb editorial workflow.
-
-Maybe this could be simplified by converting them to nodes with a taxonomy vocabulary for the guideline lists.
+Guidelines can be loaded in entity edit forms via JSON
+(`/guidelines/json/{entity_type}/{bundle}`) and the `rw-guidelines` theme
+component.

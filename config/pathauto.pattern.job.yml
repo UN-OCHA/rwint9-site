@@ -12,11 +12,11 @@ selection_criteria:
   140bd801-78ac-4a99-8477-c5d2ce4e73d6:
     id: 'entity_bundle:node'
     negate: false
-    uuid: 140bd801-78ac-4a99-8477-c5d2ce4e73d6
     context_mapping:
       node: node
     bundles:
       job: job
+    uuid: 140bd801-78ac-4a99-8477-c5d2ce4e73d6
 selection_logic: and
 weight: -8
 relationships: {  }

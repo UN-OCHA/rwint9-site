@@ -1,0 +1,71 @@
+{#
+/**
+ * @file
+ * Theme override for a guideline node edit form.
+ */
+#}
+{{ attach_library('common_design_subtheme/rw-form') }}
+
+{{
+  render_var({
+    '#theme': 'reliefweb_entities_table_of_contents',
+    '#sections': {
+      'fields': {
+        'title': 'Fields'|t,
+        'sections': {
+          'description': 'Description'|t,
+          'images-links': 'Images & Links'|t,
+        },
+      },
+      'submission': {
+        'title': 'Submission'|t,
+        'sections': {
+          'editorial': 'Editorial'|t,
+          'actions': 'Save'|t,
+          'edit-revision-information': 'Revisions'|t,
+        },
+      },
+    },
+  })
+}}
+
+<fieldset id="description">
+  <legend>{% trans %}Description{% endtrans %}</legend>
+  {{ form.title }}
+  {{ form.field_description }}
+</fieldset>
+
+<fieldset id="images-links">
+  <legend>{% trans %}Images &amp; Links{% endtrans %}</legend>
+  {{ form.field_images }}
+  {{ form.field_links }}
+</fieldset>
+
+<fieldset id="editorial">
+  <legend>{% trans %}Editorial{% endtrans %}</legend>
+  {{ form.field_guideline_list }}
+  {{ form.field_field }}
+</fieldset>
+
+<fieldset id="actions">
+  <legend class="visually-hidden">{% trans %}Form submission and other actions{% endtrans %}</legend>
+  {{ form.actions }}
+</fieldset>
+
+{{ form.revision_information }}
+{{ form.path }}
+
+{{
+  form|without([
+    'title',
+    'field_description',
+    'field_images',
+    'field_links',
+    'field_field',
+    'field_guideline_list',
+    'revision_information',
+    'actions',
+    'advanced',
+    'path',
+  ])
+}}

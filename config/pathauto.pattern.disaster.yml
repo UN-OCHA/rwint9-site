@@ -13,11 +13,11 @@ selection_criteria:
   3366e40d-d392-435b-aea7-6cfdeae0811b:
     id: 'entity_bundle:taxonomy_term'
     negate: false
-    uuid: 3366e40d-d392-435b-aea7-6cfdeae0811b
     context_mapping:
       taxonomy_term: taxonomy_term
     bundles:
       disaster: disaster
+    uuid: 3366e40d-d392-435b-aea7-6cfdeae0811b
 selection_logic: and
 weight: -3
 relationships: {  }

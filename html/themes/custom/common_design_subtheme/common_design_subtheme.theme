@@ -222,23 +222,28 @@ function common_design_subtheme_editor_link_dialog_form_after_build(array $form,
 
 /**
  * Implements hook_theme().
- *
- * Add themes for the guideline edit forms.
  */
 function common_design_subtheme_theme(array $existing, $type, $theme, $path) {
-  $hooks = [
-    'guideline_edit_form',
-  ];
-
-  return common_design_get_entity_edit_form_themes($hooks, $existing, $theme, $path);
+  return [];
 }
 
 /**
- * Implements hook_form_guideline_HOOK_alter().
+ * Implements hook_form_node_form_alter().
  */
-function common_design_subtheme_form_guideline_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  if (!empty($form_state->get('form_display'))) {
-    common_design_add_entity_edit_form_theme($form, $form_state);
+function common_design_subtheme_form_node_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $entity = $form_state->getFormObject()?->getEntity();
+  if ($entity && $entity->bundle() === 'guideline' && !empty($form_state->get('form_display'))) {
+    $form['#theme'] = ['node_edit_form__guideline', 'node_edit_form'];
+  }
+}
+
+/**
+ * Implements hook_form_taxonomy_term_form_alter().
+ */
+function common_design_subtheme_form_taxonomy_term_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  $entity = $form_state->getFormObject()?->getEntity();
+  if ($entity && $entity->bundle() === 'guideline_list' && !empty($form_state->get('form_display'))) {
+    $form['#theme'] = ['taxonomy_term_edit_form__guideline_list', 'taxonomy_term_edit_form'];
   }
 }
 

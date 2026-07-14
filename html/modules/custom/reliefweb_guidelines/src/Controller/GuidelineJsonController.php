@@ -6,18 +6,22 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Session\AccountInterface;
-use Drupal\reliefweb_guidelines\GuidelineLoadTrait;
+use Drupal\reliefweb_guidelines\Entity\Node\Guideline;
+use Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
- * Class GuidelineJsonController.
- *
- *  Returns responses for Guideline routes.
+ * Returns JSON responses for form guideline popups.
  */
 class GuidelineJsonController extends ControllerBase {
 
-  use GuidelineLoadTrait;
+  /**
+   * The guideline access checker.
+   *
+   * @var \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker
+   */
+  protected GuidelineAccessChecker $guidelineAccessChecker;
 
   /**
    * The renderer service.
@@ -27,23 +31,18 @@ class GuidelineJsonController extends ControllerBase {
   protected RendererInterface $renderer;
 
   /**
-   * Constructs a new entity.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   This is pointing to the object of enitytype manager.
-   * @param \Drupal\Core\Session\AccountInterface $current_user
-   *   The current user.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   Renderer service.
+   * Constructs a GuidelineJsonController.
    */
   public function __construct(
     EntityTypeManagerInterface $entity_type_manager,
     AccountInterface $current_user,
     RendererInterface $renderer,
+    GuidelineAccessChecker $guideline_access_checker,
   ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->currentUser = $current_user;
     $this->renderer = $renderer;
+    $this->guidelineAccessChecker = $guideline_access_checker;
   }
 
   /**
@@ -53,7 +52,8 @@ class GuidelineJsonController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('current_user'),
-      $container->get('renderer')
+      $container->get('renderer'),
+      $container->get('reliefweb_guidelines.access_checker'),
     );
   }
 
@@ -65,25 +65,27 @@ class GuidelineJsonController extends ControllerBase {
    * @param string $bundle
    *   The entity bundle.
    *
-   * @return array
-   *   An array suitable for drupal_render().
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   JSON response with guideline descriptions keyed by field name.
    */
   public function getFormGuidelines(string $entity_type, string $bundle): JsonResponse {
     $descriptions = [];
 
-    $guideline_list_ids = $this->getAccessibleGuidelineListIds($this->currentUser());
+    $guideline_list_ids = $this->guidelineAccessChecker
+      ->getAccessibleGuidelineListIds($this->currentUser());
     if (empty($guideline_list_ids)) {
       return new JsonResponse($descriptions);
     }
 
-    $storage = $this->entityTypeManager()->getStorage('guideline');
+    $storage = $this->entityTypeManager()->getStorage('node');
 
-    // Retrieve the guideline lists accessible to the current user.
+    // Retrieve published guideline nodes for lists accessible to the current
+    // user.
     $ids = $storage
       ->getQuery()
-      ->condition('status', 1, '=')
-      ->condition('type', 'field_guideline', '=')
-      ->condition('parent', $guideline_list_ids, 'IN')
+      ->condition('moderation_status', 'published', '=')
+      ->condition('type', 'guideline', '=')
+      ->condition('field_guideline_list', $guideline_list_ids, 'IN')
       ->condition('field_field', $entity_type . '.' . $bundle . '.', 'STARTS_WITH')
       ->accessCheck(TRUE)
       ->execute();
@@ -91,7 +93,7 @@ class GuidelineJsonController extends ControllerBase {
       return new JsonResponse($descriptions);
     }
 
-    /** @var Drupal\guidelines\Entity\Guideline[] $guidelines */
+    /** @var \Drupal\reliefweb_guidelines\Entity\Node\Guideline[] $guidelines */
     $guidelines = $storage->loadMultiple($ids);
 
     foreach ($guidelines as $guideline) {
@@ -101,16 +103,11 @@ class GuidelineJsonController extends ControllerBase {
           continue;
         }
         if (!empty($bundle) && $bundle === $field_bundle) {
-          $view_builder = $this->entityTypeManager()->getViewBuilder('guideline');
+          $view_builder = $this->entityTypeManager()->getViewBuilder('node');
           $pre_render = $view_builder->view($guideline, 'default');
           $render_output = $this->renderer->render($pre_render);
 
-          if (!empty($guideline->field_title->value)) {
-            $title = $guideline->field_title->value;
-          }
-          else {
-            $title = $guideline->label();
-          }
+          $title = $guideline->label();
 
           $description = [
             'label' => $field_name,
@@ -119,15 +116,14 @@ class GuidelineJsonController extends ControllerBase {
             'link' => $guideline->toUrl()->toString(),
           ];
 
-          // Allow other modules to add extra fields.
-          $module_handler = $this->moduleHandler();
-          $context = [
-            'entity_type' => $entity_type,
-            'bundle' => $bundle,
-          ];
-          $module_handler->alter('guideline_json_fields', $description, $guideline, $context);
+          if ($guideline instanceof Guideline) {
+            $description['link'] = '/guidelines#' . $guideline->getShortId();
+          }
+          if (!empty($description['content'])) {
+            $description['content'] = GuidelineSinglePageController::replaceLinks($description['content']);
+          }
 
-          if (isset($description['label']) && !empty($description['label'])) {
+          if (!empty($description['label'])) {
             $descriptions[$field_name] = $description;
           }
         }

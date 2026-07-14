@@ -5,3 +5,10 @@ access editorial guidelines:
 sort editorial guidelines:
   title: 'Sort editorial guidelines'
   description: 'Allow users to sort editorial guidelines.'
+
+view any guideline list:
+  title: 'View any guideline list'
+  description: 'Allow users to view any guideline list, regardless of status or role.'
+
+permission_callbacks:
+  - \Drupal\reliefweb_guidelines\GuidelinePermissions::permissions

@@ -4,12 +4,14 @@ status: true
 dependencies:
   config:
     - filter.format.guideline
+    - node.type.guideline
     - taxonomy.vocabulary.career_category
     - taxonomy.vocabulary.content_format
     - taxonomy.vocabulary.country
     - taxonomy.vocabulary.disaster
     - taxonomy.vocabulary.disaster_type
     - taxonomy.vocabulary.feature
+    - taxonomy.vocabulary.guideline_list
     - taxonomy.vocabulary.job_experience
     - taxonomy.vocabulary.job_type
     - taxonomy.vocabulary.language
@@ -24,7 +26,6 @@ dependencies:
   module:
     - book
     - filter
-    - guidelines
     - ocha_ai
     - ocha_content_classification
     - reliefweb_anti_spam
@@ -49,7 +50,6 @@ permissions:
   - 'access role capabilities overview'
   - 'access taxonomy overview'
   - 'add content to books'
-  - 'add guideline entities'
   - 'administer posting rights mapping'
   - 'administer privileged domains'
   - 'administer reliefweb anti-spam settings'
@@ -57,6 +57,7 @@ permissions:
   - 'administer submitter form settings'
   - 'bypass ocha content classification for node job'
   - 'bypass ocha content classification for node report'
+  - 'create guideline content'
   - 'create new books'
   - 'create terms in career_category'
   - 'create terms in content_format'
@@ -64,6 +65,7 @@ permissions:
   - 'create terms in disaster'
   - 'create terms in disaster_type'
   - 'create terms in feature'
+  - 'create terms in guideline_list'
   - 'create terms in job_experience'
   - 'create terms in job_type'
   - 'create terms in language'
@@ -77,13 +79,15 @@ permissions:
   - 'create terms in vulnerable_group'
   - 'delete all guideline revisions'
   - 'delete all taxonomy revisions'
-  - 'delete guideline entities'
+  - 'delete any guideline content'
+  - 'delete own guideline content'
   - 'delete terms in career_category'
   - 'delete terms in content_format'
   - 'delete terms in country'
   - 'delete terms in disaster'
   - 'delete terms in disaster_type'
   - 'delete terms in feature'
+  - 'delete terms in guideline_list'
   - 'delete terms in job_experience'
   - 'delete terms in job_type'
   - 'delete terms in language'
@@ -95,8 +99,9 @@ permissions:
   - 'delete terms in training_format'
   - 'delete terms in training_type'
   - 'delete terms in vulnerable_group'
+  - 'edit any guideline content'
   - 'edit archived content'
-  - 'edit guideline entities'
+  - 'edit own guideline content'
   - 'edit refused content'
   - 'edit terms in career_category'
   - 'edit terms in content_format'
@@ -104,6 +109,7 @@ permissions:
   - 'edit terms in disaster'
   - 'edit terms in disaster_type'
   - 'edit terms in feature'
+  - 'edit terms in guideline_list'
   - 'edit terms in job_experience'
   - 'edit terms in job_type'
   - 'edit terms in language'
@@ -115,37 +121,20 @@ permissions:
   - 'edit terms in training_format'
   - 'edit terms in training_type'
   - 'edit terms in vulnerable_group'
-  - 'field_guideline create entities'
-  - 'field_guideline delete any entities'
-  - 'field_guideline delete own entities'
-  - 'field_guideline delete revisions'
-  - 'field_guideline edit any entities'
-  - 'field_guideline edit own entities'
-  - 'field_guideline revert revisions'
-  - 'field_guideline view revisions'
-  - 'guideline_list create entities'
-  - 'guideline_list delete any entities'
-  - 'guideline_list delete own entities'
-  - 'guideline_list delete revisions'
-  - 'guideline_list edit any entities'
-  - 'guideline_list edit own entities'
-  - 'guideline_list revert revisions'
-  - 'guideline_list view revisions'
   - 'import organization records'
   - 'requeue node job for ocha content classification'
   - 'requeue node report for ocha content classification'
   - 'revert all guideline revisions'
   - 'revert all taxonomy revisions'
   - 'see other bookmarks'
-  - 'sort all guideline'
   - 'sort editorial guidelines'
   - 'use text format guideline'
   - 'view all guideline revisions'
   - 'view all taxonomy revisions'
+  - 'view any guideline content'
+  - 'view any guideline list'
   - 'view moderation information'
   - 'view moderation information revision message author'
   - 'view ocha ai admin config menu'
-  - 'view published guideline entities'
   - 'view reliefweb admin menu'
   - 'view the administration theme'
-  - 'view unpublished guideline entities'

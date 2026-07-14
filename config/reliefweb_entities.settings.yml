@@ -17,9 +17,9 @@ cron:
   expired_jobs_limit: 20
   expired_training_limit: 20
 related_content:
-  candidate_limit: 20
   recency_short_months: 3
   recency_long_months: 12
+  candidate_limit: 20
   recency_decay_exponent: 1.5
   translation_date_window_days: 2
   title_pattern_token_counts:
