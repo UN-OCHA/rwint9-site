@@ -302,7 +302,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
     // Return the access result based on the entity type.
-    return match ($entity->getEntityTypeId()) {
+    $access = match ($entity->getEntityTypeId()) {
       // Check access to a node.
       'node' => $this->nodeAccess($entity, $operation, $account),
       // Check access to a taxonomy term.
@@ -310,6 +310,14 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       // Access neutral, let other modules handle the access.
       default => AccessResult::neutral(),
     };
+
+    if ($access->isNeutral()) {
+      return $access;
+    }
+
+    return $access
+      ->cachePerPermissions()
+      ->addCacheableDependency($entity);
   }
 
   /**
@@ -483,7 +491,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
    */
   public function entityCreateAccess(?AccountInterface $account = NULL): AccessResultInterface {
     // Return the access result based on the entity type.
-    return match ($this->getEntityTypeId()) {
+    $access = match ($this->getEntityTypeId()) {
       // Check create access to a node.
       'node' => $this->nodeCreateAccess($account),
       // Check create access to a taxonomy term.
@@ -491,6 +499,12 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       // Access neutral, let other modules handle the access.
       default => AccessResult::neutral(),
     };
+
+    if ($access->isNeutral()) {
+      return $access;
+    }
+
+    return $access->cachePerPermissions();
   }
 
   /**

@@ -101,6 +101,8 @@ class GuidelineModerationEntityAccessTest extends UnitTestCase {
 
     $result = $this->moderation->entityAccess($guideline, 'view', $account);
     $this->assertTrue($result->isAllowed());
+    $this->assertContains('user.permissions', $result->getCacheContexts());
+    $this->assertContains('node:1', $result->getCacheTags());
   }
 
   /**
@@ -151,6 +153,9 @@ class GuidelineModerationEntityAccessTest extends UnitTestCase {
     $guideline = $this->createMock(Guideline::class);
     $guideline->method('getModerationStatus')->willReturn('published');
     $guideline->method('getGuidelineList')->willReturn($list);
+    $guideline->method('getCacheTags')->willReturn(['node:1']);
+    $guideline->method('getCacheContexts')->willReturn([]);
+    $guideline->method('getCacheMaxAge')->willReturn(-1);
     return $guideline;
   }
 

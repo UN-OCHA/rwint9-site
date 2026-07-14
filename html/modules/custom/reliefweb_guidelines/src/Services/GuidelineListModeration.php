@@ -207,27 +207,35 @@ class GuidelineListModeration extends ModerationServiceBase {
     $status = $entity->getModerationStatus();
     $viewable = $this->isViewableStatus($status, $account);
 
-    return match ($operation) {
+    $access = match ($operation) {
       'view' => match (TRUE) {
         // Skip if the user is not allowed to access editorial guidelines.
-        !$this->accessChecker->userCanAccessEditorialGuidelines($account) => AccessResult::forbidden()->cachePerPermissions(),
+        !$this->accessChecker->userCanAccessEditorialGuidelines($account) => AccessResult::forbidden(),
         // Allow if the user has permission to view any guideline list,
         // regardless of status.
-        $this->accessChecker->userCanViewAnyGuidelineList($account) => AccessResult::allowed()->cachePerPermissions(),
+        $this->accessChecker->userCanViewAnyGuidelineList($account) => AccessResult::allowed(),
         // Skip if the entity is not viewable.
-        !$viewable => AccessResult::forbidden()->cachePerPermissions(),
+        !$viewable => AccessResult::forbidden(),
         // Allow if the entity is accessible to the user.
-        $this->accessChecker->isGuidelineListAccessible($entity, $account) => AccessResult::allowed()->cachePerPermissions(),
+        $this->accessChecker->isGuidelineListAccessible($entity, $account) => AccessResult::allowed(),
         // Otherwise, deny access.
-        default => AccessResult::forbidden()->cachePerPermissions(),
+        default => AccessResult::forbidden(),
       },
       'view_moderation_information' => AccessResult::allowedIf(
         $account->hasPermission('view moderation information') &&
         $account->hasPermission('edit terms in guideline_list')
-      )->cachePerPermissions(),
+      ),
       // Update, delete, revisions, etc.: defer to base taxonomyTermAccess().
       default => parent::entityAccess($entity, $operation, $account),
     };
+
+    if ($access->isNeutral()) {
+      return $access;
+    }
+
+    return $access
+      ->cachePerPermissions()
+      ->addCacheableDependency($entity);
   }
 
   /**
@@ -236,12 +244,14 @@ class GuidelineListModeration extends ModerationServiceBase {
   public function taxonomyTermCreateAccess(?AccountInterface $account = NULL): AccessResultInterface {
     $account = $account ?: $this->currentUser;
 
-    return match (TRUE) {
+    $access = match (TRUE) {
       // User can create guideline list terms.
       $account->hasPermission('create terms in guideline_list') => AccessResult::allowed(),
       // No access.
       default => AccessResult::forbidden(),
     };
+
+    return $access->cachePerPermissions();
   }
 
   /**
