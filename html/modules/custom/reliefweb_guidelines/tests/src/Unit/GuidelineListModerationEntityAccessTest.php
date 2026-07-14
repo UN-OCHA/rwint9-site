@@ -85,6 +85,8 @@ class GuidelineListModerationEntityAccessTest extends UnitTestCase {
 
     $result = $this->moderation->entityAccess($list, 'view', $account);
     $this->assertTrue($result->isAllowed());
+    $this->assertContains('user.permissions', $result->getCacheContexts());
+    $this->assertContains('taxonomy_term:1', $result->getCacheTags());
   }
 
   /**
@@ -151,6 +153,9 @@ class GuidelineListModerationEntityAccessTest extends UnitTestCase {
     $list = $this->createMock(GuidelineList::class);
     $list->method('getModerationStatus')->willReturn($status);
     $list->method('get')->with('field_role')->willReturn($field);
+    $list->method('getCacheTags')->willReturn(['taxonomy_term:1']);
+    $list->method('getCacheContexts')->willReturn([]);
+    $list->method('getCacheMaxAge')->willReturn(-1);
     return $list;
   }
 

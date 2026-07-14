@@ -256,35 +256,43 @@ class GuidelineModeration extends ModerationServiceBase {
     $viewable = $this->isViewableStatus($status, $account);
     $editable = $this->isEditableStatus($status, $account);
 
-    return match ($operation) {
+    $access = match ($operation) {
       'view' => match (TRUE) {
         // Skip if the user is not allowed to access editorial guidelines.
-        !$this->accessChecker->userCanAccessEditorialGuidelines($account) => AccessResult::forbidden()->cachePerPermissions(),
+        !$this->accessChecker->userCanAccessEditorialGuidelines($account) => AccessResult::forbidden(),
         // Allow if the user has permission to view any guideline content,
         // regardless of status.
-        $this->accessChecker->userCanViewAnyGuidelineContent($account) => AccessResult::allowed()->cachePerPermissions(),
+        $this->accessChecker->userCanViewAnyGuidelineContent($account) => AccessResult::allowed(),
         // Skip if the entity is not viewable.
-        !$viewable => AccessResult::forbidden()->cachePerPermissions(),
+        !$viewable => AccessResult::forbidden(),
         // Allow if the entity is accessible to the user, meaning that the user
         // has a role that allows access to the guideline.
-        $this->accessChecker->isGuidelineAccessible($entity, $account) => AccessResult::allowed()->cachePerPermissions(),
+        $this->accessChecker->isGuidelineAccessible($entity, $account) => AccessResult::allowed(),
         // Otherwise, deny access.
-        default => AccessResult::forbidden()->cachePerPermissions(),
+        default => AccessResult::forbidden(),
       },
       'view_moderation_information' => AccessResult::allowedIf(
         $account->hasPermission('view moderation information') &&
         $account->hasPermission('edit any guideline content')
-      )->cachePerPermissions(),
+      ),
       'update' => AccessResult::allowedIf(
         $account->hasPermission('edit any guideline content') &&
         $editable
-      )->cachePerPermissions(),
+      ),
       'delete' => AccessResult::allowedIf(
         $account->hasPermission('delete any guideline content')
-      )->cachePerPermissions(),
+      ),
       // Revisions and other operations: defer to base.
       default => parent::entityAccess($entity, $operation, $account),
     };
+
+    if ($access->isNeutral()) {
+      return $access;
+    }
+
+    return $access
+      ->cachePerPermissions()
+      ->addCacheableDependency($entity);
   }
 
   /**
