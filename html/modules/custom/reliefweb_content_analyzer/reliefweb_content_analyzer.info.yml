@@ -7,5 +7,6 @@ dependencies:
   - reliefweb_files:reliefweb_files
   - reliefweb_api:reliefweb_api
   - reliefweb_moderation:reliefweb_moderation
+  - reliefweb_utility:reliefweb_utility
   - ocha_ai:ocha_ai
   - ocha_content_classification:ocha_content_classification

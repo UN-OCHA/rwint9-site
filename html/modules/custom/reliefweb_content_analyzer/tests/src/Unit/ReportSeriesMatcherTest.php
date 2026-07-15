@@ -18,7 +18,6 @@ use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchMatcherConfi
 use Drupal\Tests\UnitTestCase;
 use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
-use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Group;
 
 /**
@@ -70,26 +69,6 @@ class ReportSeriesMatcherTest extends UnitTestCase {
       $this->createMock(EntityFieldManagerInterface::class),
       $this->createMock(TimeInterface::class),
       $this->createMock(Connection::class),
-      $this->createMock(CompletionPluginManagerInterface::class),
-    );
-  }
-
-  /**
-   * Builds a matcher with escapeLike returning the input unchanged.
-   *
-   * @return \Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher
-   *   Matcher with a database stub for LIKE pattern tests.
-   */
-  private function buildMatcherForLikePatterns(): ReportSeriesMatcher {
-    $database = $this->createMock(Connection::class);
-    $database->method('escapeLike')->willReturnArgument(0);
-
-    return new ReportSeriesMatcher(
-      $this->buildConfigFactory(),
-      $this->createMock(LoggerChannelFactoryInterface::class),
-      $this->createMock(EntityFieldManagerInterface::class),
-      $this->createMock(TimeInterface::class),
-      $database,
       $this->createMock(CompletionPluginManagerInterface::class),
     );
   }
@@ -309,99 +288,6 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
-   * Month alternation is built once and cached for the request.
-   */
-  public function testGetDateLikePatternMonthAlternationIsCached(): void {
-    $method = new \ReflectionMethod(
-      ReportSeriesMatcher::class,
-      'getDateLikePatternMonthAlternation',
-    );
-    $first = $method->invoke(NULL);
-    $second = $method->invoke(NULL);
-
-    $this->assertNotSame('', $first);
-    $this->assertSame($first, $second);
-  }
-
-  /**
-   * Data provider for stringToLikePattern tests.
-   *
-   * @return array<string, array{string, string}>
-   *   Input title and expected LIKE pattern pairs.
-   */
-  public static function stringToLikePatternProvider(): array {
-    return [
-      'english full and hash' => [
-        'SitRep 27 April 2026 #3',
-        'SitRep %',
-      ],
-      'english short month' => [
-        'Update 15 Jan 2026',
-        'Update %',
-      ],
-      'french abbreviated' => [
-        'Bulletin 15 janv. 2026',
-        'Bulletin %',
-      ],
-      'french le and 1er' => [
-        'Bulletin le 1er avril 2026',
-        'Bulletin %',
-      ],
-      'spanish de' => [
-        'Informe 27 de abril de 2026',
-        'Informe %',
-      ],
-      'russian genitive' => [
-        'Отчёт 27 апреля 2026',
-        'Отчёт %',
-      ],
-      'chinese month year western order' => [
-        '报告 十二月 2025',
-        '报告 %',
-      ],
-      'chinese numeric month year' => [
-        '报告 1月 2026',
-        '报告 %',
-      ],
-      'chinese year month day no space' => [
-        '报告2026年4月27日',
-        '报告%',
-      ],
-      'chinese year month no space' => [
-        '报告2026年4月',
-        '报告%',
-      ],
-      'arabic fi' => [
-        'تقرير في 15 مارس 2026',
-        'تقرير %',
-      ],
-      'arabic no preposition' => [
-        'تقرير 15 مارس 2026',
-        'تقرير %',
-      ],
-      'no date stripping' => [
-        'Monthly Situation Report',
-        'Monthly Situation Report',
-      ],
-    ];
-  }
-
-  /**
-   * Strips multilingual dates from titles for LIKE pattern matching.
-   */
-  #[DataProvider('stringToLikePatternProvider')]
-  public function testStringToLikePattern(string $input, string $expected): void {
-    $matcher = $this->buildMatcherForLikePatterns();
-    $actual = $this->invokeProtectedWithMatcher(
-      $matcher,
-      'stringToLikePattern',
-      $input,
-    );
-
-    $this->assertSame($expected, $actual);
-  }
-
-  /**
    * Keeps original title when AI is skipped for missing attachment text.
    */
   public function testGenerateReportTitleSkipsWhenNoAttachmentText(): void {
@@ -412,15 +298,12 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($logger);
 
-    $database = $this->createMock(Connection::class);
-    $database->method('escapeLike')->willReturnArgument(0);
-
     $matcher = new ReportSeriesMatcher(
       $this->buildConfigFactory(),
       $logger_factory,
       $this->createMock(EntityFieldManagerInterface::class),
       $this->createMock(TimeInterface::class),
-      $database,
+      $this->createMock(Connection::class),
       $this->createMock(CompletionPluginManagerInterface::class),
     );
 
