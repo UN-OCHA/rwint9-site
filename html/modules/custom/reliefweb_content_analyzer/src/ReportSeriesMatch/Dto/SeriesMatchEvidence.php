@@ -46,6 +46,9 @@ final readonly class SeriesMatchEvidence {
    *   For successful matches, whole months (ceiling) from the oldest best-
    *   cluster original publication date to the series anchor, for display and
    *   tracking. For incomplete runs, the configured candidate search window.
+   * @param float|null $seriesBodyRatio
+   *   Fraction (0–1) of winning-cluster candidates with non-empty body text,
+   *   or NULL when not computed.
    */
   public function __construct(
     public array $candidateIds = [],
@@ -64,6 +67,7 @@ final readonly class SeriesMatchEvidence {
     public float $clusterScorePattern = 0.0,
     public float $clusterScoreTagging = 0.0,
     public int $lookbackMonths = 0,
+    public ?float $seriesBodyRatio = NULL,
   ) {}
 
   /**

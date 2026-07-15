@@ -14,6 +14,7 @@ use Drupal\Core\Link;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchDebugTrace;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchAttentionLevel;
@@ -177,14 +178,18 @@ final class ReportSeriesMatchForm extends FormBase {
       $this->config('reliefweb_content_analyzer.settings')
         ->get('report_series_matching.workflow'),
     );
-    $outcome = SeriesMatchOutcome::resolve($result, $workflow);
+    $outcome = SeriesMatchOutcome::resolve(
+      $result,
+      $workflow,
+      $this->buildOutcomePolicyContext($node, $result),
+    );
 
     $form['description'] = $this->buildResultsDescription($result, $outcome);
 
     $form['proposed_updates'] = $this->buildUpdatedFieldsDetails($result);
     $form['candidates'] = $this->buildCandidatesDetails($result);
     if ($result->debug !== NULL) {
-      $form['diagnostics'] = $this->buildDiagnosticsDetails($result);
+      $form['diagnostics'] = $this->buildDiagnosticsDetails($result, $outcome);
     }
 
     $form['actions'] = ['#type' => 'actions'];
@@ -221,15 +226,46 @@ final class ReportSeriesMatchForm extends FormBase {
     $series_summary = $this->formatSeriesMatchSummary($result);
 
     if ($outcome !== NULL) {
+      $policy_messages = $outcome->policyReasonMessages();
       return [
         '#type' => 'inline_template',
-        '#template' => '<p>{% trans %}Series candidate reports found for this content{% endtrans %}{% if series_summary %} ({{ series_summary }}){% endif %}.</p><p><strong>Series confidence:</strong> {{ series_confidence }}% - <strong>Tagging confidence:</strong> {{ tagging_confidence }}% - <strong>Outcome:</strong> {{ outcome_tier }} - <strong>Projected moderation:</strong> {{ status }}</p>',
+        '#template' => <<<TEMPLATE
+          <p>
+            <strong>{% trans %}Series candidate reports found for this content{% endtrans %}</strong>{% if series_summary %} ({{ series_summary }}){% endif %}.
+          </p>
+          <p>
+            <strong>Series confidence:</strong> {{ series_confidence }}% —
+            <strong>Tagging confidence:</strong> {{ tagging_confidence }}% —
+            {% if apply_match %}
+              <strong>Outcome:</strong> {{ outcome_tier }} —
+              <strong>Projected moderation:</strong> {{ status }}
+            {% else %}
+              <strong>Outcome:</strong> {% trans %}skip{% endtrans %}
+            {% endif %}
+          </p>
+          {% if policy_messages %}
+            <div><strong>
+              {% if apply_match %}
+                {% trans %}Outcome reduced because:{% endtrans %}
+              {% else %}
+                {% trans %}Match skipped because:{% endtrans %}
+              {% endif %}
+            </strong>
+            <ul>
+              {% for message in policy_messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul></div>
+          {% endif %}
+          TEMPLATE,
         '#context' => [
           'series_summary' => $series_summary,
           'series_confidence' => number_format($outcome->seriesConfidence * 100, 1),
           'tagging_confidence' => number_format($outcome->taggingConfidence * 100, 1),
-          'outcome_tier' => $outcome->outcomeTier,
+          'outcome_tier' => $outcome->outcomeTier->value,
           'status' => $outcome->targetModerationStatus,
+          'apply_match' => $outcome->applyMatch,
+          'policy_messages' => array_map('mb_ucfirst', $policy_messages),
         ],
       ];
     }
@@ -239,13 +275,23 @@ final class ReportSeriesMatchForm extends FormBase {
     if ($series_confidence === NULL && $tagging_confidence === NULL) {
       return [
         '#type' => 'inline_template',
-        '#template' => '<p>{% trans %}No series candidate reports found for this content.{% endtrans %}</p>',
+        '#template' => <<<TEMPLATE
+          <p><strong>{% trans %}No series candidate reports found for this content.{% endtrans %}</strong></p>
+          TEMPLATE,
       ];
     }
 
     return [
       '#type' => 'inline_template',
-      '#template' => '<p>{% trans %}Series candidate reports found for this content{% endtrans %}{% if series_summary %} ({{ series_summary }}){% endif %}.</p><p><strong>Series confidence:</strong> {{ series_confidence }} - <strong>Tagging confidence:</strong> {{ tagging_confidence }}</p>',
+      '#template' => <<<TEMPLATE
+        <p>
+          <strong>{% trans %}Series candidate reports found for this content{% endtrans %}</strong>{% if series_summary %} ({{ series_summary }}){% endif %}.
+        </p>
+        <p>
+          <strong>Series confidence:</strong> {{ series_confidence }} —
+          <strong>Tagging confidence:</strong> {{ tagging_confidence }}
+        </p>
+        TEMPLATE,
       '#context' => [
         'series_summary' => $series_summary,
         'series_confidence' => $series_confidence !== NULL ? number_format($series_confidence * 100, 1) . '%' : 'n/a',
@@ -320,7 +366,9 @@ final class ReportSeriesMatchForm extends FormBase {
 
     return [
       '#type' => 'details',
-      '#title' => $this->t('Series candidates'),
+      '#title' => $this->t('Series candidates (@count)', [
+        '@count' => count($candidate_ids),
+      ]),
       '#open' => FALSE,
       'content' => [
         '#theme' => 'table',
@@ -534,11 +582,16 @@ final class ReportSeriesMatchForm extends FormBase {
    *
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
    *   The match result.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome|null $outcome
+   *   Resolved outcome when available.
    *
    * @return array
    *   Render array for the diagnostics details element, or empty when no debug.
    */
-  protected function buildDiagnosticsDetails(SeriesMatchResult $result): array {
+  protected function buildDiagnosticsDetails(
+    SeriesMatchResult $result,
+    ?SeriesMatchOutcome $outcome = NULL,
+  ): array {
     $debug = $result->debug;
     if ($debug === NULL) {
       return [];
@@ -555,11 +608,25 @@ final class ReportSeriesMatchForm extends FormBase {
     ];
 
     if ($status->reason !== NULL) {
-      $rows[] = [$this->t('Outcome'), $status->reason->value];
+      $rows[] = [$this->t('Outcome'), $status->reason->label()];
     }
 
     if ($status->rejectionReason !== NULL) {
-      $rows[] = [$this->t('Rejection'), $status->rejectionReason->value];
+      $rows[] = [$this->t('Rejection'), $status->rejectionReason->label()];
+    }
+
+    if ($outcome !== NULL) {
+      $rows[] = [
+        $this->t('Apply match'),
+        $outcome->applyMatch ? $this->t('Yes') : $this->t('No'),
+      ];
+      $messages = $outcome->policyReasonMessages();
+      if ($messages !== []) {
+        $rows[] = [
+          $this->t('Policy reasons'),
+          implode('; ', $messages),
+        ];
+      }
     }
 
     $this->appendDebugRows($rows, $debug, $evidence, $status, $proposal);
@@ -733,6 +800,13 @@ final class ReportSeriesMatchForm extends FormBase {
       ];
     }
 
+    if ($evidence->seriesBodyRatio !== NULL) {
+      $rows[] = [
+        $this->t('Series body share'),
+        number_format(100.0 * $evidence->seriesBodyRatio, 1) . '%',
+      ];
+    }
+
     if ($proposal->mostRecentCandidateId > 0) {
       $rows[] = [
         $this->t('Most recent candidate ID'),
@@ -844,6 +918,33 @@ final class ReportSeriesMatchForm extends FormBase {
   public function resetMatching(array &$form, FormStateInterface $form_state): void {
     $form_state->set('match_result', NULL);
     $form_state->setRebuild();
+  }
+
+  /**
+   * Builds outcome policy context from the node and match evidence.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The report node.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   Match result.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext
+   *   Policy evaluation context.
+   */
+  protected function buildOutcomePolicyContext(
+    NodeInterface $node,
+    SeriesMatchResult $result,
+  ): SeriesMatchOutcomePolicyContext {
+    $has_body = TRUE;
+    if ($node->hasField('body')) {
+      $raw = $node->get('body')->value;
+      $has_body = is_string($raw) && trim(strip_tags($raw)) !== '';
+    }
+
+    return new SeriesMatchOutcomePolicyContext(
+      entityHasBody: $has_body,
+      seriesBodyRatio: $result->evidence->seriesBodyRatio,
+    );
   }
 
   /**

@@ -27,6 +27,48 @@ report_series_matching:
       - embargoed
       - reference
       - published
+    field_outcome_policies:
+      field_primary_country:
+        most_recent: max_low
+        merged: max_medium
+        skipped: max_low
+      field_content_format:
+        most_recent: max_low
+        merged: max_low
+        skipped: max_low
+      field_country:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: none
+      field_language:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: max_medium
+      field_theme:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+      field_disaster:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: none
+      field_disaster_type:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+    global_outcome_rules:
+      empty_body_when_series_has_body:
+        enabled: true
+        series_body_threshold: 0.5
+        action: max_medium
+      title_ai_failed_or_skipped:
+        enabled: true
+        action: max_medium
+      low_series_confidence_with_mismatch:
+        enabled: true
+        max_best_cluster_share: 0.5
+        min_cluster_count: 2
+        action: skip_match
   matcher:
     minimum_series_report_count: 3
     series_candidate_date_range_months: 18

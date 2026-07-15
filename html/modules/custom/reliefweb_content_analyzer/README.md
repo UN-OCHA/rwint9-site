@@ -7,17 +7,17 @@ Analysis helpers for ReliefWeb editorial workflows. Only report series matching 
 
 When a new report is saved, this feature looks for earlier reports in the same recurring document series (e.g. a situation report published monthly by the same organization). If it finds a strong enough match it automatically copies the series fields (country, language, content format, themes, etc.) to the new report and attempts to generate a title that follows the series naming pattern. If confidence is lower, it still flags the report but leaves more for editorial review.
 
-The final moderation status is adjusted based on confidence: a high-confidence match may keep the original status, while a low-confidence match will downgrade to pending. The applied status is never more permissive than what the submission would have received without a match.
+The final moderation status is adjusted based on confidence: a high-confidence match may keep the original status, while a low-confidence match will downgrade to pending. Configurable **outcome policies** can further ceiling the outcome tier (or skip applying the match) based on field provenance (e.g. tags copied only from the most recent candidate) and global rules (e.g. empty body when the series usually has body text). The applied status is never more permissive than what the submission would have received without a match.
 
 ### For editors
 
-Inspect the match result on the **Report series matching** tab of any report: `/node/{nid}/report-series-match` (requires the `access report series matching` permission).
+Inspect the match result on the **Report series matching** tab of any report: `/node/{nid}/report-series-match` (requires the `access report series matching` permission). The results summary shows evidence stats (candidates, clusters, signals) and editor-facing reasons when outcome policies demote or skip a match. Revision logs use the same short phrases.
 
 Review applied matches on the **Report series match log** page: `/admin/content/report-series-match-log` (requires the `view report series match log` permission).
 
 ### For site administrators
 
-Configure automation, confidence thresholds, and matching parameters at `/admin/config/content/reliefweb-content-analyzer` (requires `administer reliefweb content analyzer settings`).
+Configure automation, confidence thresholds, outcome policies, and matching parameters at `/admin/config/content/reliefweb-content-analyzer` (requires `administer reliefweb content analyzer settings`).
 
 **When automation runs automatically**
 
@@ -33,8 +33,15 @@ When a match is applied automatically, two revisions are created rather than one
 
 - Matcher algorithm: [`src/Services/ReportSeriesMatcher.php`](src/Services/ReportSeriesMatcher.php)
 - Drupal hook integration and two-save flow: [`src/Hook/ReportSeriesMatchClassificationHooks.php`](src/Hook/ReportSeriesMatchClassificationHooks.php)
+- Outcome policies: [`src/ReportSeriesMatch/SeriesMatchOutcomePolicyEvaluator.php`](src/ReportSeriesMatch/SeriesMatchOutcomePolicyEvaluator.php)
 - Per-request state carried across hook phases: [`src/ReportSeriesMatch/SeriesMatchApplyContext.php`](src/ReportSeriesMatch/SeriesMatchApplyContext.php)
 - Behavior examples: unit tests under `tests/src/Unit/`
+
+### Follow-up (not yet implemented)
+
+- More lenient pattern generation for month-range title variants.
+- Better handling when few candidates match the most specific pattern and many match a short prefix.
+- AI title date accuracy (prompt / structured output).
 
 ### Dependencies
 

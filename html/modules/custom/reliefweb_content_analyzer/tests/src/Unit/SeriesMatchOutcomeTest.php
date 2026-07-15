@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_content_analyzer\Unit;
 
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchReason;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
@@ -28,6 +30,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
 
   /**
    * Default workflow settings for tests.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings
+   *   Default workflow settings.
    */
   private static function defaultSettings(): SeriesMatchWorkflowSettings {
     return SeriesMatchWorkflowSettings::fromConfigArray(
@@ -40,6 +45,9 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
    *
    * @param array<string, mixed> $overrides
    *   Values merged over the default workflow config.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings
+   *   Workflow settings with overrides applied.
    */
   private static function settingsFrom(array $overrides): SeriesMatchWorkflowSettings {
     return SeriesMatchWorkflowSettings::fromConfigArray(
@@ -60,8 +68,8 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
     $result = $this->buildResult($series, $tagging);
     $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
     $this->assertNotNull($outcome);
-    $this->assertSame($expected_series_tier, $outcome->seriesTier);
-    $this->assertSame($expected_tagging_tier, $outcome->taggingTier);
+    $this->assertSame(SeriesMatchOutcomeTier::from($expected_series_tier), $outcome->seriesTier);
+    $this->assertSame(SeriesMatchOutcomeTier::from($expected_tagging_tier), $outcome->taggingTier);
   }
 
   /**
@@ -93,7 +101,7 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
     $result = $this->buildResult($series, $tagging);
     $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
     $this->assertNotNull($outcome);
-    $this->assertSame($expected_outcome, $outcome->outcomeTier);
+    $this->assertSame(SeriesMatchOutcomeTier::from($expected_outcome), $outcome->outcomeTier);
     $this->assertSame($expected_moderation, $outcome->targetModerationStatus);
   }
 
@@ -125,8 +133,8 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
     $result = $this->buildResult(series: 0.90, tagging: 0.65);
     $outcome = SeriesMatchOutcome::resolve($result, self::settingsFrom($config));
     $this->assertNotNull($outcome);
-    $this->assertSame('low', $outcome->taggingTier);
-    $this->assertSame('low', $outcome->outcomeTier);
+    $this->assertSame(SeriesMatchOutcomeTier::Low, $outcome->taggingTier);
+    $this->assertSame(SeriesMatchOutcomeTier::Low, $outcome->outcomeTier);
     $this->assertSame('pending', $outcome->targetModerationStatus);
   }
 
@@ -138,7 +146,7 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
     $result = $this->buildResult(series: 0.90, tagging: 0.60);
     $outcome = SeriesMatchOutcome::resolve($result, self::settingsFrom($config));
     $this->assertNotNull($outcome);
-    $this->assertSame('medium', $outcome->taggingTier);
+    $this->assertSame(SeriesMatchOutcomeTier::Medium, $outcome->taggingTier);
   }
 
   /**
@@ -211,30 +219,117 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
   }
 
   /**
-   * UNHCR fixture: strong series and tagging → high / published.
+   * UNHCR fixture.
+   *
+   * Strong series/tagging but theme MostRecent + country Merged policies
+   * ceiling match outcome to medium / to-review.
    *
    * Series: 17/17 cluster, 1 cluster, no URL both-signal.
    *   = 0.40×1.0 + 0.25×1.0 + 0.20×0 + 0.15×1 = 0.80 → high.
    *
-   * Tagging: 5/7 AllCandidates, 1 Merged, 1 MostRecent, AI title.
-   *   field_score = (5×1.0 + 1×0.75 + 1×0.50)/7 ≈ 0.8929.
-   *   total = 0.70×0.8929 + 0.30×0.65 ≈ 0.8200 → high.
-   *
-   * Outcome: min(high, high) → high → published.
-   *
-   * NB: this fixture shows that with the new formula the match is actually
-   * high/high because series also gets 0.15 single-cluster bonus. Previous
-   * analysis was based on the old blended formula.
+   * Tagging remains high from field/title weights, but field policies demote.
    */
   public function testUnhcrFixture(): void {
     $result = $this->buildUnhcrResult();
     $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
 
     $this->assertNotNull($outcome);
-    $this->assertSame('high', $outcome->seriesTier);
-    $this->assertSame('high', $outcome->taggingTier);
-    $this->assertSame('high', $outcome->outcomeTier);
-    $this->assertSame('published', $outcome->targetModerationStatus);
+    $this->assertTrue($outcome->applyMatch);
+    $this->assertSame(SeriesMatchOutcomeTier::High, $outcome->seriesTier);
+    $this->assertSame(SeriesMatchOutcomeTier::High, $outcome->taggingTier);
+    $this->assertSame(SeriesMatchOutcomeTier::Medium, $outcome->outcomeTier);
+    $this->assertSame('to-review', $outcome->targetModerationStatus);
+    $this->assertNotEmpty($outcome->policyReasons);
+  }
+
+  /**
+   * MostRecent primary country ceilings a high match to low / pending.
+   */
+  public function testPrimaryCountryMostRecentCeilingsToLow(): void {
+    $result = new SeriesMatchResult(
+      new SeriesMatchStatus(passedMinimum: TRUE),
+      new SeriesMatchProposal(
+        updatedFields: [
+          'field_primary_country' => [],
+          'field_theme' => [],
+        ],
+        updatedFieldSources: [
+          'field_primary_country' => SeriesMatchFieldUpdateSource::MostRecent,
+          'field_theme' => SeriesMatchFieldUpdateSource::AllCandidates,
+        ],
+        titleSource: SeriesMatchTitleSource::AiGenerated,
+      ),
+      new SeriesMatchEvidence(
+        candidateIds: range(1, 5),
+        bestClusterShare: 1.0,
+        clusterScore: 1.0,
+        clusterCount: 1,
+        bothSignalsCount: 0,
+        mergedAfterLimitCount: 5,
+        seriesBodyRatio: 0.0,
+      ),
+    );
+    $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
+    $this->assertNotNull($outcome);
+    $this->assertTrue($outcome->applyMatch);
+    $this->assertSame(SeriesMatchOutcomeTier::Low, $outcome->outcomeTier);
+    $this->assertSame('pending', $outcome->targetModerationStatus);
+  }
+
+  /**
+   * Empty body vs series-with-body ceilings high outcome to medium.
+   */
+  public function testEmptyBodyCeilingsToMedium(): void {
+    $result = $this->buildResult(series: 0.90, tagging: 0.85);
+    $outcome = SeriesMatchOutcome::resolve(
+      $result,
+      self::defaultSettings(),
+      new SeriesMatchOutcomePolicyContext(
+        entityHasBody: FALSE,
+        seriesBodyRatio: 0.75,
+      ),
+    );
+    $this->assertNotNull($outcome);
+    $this->assertTrue($outcome->applyMatch);
+    $this->assertSame(SeriesMatchOutcomeTier::Medium, $outcome->outcomeTier);
+    $this->assertSame('to-review', $outcome->targetModerationStatus);
+  }
+
+  /**
+   * Low confidence with cluster mismatch sets applyMatch FALSE.
+   */
+  public function testMismatchPolicySkipsMatch(): void {
+    $result = new SeriesMatchResult(
+      new SeriesMatchStatus(passedMinimum: TRUE),
+      new SeriesMatchProposal(
+        updatedFields: ['field_theme' => []],
+        updatedFieldSources: [
+          'field_theme' => SeriesMatchFieldUpdateSource::AllCandidates,
+        ],
+        titleSource: SeriesMatchTitleSource::AiGenerated,
+      ),
+      new SeriesMatchEvidence(
+        candidateIds: [1, 2, 3, 4],
+        bestClusterShare: 0.4,
+        clusterScore: 0.5,
+        clusterCount: 3,
+        bothSignalsCount: 0,
+        mergedAfterLimitCount: 10,
+        seriesBodyRatio: 0.0,
+      ),
+    );
+    // Series ≈ 0.40*0.4 + 0.25*0.5 = 0.285 → low tier.
+    $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
+    $this->assertNotNull($outcome);
+    $this->assertFalse($outcome->applyMatch);
+    $this->assertContains(
+      'weak series match with conflicting candidates',
+      $outcome->policyReasonMessages(),
+    );
+    $this->assertContains(
+      'global:low_series_confidence_with_mismatch:skip_match',
+      $outcome->policyReasonCodes(),
+    );
   }
 
   /**

@@ -254,6 +254,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       'candidateIds' => $candidate_ids,
       'candidatePatternScores' => $merged_scored_candidates,
       'lookbackMonths' => $display_lookback_months,
+      'seriesBodyRatio' => $this->computeSeriesBodyRatio($candidate_ids),
     ]);
 
     $proposal = $this->buildSeriesMatchProposal(
@@ -2313,6 +2314,30 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       'source' => SeriesMatchTitleSource::AiGenerated,
       'aiDurationSeconds' => $ai_duration ?? NULL,
     ];
+  }
+
+  /**
+   * Fraction of candidates with non-empty body text.
+   *
+   * @param int[] $nids
+   *   Winning-cluster candidate node IDs.
+   *
+   * @return float|null
+   *   Ratio in 0–1, or NULL when there are no candidates.
+   */
+  protected function computeSeriesBodyRatio(array $nids): ?float {
+    if ($nids === []) {
+      return NULL;
+    }
+
+    $query = $this->database->select('node__body', 'b');
+    $query->addExpression('COUNT(DISTINCT b.entity_id)', 'with_body');
+    $query->condition('b.entity_id', $nids, 'IN');
+    $query->condition('b.deleted', 0);
+    $query->where("TRIM(b.body_value) <> ''");
+    $with_body = (int) $query->execute()->fetchField();
+
+    return $with_body / count(array_unique($nids));
   }
 
   /**

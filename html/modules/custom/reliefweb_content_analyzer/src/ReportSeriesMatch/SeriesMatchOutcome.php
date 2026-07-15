@@ -4,13 +4,17 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_content_analyzer\ReportSeriesMatch;
 
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomePolicyAction;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier;
 
 /**
  * Resolved tier outcome and target moderation status for a series match run.
  *
  * Built by resolving series and tagging confidence scores against configured
- * thresholds. Immutable once constructed; use the static factory methods.
+ * thresholds, then applying configurable field/global outcome policies.
+ * Immutable once constructed; use the static factory methods.
  */
 final readonly class SeriesMatchOutcome {
 
@@ -21,39 +25,72 @@ final readonly class SeriesMatchOutcome {
    *   Raw series identification confidence (0–1).
    * @param float $taggingConfidence
    *   Raw tagging proposal confidence (0–1).
-   * @param string $seriesTier
-   *   Series confidence tier: 'high', 'medium', or 'low'.
-   * @param string $taggingTier
-   *   Tagging confidence tier: 'high', 'medium', or 'low'.
-   * @param string $outcomeTier
-   *   Combined outcome tier: min(seriesTier, taggingTier).
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier $seriesTier
+   *   Series confidence tier.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier $taggingTier
+   *   Tagging confidence tier.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier $outcomeTier
+   *   Combined outcome tier after policy ceilings.
    * @param string $targetModerationStatus
    *   Moderation state mapped from the outcome tier via config.
+   * @param bool $applyMatch
+   *   FALSE when a skip_match policy vetoes applying series tagging.
+   * @param list<\Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyReason> $policyReasons
+   *   Triggered outcome policies with codes and editor-facing messages.
    */
   public function __construct(
     public float $seriesConfidence,
     public float $taggingConfidence,
-    public string $seriesTier,
-    public string $taggingTier,
-    public string $outcomeTier,
+    public SeriesMatchOutcomeTier $seriesTier,
+    public SeriesMatchOutcomeTier $taggingTier,
+    public SeriesMatchOutcomeTier $outcomeTier,
     public string $targetModerationStatus,
+    public bool $applyMatch = TRUE,
+    public array $policyReasons = [],
   ) {}
+
+  /**
+   * Editor-facing policy reason messages.
+   *
+   * @return list<string>
+   *   Human-readable messages.
+   */
+  public function policyReasonMessages(): array {
+    return SeriesMatchOutcomePolicyReasonFormatter::messages($this->policyReasons);
+  }
+
+  /**
+   * Machine-readable policy reason codes.
+   *
+   * @return list<string>
+   *   Reason codes for storage/debug.
+   */
+  public function policyReasonCodes(): array {
+    return SeriesMatchOutcomePolicyReasonFormatter::codes($this->policyReasons);
+  }
 
   /**
    * Resolves a series match result to an outcome using workflow settings.
    *
    * Returns NULL when either confidence score is not computable, which signals
-   * the caller to skip moderation adjustment.
+   * the caller to skip moderation adjustment. When policies resolve to
+   * skip_match, returns an outcome with applyMatch FALSE instead of NULL.
    *
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
    *   The series match result from the matcher.
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings $settings
    *   Report series matching workflow settings.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext $context
+   *   Runtime context for global rules (body presence).
    *
    * @return self|null
    *   Resolved outcome, or NULL when the result is not scorable.
    */
-  public static function resolve(SeriesMatchResult $result, SeriesMatchWorkflowSettings $settings): ?self {
+  public static function resolve(
+    SeriesMatchResult $result,
+    SeriesMatchWorkflowSettings $settings,
+    SeriesMatchOutcomePolicyContext $context = new SeriesMatchOutcomePolicyContext(),
+  ): ?self {
     $series_confidence = $result->calculateSeriesConfidence();
     $tagging_confidence = $result->calculateTaggingConfidence();
 
@@ -61,15 +98,43 @@ final readonly class SeriesMatchOutcome {
       return NULL;
     }
 
-    $series_tier = self::scoreToTier($series_confidence, $settings->seriesConfidenceTiers);
-    $tagging_tier = self::scoreToTier($tagging_confidence, $settings->taggingConfidenceTiers);
+    $series_tier = SeriesMatchOutcomeTier::fromScore(
+      $series_confidence,
+      $settings->seriesConfidenceTiers,
+    );
+    $tagging_tier = SeriesMatchOutcomeTier::fromScore(
+      $tagging_confidence,
+      $settings->taggingConfidenceTiers,
+    );
 
     if ($tagging_confidence < $settings->minimumTaggingConfidence) {
-      $tagging_tier = 'low';
+      $tagging_tier = SeriesMatchOutcomeTier::Low;
     }
 
-    $outcome_tier = self::minTier($series_tier, $tagging_tier);
-    $target_moderation = $settings->moderationByOutcomeTier[$outcome_tier];
+    $outcome_tier = $series_tier->min($tagging_tier);
+
+    $policy = (new SeriesMatchOutcomePolicyEvaluator())->evaluate(
+      $result,
+      $settings,
+      $series_tier,
+      $context,
+    );
+
+    if ($policy->action === SeriesMatchOutcomePolicyAction::SkipMatch) {
+      return new self(
+        seriesConfidence: $series_confidence,
+        taggingConfidence: $tagging_confidence,
+        seriesTier: $series_tier,
+        taggingTier: $tagging_tier,
+        outcomeTier: $outcome_tier,
+        targetModerationStatus: $settings->moderationByOutcomeTier[$outcome_tier->value],
+        applyMatch: FALSE,
+        policyReasons: $policy->reasons,
+      );
+    }
+
+    $outcome_tier = $policy->action->applyToTier($outcome_tier);
+    $target_moderation = $settings->moderationByOutcomeTier[$outcome_tier->value];
 
     return new self(
       seriesConfidence: $series_confidence,
@@ -78,6 +143,8 @@ final readonly class SeriesMatchOutcome {
       taggingTier: $tagging_tier,
       outcomeTier: $outcome_tier,
       targetModerationStatus: $target_moderation,
+      applyMatch: TRUE,
+      policyReasons: $policy->reasons,
     );
   }
 
@@ -109,51 +176,6 @@ final readonly class SeriesMatchOutcome {
     $proposed_pos = $order[$proposed] ?? $last;
 
     return $current_pos <= $proposed_pos ? $current : $proposed;
-  }
-
-  /**
-   * Maps a confidence score to a tier label using threshold config.
-   *
-   * @param float $score
-   *   Confidence score in the range 0–1.
-   * @param array{high: float, medium: float} $tiers
-   *   Tier thresholds keyed by tier name.
-   *
-   * @return string
-   *   'high', 'medium', or 'low'.
-   */
-  private static function scoreToTier(float $score, array $tiers): string {
-    $high = $tiers['high'];
-    $medium = $tiers['medium'];
-
-    if ($score >= $high) {
-      return 'high';
-    }
-    if ($score >= $medium) {
-      return 'medium';
-    }
-    return 'low';
-  }
-
-  /**
-   * Returns the lower (more restrictive) of two tier labels.
-   *
-   * Order: low < medium < high.
-   *
-   * @param string $tier_a
-   *   First tier label.
-   * @param string $tier_b
-   *   Second tier label.
-   *
-   * @return string
-   *   The more restrictive tier.
-   */
-  private static function minTier(string $tier_a, string $tier_b): string {
-    $order = ['low' => 0, 'medium' => 1, 'high' => 2];
-    $pos_a = $order[$tier_a] ?? 0;
-    $pos_b = $order[$tier_b] ?? 0;
-
-    return $pos_a <= $pos_b ? $tier_a : $tier_b;
   }
 
 }

@@ -4,10 +4,35 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto;
 
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomePolicyAction;
+
 /**
  * Typed settings for report series matching workflow and outcome resolution.
  *
  * Built from the report_series_matching.workflow config sub-array.
+ *
+ * @phpstan-type GlobalOutcomeRules array{
+ *   empty_body_when_series_has_body: array{
+ *     enabled: bool,
+ *     series_body_threshold: float,
+ *     action: string
+ *   },
+ *   title_ai_failed_or_skipped: array{
+ *     enabled: bool,
+ *     action: string
+ *   },
+ *   low_series_confidence_with_mismatch: array{
+ *     enabled: bool,
+ *     max_best_cluster_share: float,
+ *     min_cluster_count: int,
+ *     action: string
+ *   }
+ * }
+ * @phpstan-type FieldOutcomePolicies array<string, array{
+ *   most_recent: string,
+ *   merged: string,
+ *   skipped: string
+ * }>
  */
 final readonly class SeriesMatchWorkflowSettings {
 
@@ -32,6 +57,10 @@ final readonly class SeriesMatchWorkflowSettings {
    *   Moderation states for which series matching is skipped.
    * @param list<string> $restrictivenessOrder
    *   Moderation states ordered most restrictive first.
+   * @param FieldOutcomePolicies $fieldOutcomePolicies
+   *   Per-field policy actions keyed by field machine name.
+   * @param GlobalOutcomeRules $globalOutcomeRules
+   *   Global outcome rule configuration.
    */
   public function __construct(
     public bool $automationEnabledFormCreated,
@@ -43,6 +72,8 @@ final readonly class SeriesMatchWorkflowSettings {
     public array $moderationByOutcomeTier,
     public array $skipSeriesMatchModerationStatuses,
     public array $restrictivenessOrder,
+    public array $fieldOutcomePolicies,
+    public array $globalOutcomeRules,
   ) {}
 
   /**
@@ -68,7 +99,81 @@ final readonly class SeriesMatchWorkflowSettings {
       moderationByOutcomeTier: self::requireModerationTierMap($config, 'moderation_by_outcome_tier'),
       skipSeriesMatchModerationStatuses: self::requireStringList($config, 'skip_series_match_moderation_statuses'),
       restrictivenessOrder: self::requireStringList($config, 'restrictiveness_order'),
+      fieldOutcomePolicies: self::requireFieldOutcomePolicies($config, 'field_outcome_policies'),
+      globalOutcomeRules: self::requireGlobalOutcomeRules($config, 'global_outcome_rules'),
     );
+  }
+
+  /**
+   * Default field outcome policies matching install config.
+   *
+   * @return array<string, array{most_recent: string, merged: string, skipped: string}>
+   *   Default per-field policies.
+   */
+  public static function defaultFieldOutcomePolicies(): array {
+    return [
+      'field_primary_country' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_medium',
+        'skipped' => 'max_low',
+      ],
+      'field_content_format' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_low',
+        'skipped' => 'max_low',
+      ],
+      'field_country' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_language' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'max_medium',
+      ],
+      'field_theme' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+      'field_disaster' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_disaster_type' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+    ];
+  }
+
+  /**
+   * Default global outcome rules matching install config.
+   *
+   * @return GlobalOutcomeRules
+   *   Default global rules.
+   */
+  public static function defaultGlobalOutcomeRules(): array {
+    return [
+      'empty_body_when_series_has_body' => [
+        'enabled' => TRUE,
+        'series_body_threshold' => 0.5,
+        'action' => 'max_medium',
+      ],
+      'title_ai_failed_or_skipped' => [
+        'enabled' => TRUE,
+        'action' => 'max_medium',
+      ],
+      'low_series_confidence_with_mismatch' => [
+        'enabled' => TRUE,
+        'max_best_cluster_share' => 0.5,
+        'min_cluster_count' => 2,
+        'action' => 'skip_match',
+      ],
+    ];
   }
 
   /**
@@ -201,6 +306,116 @@ final readonly class SeriesMatchWorkflowSettings {
       }
     }
     return $values;
+  }
+
+  /**
+   * Reads per-field outcome policies from workflow config.
+   *
+   * @param array<string, mixed> $config
+   *   Raw workflow config.
+   * @param string $key
+   *   Config key.
+   *
+   * @return FieldOutcomePolicies
+   *   Field policies keyed by field machine name.
+   */
+  private static function requireFieldOutcomePolicies(array $config, string $key): array {
+    if (!array_key_exists($key, $config)) {
+      throw new \InvalidArgumentException("Workflow config missing required key: {$key}.");
+    }
+    if (!is_array($config[$key])) {
+      throw new \InvalidArgumentException("Workflow config key {$key} must be an array.");
+    }
+
+    $policies = [];
+    foreach ($config[$key] as $field_name => $policy) {
+      if (!is_string($field_name) || $field_name === '' || !is_array($policy)) {
+        throw new \InvalidArgumentException("Workflow config key {$key} must map field names to policy maps.");
+      }
+      foreach (['most_recent', 'merged', 'skipped'] as $provenance) {
+        if (!isset($policy[$provenance]) || !is_string($policy[$provenance])) {
+          throw new \InvalidArgumentException("Workflow config key {$key}.{$field_name}.{$provenance} must be a string.");
+        }
+        SeriesMatchOutcomePolicyAction::fromConfig($policy[$provenance]);
+      }
+      $policies[$field_name] = [
+        'most_recent' => $policy['most_recent'],
+        'merged' => $policy['merged'],
+        'skipped' => $policy['skipped'],
+      ];
+    }
+    return $policies;
+  }
+
+  /**
+   * Reads global outcome rules from workflow config.
+   *
+   * @param array<string, mixed> $config
+   *   Raw workflow config.
+   * @param string $key
+   *   Config key.
+   *
+   * @return GlobalOutcomeRules
+   *   Global outcome rules.
+   */
+  private static function requireGlobalOutcomeRules(array $config, string $key): array {
+    if (!array_key_exists($key, $config)) {
+      throw new \InvalidArgumentException("Workflow config missing required key: {$key}.");
+    }
+    if (!is_array($config[$key])) {
+      throw new \InvalidArgumentException("Workflow config key {$key} must be an array.");
+    }
+
+    $raw = $config[$key];
+    foreach ([
+      'empty_body_when_series_has_body',
+      'title_ai_failed_or_skipped',
+      'low_series_confidence_with_mismatch',
+    ] as $rule) {
+      if (!isset($raw[$rule]) || !is_array($raw[$rule])) {
+        throw new \InvalidArgumentException("Workflow config key {$key}.{$rule} must be an array.");
+      }
+      if (!array_key_exists('enabled', $raw[$rule]) || !is_bool($raw[$rule]['enabled'])) {
+        throw new \InvalidArgumentException("Workflow config key {$key}.{$rule}.enabled must be a boolean.");
+      }
+      if (!isset($raw[$rule]['action']) || !is_string($raw[$rule]['action'])) {
+        throw new \InvalidArgumentException("Workflow config key {$key}.{$rule}.action must be a string.");
+      }
+      SeriesMatchOutcomePolicyAction::fromConfig($raw[$rule]['action']);
+    }
+
+    $empty_body = $raw['empty_body_when_series_has_body'];
+    if (!isset($empty_body['series_body_threshold'])
+      || (!is_int($empty_body['series_body_threshold']) && !is_float($empty_body['series_body_threshold']))) {
+      throw new \InvalidArgumentException("Workflow config key {$key}.empty_body_when_series_has_body.series_body_threshold must be numeric.");
+    }
+
+    $mismatch = $raw['low_series_confidence_with_mismatch'];
+    if (!isset($mismatch['max_best_cluster_share'])
+      || (!is_int($mismatch['max_best_cluster_share']) && !is_float($mismatch['max_best_cluster_share']))) {
+      throw new \InvalidArgumentException("Workflow config key {$key}.low_series_confidence_with_mismatch.max_best_cluster_share must be numeric.");
+    }
+    if (!isset($mismatch['min_cluster_count']) || !is_int($mismatch['min_cluster_count'])) {
+      throw new \InvalidArgumentException("Workflow config key {$key}.low_series_confidence_with_mismatch.min_cluster_count must be an integer.");
+    }
+
+    return [
+      'empty_body_when_series_has_body' => [
+        'enabled' => $empty_body['enabled'],
+        'series_body_threshold' => (float) $empty_body['series_body_threshold'],
+        'action' => $empty_body['action'],
+      ],
+      'title_ai_failed_or_skipped' => [
+        'enabled' => $raw['title_ai_failed_or_skipped']['enabled'],
+        'action' => $raw['title_ai_failed_or_skipped']['action'],
+      ],
+      'low_series_confidence_with_mismatch' => [
+        'enabled' => $mismatch['enabled'],
+        'max_best_cluster_share' => (float) $mismatch['max_best_cluster_share'],
+        'min_cluster_count' => $mismatch['min_cluster_count'],
+        'action' => $mismatch['action'],
+      ],
+    ];
   }
 
 }

@@ -9,6 +9,7 @@ use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
 use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -214,6 +215,137 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#description' => $this->t('One moderation state machine name per line, most restrictive first.'),
       '#default_value' => $this->sequenceToLines($workflow['restrictiveness_order']),
       '#rows' => 8,
+      '#required' => TRUE,
+    ];
+
+    $action_options = [
+      'none' => $this->t('None'),
+      'max_medium' => $this->t('Ceiling to medium (to-review)'),
+      'max_low' => $this->t('Ceiling to low (pending)'),
+      'skip_match' => $this->t('Skip match'),
+    ];
+
+    $form['outcome_policies'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Outcome policies'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+      '#description' => $this->t('Ceil or skip series-match application based on field provenance and global rules. The strictest triggered action wins.'),
+    ];
+
+    $field_policies = $workflow['field_outcome_policies']
+      ?? SeriesMatchWorkflowSettings::defaultFieldOutcomePolicies();
+    $form['outcome_policies']['field_outcome_policies'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Per-field policies'),
+      '#tree' => TRUE,
+    ];
+    foreach ($field_policies as $field_name => $policy) {
+      $form['outcome_policies']['field_outcome_policies'][$field_name] = [
+        '#type' => 'fieldset',
+        '#title' => $field_name,
+        '#tree' => TRUE,
+      ];
+      foreach (['most_recent', 'merged', 'skipped'] as $provenance) {
+        $form['outcome_policies']['field_outcome_policies'][$field_name][$provenance] = [
+          '#type' => 'select',
+          '#title' => $this->t('@provenance', [
+            '@provenance' => str_replace('_', ' ', ucfirst($provenance)),
+          ]),
+          '#options' => $action_options,
+          '#default_value' => $policy[$provenance] ?? 'none',
+          '#required' => TRUE,
+        ];
+      }
+    }
+
+    $global_rules = $workflow['global_outcome_rules']
+      ?? SeriesMatchWorkflowSettings::defaultGlobalOutcomeRules();
+
+    $form['outcome_policies']['global_outcome_rules'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Global rules'),
+      '#tree' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Empty body when series has body'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['series_body_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Series body threshold'),
+      '#description' => $this->t('Minimum fraction of series candidates with body text (0–1).'),
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['series_body_threshold'] ?? 0.5,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['action'] ?? 'max_medium',
+      '#required' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Title AI failed or skipped'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['title_ai_failed_or_skipped']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['title_ai_failed_or_skipped']['action'] ?? 'max_medium',
+      '#required' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Low series confidence with mismatch'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['max_best_cluster_share'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max best-cluster share'),
+      '#description' => $this->t('Rule fires when best-cluster share is at or below this value (0–1).'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] ?? 0.5,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['min_cluster_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum cluster count'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] ?? 2,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['action'] ?? 'skip_match',
       '#required' => TRUE,
     ];
 
@@ -621,6 +753,20 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'report_series_matching.workflow.restrictiveness_order',
       $this->linesToSequence((string) $form_state->getValue(['moderation', 'restrictiveness_order'])),
     );
+
+    $outcome_policies = $form_state->getValue('outcome_policies') ?? [];
+    $config->set(
+      'report_series_matching.workflow.field_outcome_policies',
+      $outcome_policies['field_outcome_policies'] ?? SeriesMatchWorkflowSettings::defaultFieldOutcomePolicies(),
+    );
+    $global_rules = $outcome_policies['global_outcome_rules'] ?? SeriesMatchWorkflowSettings::defaultGlobalOutcomeRules();
+    $global_rules['empty_body_when_series_has_body']['enabled'] = (bool) ($global_rules['empty_body_when_series_has_body']['enabled'] ?? FALSE);
+    $global_rules['empty_body_when_series_has_body']['series_body_threshold'] = (float) ($global_rules['empty_body_when_series_has_body']['series_body_threshold'] ?? 0.5);
+    $global_rules['title_ai_failed_or_skipped']['enabled'] = (bool) ($global_rules['title_ai_failed_or_skipped']['enabled'] ?? FALSE);
+    $global_rules['low_series_confidence_with_mismatch']['enabled'] = (bool) ($global_rules['low_series_confidence_with_mismatch']['enabled'] ?? FALSE);
+    $global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] = (float) ($global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] ?? 0.5);
+    $global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] = (int) ($global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] ?? 2);
+    $config->set('report_series_matching.workflow.global_outcome_rules', $global_rules);
 
     $matcher_values = $form_state->getValue('matcher');
     $config->set('report_series_matching.matcher', [

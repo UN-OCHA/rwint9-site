@@ -20,6 +20,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchApplyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomeTier;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchReason;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
@@ -70,6 +71,9 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
 
   /**
    * Builds default workflow settings for outcome resolution in tests.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings
+   *   Default workflow settings.
    */
   private static function defaultWorkflowSettings(): SeriesMatchWorkflowSettings {
     return SeriesMatchWorkflowSettings::fromConfigArray(self::workflowConfig());
@@ -241,7 +245,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
       ),
       new SeriesMatchEvidence(
         candidateIds: [1, 2, 3],
-        bestClusterShare: 0.5,
+        // Keep share above mismatch max (0.5) so policy skip does not fire.
+        bestClusterShare: 0.51,
         clusterScore: 0.5,
         clusterCount: 2,
         bestClusterSize: 3,
@@ -573,6 +578,64 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     $entity->method('getModerationStatus')->willReturn('published');
 
     $hooks->entityPresave($entity);
+  }
+
+  /**
+   * Does not attach apply context when outcome policies resolve to skip_match.
+   *
+   * Series confidence is high enough to pass shouldApplySeriesMatch, but the
+   * low_series_confidence_with_mismatch global rule vetoes application.
+   */
+  public function testEntityPresaveSkipsWhenPolicySkipMatch(): void {
+    $result = new SeriesMatchResult(
+      new SeriesMatchStatus(passedMinimum: TRUE),
+      new SeriesMatchProposal(
+        updatedFields: ['field_theme' => [12]],
+        updatedFieldSources: [
+          'field_theme' => SeriesMatchFieldUpdateSource::AllCandidates,
+        ],
+        titleSource: SeriesMatchTitleSource::KeptOriginalPatternMatch,
+      ),
+      new SeriesMatchEvidence(
+        candidateIds: [1, 2, 3, 4],
+        bestClusterShare: 0.5,
+        clusterScore: 1.0,
+        clusterCount: 2,
+        bestClusterSize: 2,
+        mergedAfterLimitCount: 4,
+        bothSignalsCount: 4,
+        lookbackMonths: 12,
+        seriesBodyRatio: 0.0,
+      ),
+    );
+    // Series = 0.40*0.5 + 0.25*1 + 0.20*1 = 0.65 → medium, passes apply min.
+    // Mismatch rule: not high + share<=0.5 + clusters>=2 → skip_match.
+    $matcher = $this->createMock(ReportSeriesMatcherInterface::class);
+    $matcher->expects($this->once())
+      ->method('findSeriesCandidates')
+      ->willReturn($result);
+
+    $classifier = $this->createStub(ContentEntityClassifierInterface::class);
+    $classifier->method('isEntityClassifiable')->willReturn(TRUE);
+
+    $hooks = $this->buildHooks(
+      self::hooksConfig(),
+      $matcher,
+      $classifier,
+      $this->buildAccountWithFormAutomationPermission(),
+    );
+
+    $entity = $this->buildEntityMock();
+    $entity->method('isNew')->willReturn(TRUE);
+    $entity->method('getEntityTypeId')->willReturn('node');
+    $entity->method('bundle')->willReturn('report');
+    $entity->method('hasField')->willReturn(FALSE);
+    $entity->method('getModerationStatus')->willReturn('published');
+    $entity->expects($this->never())->method('setModerationStatus');
+
+    $hooks->entityPresave($entity);
+
+    $this->assertNull(SeriesMatchApplyContext::fromEntity($entity));
   }
 
   /**
@@ -988,12 +1051,13 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
   ): void {
     $hooks = $this->buildHooks();
 
+    $tier = SeriesMatchOutcomeTier::from($outcomeTier);
     $outcome = new SeriesMatchOutcome(
       seriesConfidence: 1.0,
       taggingConfidence: 1.0,
-      seriesTier: $outcomeTier,
-      taggingTier: $outcomeTier,
-      outcomeTier: $outcomeTier,
+      seriesTier: $tier,
+      taggingTier: $tier,
+      outcomeTier: $tier,
       targetModerationStatus: $targetModeration,
     );
 

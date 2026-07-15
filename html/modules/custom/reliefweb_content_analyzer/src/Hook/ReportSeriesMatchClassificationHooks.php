@@ -22,6 +22,7 @@ use Drupal\Core\Hook\Order\OrderBefore;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchApplyContext;
@@ -149,8 +150,12 @@ final class ReportSeriesMatchClassificationHooks {
       return;
     }
 
-    $outcome = SeriesMatchOutcome::resolve($result, $this->workflowSettings());
-    if ($outcome === NULL) {
+    $outcome = SeriesMatchOutcome::resolve(
+      $result,
+      $this->workflowSettings(),
+      $this->buildOutcomePolicyContext($entity, $result),
+    );
+    if ($outcome === NULL || !$outcome->applyMatch) {
       return;
     }
 
@@ -715,7 +720,11 @@ final class ReportSeriesMatchClassificationHooks {
     string $applied_moderation,
     string $baseline,
   ): string {
-    $reason = $outcome->outcomeTier . '-confidence series match';
+    $reason = $outcome->outcomeTier->value . '-confidence series match';
+    $messages = $outcome->policyReasonMessages();
+    if ($messages !== []) {
+      $reason .= '; ' . implode('; ', $messages);
+    }
 
     return $this->formatRevisionLogClause(
       'Moderation status: @applied (original: @original, reason: @reason).',
@@ -973,9 +982,11 @@ final class ReportSeriesMatchClassificationHooks {
       'minimum_tagging_confidence' => $workflow->minimumTaggingConfidence,
       'series_confidence' => $context->outcome->seriesConfidence,
       'tagging_confidence' => $context->outcome->taggingConfidence,
-      'outcome_tier' => $context->outcome->outcomeTier,
+      'outcome_tier' => $context->outcome->outcomeTier->value,
       'target_moderation_status' => $context->outcome->targetModerationStatus,
       'applied_moderation_status' => $context->appliedModerationStatus,
+      'policy_reasons' => $context->outcome->policyReasonMessages(),
+      'policy_reason_codes' => $context->outcome->policyReasonCodes(),
       'proposal' => $this->serializeProposal($context->result->proposal),
       'evidence' => $this->serializeEvidence($context->result->evidence),
     ];
@@ -1032,7 +1043,49 @@ final class ReportSeriesMatchClassificationHooks {
       'cluster_score_pattern' => $evidence->clusterScorePattern,
       'cluster_score_tagging' => $evidence->clusterScoreTagging,
       'lookback_months' => $evidence->lookbackMonths,
+      'series_body_ratio' => $evidence->seriesBodyRatio,
     ];
+  }
+
+  /**
+   * Builds outcome policy context from the entity and match evidence.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report being saved.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   Series match result.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext
+   *   Policy evaluation context.
+   */
+  protected function buildOutcomePolicyContext(
+    EntityInterface $entity,
+    SeriesMatchResult $result,
+  ): SeriesMatchOutcomePolicyContext {
+    return new SeriesMatchOutcomePolicyContext(
+      entityHasBody: $this->entityHasBody($entity),
+      seriesBodyRatio: $result->evidence->seriesBodyRatio,
+    );
+  }
+
+  /**
+   * Whether the entity has non-empty body text.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to inspect.
+   *
+   * @return bool
+   *   TRUE when body is absent as a field or has non-empty value.
+   */
+  protected function entityHasBody(EntityInterface $entity): bool {
+    if (!$entity instanceof ContentEntityInterface || !$entity->hasField('body')) {
+      return TRUE;
+    }
+    $raw = $entity->get('body')->value;
+    if (!is_string($raw)) {
+      return FALSE;
+    }
+    return trim(strip_tags($raw)) !== '';
   }
 
   /**

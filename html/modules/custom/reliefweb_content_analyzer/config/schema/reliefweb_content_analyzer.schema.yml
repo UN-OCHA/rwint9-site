@@ -67,6 +67,65 @@ reliefweb_content_analyzer.settings:
               sequence:
                 type: string
                 label: 'Moderation state machine name'
+            field_outcome_policies:
+              type: sequence
+              label: 'Per-field outcome policy actions by provenance'
+              sequence:
+                type: mapping
+                label: 'Field outcome policy'
+                mapping:
+                  most_recent:
+                    type: string
+                    label: 'Action when field value is from the most recent candidate'
+                  merged:
+                    type: string
+                    label: 'Action when field value is merged across candidates'
+                  skipped:
+                    type: string
+                    label: 'Action when field value could not be copied'
+            global_outcome_rules:
+              type: mapping
+              label: 'Global outcome rules applied after confidence tiering'
+              mapping:
+                empty_body_when_series_has_body:
+                  type: mapping
+                  label: 'Demote when the report has no body but most series candidates do'
+                  mapping:
+                    enabled:
+                      type: boolean
+                      label: 'Enabled'
+                    series_body_threshold:
+                      type: float
+                      label: 'Minimum fraction of series candidates with body text'
+                    action:
+                      type: string
+                      label: 'Policy action'
+                title_ai_failed_or_skipped:
+                  type: mapping
+                  label: 'Demote when title AI generation failed or was skipped'
+                  mapping:
+                    enabled:
+                      type: boolean
+                      label: 'Enabled'
+                    action:
+                      type: string
+                      label: 'Policy action'
+                low_series_confidence_with_mismatch:
+                  type: mapping
+                  label: 'Skip match when series confidence is not high and cluster mismatch is high'
+                  mapping:
+                    enabled:
+                      type: boolean
+                      label: 'Enabled'
+                    max_best_cluster_share:
+                      type: float
+                      label: 'Maximum best-cluster share that still counts as mismatch'
+                    min_cluster_count:
+                      type: integer
+                      label: 'Minimum cluster count required for the mismatch rule'
+                    action:
+                      type: string
+                      label: 'Policy action'
         matcher:
           type: mapping
           label: 'Report series matcher algorithm settings'
