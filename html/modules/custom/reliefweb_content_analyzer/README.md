@@ -39,7 +39,6 @@ When a match is applied automatically, two revisions are created rather than one
 
 ### Follow-up (not yet implemented)
 
-- More lenient pattern generation for month-range title variants.
 - Better handling when few candidates match the most specific pattern and many match a short prefix.
 - AI title date accuracy (prompt / structured output).
 
