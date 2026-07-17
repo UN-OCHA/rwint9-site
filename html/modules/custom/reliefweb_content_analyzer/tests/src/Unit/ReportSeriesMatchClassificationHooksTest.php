@@ -227,32 +227,37 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
   }
 
   /**
-   * Builds a SeriesMatchResult whose series confidence falls into 'low' tier.
+   * Builds a SeriesMatchResult whose outcome tier is low but still applicable.
    *
-   * Series confidence: 0.40*0.5 + 0.25*0.5 + 0.20*(2/4) + 0 = 0.425.
-   * 0.425 < 0.60 → series tier 'low' → outcome tier 'low' (min of tiers).
+   * Strong series confidence (high tier) passes the apply minimum and avoids
+   * the mismatch skip rule; weak tagging forces the outcome tier to low.
+   *
+   * Series: 0.40*1 + 0.25*1 + 0.15 = 0.80 → high.
+   * Tagging: skipped field + AI title → low.
    *
    * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
-   *   A low-confidence result resolving to the 'low' outcome tier.
+   *   A result resolving to the 'low' outcome tier with applyMatch TRUE.
    */
   private function buildLowConfidenceResult(): SeriesMatchResult {
     return new SeriesMatchResult(
       new SeriesMatchStatus(passedMinimum: TRUE),
       new SeriesMatchProposal(
-        updatedFields: ['field_theme' => [12]],
-        updatedFieldSources: ['field_theme' => SeriesMatchFieldUpdateSource::AllCandidates],
-        titleSource: SeriesMatchTitleSource::KeptOriginalPatternMatch,
+        updatedFields: ['field_theme' => []],
+        updatedFieldSources: [
+          'field_theme' => SeriesMatchFieldUpdateSource::Skipped,
+        ],
+        titleSource: SeriesMatchTitleSource::AiGenerated,
       ),
       new SeriesMatchEvidence(
         candidateIds: [1, 2, 3],
-        // Keep share above mismatch max (0.5) so policy skip does not fire.
-        bestClusterShare: 0.51,
-        clusterScore: 0.5,
-        clusterCount: 2,
+        bestClusterShare: 1.0,
+        clusterScore: 1.0,
+        clusterCount: 1,
         bestClusterSize: 3,
-        mergedAfterLimitCount: 4,
-        bothSignalsCount: 2,
+        mergedAfterLimitCount: 3,
+        bothSignalsCount: 0,
         lookbackMonths: 24,
+        seriesBodyRatio: 0.0,
       ),
     );
   }

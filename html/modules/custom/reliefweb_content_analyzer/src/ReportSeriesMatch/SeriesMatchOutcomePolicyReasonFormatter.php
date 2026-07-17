@@ -93,6 +93,19 @@ final class SeriesMatchOutcomePolicyReasonFormatter {
   }
 
   /**
+   * Reason when series confidence is below the configured apply threshold.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyReason
+   *   Reason with code and editor-facing message.
+   */
+  public static function forBelowMinimumSeriesConfidence(): SeriesMatchOutcomePolicyReason {
+    return new SeriesMatchOutcomePolicyReason(
+      code: 'global:below_minimum_series_confidence:skip_match',
+      message: 'Series confidence is below the configured minimum',
+    );
+  }
+
+  /**
    * Returns messages from a list of policy reasons.
    *
    * @param list<\Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyReason> $reasons

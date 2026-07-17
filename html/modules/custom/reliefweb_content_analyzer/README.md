@@ -11,7 +11,7 @@ The final moderation status is adjusted based on confidence: a high-confidence m
 
 ### For editors
 
-Inspect the match result on the **Report series matching** tab of any report: `/node/{nid}/report-series-match` (requires the `access report series matching` permission). The results summary shows evidence stats (candidates, clusters, signals) and editor-facing reasons when outcome policies demote or skip a match. Revision logs use the same short phrases.
+Inspect the match result on the **Report series matching** tab of any report: `/node/{nid}/report-series-match` (requires the `access report series matching` permission). The results summary states why matching stopped or was skipped (for example not enough similar reports, or series confidence below the configured minimum) and lists editor-facing reasons when outcome policies demote or skip a match. Revision logs mention series matching only when a match was actually applied.
 
 Review applied matches on the **Report series match log** page: `/admin/content/report-series-match-log` (requires the `view report series match log` permission).
 

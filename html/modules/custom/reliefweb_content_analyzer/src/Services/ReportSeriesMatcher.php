@@ -221,27 +221,6 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ? $best_cluster_size / $merged_after_limit_count
       : 0.0;
 
-    $evidence = $evidence->with([
-      'mergedAfterLimitCount' => $merged_after_limit_count,
-      'clusterCount' => count($core_clusters),
-      'clusterSizes' => $cluster_sizes,
-      'bestClusterSize' => $best_cluster_size,
-      'bestClusterShare' => $best_cluster_share,
-      'clusterScore' => $selection['cluster_score'],
-      'clusterScoreSize' => $selection['size_score'],
-      'clusterScorePattern' => $selection['pattern_score'],
-      'clusterScoreTagging' => $selection['tagging_consistency'],
-    ]);
-
-    if ($best_cluster_size < $minimum_series_count) {
-      return SeriesMatchResult::stopped(
-        SeriesMatchReason::BelowMinimumCluster,
-        $evidence,
-        $debug,
-        SeriesMatchReason::BelowMinimumCluster,
-      );
-    }
-
     $merged_scored_candidates = array_intersect_key(
       $merged_scored_candidates,
       array_flip($selection['cluster']),
@@ -255,9 +234,30 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       $metadata,
     );
     $evidence = $evidence->with([
+      'mergedAfterLimitCount' => $merged_after_limit_count,
+      'clusterCount' => count($core_clusters),
+      'clusterSizes' => $cluster_sizes,
+      'bestClusterSize' => $best_cluster_size,
+      'bestClusterShare' => $best_cluster_share,
+      'clusterScore' => $selection['cluster_score'],
+      'clusterScoreSize' => $selection['size_score'],
+      'clusterScorePattern' => $selection['pattern_score'],
+      'clusterScoreTagging' => $selection['tagging_consistency'],
       'candidateIds' => $candidate_ids,
       'candidatePatternScores' => $merged_scored_candidates,
       'lookbackMonths' => $display_lookback_months,
+    ]);
+
+    if ($best_cluster_size < $minimum_series_count) {
+      return SeriesMatchResult::stopped(
+        SeriesMatchReason::BelowMinimumCluster,
+        $evidence,
+        $debug,
+        SeriesMatchReason::BelowMinimumCluster,
+      );
+    }
+
+    $evidence = $evidence->with([
       'seriesBodyRatio' => $this->computeSeriesBodyRatio($candidate_ids),
     ]);
 

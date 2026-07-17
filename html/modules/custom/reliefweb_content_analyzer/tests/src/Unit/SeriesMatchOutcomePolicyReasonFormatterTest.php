@@ -62,4 +62,20 @@ class SeriesMatchOutcomePolicyReasonFormatterTest extends UnitTestCase {
     $this->assertSame('no body while series usually has body', $reason->message);
   }
 
+  /**
+   * Below-minimum series confidence has a dedicated skip reason.
+   */
+  public function testForBelowMinimumSeriesConfidence(): void {
+    $reason = SeriesMatchOutcomePolicyReasonFormatter::forBelowMinimumSeriesConfidence();
+
+    $this->assertSame(
+      'global:below_minimum_series_confidence:skip_match',
+      $reason->code,
+    );
+    $this->assertSame(
+      'Series confidence is below the configured minimum',
+      $reason->message,
+    );
+  }
+
 }

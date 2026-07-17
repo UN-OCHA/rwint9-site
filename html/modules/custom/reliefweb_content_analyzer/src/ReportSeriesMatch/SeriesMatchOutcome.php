@@ -113,6 +113,21 @@ final readonly class SeriesMatchOutcome {
 
     $outcome_tier = $series_tier->min($tagging_tier);
 
+    if ($series_confidence < $settings->minimumSeriesConfidence) {
+      return new self(
+        seriesConfidence: $series_confidence,
+        taggingConfidence: $tagging_confidence,
+        seriesTier: $series_tier,
+        taggingTier: $tagging_tier,
+        outcomeTier: $outcome_tier,
+        targetModerationStatus: $settings->moderationByOutcomeTier[$outcome_tier->value],
+        applyMatch: FALSE,
+        policyReasons: [
+          SeriesMatchOutcomePolicyReasonFormatter::forBelowMinimumSeriesConfidence(),
+        ],
+      );
+    }
+
     $policy = (new SeriesMatchOutcomePolicyEvaluator())->evaluate(
       $result,
       $settings,

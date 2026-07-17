@@ -19,6 +19,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchAttentionLevel;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchReason;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
@@ -270,16 +271,21 @@ final class ReportSeriesMatchForm extends FormBase {
       ];
     }
 
-    $series_confidence = $result->calculateSeriesConfidence();
-    $tagging_confidence = $result->calculateTaggingConfidence();
-    if ($series_confidence === NULL && $tagging_confidence === NULL) {
+    $stop_message = $this->formatStoppedMatchSummary($result);
+    if ($stop_message !== '') {
       return [
         '#type' => 'inline_template',
         '#template' => <<<TEMPLATE
-          <p><strong>{% trans %}No series candidate reports found for this content.{% endtrans %}</strong></p>
+          <p><strong>{{ stop_message }}</strong></p>
           TEMPLATE,
+        '#context' => [
+          'stop_message' => $stop_message,
+        ],
       ];
     }
+
+    $series_confidence = $result->calculateSeriesConfidence();
+    $tagging_confidence = $result->calculateTaggingConfidence();
 
     return [
       '#type' => 'inline_template',
@@ -298,6 +304,53 @@ final class ReportSeriesMatchForm extends FormBase {
         'tagging_confidence' => $tagging_confidence !== NULL ? number_format($tagging_confidence * 100, 1) . '%' : 'n/a',
       ],
     ];
+  }
+
+  /**
+   * Builds an editor-facing summary when matching stopped without an outcome.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return string
+   *   Summary text, or empty when the caller should use the scorable fallback.
+   */
+  protected function formatStoppedMatchSummary(SeriesMatchResult $result): string {
+    $reason = $result->status->rejectionReason ?? $result->status->reason;
+    if ($reason === NULL) {
+      return '';
+    }
+
+    return match ($reason) {
+      SeriesMatchReason::NotReport => (string) $this->t('Series matching only applies to reports.'),
+      SeriesMatchReason::NoSource => (string) $this->t('This report has no source, so series matching cannot run.'),
+      SeriesMatchReason::LimitZero => (string) $this->t('Series candidate lookup is disabled (candidate limit is zero).'),
+      SeriesMatchReason::NoPatterns => (string) $this->t('No title or URL patterns could be generated for this content.'),
+      SeriesMatchReason::NoPatternMatches => (string) $this->t('No matching series candidates were found for this content.'),
+      SeriesMatchReason::BelowMinimumCluster => (string) $this->t('Not enough similar series reports were found (@found found, minimum @minimum).', [
+        '@found' => $result->evidence->bestClusterSize,
+        '@minimum' => $this->resolveMinimumSeriesReportCount($result),
+      ]),
+    };
+  }
+
+  /**
+   * Resolves the configured minimum series report count for display.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult $result
+   *   The match result.
+   *
+   * @return int
+   *   Minimum series size from debug trace or config.
+   */
+  protected function resolveMinimumSeriesReportCount(SeriesMatchResult $result): int {
+    $minimum = $result->debug?->minimumSeriesCount ?? 0;
+    if ($minimum > 0) {
+      return $minimum;
+    }
+
+    return (int) ($this->config('reliefweb_content_analyzer.settings')
+      ->get('report_series_matching.matcher.minimum_series_report_count') ?? 3);
   }
 
   /**

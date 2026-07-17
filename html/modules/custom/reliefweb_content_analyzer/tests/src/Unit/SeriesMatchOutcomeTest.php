@@ -310,15 +310,15 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
       ),
       new SeriesMatchEvidence(
         candidateIds: [1, 2, 3, 4],
-        bestClusterShare: 0.4,
-        clusterScore: 0.5,
+        // 0.40*0.5 + 0.25*1 + 0.20*1 = 0.65 → medium (passes min, not high).
+        bestClusterShare: 0.5,
+        clusterScore: 1.0,
         clusterCount: 3,
-        bothSignalsCount: 0,
+        bothSignalsCount: 10,
         mergedAfterLimitCount: 10,
         seriesBodyRatio: 0.0,
       ),
     );
-    // Series ≈ 0.40*0.4 + 0.25*0.5 = 0.285 → low tier.
     $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
     $this->assertNotNull($outcome);
     $this->assertFalse($outcome->applyMatch);
@@ -328,6 +328,24 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
     );
     $this->assertContains(
       'global:low_series_confidence_with_mismatch:skip_match',
+      $outcome->policyReasonCodes(),
+    );
+  }
+
+  /**
+   * Series confidence below the configured minimum skips the match.
+   */
+  public function testBelowMinimumSeriesConfidenceSkipsMatch(): void {
+    $result = $this->buildResult(series: 0.356, tagging: 0.75);
+    $outcome = SeriesMatchOutcome::resolve($result, self::defaultSettings());
+    $this->assertNotNull($outcome);
+    $this->assertFalse($outcome->applyMatch);
+    $this->assertContains(
+      'Series confidence is below the configured minimum',
+      $outcome->policyReasonMessages(),
+    );
+    $this->assertContains(
+      'global:below_minimum_series_confidence:skip_match',
       $outcome->policyReasonCodes(),
     );
   }
