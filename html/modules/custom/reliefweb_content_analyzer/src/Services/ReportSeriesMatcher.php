@@ -209,10 +209,13 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $merged_after_limit_count = count($merged_scored_candidates);
 
     $metadata = $this->getCandidateMetadata(array_keys($merged_scored_candidates));
-    $clusters = $this->clusterCandidates($merged_scored_candidates, $metadata);
-    $selection = $this->selectBestCluster($clusters, $merged_scored_candidates, $metadata);
+    $selection = $this->selectSeriesCandidatesFromCoreAndSupport(
+      $merged_scored_candidates,
+      $metadata,
+    );
 
-    $cluster_sizes = array_map('count', $clusters);
+    $core_clusters = $selection['core_clusters'];
+    $cluster_sizes = array_map('count', $core_clusters);
     $best_cluster_size = count($selection['cluster']);
     $best_cluster_share = $merged_after_limit_count > 0
       ? $best_cluster_size / $merged_after_limit_count
@@ -220,7 +223,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
 
     $evidence = $evidence->with([
       'mergedAfterLimitCount' => $merged_after_limit_count,
-      'clusterCount' => count($clusters),
+      'clusterCount' => count($core_clusters),
       'clusterSizes' => $cluster_sizes,
       'bestClusterSize' => $best_cluster_size,
       'bestClusterShare' => $best_cluster_share,
@@ -815,6 +818,217 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       $values[$entity_id] = $target_ids;
     }
     return $values;
+  }
+
+  /**
+   * Select series candidates from a high-score core plus similar support.
+   *
+   * Builds the core from candidates at the maximum pattern score (best
+   * connected component within that tier). When the core is below the minimum
+   * series size, admits lower-score candidates only when they are similar
+   * enough to at least one core member. Recency/NID only ranks consideration
+   * order and never admits by themselves.
+   *
+   * @param array<int, int> $scored_candidates
+   *   Merged pattern scores keyed by node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata from getCandidateMetadata().
+   *
+   * @return array{
+   *   cluster: int[],
+   *   cluster_score: float,
+   *   size_score: float,
+   *   pattern_score: float,
+   *   tagging_consistency: float,
+   *   core_clusters: array<int, int[]>,
+   *   }
+   *   Final candidate set, score breakdown, and max-score-tier components.
+   */
+  protected function selectSeriesCandidatesFromCoreAndSupport(
+    array $scored_candidates,
+    array $metadata,
+  ): array {
+    $empty = [
+      'cluster' => [],
+      'cluster_score' => 0.0,
+      'size_score' => 0.0,
+      'pattern_score' => 0.0,
+      'tagging_consistency' => 0.0,
+      'core_clusters' => [],
+    ];
+
+    if ($scored_candidates === []) {
+      return $empty;
+    }
+
+    $max_score = max($scored_candidates);
+    $core_scored = array_filter(
+      $scored_candidates,
+      static fn(int $score): bool => $score === $max_score,
+    );
+
+    $core_clusters = $this->clusterCandidates($core_scored, $metadata);
+    $core_selection = $this->selectBestCluster($core_clusters, $core_scored, $metadata);
+    $core = $core_selection['cluster'];
+    if ($core === []) {
+      $empty['core_clusters'] = $core_clusters;
+      return $empty;
+    }
+
+    $minimum = $this->getMinimumSeriesReportCount();
+    $selected = $core;
+
+    if (count($core) < $minimum) {
+      $support_ids = array_values(array_diff(
+        array_keys($scored_candidates),
+        $core,
+      ));
+      $ranked_support = $this->rankSupportCandidatesByProximityToCore(
+        $support_ids,
+        $core,
+        $metadata,
+      );
+      $threshold = $this->getCandidateClusteringSimilarityThreshold();
+
+      foreach ($ranked_support as $support_nid) {
+        if ($this->maxSimilarityToCore($support_nid, $core, $metadata) >= $threshold) {
+          $selected[] = $support_nid;
+        }
+      }
+    }
+
+    $breakdown = $this->selectBestCluster([$selected], $scored_candidates, $metadata);
+
+    return [
+      'cluster' => $selected,
+      'cluster_score' => $breakdown['cluster_score'],
+      'size_score' => $breakdown['size_score'],
+      'pattern_score' => $breakdown['pattern_score'],
+      'tagging_consistency' => $breakdown['tagging_consistency'],
+      'core_clusters' => $core_clusters,
+    ];
+  }
+
+  /**
+   * Rank lower-score candidates by proximity to the core timeline.
+   *
+   * Candidates whose order key falls inside the core span are considered
+   * first, then those nearest outside the span. NID is the final tie-break.
+   *
+   * @param int[] $support_ids
+   *   Lower-score candidate node IDs.
+   * @param int[] $core
+   *   Core candidate node IDs.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return int[]
+   *   Support IDs in consideration order.
+   */
+  protected function rankSupportCandidatesByProximityToCore(
+    array $support_ids,
+    array $core,
+    array $metadata,
+  ): array {
+    if ($support_ids === [] || $core === []) {
+      return $support_ids;
+    }
+
+    $core_keys = [];
+    foreach ($core as $nid) {
+      $core_keys[] = $this->resolveCandidateOrderKey($nid, $metadata);
+    }
+    $core_min = min($core_keys);
+    $core_max = max($core_keys);
+
+    $ranked = [];
+    foreach ($support_ids as $nid) {
+      $key = $this->resolveCandidateOrderKey($nid, $metadata);
+      if ($key >= $core_min && $key <= $core_max) {
+        $outside = 0;
+        $distance = 0;
+      }
+      else {
+        $outside = 1;
+        $distance = min(abs($key - $core_min), abs($key - $core_max));
+      }
+      $ranked[] = [
+        'nid' => $nid,
+        'outside' => $outside,
+        'distance' => $distance,
+      ];
+    }
+
+    usort(
+      $ranked,
+      static function (array $a, array $b): int {
+        return $a['outside'] <=> $b['outside']
+          ?: $a['distance'] <=> $b['distance']
+          ?: $a['nid'] <=> $b['nid'];
+      },
+    );
+
+    return array_column($ranked, 'nid');
+  }
+
+  /**
+   * Resolve a stable chronological order key for a candidate.
+   *
+   * Prefers the configured recency field, then created, then the node ID.
+   *
+   * @param int $nid
+   *   Candidate node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return int
+   *   Order key (higher = later when used as a timestamp).
+   */
+  protected function resolveCandidateOrderKey(int $nid, array $metadata): int {
+    $recency_field = $this->getRecencyFieldName();
+    if (isset($metadata[$nid][$recency_field])) {
+      $timestamp = $this->parseRecencyValueToTimestamp($metadata[$nid][$recency_field]);
+      if ($timestamp !== NULL) {
+        return $timestamp;
+      }
+    }
+
+    if (isset($metadata[$nid]['created'])) {
+      $timestamp = $this->parseRecencyValueToTimestamp($metadata[$nid]['created']);
+      if ($timestamp !== NULL) {
+        return $timestamp;
+      }
+    }
+
+    return $nid;
+  }
+
+  /**
+   * Maximum pairwise similarity between a candidate and any core member.
+   *
+   * @param int $nid
+   *   Candidate node ID.
+   * @param int[] $core
+   *   Core candidate node IDs.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return float
+   *   Similarity in the range 0–1.
+   */
+  protected function maxSimilarityToCore(int $nid, array $core, array $metadata): float {
+    $max = 0.0;
+    $candidate_meta = $metadata[$nid] ?? [];
+    foreach ($core as $core_nid) {
+      $max = max(
+        $max,
+        $this->computePairwiseCandidateSimilarity(
+          $candidate_meta,
+          $metadata[$core_nid] ?? [],
+        ),
+      );
+    }
+    return $max;
   }
 
   /**

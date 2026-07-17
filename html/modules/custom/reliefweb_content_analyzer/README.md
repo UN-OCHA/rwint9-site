@@ -39,8 +39,9 @@ When a match is applied automatically, two revisions are created rather than one
 
 ### Follow-up (not yet implemented)
 
-- Better handling when few candidates match the most specific pattern and many match a short prefix.
 - AI title date accuracy (prompt / structured output).
+
+Series candidate selection prefers a high pattern-score core and only adds lower-score matches when they are similar enough to that core (title/tag similarity), so short-prefix noise cannot outvote or artificially pad a series.
 
 ### Dependencies
 

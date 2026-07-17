@@ -268,6 +268,157 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
+   * Builds candidate metadata for clustering tests.
+   *
+   * @param string $title
+   *   Candidate title.
+   * @param string $date
+   *   ISO publication date.
+   * @param int[] $country
+   *   Primary country term IDs.
+   * @param int[] $format
+   *   Content format term IDs.
+   * @param int[] $language
+   *   Language term IDs.
+   *
+   * @return array<string, mixed>
+   *   Metadata row.
+   */
+  private function candidateMetadata(
+    string $title,
+    string $date,
+    array $country = [241],
+    array $format = [10],
+    array $language = [267],
+  ): array {
+    return [
+      'title' => $title,
+      'field_original_publication_date' => $date,
+      'created' => $date,
+      'field_primary_country' => $country,
+      'field_content_format' => $format,
+      'field_language' => $language,
+    ];
+  }
+
+  /**
+   * Dissimilar weak matches are not admitted to pad a small high-score core.
+   */
+  public function testCoreAndSupportRejectsDissimilarWeakCandidates(): void {
+    $scored = [
+      101 => 4,
+      102 => 4,
+      201 => 1,
+      202 => 1,
+      203 => 1,
+      204 => 1,
+    ];
+    $metadata = [
+      101 => $this->candidateMetadata('Ukraine Operation Overview, January 2026', '2026-01-15'),
+      102 => $this->candidateMetadata('Ukraine Operation Overview, March 2026', '2026-03-15'),
+      201 => $this->candidateMetadata('Nigeria Flood Flash Update', '2026-02-01', [999], [11], [268]),
+      202 => $this->candidateMetadata('Sahel Market Bulletin', '2026-02-10', [998], [12], [269]),
+      203 => $this->candidateMetadata('Yemen Health Weekly', '2026-02-20', [997], [13], [270]),
+      204 => $this->candidateMetadata('Sudan Displacement Snapshot', '2026-02-25', [996], [14], [271]),
+    ];
+
+    $selection = $this->invokeProtected(
+      'selectSeriesCandidatesFromCoreAndSupport',
+      $scored,
+      $metadata,
+    );
+
+    $cluster = $selection['cluster'];
+    sort($cluster);
+    $this->assertSame([101, 102], $cluster);
+    $this->assertCount(2, $cluster);
+  }
+
+  /**
+   * Similar weak candidates are admitted when the high-score core is too small.
+   */
+  public function testCoreAndSupportAdmitsSimilarWeakCandidate(): void {
+    $scored = [
+      101 => 4,
+      102 => 4,
+      201 => 1,
+      301 => 1,
+    ];
+    $metadata = [
+      101 => $this->candidateMetadata('Ukraine Operation Overview, January 2026', '2026-01-15'),
+      102 => $this->candidateMetadata('Ukraine Operation Overview, March 2026', '2026-03-15'),
+      201 => $this->candidateMetadata('Ukraine Operation Overview, February 2026', '2026-02-15'),
+      301 => $this->candidateMetadata('Nigeria Flood Flash Update', '2026-02-01', [999], [11], [268]),
+    ];
+
+    $selection = $this->invokeProtected(
+      'selectSeriesCandidatesFromCoreAndSupport',
+      $scored,
+      $metadata,
+    );
+
+    $cluster = $selection['cluster'];
+    sort($cluster);
+    $this->assertSame([101, 102, 201], $cluster);
+    $this->assertNotContains(301, $selection['cluster']);
+  }
+
+  /**
+   * When the core already meets the minimum size, weaker matches are ignored.
+   */
+  public function testCoreAndSupportDoesNotAddWeakWhenCoreMeetsMinimum(): void {
+    $scored = [
+      101 => 4,
+      102 => 4,
+      103 => 4,
+      201 => 1,
+    ];
+    $metadata = [
+      101 => $this->candidateMetadata('Ukraine Operation Overview, January 2026', '2026-01-15'),
+      102 => $this->candidateMetadata('Ukraine Operation Overview, February 2026', '2026-02-15'),
+      103 => $this->candidateMetadata('Ukraine Operation Overview, March 2026', '2026-03-15'),
+      201 => $this->candidateMetadata('Ukraine Operation Overview, April 2026', '2026-04-15'),
+    ];
+
+    $selection = $this->invokeProtected(
+      'selectSeriesCandidatesFromCoreAndSupport',
+      $scored,
+      $metadata,
+    );
+
+    $cluster = $selection['cluster'];
+    sort($cluster);
+    $this->assertSame([101, 102, 103], $cluster);
+    $this->assertNotContains(201, $selection['cluster']);
+  }
+
+  /**
+   * Support ranking prefers candidates inside the core date span.
+   */
+  public function testRankSupportCandidatesPrefersInsideCoreSpan(): void {
+    $core = [101, 102];
+    $support = [301, 201, 302];
+    $metadata = [
+      101 => $this->candidateMetadata('Core A', '2026-01-15'),
+      102 => $this->candidateMetadata('Core B', '2026-03-15'),
+      // Inside span.
+      201 => $this->candidateMetadata('Inside', '2026-02-15'),
+      // Outside span, farther then nearer.
+      301 => $this->candidateMetadata('Far before', '2025-06-01'),
+      302 => $this->candidateMetadata('Near after', '2026-04-01'),
+    ];
+
+    $ranked = $this->invokeProtected(
+      'rankSupportCandidatesByProximityToCore',
+      $support,
+      $core,
+      $metadata,
+    );
+
+    $this->assertSame([201, 302, 301], $ranked);
+  }
+
+  /**
    * Sorts candidates by parsed Unix recency timestamps, newest first.
    */
   public function testSortCandidateIdsByRecencyWithUnixTimestamps(): void {
