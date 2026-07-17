@@ -64,6 +64,13 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
 
   /**
+   * Complex Emergency disaster type term ID.
+   *
+   * Excluded from report tagging, matching ReportFormAlter.
+   */
+  public const int COMPLEX_EMERGENCY_DISASTER_TYPE_ID = 41764;
+
+  /**
    * Lazily loaded matcher settings from config.
    */
   private ?SeriesMatchMatcherSettings $matcherSettings = NULL;
@@ -1896,10 +1903,120 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       $sources[$field_name] = $source;
     }
 
+    return $this->applyDisasterTypeDerivation($values, $sources);
+  }
+
+  /**
+   * When disasters are proposed, derive disaster types from those terms.
+   *
+   * Matches report-form behaviour: types come from tagged disasters. Series
+   * field_disaster_type is used only when no disasters are proposed.
+   *
+   * @param array<string, null|string|string[]|int[]> $values
+   *   Proposed field values.
+   * @param array<string, \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource> $sources
+   *   Per-field provenance.
+   *
+   * @return FieldCopyResult
+   *   Values and sources after disaster-type derivation.
+   */
+  protected function applyDisasterTypeDerivation(array $values, array $sources): array {
+    $disasters = $values['field_disaster'] ?? NULL;
+    if (!is_array($disasters) || $disasters === []) {
+      return [
+        'values' => $values,
+        'sources' => $sources,
+      ];
+    }
+
+    $disaster_ids = array_values(array_unique(array_map('intval', $disasters)));
+    $values['field_disaster_type'] = $this->deriveDisasterTypeIdsFromDisasters($disaster_ids);
+    $sources['field_disaster_type'] = $sources['field_disaster']
+      ?? SeriesMatchFieldUpdateSource::Skipped;
+
     return [
       'values' => $values,
       'sources' => $sources,
     ];
+  }
+
+  /**
+   * Derive sorted unique disaster type IDs from disaster term IDs.
+   *
+   * @param int[] $disaster_ids
+   *   Disaster taxonomy term IDs.
+   *
+   * @return int[]
+   *   Disaster type term IDs (Complex Emergency excluded).
+   */
+  protected function deriveDisasterTypeIdsFromDisasters(array $disaster_ids): array {
+    if ($disaster_ids === []) {
+      return [];
+    }
+
+    $grouped = $this->fetchDisasterTypeIdsByDisasterIds($disaster_ids);
+    $type_ids = [];
+    foreach ($grouped as $ids) {
+      foreach ($ids as $type_id) {
+        $type_ids[] = (int) $type_id;
+      }
+    }
+
+    return $this->normalizeDisasterTypeIds($type_ids);
+  }
+
+  /**
+   * Load disaster type term IDs keyed by disaster term ID.
+   *
+   * @param int[] $disaster_ids
+   *   Disaster taxonomy term IDs.
+   *
+   * @return array<int, int[]>
+   *   Sorted unique type IDs per disaster.
+   */
+  protected function fetchDisasterTypeIdsByDisasterIds(array $disaster_ids): array {
+    if ($disaster_ids === []) {
+      return [];
+    }
+
+    $query = $this->database->select('taxonomy_term__field_disaster_type', 'f');
+    $query->fields('f', ['entity_id', 'field_disaster_type_target_id']);
+    $query->condition('f.entity_id', $disaster_ids, 'IN');
+    $query->condition('f.deleted', 0);
+    $query->orderBy('f.entity_id', 'ASC');
+    $query->orderBy('f.delta', 'ASC');
+
+    $results = [];
+    foreach ($query->execute() as $row) {
+      $results[(int) $row->entity_id][] = (int) $row->field_disaster_type_target_id;
+    }
+
+    $values = [];
+    foreach ($disaster_ids as $disaster_id) {
+      $type_ids = array_values(array_unique($results[$disaster_id] ?? []));
+      sort($type_ids, \SORT_NUMERIC);
+      $values[$disaster_id] = $type_ids;
+    }
+    return $values;
+  }
+
+  /**
+   * Deduplicate, exclude Complex Emergency, and sort disaster type IDs.
+   *
+   * @param int[] $type_ids
+   *   Raw disaster type term IDs.
+   *
+   * @return int[]
+   *   Normalized type IDs.
+   */
+  protected function normalizeDisasterTypeIds(array $type_ids): array {
+    $type_ids = array_values(array_unique(array_map('intval', $type_ids)));
+    $type_ids = array_values(array_filter(
+      $type_ids,
+      static fn(int $id): bool => $id !== self::COMPLEX_EMERGENCY_DISASTER_TYPE_ID,
+    ));
+    sort($type_ids, \SORT_NUMERIC);
+    return $type_ids;
   }
 
   /**

@@ -37,6 +37,8 @@ When a match is applied automatically, two revisions are created rather than one
 - Per-request state carried across hook phases: [`src/ReportSeriesMatch/SeriesMatchApplyContext.php`](src/ReportSeriesMatch/SeriesMatchApplyContext.php)
 - Behavior examples: unit tests under `tests/src/Unit/`
 
+When series matching proposes disasters, `field_disaster_type` is derived from those disaster terms (union of their types, excluding Complex Emergency), matching the report form. Series-copied disaster types are used only when no disasters are proposed.
+
 ### Follow-up (not yet implemented)
 
 - AI title date accuracy (prompt / structured output).

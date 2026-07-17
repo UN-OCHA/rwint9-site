@@ -8,10 +8,12 @@ use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher;
 use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchMatcherConfigFixture;
@@ -513,6 +515,146 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $this->assertSame($original_title, $result['title']);
     $this->assertSame(SeriesMatchTitleSource::FailedNoCandidateTitles, $result['source']);
     $this->assertNull($result['aiDurationSeconds']);
+  }
+
+  /**
+   * Normalizes disaster types: unique, sorted, Complex Emergency excluded.
+   */
+  public function testNormalizeDisasterTypeIdsExcludesComplexEmergencyAndSorts(): void {
+    $normalized = $this->invokeProtected(
+      'normalizeDisasterTypeIds',
+      [
+        4616,
+        ReportSeriesMatcher::COMPLEX_EMERGENCY_DISASTER_TYPE_ID,
+        4604,
+        4616,
+      ],
+    );
+
+    $this->assertSame([4604, 4616], $normalized);
+  }
+
+  /**
+   * Keeps series-copied disaster types when no disasters are proposed.
+   */
+  public function testApplyDisasterTypeDerivationKeepsSeriesTypesWithoutDisasters(): void {
+    $values = [
+      'field_disaster' => [],
+      'field_disaster_type' => [4604, 4616],
+    ];
+    $sources = [
+      'field_disaster' => SeriesMatchFieldUpdateSource::Skipped,
+      'field_disaster_type' => SeriesMatchFieldUpdateSource::AllCandidates,
+    ];
+
+    $result = $this->invokeProtected(
+      'applyDisasterTypeDerivation',
+      $values,
+      $sources,
+    );
+
+    $this->assertSame([4604, 4616], $result['values']['field_disaster_type']);
+    $this->assertSame(
+      SeriesMatchFieldUpdateSource::AllCandidates,
+      $result['sources']['field_disaster_type'],
+    );
+  }
+
+  /**
+   * Derives types from proposed disasters and ignores series type values.
+   */
+  public function testApplyDisasterTypeDerivationUsesDisasterUnionNotSeriesTypes(): void {
+    $matcher = $this->buildMatcherWithDisasterTypeRows([
+      (object) ['entity_id' => 100, 'field_disaster_type_target_id' => 4616],
+      (object) [
+        'entity_id' => 100,
+        'field_disaster_type_target_id' => ReportSeriesMatcher::COMPLEX_EMERGENCY_DISASTER_TYPE_ID,
+      ],
+      (object) ['entity_id' => 200, 'field_disaster_type_target_id' => 4604],
+      (object) ['entity_id' => 200, 'field_disaster_type_target_id' => 4616],
+    ]);
+
+    $values = [
+      'field_disaster' => [200, 100],
+      'field_disaster_type' => [9999],
+    ];
+    $sources = [
+      'field_disaster' => SeriesMatchFieldUpdateSource::Merged,
+      'field_disaster_type' => SeriesMatchFieldUpdateSource::MostRecent,
+    ];
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'applyDisasterTypeDerivation',
+      $values,
+      $sources,
+    );
+
+    $this->assertSame([4604, 4616], $result['values']['field_disaster_type']);
+    $this->assertSame(
+      SeriesMatchFieldUpdateSource::Merged,
+      $result['sources']['field_disaster_type'],
+    );
+  }
+
+  /**
+   * Empty types from disasters do not fall back to series disaster types.
+   */
+  public function testApplyDisasterTypeDerivationNoFallbackWhenDisastersHaveNoTypes(): void {
+    $matcher = $this->buildMatcherWithDisasterTypeRows([]);
+
+    $values = [
+      'field_disaster' => [100],
+      'field_disaster_type' => [4604],
+    ];
+    $sources = [
+      'field_disaster' => SeriesMatchFieldUpdateSource::MostRecent,
+      'field_disaster_type' => SeriesMatchFieldUpdateSource::AllCandidates,
+    ];
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'applyDisasterTypeDerivation',
+      $values,
+      $sources,
+    );
+
+    $this->assertSame([], $result['values']['field_disaster_type']);
+    $this->assertSame(
+      SeriesMatchFieldUpdateSource::MostRecent,
+      $result['sources']['field_disaster_type'],
+    );
+  }
+
+  /**
+   * Builds a matcher whose DB returns the given disaster-type rows.
+   *
+   * @param list<object{entity_id: int, field_disaster_type_target_id: int}> $rows
+   *   Rows from taxonomy_term__field_disaster_type.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher
+   *   Matcher with a stubbed select query.
+   */
+  private function buildMatcherWithDisasterTypeRows(array $rows): ReportSeriesMatcher {
+    $query = $this->createMock(SelectInterface::class);
+    $query->method('fields')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('orderBy')->willReturnSelf();
+    $query->method('execute')->willReturn($rows);
+
+    $database = $this->createMock(Connection::class);
+    $database->method('select')
+      ->with('taxonomy_term__field_disaster_type', 'f')
+      ->willReturn($query);
+
+    return new ReportSeriesMatcher(
+      $this->buildConfigFactory(),
+      $this->createMock(LoggerChannelFactoryInterface::class),
+      $this->createMock(EntityFieldManagerInterface::class),
+      $this->createMock(TimeInterface::class),
+      $database,
+      $this->createMock(CompletionPluginManagerInterface::class),
+    );
   }
 
 }
