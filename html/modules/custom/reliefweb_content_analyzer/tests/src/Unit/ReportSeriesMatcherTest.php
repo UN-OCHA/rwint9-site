@@ -518,6 +518,97 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
+   * Keeps full retrieval scores while candidateIds lists only the selected set.
+   */
+  public function testBuildCandidateEvidenceFromSelectionKeepsDiscardedScores(): void {
+    $retrieved = [
+      101 => 5,
+      102 => 5,
+      103 => 5,
+      104 => 5,
+      201 => 3,
+      202 => 2,
+      203 => 2,
+      204 => 1,
+      205 => 1,
+    ];
+    $selected = [101, 102, 103, 104];
+
+    $evidence = $this->invokeProtected(
+      'buildCandidateEvidenceFromSelection',
+      $retrieved,
+      $selected,
+    );
+
+    $this->assertSame([101, 102, 103, 104], $evidence['candidateIds']);
+    $this->assertSame(
+      [101, 102, 103, 104, 201, 202, 203, 204, 205],
+      array_keys($evidence['candidatePatternScores']),
+    );
+    $this->assertSame(3, $evidence['candidatePatternScores'][201]);
+    $this->assertCount(9, $evidence['candidatePatternScores']);
+  }
+
+  /**
+   * Weights cluster share by pattern score (strong core + weak noise).
+   */
+  public function testComputeBestClusterShareWeightsByPatternScore(): void {
+    $retrieved = [
+      101 => 5,
+      102 => 5,
+      103 => 5,
+      104 => 5,
+      201 => 1,
+      202 => 1,
+      203 => 1,
+      204 => 1,
+      205 => 1,
+    ];
+
+    $share = $this->invokeProtected(
+      'computeBestClusterShare',
+      $retrieved,
+      [101, 102, 103, 104],
+    );
+
+    $this->assertEqualsWithDelta(0.8, $share, 0.0001);
+  }
+
+  /**
+   * Returns 1.0 when every retrieved candidate is selected.
+   */
+  public function testComputeBestClusterShareAllSelected(): void {
+    $retrieved = [
+      101 => 5,
+      102 => 3,
+    ];
+
+    $share = $this->invokeProtected(
+      'computeBestClusterShare',
+      $retrieved,
+      [101, 102],
+    );
+
+    $this->assertEqualsWithDelta(1.0, $share, 0.0001);
+  }
+
+  /**
+   * Returns 0.0 when there are no scores to weight.
+   */
+  public function testComputeBestClusterShareEmptyOrZeroTotal(): void {
+    $this->assertSame(0.0, $this->invokeProtected(
+      'computeBestClusterShare',
+      [],
+      [101],
+    ));
+    $this->assertSame(0.0, $this->invokeProtected(
+      'computeBestClusterShare',
+      [101 => 0, 102 => 0],
+      [101],
+    ));
+  }
+
+  /**
    * Normalizes disaster types: unique, sorted, Complex Emergency excluded.
    */
   public function testNormalizeDisasterTypeIdsExcludesComplexEmergencyAndSorts(): void {

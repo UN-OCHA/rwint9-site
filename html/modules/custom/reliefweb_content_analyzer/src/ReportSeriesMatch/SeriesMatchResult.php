@@ -46,7 +46,8 @@ final readonly class SeriesMatchResult {
    * quality.
    *
    * Weights (sum = 1.0 when all signals present):
-   * - 0.40 cluster share (fraction of candidates in the best cluster)
+   * - 0.40 cluster share (pattern-score-weighted fraction of retrieval in the
+   *   selected cluster)
    * - 0.25 cluster composite score
    * - 0.20 dual title+URL retrieval ratio
    * - 0.15 single-cluster bonus (all candidates collapsed into one cluster)

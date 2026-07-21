@@ -214,6 +214,9 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     arsort($merged_scored_candidates, \SORT_NUMERIC);
     $merged_scored_candidates = array_slice($merged_scored_candidates, 0, $limit, TRUE);
     $merged_after_limit_count = count($merged_scored_candidates);
+    // Keep the full post-limit retrieval set for editor display (selected +
+    // discarded). Tagging still uses only the selected cluster IDs below.
+    $retrieved_scored_candidates = $merged_scored_candidates;
 
     $metadata = $this->getCandidateMetadata(array_keys($merged_scored_candidates));
     $selection = $this->selectSeriesCandidatesFromCoreAndSupport(
@@ -224,17 +227,16 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $core_clusters = $selection['core_clusters'];
     $cluster_sizes = array_map('count', $core_clusters);
     $best_cluster_size = count($selection['cluster']);
-    $best_cluster_share = $merged_after_limit_count > 0
-      ? $best_cluster_size / $merged_after_limit_count
-      : 0.0;
-
-    $merged_scored_candidates = array_intersect_key(
-      $merged_scored_candidates,
-      array_flip($selection['cluster']),
+    $best_cluster_share = $this->computeBestClusterShare(
+      $retrieved_scored_candidates,
+      $selection['cluster'],
     );
-    arsort($merged_scored_candidates, \SORT_NUMERIC);
 
-    $candidate_ids = array_keys($merged_scored_candidates);
+    $candidate_evidence = $this->buildCandidateEvidenceFromSelection(
+      $retrieved_scored_candidates,
+      $selection['cluster'],
+    );
+    $candidate_ids = $candidate_evidence['candidateIds'];
     $display_lookback_months = $this->computeBestClusterLookbackMonths(
       $anchor,
       $selection['cluster'],
@@ -251,7 +253,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       'clusterScorePattern' => $selection['pattern_score'],
       'clusterScoreTagging' => $selection['tagging_consistency'],
       'candidateIds' => $candidate_ids,
-      'candidatePatternScores' => $merged_scored_candidates,
+      'candidatePatternScores' => $candidate_evidence['candidatePatternScores'],
       'lookbackMonths' => $display_lookback_months,
     ]);
 
@@ -825,6 +827,65 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       $values[$entity_id] = $target_ids;
     }
     return $values;
+  }
+
+  /**
+   * Pattern-score-weighted share of the selected cluster over retrieval.
+   *
+   * @param array<int, int> $retrieved_scored
+   *   Pattern scores for all candidates after the retrieval limit.
+   * @param int[] $selected_ids
+   *   Node IDs in the selected series cluster.
+   *
+   * @return float
+   *   Selected score sum / total retrieved score sum, in [0, 1].
+   */
+  protected function computeBestClusterShare(
+    array $retrieved_scored,
+    array $selected_ids,
+  ): float {
+    $total = array_sum($retrieved_scored);
+    if ($total <= 0) {
+      return 0.0;
+    }
+
+    $selected_sum = 0;
+    foreach ($selected_ids as $id) {
+      $selected_sum += $retrieved_scored[$id] ?? 0;
+    }
+
+    return min(1.0, max(0.0, $selected_sum / $total));
+  }
+
+  /**
+   * Builds selected candidate IDs and full retrieval pattern-score map.
+   *
+   * @param array<int, int> $retrieved_scored
+   *   Pattern scores for all candidates after the retrieval limit.
+   * @param int[] $selected_cluster
+   *   Node IDs kept in the selected series cluster.
+   *
+   * @return array{
+   *   candidateIds: int[],
+   *   candidatePatternScores: array<int, int>,
+   *   }
+   *   Selected IDs (score order) and the full retrieved score map.
+   */
+  protected function buildCandidateEvidenceFromSelection(
+    array $retrieved_scored,
+    array $selected_cluster,
+  ): array {
+    arsort($retrieved_scored, \SORT_NUMERIC);
+    $selected_scored = array_intersect_key(
+      $retrieved_scored,
+      array_flip($selected_cluster),
+    );
+    arsort($selected_scored, \SORT_NUMERIC);
+
+    return [
+      'candidateIds' => array_keys($selected_scored),
+      'candidatePatternScores' => $retrieved_scored,
+    ];
   }
 
   /**

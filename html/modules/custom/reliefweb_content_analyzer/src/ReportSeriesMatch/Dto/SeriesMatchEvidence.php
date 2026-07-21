@@ -13,9 +13,10 @@ final readonly class SeriesMatchEvidence {
    * Constructs a series match evidence value object.
    *
    * @param int[] $candidateIds
-   *   Final candidate node IDs in pattern score order (descending).
+   *   Selected series member node IDs in pattern score order (descending).
    * @param array<int, int> $candidatePatternScores
-   *   Merged pattern score per candidate node ID.
+   *   Merged pattern score per retrieved candidate after the limit, including
+   *   both selected and discarded candidates.
    * @param int $titleMatchCount
    *   Candidates matched by title patterns.
    * @param int $urlMatchCount
@@ -33,7 +34,8 @@ final readonly class SeriesMatchEvidence {
    * @param int $bestClusterSize
    *   Size of the selected best cluster.
    * @param float $bestClusterShare
-   *   Best-cluster share over merged candidates after limit (0–1).
+   *   Pattern-score-weighted share of the selected cluster over all post-limit
+   *   retrieved candidates (0–1).
    * @param float $clusterScore
    *   Composite score of the selected best cluster.
    * @param float $clusterScoreSize

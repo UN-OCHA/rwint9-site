@@ -389,8 +389,13 @@ final class ReportSeriesMatchForm extends FormBase {
    *   Render array for the candidates details element.
    */
   protected function buildCandidatesDetails(SeriesMatchResult $result): array {
-    $candidate_ids = $result->evidence->candidateIds;
+    $selected_ids = $result->evidence->candidateIds;
     $scores = $result->evidence->candidatePatternScores;
+    $selected_lookup = array_fill_keys($selected_ids, TRUE);
+
+    $display_ids = $scores !== []
+      ? array_keys($scores)
+      : $selected_ids;
 
     $headers = [
       $this->t('ID'),
@@ -400,12 +405,13 @@ final class ReportSeriesMatchForm extends FormBase {
     if ($scores !== []) {
       $headers[] = $this->t('Pattern score');
     }
+    $headers[] = $this->t('Status');
 
     $rows = [];
-    if ($candidate_ids !== []) {
+    if ($display_ids !== []) {
       /** @var \Drupal\node\NodeInterface[] $candidates */
-      $candidates = $this->entityTypeManager->getStorage('node')->loadMultiple($candidate_ids);
-      foreach ($candidate_ids as $nid) {
+      $candidates = $this->entityTypeManager->getStorage('node')->loadMultiple($display_ids);
+      foreach ($display_ids as $nid) {
         $candidate = $candidates[$nid] ?? NULL;
         if ($candidate === NULL) {
           continue;
@@ -418,14 +424,21 @@ final class ReportSeriesMatchForm extends FormBase {
         if ($scores !== []) {
           $row[] = isset($scores[$nid]) ? (string) (int) $scores[$nid] : '';
         }
+        $row[] = isset($selected_lookup[$nid])
+          ? $this->t('Selected')
+          : $this->t('Discarded');
         $rows[] = $row;
       }
     }
 
+    $selected_count = count($selected_ids);
+    $total_count = count($display_ids);
+
     return [
       '#type' => 'details',
-      '#title' => $this->t('Series candidates (@count)', [
-        '@count' => count($candidate_ids),
+      '#title' => $this->t('Series candidates (@selected of @total selected)', [
+        '@selected' => $selected_count,
+        '@total' => $total_count,
       ]),
       '#open' => FALSE,
       'content' => [
@@ -813,7 +826,7 @@ final class ReportSeriesMatchForm extends FormBase {
 
     if ($debug->entityId > 0) {
       $rows[] = [
-        $this->t('Best cluster (size / share / minimum)'),
+        $this->t('Best cluster (size / score-weighted share / minimum)'),
         $this->t('@cluster_size / @cluster_share% / @minimum_series_count', [
           '@cluster_size' => $evidence->bestClusterSize,
           '@cluster_share' => number_format(100.0 * $evidence->bestClusterShare, 1),
