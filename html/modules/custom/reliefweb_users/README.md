@@ -35,6 +35,6 @@ drush reliefweb_users:delete-inactive --weeks=26 --limit=50 --sort=newest --dry-
 - uid > 2 (system users are never processed)
 - Last activity older than the configured number of weeks — uses `access` when the user has visited the site (`access > 0`), otherwise uses account creation date (`created`) for never-accessed accounts
 - Only the `authenticated` role (no custom roles)
-- No nodes (authored/revised), subscriptions, bookmarks, posting-rights records, API keys, staff notes, files, media, or guidelines
+- No nodes (authored/revised), subscriptions, bookmarks, posting-rights records, API keys, staff notes, files or media
 
 Accounts are processed up to the `--limit` per run, ordered by effective activity (`--sort=oldest`, default, or `--sort=newest`). Use `--dry-run` to list candidates without deleting.
