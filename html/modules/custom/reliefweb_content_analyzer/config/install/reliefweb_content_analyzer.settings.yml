@@ -106,3 +106,6 @@ report_series_matching:
       - field_theme
       - field_disaster
       - field_disaster_type
+  testing:
+    download_missing_attachment: true
+    download_missing_attachment_source_url: 'https://reliefweb.int'

@@ -25,6 +25,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowS
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface;
+use Drupal\reliefweb_files\Services\MissingFileDownloaderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -43,12 +44,15 @@ final class ReportSeriesMatchForm extends FormBase {
    *   Field manager for report field labels and definitions.
    * @param \Drupal\Core\Datetime\DateFormatterInterface $dateFormatter
    *   Date formatter for candidate created dates.
+   * @param \Drupal\reliefweb_files\Services\MissingFileDownloaderInterface $missingFileDownloader
+   *   Downloader for missing report attachments (local testing).
    */
   public function __construct(
     protected ReportSeriesMatcherInterface $reportSeriesMatcher,
     protected EntityTypeManagerInterface $entityTypeManager,
     protected EntityFieldManagerInterface $entityFieldManager,
     protected DateFormatterInterface $dateFormatter,
+    protected MissingFileDownloaderInterface $missingFileDownloader,
   ) {}
 
   /**
@@ -60,6 +64,7 @@ final class ReportSeriesMatchForm extends FormBase {
       $container->get('entity_type.manager'),
       $container->get('entity_field.manager'),
       $container->get('date.formatter'),
+      $container->get('reliefweb_files.missing_file_downloader'),
     );
   }
 
@@ -1009,11 +1014,46 @@ final class ReportSeriesMatchForm extends FormBase {
       return;
     }
 
+    $this->ensureMissingAttachmentForTesting($node);
+
     $form_state->set(
       'match_result',
       $this->reportSeriesMatcher->findSeriesCandidates($node, includeDebug: TRUE),
     );
     $form_state->setRebuild();
+  }
+
+  /**
+   * Downloads the first attachment when missing (series match test only).
+   *
+   * Controlled by report_series_matching.testing settings. No-ops when disabled
+   * or when the source host matches the current request host.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The report being matched.
+   */
+  protected function ensureMissingAttachmentForTesting(NodeInterface $node): void {
+    $settings = $this->config('reliefweb_content_analyzer.settings')
+      ->get('report_series_matching.testing') ?? [];
+    if (empty($settings['download_missing_attachment'])) {
+      return;
+    }
+
+    $source_url = $settings['download_missing_attachment_source_url'] ?? '';
+    $source_url = is_string($source_url) ? rtrim($source_url, '/') : '';
+    $source_url = $source_url ?: 'https://reliefweb.int';
+
+    $result = $this->missingFileDownloader->ensureFirstReportAttachmentOnDisk(
+      $node,
+      $source_url,
+    );
+
+    if ($result === 'downloaded') {
+      $this->messenger()->addStatus($this->t('Downloaded missing report attachment for series match testing.'));
+    }
+    elseif ($result === 'failed') {
+      $this->messenger()->addWarning($this->t('Could not download the missing report attachment. AI title generation may be skipped.'));
+    }
   }
 
 }

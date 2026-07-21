@@ -5,13 +5,11 @@ namespace Drupal\reliefweb_files\Commands;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
-use Drupal\Core\Http\ClientFactory;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_files\Services\MissingFileDownloaderInterface;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drush\Commands\DrushCommands;
-use GuzzleHttp\Exception\RequestException;
-use GuzzleHttp\ClientInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Uid\Uuid;
 
@@ -49,18 +47,18 @@ class ReliefWebFilesCommands extends DrushCommands {
   protected $database;
 
   /**
-   * The HTTP client factory.
-   *
-   * @var \Drupal\Core\Http\ClientFactory
-   */
-  protected $httpClientFactory;
-
-  /**
    * The state service.
    *
    * @var \Drupal\Core\State\StateInterface
    */
   protected $state;
+
+  /**
+   * The missing file downloader.
+   *
+   * @var \Drupal\reliefweb_files\Services\MissingFileDownloaderInterface
+   */
+  protected $missingFileDownloader;
 
   /**
    * {@inheritdoc}
@@ -71,14 +69,14 @@ class ReliefWebFilesCommands extends DrushCommands {
     EntityTypeManagerInterface $entity_type_manager,
     StateInterface $state,
     Connection $database,
-    ClientFactory $http_client_factory,
+    MissingFileDownloaderInterface $missing_file_downloader,
   ) {
     $this->fileSystem = $file_system;
     $this->fileDuplication = $file_duplication;
     $this->entityTypeManager = $entity_type_manager;
     $this->state = $state;
     $this->database = $database;
-    $this->httpClientFactory = $http_client_factory;
+    $this->missingFileDownloader = $missing_file_downloader;
   }
 
   /**
@@ -515,7 +513,7 @@ class ReliefWebFilesCommands extends DrushCommands {
     $limit = $options['limit'] ?? 0;
     $dry_run = $options['dry-run'] ?? FALSE;
     $chunk_size = $options['chunk-size'] ?? 50;
-    $timeout = $options['timeout'] ?? 30;
+    $timeout = $options['timeout'] ?? 60;
 
     $node_ids = [];
     if (!empty($options['ids'])) {
@@ -532,8 +530,7 @@ class ReliefWebFilesCommands extends DrushCommands {
       $logger->notice("DRY RUN MODE - No files will be downloaded");
     }
 
-    // Get missing files from database.
-    $missing_files = $this->getMissingFiles($limit, $node_ids);
+    $missing_files = $this->missingFileDownloader->findMissingFiles($node_ids, $limit);
     $total_files = count($missing_files);
 
     if ($total_files === 0) {
@@ -543,25 +540,21 @@ class ReliefWebFilesCommands extends DrushCommands {
 
     $logger->info("Found $total_files missing files to download");
 
-    // Create HTTP client.
-    $http_client = $this->httpClientFactory->fromOptions([
-      'timeout' => $timeout,
-      'headers' => [
-        'User-Agent' => 'ReliefWeb-Files-Downloader/1.0',
-      ],
-    ]);
-
     $downloaded = 0;
     $failed = 0;
     $skipped = 0;
 
-    // Process files in chunks.
     $chunks = array_chunk($missing_files, $chunk_size);
     foreach ($chunks as $chunk_index => $chunk) {
       $logger->info("Processing chunk " . ($chunk_index + 1) . "/" . count($chunks) . " (" . count($chunk) . " files)");
 
       foreach ($chunk as $file_data) {
-        $result = $this->downloadFile($http_client, $source_url, $file_data, $dry_run);
+        $result = $this->missingFileDownloader->downloadFile(
+          $file_data,
+          $source_url,
+          $dry_run,
+          $timeout,
+        );
         switch ($result) {
           case 'downloaded':
             $downloaded++;
@@ -577,238 +570,11 @@ class ReliefWebFilesCommands extends DrushCommands {
         }
       }
 
-      // Progress update.
       $processed = $downloaded + $failed + $skipped;
       $logger->info("Progress: $processed/$total_files files processed (downloaded: $downloaded, failed: $failed, skipped: $skipped)");
     }
 
-    // Final summary.
     $logger->success("Download completed! Downloaded: $downloaded, Failed: $failed, Skipped: $skipped");
-  }
-
-  /**
-   * Get list of files that are missing on disk.
-   *
-   * @param int $limit
-   *   Maximum number of files to return.
-   * @param array $node_ids
-   *   Report node IDs to limit the query to. Empty for all reports.
-   *
-   * @return array
-   *   Array of file data with uuid, filename, filemime, uri, and expected path.
-   */
-  protected function getMissingFiles(int $limit = 0, array $node_ids = []): array {
-    $query = $this->database->select('node__field_file', 'nff')
-      ->fields('fm', ['uuid', 'filename', 'filemime', 'uri'])
-      ->condition('nff.bundle', 'report', '=')
-      ->distinct();
-
-    if (!empty($node_ids)) {
-      $query->condition('nff.entity_id', $node_ids, 'IN');
-    }
-
-    // Join with file_managed table to get file data from UUIDs.
-    $query->join('file_managed', 'fm', 'nff.field_file_file_uuid = fm.uuid');
-    $query->orderBy('fm.fid', 'DESC');
-
-    // Don't apply limit here - we need to check all files first to find missing
-    // ones.
-    $results = $query->execute()->fetchAll();
-    $missing_files = [];
-
-    foreach ($results as $result) {
-      $uuid = $result->uuid;
-      $filename = $result->filename;
-      $filemime = $result->filemime;
-      $uri = $result->uri;
-
-      // Skip if we don't have essential data.
-      if (empty($uuid) || empty($filename) || empty($uri)) {
-        continue;
-      }
-
-      // Get expected file path based on the URI from the database.
-      $expected_path = $this->getExpectedPathFromUri($uri);
-
-      // Check if file exists on disk.
-      if (!file_exists($expected_path)) {
-        $extension = ReliefWebFile::extractFileExtension($filename);
-        $missing_files[] = [
-          'uuid' => $uuid,
-          'filename' => $filename,
-          'filemime' => $filemime,
-          'uri' => $uri,
-          'extension' => $extension,
-          'expected_path' => $expected_path,
-        ];
-
-        // Apply limit after finding missing files.
-        if ($limit > 0 && count($missing_files) >= $limit) {
-          break;
-        }
-      }
-    }
-
-    return $missing_files;
-  }
-
-  /**
-   * Get the expected file path from a URI.
-   *
-   * @param string $uri
-   *   File URI.
-   *   Ex: public://attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf.
-   *
-   * @return string
-   *   Expected file path on disk.
-   */
-  protected function getExpectedPathFromUri(string $uri): string {
-    // Extract the file path from the URI and construct the full path. The URI
-    // public://attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf
-    // would become /srv/www/html/sites/default/files/attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf.
-    $file_path = preg_replace('#^[^:]+://#', '', $uri);
-    $base_path = $this->fileSystem->realpath('public://');
-    return $base_path . '/' . $file_path;
-  }
-
-  /**
-   * Get the expected file path for a file based on its UUID and extension.
-   *
-   * @param string $uuid
-   *   File UUID.
-   * @param string $extension
-   *   File extension.
-   *
-   * @return string
-   *   Expected file path.
-   */
-  protected function getExpectedFilePath(string $uuid, string $extension): string {
-    $file_directory = ReliefWebFile::getFileDirectory();
-    $base_path = $this->fileSystem->realpath('public://');
-    $directory = $base_path . '/' . $file_directory . '/' . substr($uuid, 0, 2) . '/' . substr($uuid, 2, 2);
-    return $directory . '/' . $uuid . '.' . $extension;
-  }
-
-  /**
-   * Convert a file URI to a source URL.
-   *
-   * @param string $uri
-   *   File URI.
-   *   Ex: public://attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf.
-   * @param string $source_url
-   *   Base source URL (e.g., https://reliefweb.int).
-   *
-   * @return string
-   *   Full source URL for the file.
-   */
-  protected function convertUriToUrl(string $uri, string $source_url): string {
-    // Extract the file path from the URI. The URI
-    // public://attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf
-    // would become attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf.
-    $file_path = preg_replace('#^[^:]+://#', '', $uri);
-
-    // Construct the full URL.
-    // https://reliefweb.int/sites/default/files/attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf
-    return $source_url . '/sites/default/files/' . $file_path;
-  }
-
-  /**
-   * Download a single file from the source URL.
-   *
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   HTTP client.
-   * @param string $source_url
-   *   Source URL base.
-   * @param array $file_data
-   *   File data array.
-   * @param bool $dry_run
-   *   Whether this is a dry run.
-   *
-   * @return string
-   *   Result: 'downloaded', 'failed', or 'skipped'.
-   */
-  protected function downloadFile(
-    ClientInterface $http_client,
-    string $source_url,
-    array $file_data,
-    bool $dry_run = FALSE,
-  ): string {
-    $logger = $this->logger();
-    $filename = $file_data['filename'];
-    $uri = $file_data['uri'];
-    $expected_path = $file_data['expected_path'];
-
-    // Convert the URI to the source URL. The URI
-    // public://attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf
-    // would become https://reliefweb.int/sites/default/files/attachments/f8/93/f893a4c6-dbb7-4890-a9ab-a0722d71ef95.pdf.
-    $source_file_url = $this->convertUriToUrl($uri, $source_url);
-
-    if ($dry_run) {
-      $logger->notice("Would download: $filename from $source_file_url to $expected_path");
-      return 'skipped';
-    }
-
-    try {
-      // Create directory if it doesn't exist.
-      $directory = dirname($expected_path);
-      if (empty($directory)) {
-        $logger->error("Invalid directory path for file: $filename");
-        return 'failed';
-      }
-
-      if (!$this->fileSystem->prepareDirectory($directory, $this->fileSystem::CREATE_DIRECTORY)) {
-        $logger->error("Failed to create directory: $directory");
-        return 'failed';
-      }
-
-      // Download the file.
-      $response = $http_client->get($source_file_url, [
-        'sink' => $expected_path,
-      ]);
-
-      if ($response->getStatusCode() === 200) {
-        // Verify the file was actually downloaded and has content.
-        if (file_exists($expected_path) && filesize($expected_path) > 0) {
-          $logger->info("Downloaded: $filename (" . filesize($expected_path) . " bytes)");
-          return 'downloaded';
-        }
-        else {
-          $logger->error("Downloaded file is empty or doesn't exist: $filename");
-          return 'failed';
-        }
-      }
-      elseif ($response->getStatusCode() === 404) {
-        // Remove any empty file that might have been created by the sink
-        // option.
-        if (file_exists($expected_path)) {
-          @unlink($expected_path);
-        }
-        $logger->notice("File not found on server (404): $filename - skipping");
-        return 'skipped';
-      }
-      else {
-        $logger->error("Failed to download $filename: HTTP " . $response->getStatusCode());
-        return 'failed';
-      }
-    }
-    catch (RequestException $exception) {
-      // Check if it's a 404 error.
-      if ($exception->hasResponse() && $exception->getResponse()->getStatusCode() === 404) {
-        // Remove any empty file that might have been created by the sink
-        // option.
-        if (file_exists($expected_path)) {
-          @unlink($expected_path);
-        }
-        $logger->notice("File not found on server (404): $filename - skipping");
-        return 'skipped';
-      }
-      $logger->error("Failed to download $filename: " . $exception->getMessage());
-      return 'failed';
-    }
-    catch (\Exception $exception) {
-      $logger->error("Unexpected error downloading $filename: " . $exception->getMessage());
-      return 'failed';
-    }
   }
 
   /**

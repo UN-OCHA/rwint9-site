@@ -1,5 +1,5 @@
 _core:
-  default_config_hash: ckusuYiKT6X2b5Y1Jvj-bbK9NtPZq2-vfEsLWZtBB6M
+  default_config_hash: iLOA7Aahd4c5bWT_oyGSdj7qOQsjanxAfo0J3k2mAF8
 report_series_matching:
   workflow:
     automation_enabled_form_created: true
@@ -30,7 +30,7 @@ report_series_matching:
     field_outcome_policies:
       field_primary_country:
         most_recent: max_low
-        merged: max_medium
+        merged: max_low
         skipped: max_low
       field_content_format:
         most_recent: max_low
@@ -49,8 +49,8 @@ report_series_matching:
         merged: none
         skipped: none
       field_disaster:
-        most_recent: max_medium
-        merged: max_medium
+        most_recent: max_low
+        merged: max_low
         skipped: none
       field_disaster_type:
         most_recent: max_medium
@@ -76,9 +76,7 @@ report_series_matching:
     ai_title_generation_enabled: true
     ai_title_source_length_limit: 2000
     ai_title_example_line_count: 5
-    ai_title_description_template: |-
-      Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:
-      @examples
+    ai_title_description_template: "Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:\r\n@examples"
     ai_title_inference:
       plugin_id: aws_bedrock_nova_lite_v1
       temperature: 0.0
@@ -110,3 +108,6 @@ report_series_matching:
       - field_theme
       - field_disaster
       - field_disaster_type
+  testing:
+    download_missing_attachment: true
+    download_missing_attachment_source_url: 'https://reliefweb.int'

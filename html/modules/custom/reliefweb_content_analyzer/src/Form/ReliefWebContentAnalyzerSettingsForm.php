@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_content_analyzer\Form;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
 use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
@@ -69,6 +70,10 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $matching = $config->get('report_series_matching');
     $workflow = $matching['workflow'];
     $matcher = $matching['matcher'];
+    $testing = $matching['testing'] ?? [
+      'download_missing_attachment' => TRUE,
+      'download_missing_attachment_source_url' => 'https://reliefweb.int',
+    ];
     $moderation_options = $this->reportModeration->getStatuses();
 
     $form['report_series_matching'] = [
@@ -496,7 +501,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $matcher['candidate_clustering_tagging_weight'],
       '#min' => 0,
       '#max' => 1,
-      '#step' => 0.01,
+      '#step' => 'any',
       '#required' => TRUE,
     ];
 
@@ -506,7 +511,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $matcher['candidate_clustering_title_weight'],
       '#min' => 0,
       '#max' => 1,
-      '#step' => 0.01,
+      '#step' => 'any',
       '#required' => TRUE,
     ];
 
@@ -526,7 +531,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $matcher['cluster_scoring_size_weight'],
       '#min' => 0,
       '#max' => 1,
-      '#step' => 0.01,
+      '#step' => 'any',
       '#required' => TRUE,
     ];
 
@@ -536,7 +541,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $matcher['cluster_scoring_pattern_score_weight'],
       '#min' => 0,
       '#max' => 1,
-      '#step' => 0.01,
+      '#step' => 'any',
       '#required' => TRUE,
     ];
 
@@ -546,7 +551,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $matcher['cluster_scoring_tagging_consistency_weight'],
       '#min' => 0,
       '#max' => 1,
-      '#step' => 0.01,
+      '#step' => 'any',
       '#required' => TRUE,
     ];
 
@@ -573,6 +578,33 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#default_value' => $this->sequenceToLines($matcher['report_entity_field_names_to_copy']),
       '#rows' => 6,
       '#required' => TRUE,
+    ];
+
+    $form['testing'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Series match testing'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+      '#description' => $this->t('Options used only by the series match test form. Downloads are skipped when the source URL host matches the current site host.'),
+    ];
+
+    $form['testing']['download_missing_attachment'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Download missing attachment before running match'),
+      '#description' => $this->t('When enabled, the series match test form downloads the report’s first attachment from the source URL if it is missing locally (needed for AI title generation).'),
+      '#default_value' => $testing['download_missing_attachment'] ?? TRUE,
+    ];
+
+    $form['testing']['download_missing_attachment_source_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Attachment download source URL'),
+      '#default_value' => $testing['download_missing_attachment_source_url'] ?? 'https://reliefweb.int',
+      '#description' => $this->t('Base URL used to fetch missing attachments (e.g. https://reliefweb.int).'),
+      '#states' => [
+        'required' => [
+          ':input[name="testing[download_missing_attachment]"]' => ['checked' => TRUE],
+        ],
+      ],
     ];
 
     return parent::buildForm($form, $form_state);
@@ -707,6 +739,15 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
         );
       }
     }
+
+    $download_enabled = (bool) $form_state->getValue(['testing', 'download_missing_attachment']);
+    $source_url = trim((string) $form_state->getValue(['testing', 'download_missing_attachment_source_url']));
+    if ($download_enabled && ($source_url === '' || parse_url($source_url, PHP_URL_HOST) === NULL)) {
+      $form_state->setErrorByName(
+        'testing][download_missing_attachment_source_url',
+        $this->t('A valid attachment download source URL is required when download is enabled.'),
+      );
+    }
   }
 
   /**
@@ -797,6 +838,16 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'report_entity_field_names_to_copy' => $this->linesToSequence((string) $matcher_values['report_entity_field_names_to_copy']),
     ]);
 
+    $testing_values = $form_state->getValue('testing') ?? [];
+    $source_url = rtrim(trim((string) ($testing_values['download_missing_attachment_source_url'] ?? '')), '/');
+    if ($source_url === '') {
+      $source_url = 'https://reliefweb.int';
+    }
+    $config->set('report_series_matching.testing', [
+      'download_missing_attachment' => (bool) ($testing_values['download_missing_attachment'] ?? FALSE),
+      'download_missing_attachment_source_url' => $source_url,
+    ]);
+
     $config->save();
     parent::submitForm($form, $form_state);
   }
@@ -808,13 +859,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
    *   The form state.
    * @param string[] $parents
    *   Form value parents for the element being validated.
-   * @param string $message
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
    *   Error message when the value is out of range.
    */
   private function validateUnitInterval(
     FormStateInterface $form_state,
     array $parents,
-    string $message,
+    string|TranslatableMarkup $message,
   ): void {
     $value = (float) $form_state->getValue($parents);
     if ($value < 0 || $value > 1) {
@@ -829,13 +880,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
    *   The form state.
    * @param string[] $parents
    *   Form value parents for the tier mapping.
-   * @param string $message
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
    *   Error message when high tier is not greater than medium.
    */
   private function validateTierPair(
     FormStateInterface $form_state,
     array $parents,
-    string $message,
+    string|TranslatableMarkup $message,
   ): void {
     $range_message = $this->t('Tier thresholds must be between 0 and 1.');
     foreach (['high', 'medium'] as $tier) {

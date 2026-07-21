@@ -212,3 +212,13 @@ reliefweb_content_analyzer.settings:
               sequence:
                 type: string
                 label: 'Field machine name'
+        testing:
+          type: mapping
+          label: 'Series match testing settings'
+          mapping:
+            download_missing_attachment:
+              type: boolean
+              label: 'Download missing first attachment before series match test form runs'
+            download_missing_attachment_source_url:
+              type: string
+              label: 'Source URL for downloading missing attachments'
