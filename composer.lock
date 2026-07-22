@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f5792c06b9f8189dac987270d6ce1e30",
+    "content-hash": "dc2cca2e01007841ee90f7448adc3e8e",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3424,11 +3424,17 @@
         },
         {
             "name": "drupal/mimemail",
-            "version": "dev-2.0.x",
+            "version": "2.0.3",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/mimemail.git",
-                "reference": "8bae776d"
+                "reference": "2.0.3"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://ftp.drupal.org/files/projects/mimemail-2.0.3.zip",
+                "reference": "2.0.3",
+                "shasum": "133e81946ec4815451eb25794fd9256d9c5c226a"
             },
             "require": {
                 "drupal/core": "^10.3 || ^11 || ^12",
@@ -3439,15 +3445,12 @@
             },
             "type": "drupal-module",
             "extra": {
-                "branch-alias": {
-                    "dev-2.0.x": "2.0.x-dev"
-                },
                 "drupal": {
-                    "version": "2.0.2+2-dev",
-                    "datestamp": "1782504041",
+                    "version": "2.0.3",
+                    "datestamp": "1782504338",
                     "security-coverage": {
-                        "status": "not-covered",
-                        "message": "Dev releases are not covered by Drupal security advisories."
+                        "status": "covered",
+                        "message": "Covered by Drupal's security advisory policy"
                     }
                 }
             },
@@ -3474,17 +3477,17 @@
         },
         {
             "name": "drupal/monitoring",
-            "version": "1.21.0",
+            "version": "1.22.0",
             "source": {
                 "type": "git",
                 "url": "https://git.drupalcode.org/project/monitoring.git",
-                "reference": "8.x-1.21"
+                "reference": "8.x-1.22"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://ftp.drupal.org/files/projects/monitoring-8.x-1.21.zip",
-                "reference": "8.x-1.21",
-                "shasum": "ef720b3b8241caaf33a8603142d87dc06621a596"
+                "url": "https://ftp.drupal.org/files/projects/monitoring-8.x-1.22.zip",
+                "reference": "8.x-1.22",
+                "shasum": "c180420b0cd47891b2fa807e9f184f3d96016c1b"
             },
             "require": {
                 "drupal/core": "^10.2 || ^11"
@@ -3507,8 +3510,8 @@
             "type": "drupal-module",
             "extra": {
                 "drupal": {
-                    "version": "8.x-1.21",
-                    "datestamp": "1772397996",
+                    "version": "8.x-1.22",
+                    "datestamp": "1783583997",
                     "security-coverage": {
                         "status": "covered",
                         "message": "Covered by Drupal's security advisory policy"
@@ -20389,14 +20392,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/aws": 20,
-        "drupal/components": 10,
-        "drupal/config_split": 5,
-        "drupal/imageapi_optimize": 10,
         "drupal/imageapi_optimize_binaries": 10,
-        "drupal/inline_entity_form": 5,
-        "drupal/mimemail": 20,
         "drupal/openid_connect_windows_aad": 10,
-        "drupal/social_auth_account_verification": 5,
         "drupal/webhooks": 15,
         "phpcompatibility/php-compatibility": 15
     },
