@@ -211,10 +211,6 @@ class InactiveUserDeletionService implements InactiveUserDeletionServiceInterfac
       $subquery->where('[m].[uid] = [ufd].[uid]');
     });
 
-    $this->addNotExistsSubquery($query, 'guideline_field_data', 'g', static function (SelectInterface $subquery): void {
-      $subquery->where('[g].[user_id] = [ufd].[uid]');
-    });
-
     return $query;
   }
 
