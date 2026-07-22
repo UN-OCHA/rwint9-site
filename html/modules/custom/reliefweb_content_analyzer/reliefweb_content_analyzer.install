@@ -1,0 +1,158 @@
+<?php
+
+/**
+ * @file
+ * Install file for the reliefweb_content_analyzer module.
+ */
+
+declare(strict_types=1);
+
+/**
+ * Implements hook_schema().
+ *
+ * Defines the reliefweb_report_series_match table for fresh installs.
+ */
+function reliefweb_content_analyzer_schema(): array {
+  $schema['reliefweb_report_series_match'] = [
+    'description' => 'Records successful report series matching on entity creation.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'entity_type_id' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'bundle' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'revision_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'series_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'tagging_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'data' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'entity' => ['entity_type_id', 'entity_id'],
+    ],
+    'indexes' => [
+      'created' => ['created'],
+      'series_confidence' => ['series_confidence'],
+      'tagging_confidence' => ['tagging_confidence'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add default field and global outcome policies to existing settings.
+ */
+function reliefweb_content_analyzer_update_10001(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $workflow = $config->get('report_series_matching.workflow') ?? [];
+
+  if (empty($workflow['field_outcome_policies'])) {
+    $workflow['field_outcome_policies'] = [
+      'field_primary_country' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_medium',
+        'skipped' => 'max_low',
+      ],
+      'field_content_format' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_low',
+        'skipped' => 'max_low',
+      ],
+      'field_country' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_language' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'max_medium',
+      ],
+      'field_theme' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+      'field_disaster' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_disaster_type' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+    ];
+  }
+
+  if (empty($workflow['global_outcome_rules'])) {
+    $workflow['global_outcome_rules'] = [
+      'empty_body_when_series_has_body' => [
+        'enabled' => TRUE,
+        'series_body_threshold' => 0.5,
+        'action' => 'max_medium',
+      ],
+      'title_ai_failed_or_skipped' => [
+        'enabled' => TRUE,
+        'action' => 'max_medium',
+      ],
+      'low_series_confidence_with_mismatch' => [
+        'enabled' => TRUE,
+        'max_best_cluster_share' => 0.5,
+        'min_cluster_count' => 2,
+        'action' => 'skip_match',
+      ],
+    ];
+  }
+
+  $config->set('report_series_matching.workflow', $workflow)->save();
+}

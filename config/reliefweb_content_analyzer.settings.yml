@@ -1,0 +1,113 @@
+_core:
+  default_config_hash: iLOA7Aahd4c5bWT_oyGSdj7qOQsjanxAfo0J3k2mAF8
+report_series_matching:
+  workflow:
+    automation_enabled_form_created: true
+    automation_enabled_imported: true
+    minimum_series_confidence: 0.65
+    minimum_tagging_confidence: 0.4
+    series_confidence_tiers:
+      high: 0.8
+      medium: 0.6
+    tagging_confidence_tiers:
+      high: 0.8
+      medium: 0.6
+    moderation_by_outcome_tier:
+      low: pending
+      medium: to-review
+      high: published
+    skip_series_match_moderation_statuses:
+      - refused
+    restrictiveness_order:
+      - refused
+      - draft
+      - on-hold
+      - pending
+      - to-review
+      - embargoed
+      - reference
+      - published
+    field_outcome_policies:
+      field_primary_country:
+        most_recent: max_low
+        merged: max_low
+        skipped: max_low
+      field_content_format:
+        most_recent: max_low
+        merged: max_low
+        skipped: max_low
+      field_country:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: none
+      field_language:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: max_medium
+      field_theme:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+      field_disaster:
+        most_recent: max_low
+        merged: max_low
+        skipped: none
+      field_disaster_type:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+    global_outcome_rules:
+      empty_body_when_series_has_body:
+        enabled: true
+        series_body_threshold: 0.5
+        action: max_medium
+      title_ai_failed_or_skipped:
+        enabled: true
+        action: max_medium
+      low_series_confidence_with_mismatch:
+        enabled: true
+        max_best_cluster_share: 0.5
+        min_cluster_count: 2
+        action: skip_match
+  matcher:
+    minimum_series_report_count: 3
+    series_candidate_date_range_months: 18
+    series_candidate_limit: 30
+    ai_title_generation_enabled: true
+    ai_title_source_length_limit: 2000
+    ai_title_example_line_count: 5
+    ai_title_description_template: "Extract the title of the document and rewrite it to match the naming style of these example titles from the same report series:\r\n@examples"
+    ai_title_inference:
+      plugin_id: aws_bedrock_nova_lite_v1
+      temperature: 0.0
+      top_p: 0.9
+      max_tokens: 512
+      thinking_mode: none
+      system_prompt: 'Generate a title for this humanitarian report that matches the series naming style shown in the structured output schema. Use the `structured_output` tool.'
+    pattern_token_counts:
+      - 10
+      - 8
+      - 6
+      - 4
+    candidate_clustering_tagging_weight: 0.5
+    candidate_clustering_title_weight: 0.5
+    candidate_clustering_similarity_threshold: 0.6
+    cluster_scoring_size_weight: 0.3333333333
+    cluster_scoring_pattern_score_weight: 0.3333333333
+    cluster_scoring_tagging_consistency_weight: 0.3333333333
+    cluster_comparison_field_names:
+      - field_primary_country
+      - field_content_format
+      - field_language
+    recency_field_name: field_original_publication_date
+    report_entity_field_names_to_copy:
+      - field_primary_country
+      - field_country
+      - field_language
+      - field_content_format
+      - field_theme
+      - field_disaster
+      - field_disaster_type
+  testing:
+    download_missing_attachment: true
+    download_missing_attachment_source_url: 'https://reliefweb.int'

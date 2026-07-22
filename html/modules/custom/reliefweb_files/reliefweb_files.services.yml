@@ -1,11 +1,32 @@
 services:
   reliefweb_files.client:
     class: Drupal\reliefweb_files\Services\DocstoreClient
-    arguments: ['@config.factory', '@http_client', '@logger.factory']
+    arguments:
+      - '@config.factory'
+      - '@http_client'
+      - '@logger.factory'
   reliefweb_files.file_duplication:
     class: Drupal\reliefweb_files\Services\ReliefWebFileDuplication
-    arguments: ['@state', '@config.factory', '@http_client', '@logger.factory', '@database', '@entity_type.manager', '@file_system', '@current_user']
+    arguments:
+      - '@state'
+      - '@config.factory'
+      - '@http_client'
+      - '@logger.factory'
+      - '@database'
+      - '@entity_type.manager'
+      - '@file_system'
+      - '@current_user'
+  reliefweb_files.missing_file_downloader:
+    class: Drupal\reliefweb_files\Services\MissingFileDownloader
+    arguments:
+      - '@file_system'
+      - '@database'
+      - '@http_client_factory'
+      - '@request_stack'
+      - '@logger.factory'
   reliefweb_files.route_subscriber:
     class: Drupal\reliefweb_files\Routing\RouteSubscriber
+    arguments:
+      - '@config.factory'
     tags:
       - { name: event_subscriber }

@@ -38,6 +38,7 @@ dependencies:
     - path
     - reliefweb_anti_spam
     - reliefweb_bookmarks
+    - reliefweb_content_analyzer
     - reliefweb_entities
     - reliefweb_fields
     - reliefweb_files
@@ -68,6 +69,7 @@ permissions:
   - 'access reliefweb links field validation'
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
+  - 'access report series matching'
   - 'access user contact forms'
   - 'access user profiles'
   - 'add content to books'

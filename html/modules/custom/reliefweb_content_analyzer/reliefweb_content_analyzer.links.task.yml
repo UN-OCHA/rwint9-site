@@ -1,0 +1,5 @@
+reliefweb_content_analyzer.report_series_match:
+  route_name: reliefweb_content_analyzer.report_series_match
+  title: 'Report series matching'
+  base_route: entity.node.canonical
+  weight: 52

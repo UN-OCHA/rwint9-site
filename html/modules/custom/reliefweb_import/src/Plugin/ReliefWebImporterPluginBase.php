@@ -591,9 +591,12 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Skip if classification is not enabled for this plugin.
+    // Skip if classification is not enabled for this plugin. When enabled,
+    // leave $skip unchanged so other modules (e.g. series matching) can skip.
     $setting = $this->getPluginSetting('classification.enabled', FALSE, FALSE);
-    $skip = empty($setting);
+    if (empty($setting)) {
+      $skip = TRUE;
+    }
   }
 
   /**

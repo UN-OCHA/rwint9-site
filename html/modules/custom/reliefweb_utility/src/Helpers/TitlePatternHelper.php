@@ -378,6 +378,9 @@ class TitlePatternHelper {
       // Day + month name + year: "27 April 2026", "le 1er avril 2026".
       '/\b' . $optional_le . $optional_fi . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
+      // Month range + year: "Jan-Mar 2026", "October - December 2025".
+      '/\b(?:' . $months . ')\s*[-–—]\s*(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
+
       // Month name + year: "December 2025", "diciembre de 2025".
       '/\b(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 

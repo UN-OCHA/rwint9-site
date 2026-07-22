@@ -77,6 +77,26 @@ class TitlePatternHelperTest extends UnitTestCase {
         'Monthly Situation Report',
         'Monthly Situation Report',
       ],
+      'english abbreviated month range' => [
+        'Ukraine Operation Overview, Jan-Mar 2026',
+        'Ukraine Operation Overview, %',
+      ],
+      'english mixed month range' => [
+        'Ukraine Operation Overview, Jan-March 2026',
+        'Ukraine Operation Overview, %',
+      ],
+      'english full month range spaced' => [
+        'Ukraine Operation Overview, October - December 2025',
+        'Ukraine Operation Overview, %',
+      ],
+      'english full month range no spaces' => [
+        'Ukraine Operation Overview, October-December 2025',
+        'Ukraine Operation Overview, %',
+      ],
+      'french month range' => [
+        'Aperçu opérationnel, janvier - mars 2026',
+        'Aperçu opérationnel, %',
+      ],
     ];
   }
 

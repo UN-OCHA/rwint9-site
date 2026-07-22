@@ -1,0 +1,30 @@
+reliefweb_content_analyzer.settings:
+  path: '/admin/config/content/reliefweb-content-analyzer'
+  defaults:
+    _form: '\Drupal\reliefweb_content_analyzer\Form\ReliefWebContentAnalyzerSettingsForm'
+    _title: 'ReliefWeb content analyzer'
+  requirements:
+    _permission: 'administer reliefweb content analyzer settings'
+
+reliefweb_content_analyzer.report_series_match_log:
+  path: '/admin/content/report-series-match-log'
+  defaults:
+    _controller: '\Drupal\reliefweb_content_analyzer\Controller\ReportSeriesMatchLogController::overview'
+    _title: 'Report series match log'
+  requirements:
+    _permission: 'view report series match log'
+
+reliefweb_content_analyzer.report_series_match:
+  path: '/node/{node}/report-series-match'
+  defaults:
+    _form: '\Drupal\reliefweb_content_analyzer\Form\ReportSeriesMatchForm'
+    _title: 'Report series matching'
+  requirements:
+    _permission: 'access report series matching'
+    _entity_access: 'node.update'
+    _entity_bundles: 'node:report'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
