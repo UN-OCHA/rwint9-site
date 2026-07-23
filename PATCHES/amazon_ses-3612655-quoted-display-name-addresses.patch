@@ -1,0 +1,58 @@
+--- a/src/MessageBuilder.php
++++ b/src/MessageBuilder.php
+@@ -27,7 +27,7 @@
+    * {@inheritdoc}
+    */
+   public function buildMessage(array $message) {
+-    $to = preg_split('/[,;]/', $message['to']);
++    $to = $this->splitAddresses($message['to']);
+
+     $from = $this->parseAddress($message['from']);
+     $from_address = new Address($from['address'], $from['name']);
+@@ -49,7 +49,7 @@
+           $cc_addresses = $message['headers']['Cc'];
+         }
+         else {
+-          $cc_addresses = preg_split('/[,;]/', $message['headers']['Cc']);
++          $cc_addresses = $this->splitAddresses($message['headers']['Cc']);
+         }
+
+         $email->cc(...$cc_addresses);
+@@ -60,7 +60,7 @@
+           $bcc_addresses = $message['headers']['Bcc'];
+         }
+         else {
+-          $bcc_addresses = preg_split('/[,;]/', $message['headers']['Bcc']);
++          $bcc_addresses = $this->splitAddresses($message['headers']['Bcc']);
+         }
+
+         $email->bcc(...$bcc_addresses);
+@@ -109,6 +109,28 @@
+     }
+
+     return $email;
++  }
++
++  /**
++   * Split a mailbox-list into individual addresses.
++   *
++   * Unlike a naive split on commas/semicolons, this preserves separators
++   * inside quoted display names, e.g. `"John Doe, MPH" <user@example.com>`.
++   *
++   * @param string $addresses
++   *   A mailbox-list string (To, Cc, or Bcc).
++   *
++   * @return array
++   *   A list of individual address strings.
++   */
++  protected function splitAddresses(string $addresses): array {
++    // Split on commas/semicolons only when not inside double quotes.
++    // @see \Drupal\Core\Mail\Plugin\Mail\SymfonyMailer::mail() which uses
++    // str_getcsv() for the same reason.
++    // A regex is used instead of str_getcsv() so both "," and ";" remain valid
++    // address separators, matching the previous preg_split('/[,;]/') behavior.
++    $parts = preg_split('/[,;](?=(?:[^"]*"[^"]*")*[^"]*$)/', $addresses) ?: [];
++    return array_values(array_filter(array_map('trim', $parts)));
+   }
+
+   /**
