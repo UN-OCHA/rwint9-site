@@ -147,9 +147,10 @@ function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, A
     return AccessResult::forbidden();
   }
 
-  // Administrators always have access.
-  if ($account->id() == 1 || in_array('administrator', $account->getRoles())) {
-    return AccessResult::allowed();
+  /** @var \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker $access_checker */
+  $access_checker = \Drupal::service('reliefweb_guidelines.access_checker');
+  if ($access_checker->userCanViewAnyGuidelineContent($account)) {
+    return AccessResult::allowed()->cachePerPermissions();
   }
 
   // If the file is not permanent (e.g., during upload/validation), return
@@ -160,25 +161,9 @@ function reliefweb_guidelines_file_access(EntityInterface $entity, $operation, A
     return AccessResult::neutral();
   }
 
-  $database = \Drupal::database();
-  $user_roles = $account->getRoles();
-
-  $query = $database->select('file_managed', 'fm');
-  $query->fields('fm', ['fid']);
-  $query->condition('fm.uri', $uri);
-
-  // Find the guideline node the image is attached to.
-  $query->join('node__field_images', 'gfi', 'gfi.field_images_target_id = fm.fid');
-
-  // Find the guideline_list term the guideline is attached to.
-  $query->join('node__field_guideline_list', 'ggl', 'ggl.entity_id = gfi.entity_id');
-
-  // Check if the current user has access to the guideline_list term.
-  $query->join('taxonomy_term__field_role', 'gfr', 'gfr.entity_id = ggl.field_guideline_list_target_id');
-  $query->condition('gfr.field_role_target_id', $user_roles, 'IN');
-
-  $result = $query->countQuery()->execute()?->fetchField() ?? 0;
-  return $result > 0 ? AccessResult::allowed() : AccessResult::forbidden();
+  return $access_checker->userCanAccessGuidelineFile($entity, $account)
+    ? AccessResult::allowed()->cachePerPermissions()
+    : AccessResult::forbidden()->cachePerPermissions();
 }
 
 /**

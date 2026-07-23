@@ -19,6 +19,44 @@ use Drupal\reliefweb_moderation\ModerationServiceBase;
 class GuidelineModeration extends ModerationServiceBase {
 
   /**
+   * The guideline access checker.
+   *
+   * @var \Drupal\reliefweb_guidelines\Services\GuidelineAccessChecker
+   */
+  protected GuidelineAccessChecker $accessChecker;
+
+  /**
+   * {@inheritdoc}
+   */
+  public function __construct(
+    $current_user,
+    $database,
+    $date_formatter,
+    $entity_field_manager,
+    $entity_type_manager,
+    $pager_manager,
+    $pager_parameters,
+    $request_stack,
+    $string_translation,
+    $user_posting_rights_manager,
+    GuidelineAccessChecker $access_checker,
+  ) {
+    parent::__construct(
+      $current_user,
+      $database,
+      $date_formatter,
+      $entity_field_manager,
+      $entity_type_manager,
+      $pager_manager,
+      $pager_parameters,
+      $request_stack,
+      $string_translation,
+      $user_posting_rights_manager,
+    );
+    $this->accessChecker = $access_checker;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getBundle() {
@@ -209,42 +247,52 @@ class GuidelineModeration extends ModerationServiceBase {
    * {@inheritdoc}
    */
   public function entityAccess(EntityModeratedInterface $entity, string $operation = 'view', ?AccountInterface $account = NULL): AccessResultInterface {
+    if (!$entity instanceof Guideline) {
+      throw new \InvalidArgumentException('Entity must be a guideline node.');
+    }
+
     $account = $account ?: $this->currentUser;
-    $access = FALSE;
     $status = $entity->getModerationStatus();
     $viewable = $this->isViewableStatus($status, $account);
     $editable = $this->isEditableStatus($status, $account);
 
-    switch ($operation) {
-      case 'view':
-        if ($account->hasPermission('access editorial guidelines')) {
-          $access = $viewable || $account->hasPermission('view any guideline content');
-        }
-        break;
+    $access = match ($operation) {
+      'view' => match (TRUE) {
+        // Skip if the user is not allowed to access editorial guidelines.
+        !$this->accessChecker->userCanAccessEditorialGuidelines($account) => AccessResult::forbidden(),
+        // Allow if the user has permission to view any guideline content,
+        // regardless of status.
+        $this->accessChecker->userCanViewAnyGuidelineContent($account) => AccessResult::allowed(),
+        // Skip if the entity is not viewable.
+        !$viewable => AccessResult::forbidden(),
+        // Allow if the entity is accessible to the user, meaning that the user
+        // has a role that allows access to the guideline.
+        $this->accessChecker->isGuidelineAccessible($entity, $account) => AccessResult::allowed(),
+        // Otherwise, deny access.
+        default => AccessResult::forbidden(),
+      },
+      'view_moderation_information' => AccessResult::allowedIf(
+        $account->hasPermission('view moderation information') &&
+        $account->hasPermission('edit any guideline content')
+      ),
+      'update' => AccessResult::allowedIf(
+        $account->hasPermission('edit any guideline content') &&
+        $editable
+      ),
+      'delete' => AccessResult::allowedIf(
+        $account->hasPermission('delete any guideline content')
+      ),
+      // Revisions and other operations: defer to base.
+      default => parent::entityAccess($entity, $operation, $account),
+    };
 
-      case 'create':
-        $access = $account->hasPermission('create guideline content');
-        break;
-
-      case 'update':
-        $access = $account->hasPermission('edit any guideline content') && $editable;
-        break;
-
-      case 'delete':
-        $access = $account->hasPermission('delete any guideline content');
-        break;
-
-      case 'view_moderation_information':
-        if ($account->hasPermission('view moderation information')) {
-          $access = $account->hasPermission('edit any guideline content');
-        }
-        break;
-
-      default:
-        return AccessResult::neutral();
+    if ($access->isNeutral()) {
+      return $access;
     }
 
-    return $access ? AccessResult::allowed() : AccessResult::forbidden();
+    return $access
+      ->cachePerPermissions()
+      ->addCacheableDependency($entity);
   }
 
   /**

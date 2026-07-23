@@ -198,6 +198,7 @@ permissions:
   - 'view any content'
   - 'view blog_post revisions'
   - 'view book revisions'
+  - 'view editor guideline content'
   - 'view entity history'
   - 'view job moderation information'
   - 'view job revisions'

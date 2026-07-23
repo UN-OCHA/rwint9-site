@@ -1,5 +1,5 @@
 {
-    "_hash": "7d60964514da6162299f8d1c9f7692c6809e4d5cb595d75c49999f316b69a14d",
+    "_hash": "a8aff83568a0561c41322911fca843614b717f1d64ea2f12006dfa81b3957327",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -95,18 +95,6 @@
                 "description": "Drupal 11 compatibility",
                 "url": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch",
                 "sha256": "10e7faee8f6ba7673206fa74dfcda703b2c28546bacf742d138c9fa16d774ffe",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/monitoring": [
-            {
-                "package": "drupal/monitoring",
-                "description": "PHP 8.5 canonical cast compatibility",
-                "url": "PATCHES/monitoring--php85-canonical-cast.patch",
-                "sha256": "95c7190d958a30fc35f5adb939bf800ffd59b3c423f9041c46e8739b4bec2727",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
