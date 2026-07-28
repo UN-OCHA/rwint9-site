@@ -1,5 +1,5 @@
 {
-    "_hash": "a8aff83568a0561c41322911fca843614b717f1d64ea2f12006dfa81b3957327",
+    "_hash": "39b76cf344bdfc8bded36c818fb0358accf8e0c1cbdfd17a573f2b12a9424825",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -17,6 +17,16 @@
                 "description": "PHP warning in test form",
                 "url": "PATCHES/amazon_ses-3508814-test-form-fix.patch",
                 "sha256": "f5feba7fab1cd76827b5f2350c2a476f7be65fcc36c9196eecf7a97f114277c9",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            },
+            {
+                "package": "drupal/amazon_ses",
+                "description": "Preserve commas in quoted display names when splitting addresses",
+                "url": "PATCHES/amazon_ses-3612655-quoted-display-name-addresses.patch",
+                "sha256": "2dab2a29665eb0fab9f2731ce93355cfa5dc139c883797f0572da72cf64dd50e",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
