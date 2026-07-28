@@ -1354,7 +1354,14 @@ function reliefweb_entities_trigger_webhooks($event, $payload) {
       'application/json'
     );
 
-    $webhooks_service->send($webhook_config, $webhook);
+    try {
+      $webhooks_service->send($webhook_config, $webhook);
+    }
+    catch (\Throwable $exception) {
+      // Use error_log() during shutdown to avoid depending on Drupal services
+      // that may not be available anymore.
+      error_log('[reliefweb_entities] Error sending webhook: ' . $exception->getMessage());
+    }
   }
 }
 

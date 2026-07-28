@@ -164,6 +164,9 @@ class FileDownloadController extends OriginalFileDownloadController {
     if (!isset($file)) {
       throw new NotFoundHttpException();
     }
+    if (!file_exists($uri)) {
+      throw new NotFoundHttpException();
+    }
 
     // Retrieve the file headers and return the file content.
     // @todo review how to deal with the file caching to deal with file
