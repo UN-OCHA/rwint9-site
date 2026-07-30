@@ -83,6 +83,7 @@ jobs:
         id: aws-login
         uses: aws-actions/amazon-ecr-login@v2
         if: ${{ !env.ACT }}
+        with:
           registry-type: public
 
       - name: Build Image
