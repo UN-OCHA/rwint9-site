@@ -35,7 +35,7 @@ class ReliefWebImportSettingsForm extends ConfigFormBase {
     $form['user_agents'] = [
       '#type' => 'textarea',
       '#title' => $this->t('User agents for remote file downloads'),
-      '#description' => $this->t('One User-Agent string per line, tried in order until a file download returns HTTP 200. Leave empty if not configured (downloads will fail until set).'),
+      '#description' => $this->t('One User-Agent string per line, tried in order until a file download returns HTTP 200. Leave empty to use the default Drupal HTTP client User-Agent.'),
       '#default_value' => $config->get('user_agents') ?? '',
       '#rows' => 8,
     ];

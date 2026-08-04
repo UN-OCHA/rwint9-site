@@ -1187,21 +1187,24 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Remote file.
     try {
       $user_agents = $this->getRemoteFileUserAgents();
-      if (empty($user_agents)) {
-        throw new ReliefwebImportException('No user agents configured.');
-      }
 
       $this->throttleRemoteFileDownload();
 
       $response = NULL;
-      foreach ($user_agents as $index => $user_agent) {
-        [$response, $should_retry] = $this->requestRemoteFile($url, $user_agent);
+      // Empty list: one attempt with the default Drupal HTTP client User-Agent.
+      if ($user_agents === []) {
+        [$response] = $this->requestRemoteFile($url);
+      }
+      else {
+        foreach ($user_agents as $index => $user_agent) {
+          [$response, $should_retry] = $this->requestRemoteFile($url, $user_agent);
 
-        if ($should_retry && $index < count($user_agents) - 1) {
-          $this->sleepSeconds($this->getRemoteFileThrottleSetting('user_agent_retry_delay', 15));
-        }
-        else {
-          break;
+          if ($should_retry && $index < count($user_agents) - 1) {
+            $this->sleepSeconds($this->getRemoteFileThrottleSetting('user_agent_retry_delay', 15));
+          }
+          else {
+            break;
+          }
         }
       }
 
@@ -1289,7 +1292,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * Reads reliefweb_import.settings:user_agents (one per line).
    *
    * @return list<string>
-   *   Non-empty User-Agent strings in try order. Empty when not configured.
+   *   Non-empty User-Agent strings in try order. Empty means use the default
+   *   Drupal HTTP client User-Agent (do not override).
    */
   protected function getRemoteFileUserAgents(): array {
     $configured = (string) ($this->configFactory->get('reliefweb_import.settings')->get('user_agents') ?? '');
@@ -1367,8 +1371,9 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *
    * @param string $url
    *   Remote file URL.
-   * @param string $user_agent
-   *   User agent to use.
+   * @param string|null $user_agent
+   *   User agent to send, or NULL to keep the default Drupal HTTP client
+   *   User-Agent.
    * @param bool $stream
    *   Whether to use streaming. Defaults to TRUE.
    *
@@ -1379,7 +1384,15 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * @throws \GuzzleHttp\Exception\TransferException
    *   When a non-streaming attempt fails at the transport layer.
    */
-  protected function requestRemoteFile(string $url, string $user_agent, bool $stream = TRUE): array {
+  protected function requestRemoteFile(string $url, ?string $user_agent = NULL, bool $stream = TRUE): array {
+    $headers = [
+      'Accept' => '*/*',
+      'X-ReliefWeb-Import' => '2',
+    ];
+    if ($user_agent !== NULL && $user_agent !== '') {
+      $headers['User-Agent'] = $user_agent;
+    }
+
     try {
       $response = $this->httpClient->request('GET', $url, [
         // Avoid throwing on HTTP errors so we can inspect the status and try
@@ -1388,11 +1401,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
         'stream' => $stream,
         'connect_timeout' => 30,
         'timeout' => 600,
-        'headers' => [
-          'User-Agent' => $user_agent,
-          'Accept' => '*/*',
-          'X-ReliefWeb-Import' => '2',
-        ],
+        'headers' => $headers,
       ]);
     }
     catch (TransferException $exception) {
@@ -1415,12 +1424,14 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     // Close non-success bodies before retrying or returning.
     $response->getBody()->close();
 
+    $agent_label = $user_agent ?: 'default';
+
     // Rate limited: do not keep trying.
     if ($status === 429) {
       // @todo check the retry-after header and possibly stop the import.
       $this->getLogger()->notice(strtr('Rate limited on attempt for @url with user agent "@agent".', [
         '@url' => $url,
-        '@agent' => $user_agent,
+        '@agent' => $agent_label,
       ]));
       return [$response, FALSE];
     }
@@ -1429,7 +1440,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     if ($status === 403) {
       $this->getLogger()->notice(strtr('Bot/WAF filtering on attempt for @url with user agent "@agent".', [
         '@url' => $url,
-        '@agent' => $user_agent,
+        '@agent' => $agent_label,
       ]));
       return [$response, TRUE];
     }
@@ -1438,7 +1449,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     $this->getLogger()->notice(strtr('HTTP @status error on attempt for @url with user agent "@agent".', [
       '@status' => $status,
       '@url' => $url,
-      '@agent' => $user_agent,
+      '@agent' => $agent_label,
     ]));
     return [$response, FALSE];
   }
