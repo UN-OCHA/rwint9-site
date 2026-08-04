@@ -650,11 +650,10 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the data for the attachment if any.
     $files = [];
     if (isset($document['document_url'])) {
-      foreach ($document['document_url'] ?? [] as $document) {
-        $document_url = reset($document);
-        $info = $this->getRemoteFileInfo($document_url);
+      foreach ($document['document_url'] ?? [] as $file_entry) {
+        $file_url = reset($file_entry);
+        $info = $this->getRemoteFileInfo($file_url);
         if (!empty($info)) {
-          $file_url = $document_url;
           $file_uuid = $this->generateUuid($file_url, $uuid);
           $files[] = [
             'url' => $file_url,
