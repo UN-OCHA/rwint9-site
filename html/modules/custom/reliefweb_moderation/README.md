@@ -45,6 +45,7 @@ Reports can have the following moderation statuses:
 - **reference**: Unpublished, kept as editorial reference
 - **pending**: Unpublished, awaiting processing
 - **refused**: Unpublished, rejected content
+- **duplicate**: Unpublished, duplicate content
 - **archive**: Unpublished, archived content
 
 **Published statuses:**
@@ -67,6 +68,7 @@ A user is considered the owner of a report if they are the author of the documen
 | reference | ❌ | ❌ | ❌ | ❌ | ❌ |
 | pending | ❌ | ❌ | ❌ | ❌ | ❌ |
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
+| duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | archive | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Authenticated User Access
@@ -81,6 +83,7 @@ A user is considered the owner of a report if they are the author of the documen
 | reference | ❌ | ❌ | ❌ | ❌ | ❌ |
 | pending | ❌ | ❌ | ❌ | ❌ | ❌ |
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
+| duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | archive | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Submitter Access
@@ -97,11 +100,13 @@ Submitters can only access their own reports and require posting rights for crea
 | reference | ✅ | ✅* | ✅ | ❌ | ❌ |
 | pending | ✅ | ✅* | ✅ | ❌ | ❌ |
 | refused | ✅ | ✅* | ✅ | ❌ | ❌ |
+| duplicate | ✅ | ✅* | ✅* | ❌ | ❌ |
 | archive | ✅ | ✅* | ❌ | ❌ | ❌ |
 
 **Access Restrictions:**
 - **View/Update**: Limited to reports owned by the submitter only for unpublished content
 - **Create**: Allowed unless a flag is set in which case allowed/trusted posting rights for a source are required
+- **Update on duplicate**: Requires `edit duplicate content` permission
 - **Delete**: Not permitted for any reports
 - **View Moderation Info**: Not permitted
 
@@ -119,11 +124,12 @@ Contributors have broader access to reports and can view moderation information.
 | reference | ✅ | ✅ | ✅ | ❌ | ✅ |
 | pending | ✅ | ✅ | ✅ | ❌ | ✅ |
 | refused | ✅ | ✅ | ❌ | ❌ | ✅ |
+| duplicate | ✅ | ✅ | ❌ | ❌ | ✅ |
 | archive | ✅ | ✅ | ❌ | ❌ | ✅ |
 
 ### Editor Access
 
-Editors have full access to all reports and can edit refused reports.
+Editors have full access to all reports and can edit refused and duplicate reports.
 
 | Status | View | Create | Update | Delete | View Moderation Info |
 |--------|------|--------|--------|--------|---------------------|
@@ -135,6 +141,7 @@ Editors have full access to all reports and can edit refused reports.
 | reference | ✅ | ✅ | ✅ | ✅ | ✅ |
 | pending | ✅ | ✅ | ✅ | ✅ | ✅ |
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
+| duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | archive | ✅ | ✅ | ❌ | ✅ | ✅ |
 
 ### Administrator/Webmaster Access
@@ -151,6 +158,7 @@ Administrators and webmasters have full access including the ability to edit arc
 | reference | ✅ | ✅ | ✅ | ✅ | ✅ |
 | pending | ✅ | ✅ | ✅ | ✅ | ✅ |
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
+| duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | archive | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Job access

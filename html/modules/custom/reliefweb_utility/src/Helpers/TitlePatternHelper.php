@@ -6,8 +6,30 @@ namespace Drupal\reliefweb_utility\Helpers;
 
 /**
  * Helper for report title series pattern generation and conversion.
+ *
+ * @phpstan-type SeriesMarkers array{
+ *   stem: string,
+ *   issues: int[],
+ *   weeks: int[],
+ *   periods: list<array{start: string, end: string}>
+ * }
  */
 class TitlePatternHelper {
+
+  /**
+   * Compare series markers: stems are not compatible.
+   */
+  public const COMPARE_UNRELATED = 'unrelated';
+
+  /**
+   * Compare series markers: same series line, different installment.
+   */
+  public const COMPARE_SERIES_SIBLING = 'series_sibling';
+
+  /**
+   * Compare series markers: stems compatible but no disagreeing markers.
+   */
+  public const COMPARE_INCONCLUSIVE = 'inconclusive';
 
   /**
    * Convert a title to SQL LIKE prefix patterns.
@@ -107,6 +129,86 @@ class TitlePatternHelper {
   public static function stringToLikePattern(string $string, string $wildcard = '%'): string {
     // Escape the string for SQL LIKE.
     return trim(self::applyDateStripping(self::escapeLike($string), $wildcard));
+  }
+
+  /**
+   * Normalize a title stem for series comparison (no SQL escaping).
+   *
+   * @param string $title
+   *   Document title.
+   *
+   * @return string
+   *   Stem with dates/numbers replaced by % wildcards.
+   */
+  public static function normalizeSeriesStem(string $title): string {
+    return trim(self::applyDateStripping($title, '%'));
+  }
+
+  /**
+   * Extract canonical series markers from a title.
+   *
+   * @param string $title
+   *   Document title.
+   *
+   * @return array{
+   *   stem: string,
+   *   issues: int[],
+   *   weeks: int[],
+   *   periods: list<array{start: string, end: string}>
+   *   }
+   *   Stem plus labeled issues/weeks and inclusive Y-m-d periods.
+   */
+  public static function extractSeriesMarkers(string $title): array {
+    return [
+      'stem' => self::normalizeSeriesStem($title),
+      'issues' => self::extractIssues($title),
+      'weeks' => self::extractWeeks($title),
+      'periods' => self::extractPeriods($title),
+    ];
+  }
+
+  /**
+   * Compare two marker payloads from extractSeriesMarkers().
+   *
+   * @param SeriesMarkers $a
+   *   First markers.
+   * @param SeriesMarkers $b
+   *   Second markers.
+   *
+   * @return string
+   *   One of COMPARE_* constants.
+   */
+  public static function compareSeriesMarkers(array $a, array $b): string {
+    $stem_a = (string) ($a['stem'] ?? '');
+    $stem_b = (string) ($b['stem'] ?? '');
+    // Differen stems: unrelated.
+    if (!self::stemsCompatible($stem_a, $stem_b)) {
+      return self::COMPARE_UNRELATED;
+    }
+
+    // Normalize the markers.
+    $issues_a = self::normalizeIntList($a['issues'] ?? []);
+    $issues_b = self::normalizeIntList($b['issues'] ?? []);
+    $weeks_a = self::normalizeIntList($a['weeks'] ?? []);
+    $weeks_b = self::normalizeIntList($b['weeks'] ?? []);
+    $periods_a = self::normalizePeriodList($a['periods'] ?? []);
+    $periods_b = self::normalizePeriodList($b['periods'] ?? []);
+
+    // Same stem, different issue numbers: likely series.
+    if (self::intListsDisagree($issues_a, $issues_b)) {
+      return self::COMPARE_SERIES_SIBLING;
+    }
+    // Same stem, different week numbers: likely series.
+    if (self::intListsDisagree($weeks_a, $weeks_b)) {
+      return self::COMPARE_SERIES_SIBLING;
+    }
+    // Same stem, different periods: likely series.
+    if ($periods_a !== [] && $periods_b !== [] && !self::periodsHaveOverlap($periods_a, $periods_b)) {
+      return self::COMPARE_SERIES_SIBLING;
+    }
+
+    // Unsure about the series relationship.
+    return self::COMPARE_INCONCLUSIVE;
   }
 
   /**
@@ -356,14 +458,41 @@ class TitlePatternHelper {
    *   String with dates and numbers replaced by wildcards.
    */
   private static function applyDateStripping(string $string, string $wildcard): string {
-    $months = self::getDateLikePatternMonthAlternation();
-    $optional_de = '(?:de\s+)?';
-    $optional_le = '(?:le\s+)?';
-    $optional_fi = '(?:في\s+)?';
-    $day = '(?:1er|1ère|1e|\d{1,2})';
+    $replacements = self::getStripReplacements($wildcard);
 
-    // Date and number replacements.
-    $replacements = [
+    // @todo we should replace common mistaken characters like dashes, mdashes,
+    // etc. with a `?` wildcard to be more lenient.
+    $result = preg_replace(
+      array_keys($replacements),
+      array_values($replacements),
+      $string,
+    );
+
+    // Collapse multiple consecutive wildcards into one.
+    $escaped = preg_quote($wildcard, '/');
+    $result = preg_replace('/(?:' . $escaped . '\s*){2,}/u', $wildcard . ' ', $result);
+
+    return trim($result ?? '');
+  }
+
+  /**
+   * Build strip regex => replacement map (shared source for LIKE stems).
+   *
+   * @param string $wildcard
+   *   Wildcard replacement string.
+   *
+   * @return array<string, string>
+   *   Pattern map, most specific first.
+   */
+  private static function getStripReplacements(string $wildcard): array {
+    $context = self::getDatePatternContext();
+    $months = $context['months'];
+    $optional_de = $context['optional_de'];
+    $optional_le = $context['optional_le'];
+    $optional_fi = $context['optional_fi'];
+    $day = $context['day'];
+
+    return [
       // Date patterns (most specific first).
       // Chinese: 2026年4月27日 (no leading \b — CJK text may appear directly
       // before the year).
@@ -406,20 +535,594 @@ class TitlePatternHelper {
       // Standalone remaining integers.
       '/\b\d+\b/u' => $wildcard,
     ];
+  }
 
-    // @todo we should replace common mistaken characters like dashes, mdashes,
-    // etc. with a `?` wildcard to be more lenient.
-    $result = preg_replace(
-      array_keys($replacements),
-      array_values($replacements),
-      $string,
+  /**
+   * Shared month/day regex fragments for strip and extract.
+   *
+   * @return array{
+   *   months: string,
+   *   optional_de: string,
+   *   optional_le: string,
+   *   optional_fi: string,
+   *   day: string
+   *   }
+   *   Regex fragments.
+   */
+  private static function getDatePatternContext(): array {
+    return [
+      'months' => self::getDateLikePatternMonthAlternation(),
+      'optional_de' => '(?:de\s+)?',
+      'optional_le' => '(?:le\s+)?',
+      'optional_fi' => '(?:في\s+)?',
+      'day' => '(?:1er|1ère|1e|\d{1,2})',
+    ];
+  }
+
+  /**
+   * Extract labeled issue numbers from a title.
+   *
+   * @param string $title
+   *   Title.
+   *
+   * @return int[]
+   *   Sorted unique issue numbers.
+   */
+  private static function extractIssues(string $title): array {
+    $issues = [];
+    if (preg_match_all('/#\s*(\d+)(?![\p{L}\p{N}])/u', $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $issues[] = (int) $value;
+      }
+    }
+    // №189 (common in RU titles).
+    if (preg_match_all('/№\s*(\d+)(?![\p{L}\p{N}])/u', $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $issues[] = (int) $value;
+      }
+    }
+    // Label + number (EN/FR/ES/DE/PT/RU/AR). Use Unicode boundaries: \b is
+    // weak for non-Latin scripts.
+    $labels = self::getIssueLabelAlternation();
+    $pattern = '/(?<![\p{L}\p{N}])(?:' . $labels . ')\s*#?\s*(\d+)(?![\p{L}\p{N}])/iu';
+    if (preg_match_all($pattern, $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $issues[] = (int) $value;
+      }
+    }
+    // Chinese: 第12期.
+    if (preg_match_all('/第\s*(\d+)\s*期/u', $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $issues[] = (int) $value;
+      }
+    }
+    return self::normalizeIntList($issues);
+  }
+
+  /**
+   * Extract labeled week numbers from a title.
+   *
+   * @param string $title
+   *   Title.
+   *
+   * @return int[]
+   *   Sorted unique week numbers.
+   */
+  private static function extractWeeks(string $title): array {
+    $weeks = [];
+    $labels = self::getWeekLabelAlternation();
+    $pattern = '/(?<![\p{L}\p{N}])(?:' . $labels . ')\s+(\d+)(?![\p{L}\p{N}])/iu';
+    if (preg_match_all($pattern, $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $weeks[] = (int) $value;
+      }
+    }
+    // Chinese: 第2周 / 第 2 周.
+    if (preg_match_all('/第\s*(\d+)\s*周/u', $title, $matches)) {
+      foreach ($matches[1] as $value) {
+        $weeks[] = (int) $value;
+      }
+    }
+    return self::normalizeIntList($weeks);
+  }
+
+  /**
+   * Regex alternation for issue labels (excluding # / № / 第N期).
+   *
+   * @return string
+   *   Alternation suitable for a Unicode-aware pattern.
+   */
+  private static function getIssueLabelAlternation(): string {
+    $labels = [
+      // EN. Require a dot on "no." so bare "no" is not an issue label.
+      'issue', 'no\.', 'number', 'n°',
+      // FR.
+      'numéro', 'édition', 'num\.',
+      // ES / PT.
+      'número', 'núm\.?', 'edición', 'edição',
+      // DE.
+      'ausgabe', 'nummer', 'nr\.?',
+      // RU.
+      'выпуск', 'номер',
+      // AR.
+      'عدد', 'إصدار',
+    ];
+    return implode('|', $labels);
+  }
+
+  /**
+   * Regex alternation for week labels (excluding Chinese 第N周).
+   *
+   * @return string
+   *   Alternation suitable for a Unicode-aware pattern.
+   */
+  private static function getWeekLabelAlternation(): string {
+    $labels = [
+      // EN.
+      'week', 'wk\.?',
+      // FR.
+      'semaine',
+      // ES / PT.
+      'semana',
+      // DE.
+      'woche',
+      // RU.
+      'неделя', 'нед\.?',
+      // AR.
+      'أسبوع',
+    ];
+    return implode('|', $labels);
+  }
+
+  /**
+   * Extract calendar phrases as inclusive Y-m-d periods.
+   *
+   * Matches most-specific patterns first and blanks them out so broader
+   * month/year patterns do not double-count the same phrase.
+   *
+   * @param string $title
+   *   Title.
+   *
+   * @return list<array{start: string, end: string}>
+   *   Sorted unique periods.
+   */
+  private static function extractPeriods(string $title): array {
+    $context = self::getDatePatternContext();
+    $months = $context['months'];
+    $optional_de = $context['optional_de'];
+    $optional_le = $context['optional_le'];
+    $optional_fi = $context['optional_fi'];
+    $day = $context['day'];
+
+    $remaining = $title;
+    $periods = [];
+
+    $consume = static function (string $regex, callable $handler) use (&$remaining, &$periods): void {
+      if (preg_match_all($regex, $remaining, $matches, PREG_SET_ORDER | PREG_OFFSET_CAPTURE) === FALSE) {
+        return;
+      }
+      // Blank from the end so offsets stay valid.
+      for ($i = count($matches) - 1; $i >= 0; $i--) {
+        $match = $matches[$i];
+        $full = $match[0][0];
+        $offset = $match[0][1];
+        $groups = [];
+        foreach ($match as $index => $part) {
+          if ($index === 0) {
+            continue;
+          }
+          $groups[$index] = $part[0];
+        }
+        $period = $handler($groups, $full);
+        if ($period !== NULL) {
+          $periods[] = $period;
+          $remaining = substr_replace($remaining, str_repeat(' ', strlen($full)), $offset, strlen($full));
+        }
+      }
+    };
+
+    // Chinese: 2026年4月27日.
+    $consume('/(?<![0-9])(\d{4})年(\d{1,2})月(\d{1,2})日/u', static function (array $g): ?array {
+      return self::periodFromYmd((int) $g[1], (int) $g[2], (int) $g[3]);
+    });
+
+    // Chinese: 2026年4月 or 2026年十二月.
+    $consume('/(?<![0-9])(\d{4})年(' . $months . '|\d{1,2}月)/u', static function (array $g): ?array {
+      $month = self::parseMonthToken($g[2]);
+      return $month === NULL ? NULL : self::periodFromMonthYear((int) $g[1], $month);
+    });
+
+    // Numeric day range + month + year: "02 - 06 May 2026".
+    $consume(
+      '/\b(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month = self::parseMonthToken($g[3]);
+        $year = (int) $g[4];
+        if ($month === NULL) {
+          return NULL;
+        }
+        $start = self::periodFromYmd($year, $month, (int) $g[1]);
+        $end = self::periodFromYmd($year, $month, (int) $g[2]);
+        if ($start === NULL || $end === NULL) {
+          return NULL;
+        }
+        return [
+          'start' => min($start['start'], $end['start']),
+          'end' => max($start['end'], $end['end']),
+        ];
+      },
     );
 
-    // Collapse multiple consecutive wildcards into one.
-    $escaped = preg_quote($wildcard, '/');
-    $result = preg_replace('/(?:' . $escaped . '\s*){2,}/u', $wildcard . ' ', $result);
+    // Day + month name + year: "27 April 2026", "le 1er avril 2026".
+    $consume(
+      '/\b' . $optional_le . $optional_fi . '(' . $day . ')\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month = self::parseMonthToken($g[2]);
+        $day_num = self::parseDayToken($g[1]);
+        if ($month === NULL || $day_num === NULL) {
+          return NULL;
+        }
+        return self::periodFromYmd((int) $g[3], $month, $day_num);
+      },
+    );
 
-    return trim($result ?? '');
+    // Month range + year: "Jan-Mar 2026", "Nov-Feb 2026" (wraps into next
+    // year).
+    $consume(
+      '/\b(' . $months . ')\s*[-–—]\s*(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month_start = self::parseMonthToken($g[1]);
+        $month_end = self::parseMonthToken($g[2]);
+        $year = (int) $g[3];
+        if ($month_start === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        $end_year = $month_start > $month_end ? $year + 1 : $year;
+        $start = self::periodFromMonthYear($year, $month_start);
+        $end = self::periodFromMonthYear($end_year, $month_end);
+        if ($start === NULL || $end === NULL) {
+          return NULL;
+        }
+        return [
+          'start' => $start['start'],
+          'end' => $end['end'],
+        ];
+      },
+    );
+
+    // Month name + year: "December 2025".
+    $consume(
+      '/\b(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month = self::parseMonthToken($g[1]);
+        return $month === NULL ? NULL : self::periodFromMonthYear((int) $g[2], $month);
+      },
+    );
+
+    // Numeric dates: 2026-04-27, 27/04/2026, 27.04.2026.
+    $consume('/\b(\d{1,4}[-\/\.]\d{1,2}[-\/\.]\d{2,4})\b/u', static function (array $g): ?array {
+      return self::parseNumericDate($g[1]);
+    });
+
+    return self::normalizePeriodList($periods);
+  }
+
+  /**
+   * Parse a numeric date string into a single-day period.
+   *
+   * @param string $raw
+   *   Raw date token.
+   *
+   * @return array{start: string, end: string}|null
+   *   Period or NULL.
+   */
+  private static function parseNumericDate(string $raw): ?array {
+    $raw = trim($raw);
+    // Prefer ISO / year-first, then d/m/Y (RW-dominant), then m/d/Y.
+    $formats = ['Y-m-d', 'Y/m/d', 'Y.m.d', 'd/m/Y', 'd-m-Y', 'd.m.Y', 'm/d/Y', 'm-d-Y', 'm.d.Y'];
+    foreach ($formats as $format) {
+      $date = \DateTimeImmutable::createFromFormat('!' . $format, $raw);
+      if ($date instanceof \DateTimeImmutable) {
+        $errors = \DateTimeImmutable::getLastErrors();
+        if (is_array($errors) && ($errors['warning_count'] > 0 || $errors['error_count'] > 0)) {
+          continue;
+        }
+        $ymd = $date->format('Y-m-d');
+        return ['start' => $ymd, 'end' => $ymd];
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Build a single-day period from Y-m-d parts.
+   *
+   * @param int $year
+   *   Year.
+   * @param int $month
+   *   Month 1-12.
+   * @param int $day
+   *   Day.
+   *
+   * @return array{start: string, end: string}|null
+   *   Period or NULL if invalid.
+   */
+  private static function periodFromYmd(int $year, int $month, int $day): ?array {
+    if (!checkdate($month, $day, $year)) {
+      return NULL;
+    }
+    $ymd = sprintf('%04d-%02d-%02d', $year, $month, $day);
+    return ['start' => $ymd, 'end' => $ymd];
+  }
+
+  /**
+   * Build a full-month period.
+   *
+   * @param int $year
+   *   Year.
+   * @param int $month
+   *   Month 1-12.
+   *
+   * @return array{start: string, end: string}|null
+   *   Period or NULL if invalid.
+   */
+  private static function periodFromMonthYear(int $year, int $month): ?array {
+    if ($month < 1 || $month > 12 || $year < 1) {
+      return NULL;
+    }
+    $start = sprintf('%04d-%02d-01', $year, $month);
+    $date = \DateTimeImmutable::createFromFormat('!Y-m-d', $start);
+    if (!$date instanceof \DateTimeImmutable) {
+      return NULL;
+    }
+    return [
+      'start' => $start,
+      'end' => $date->modify('last day of this month')->format('Y-m-d'),
+    ];
+  }
+
+  /**
+   * Resolve a month name or numeric token to 1-12.
+   *
+   * @param string $token
+   *   Month token (possibly with 月 suffix).
+   *
+   * @return int|null
+   *   Month number or NULL.
+   */
+  private static function parseMonthToken(string $token): ?int {
+    $token = trim($token);
+    if (preg_match('/^(\d{1,2})月$/u', $token, $matches)) {
+      $month = (int) $matches[1];
+      return ($month >= 1 && $month <= 12) ? $month : NULL;
+    }
+    if (preg_match('/^\d{1,2}$/', $token)) {
+      $month = (int) $token;
+      return ($month >= 1 && $month <= 12) ? $month : NULL;
+    }
+    $map = self::getMonthNumberMap();
+    $key = mb_strtolower($token, 'UTF-8');
+    return $map[$key] ?? NULL;
+  }
+
+  /**
+   * Resolve a day token (including French 1er) to 1-31.
+   *
+   * @param string $token
+   *   Day token.
+   *
+   * @return int|null
+   *   Day number or NULL.
+   */
+  private static function parseDayToken(string $token): ?int {
+    $token = trim(mb_strtolower($token, 'UTF-8'));
+    if (in_array($token, ['1er', '1ère', '1e'], TRUE)) {
+      return 1;
+    }
+    if (preg_match('/^\d{1,2}$/', $token)) {
+      $day = (int) $token;
+      return ($day >= 1 && $day <= 31) ? $day : NULL;
+    }
+    return NULL;
+  }
+
+  /**
+   * Month name (lowercased) to number map.
+   *
+   * @return array<string, int>
+   *   Map.
+   */
+  private static function getMonthNumberMap(): array {
+    static $map = NULL;
+    if ($map !== NULL) {
+      return $map;
+    }
+
+    $groups = [
+      1 => [
+        'January', 'Jan', 'janvier', 'janv.', 'enero', 'ene.',
+        'Januar', 'Jan.', 'janeiro', 'jan.',
+        'январь', 'января', '一月', 'يناير',
+      ],
+      2 => [
+        'February', 'Feb', 'février', 'févr.', 'febrero', 'feb.',
+        'Februar', 'Feb.', 'fevereiro', 'fev.',
+        'февраль', 'февраля', '二月', 'فبراير',
+      ],
+      3 => [
+        'March', 'Mar', 'mars', 'marzo', 'mar.',
+        'März', 'Mrz.', 'março',
+        'март', 'марта', '三月', 'مارس',
+      ],
+      4 => [
+        'April', 'Apr', 'avril', 'avr.', 'abril', 'abr.',
+        'Apr.',
+        'апрель', 'апреля', '四月', 'أبريل',
+      ],
+      5 => [
+        'May', 'mai', 'mayo', 'may.',
+        'Mai', 'maio', 'mai.',
+        'май', 'мая', '五月', 'مايو',
+      ],
+      6 => [
+        'June', 'Jun', 'juin', 'junio', 'jun.',
+        'Juni', 'Jun.', 'junho',
+        'июнь', 'июня', '六月', 'يونيو',
+      ],
+      7 => [
+        'July', 'Jul', 'juillet', 'juil.', 'julio', 'jul.',
+        'Juli', 'Jul.', 'julho',
+        'июль', 'июля', '七月', 'يوليو',
+      ],
+      8 => [
+        'August', 'Aug', 'août', 'agosto', 'ago.',
+        'Aug.',
+        'август', 'августа', '八月', 'أغسطس',
+      ],
+      9 => [
+        'September', 'Sep', 'Sept', 'septembre', 'sept.', 'septiembre',
+        'Sept.', 'setembro', 'set.',
+        'сентябрь', 'сентября', '九月', 'سبتمبر',
+      ],
+      10 => [
+        'October', 'Oct', 'octobre', 'oct.', 'octubre',
+        'Oktober', 'Okt.', 'outubro', 'out.',
+        'октябрь', 'октября', '十月', 'أكتوبر',
+      ],
+      11 => [
+        'November', 'Nov', 'novembre', 'nov.', 'noviembre',
+        'Nov.', 'novembro',
+        'ноябрь', 'ноября', '十一月', 'نوفمبر',
+      ],
+      12 => [
+        'December', 'Dec', 'décembre', 'déc.', 'diciembre', 'dic.',
+        'Dezember', 'Dez.', 'dezembro', 'dez.',
+        'декабрь', 'декабря', '十二月', 'ديسمبر',
+      ],
+    ];
+
+    $map = [];
+    foreach ($groups as $number => $names) {
+      foreach ($names as $name) {
+        $map[mb_strtolower($name, 'UTF-8')] = $number;
+      }
+    }
+    return $map;
+  }
+
+  /**
+   * Whether two stems look like the same series line.
+   */
+  private static function stemsCompatible(string $stem_a, string $stem_b): bool {
+    if (!self::stemHasLiteralContent($stem_a) || !self::stemHasLiteralContent($stem_b)) {
+      return FALSE;
+    }
+    if ($stem_a === $stem_b) {
+      return TRUE;
+    }
+    return self::titleMatchesLikePattern($stem_b, $stem_a)
+      || self::titleMatchesLikePattern($stem_a, $stem_b);
+  }
+
+  /**
+   * Whether a stem has non-wildcard literal content.
+   */
+  private static function stemHasLiteralContent(string $stem): bool {
+    $literal = trim(str_replace('%', '', $stem));
+    return $literal !== '';
+  }
+
+  /**
+   * Whether two non-empty int lists disagree.
+   *
+   * @param int[] $a
+   *   First list (normalized).
+   * @param int[] $b
+   *   Second list (normalized).
+   */
+  private static function intListsDisagree(array $a, array $b): bool {
+    return $a !== [] && $b !== [] && $a !== $b;
+  }
+
+  /**
+   * Whether any period in A overlaps any period in B.
+   *
+   * @param list<array{start: string, end: string}> $a
+   *   First periods.
+   * @param list<array{start: string, end: string}> $b
+   *   Second periods.
+   */
+  private static function periodsHaveOverlap(array $a, array $b): bool {
+    foreach ($a as $period_a) {
+      foreach ($b as $period_b) {
+        if ($period_a['start'] <= $period_b['end'] && $period_b['start'] <= $period_a['end']) {
+          return TRUE;
+        }
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Deduplicate and sort positive integers.
+   *
+   * @param mixed $values
+   *   Raw values.
+   *
+   * @return int[]
+   *   Normalized list.
+   */
+  private static function normalizeIntList(mixed $values): array {
+    if (!is_array($values)) {
+      return [];
+    }
+    $out = [];
+    foreach ($values as $value) {
+      if (is_int($value) || (is_string($value) && ctype_digit($value))) {
+        $int = (int) $value;
+        if ($int > 0) {
+          $out[$int] = $int;
+        }
+      }
+    }
+    $list = array_values($out);
+    sort($list, SORT_NUMERIC);
+    return $list;
+  }
+
+  /**
+   * Deduplicate and sort period ranges.
+   *
+   * @param mixed $values
+   *   Raw periods.
+   *
+   * @return list<array{start: string, end: string}>
+   *   Normalized periods.
+   */
+  private static function normalizePeriodList(mixed $values): array {
+    if (!is_array($values)) {
+      return [];
+    }
+    $keyed = [];
+    foreach ($values as $value) {
+      if (!is_array($value)) {
+        continue;
+      }
+      $start = isset($value['start']) ? (string) $value['start'] : '';
+      $end = isset($value['end']) ? (string) $value['end'] : '';
+      if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $start) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $end)) {
+        continue;
+      }
+      if ($start > $end) {
+        [$start, $end] = [$end, $start];
+      }
+      $keyed[$start . '|' . $end] = ['start' => $start, 'end' => $end];
+    }
+    $list = array_values($keyed);
+    usort($list, static function (array $left, array $right): int {
+      return [$left['start'], $left['end']] <=> [$right['start'], $right['end']];
+    });
+    return $list;
   }
 
   /**
@@ -455,8 +1158,8 @@ class TitlePatternHelper {
   /**
    * Returns a regex-safe alternation of month names.
    *
-   * Includes full and abbreviated names in English, French, Spanish, Russian,
-   * Chinese, and Arabic. Built once per request.
+   * Includes full and abbreviated names in English, French, Spanish, German,
+   * Portuguese, Russian, Chinese, and Arabic. Built once per request.
    *
    * @return string
    *   A regex-safe alternation of month names.
@@ -485,6 +1188,18 @@ class TitlePatternHelper {
       // Spanish abbreviated.
       'ene.', 'feb.', 'mar.', 'abr.', 'may.', 'jun.',
       'jul.', 'ago.', 'dic.',
+      // German full.
+      'Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+      'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember',
+      // German abbreviated.
+      'Jan.', 'Feb.', 'Mrz.', 'Apr.', 'Jun.', 'Jul.',
+      'Aug.', 'Sept.', 'Okt.', 'Nov.', 'Dez.',
+      // Portuguese full.
+      'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho',
+      'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro',
+      // Portuguese abbreviated.
+      'jan.', 'fev.', 'mar.', 'abr.', 'mai.', 'jun.',
+      'jul.', 'ago.', 'set.', 'out.', 'nov.', 'dez.',
       // Russian nominative.
       'январь', 'февраль', 'март', 'апрель', 'май', 'июнь',
       'июль', 'август', 'сентябрь', 'октябрь', 'ноябрь', 'декабрь',

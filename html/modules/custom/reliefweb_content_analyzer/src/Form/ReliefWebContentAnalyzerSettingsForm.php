@@ -10,6 +10,9 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
 use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\EmbeddingSourceSettings;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -74,7 +77,262 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'download_missing_attachment' => TRUE,
       'download_missing_attachment_source_url' => 'https://reliefweb.int',
     ];
+    $report_duplicate_matching = (array) ($config->get('report_duplicate_matching') ?? [])
+      + DuplicateMatchSettings::defaultConfig();
+    $content_embeddings = ContentEmbeddingsSettings::fromConfigArray(
+      $config->get('content_embeddings'),
+    );
+    $report_source = $content_embeddings->getSource('node', 'report')
+      ?? EmbeddingSourceSettings::fromConfigArray([], ContentEmbeddingsSettings::defaultConfig()['sources']['node']['report']);
     $moderation_options = $this->reportModeration->getStatuses();
+
+    $form['report_duplicate_matching_tabs'] = [
+      '#type' => 'vertical_tabs',
+      '#title' => $this->t('Report near-duplicate detection'),
+    ];
+
+    $form['report_duplicate_matching'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Report duplication'),
+      '#group' => 'report_duplicate_matching_tabs',
+      '#tree' => TRUE,
+      '#description' => $this->t('Detects near-duplicate reports on create. Candidates come from the date/source window unioned with embedding nearest neighbors. Hard matches use word 3-gram Jaccard; soft matches require TF-IDF then local embedding cosine (stored vectors or /embed). Series siblings are discarded. Status changes are demotion-only via the series restrictiveness order.'),
+    ];
+
+    $form['report_duplicate_matching']['automation_enabled_form_created'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports created via the editorial form'),
+      '#description' => $this->t('Requires the “Apply report duplication automation on form create” permission.'),
+      '#default_value' => $report_duplicate_matching['automation_enabled_form_created'],
+    ];
+
+    $form['report_duplicate_matching']['automation_enabled_imported'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports submitted via Post API or import'),
+      '#default_value' => $report_duplicate_matching['automation_enabled_imported'],
+    ];
+
+    $form['report_duplicate_matching']['skip_with_attachments'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Skip reports that have file attachments'),
+      '#description' => $this->t('When enabled, detection is skipped for the source report if it has attachments, and candidate reports with attachments are excluded. Body text is always required. Leave unchecked to compare body text even when attachments are present (file near-duplicates still use the MinHash pipeline separately).'),
+      '#default_value' => $report_duplicate_matching['skip_with_attachments'],
+    ];
+
+    $form['report_duplicate_matching']['filter_by_source'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Filter candidates by shared source'),
+      '#description' => $this->t('When enabled (default), only reports that share at least one source with the report being checked are candidates. Disable to search all sources in the created-date window (broader recall, higher cost and more noise).'),
+      '#default_value' => $report_duplicate_matching['filter_by_source'],
+    ];
+
+    $form['report_duplicate_matching']['lookback_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Lookback days'),
+      '#description' => $this->t('Search candidates created up to this many days before the report’s created date.'),
+      '#default_value' => $report_duplicate_matching['lookback_days'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['lookforward_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Lookforward days'),
+      '#description' => $this->t('Search candidates created up to this many days after the report’s created date (clamped to now).'),
+      '#default_value' => $report_duplicate_matching['lookforward_days'],
+      '#min' => 0,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['candidate_limit'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate limit'),
+      '#description' => $this->t('Maximum candidates after ranking. With source filtering on: shared-source count (desc), then created date (desc). With source filtering off: created date (desc) only.'),
+      '#default_value' => $report_duplicate_matching['candidate_limit'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['minimum_body_length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum normalized body length'),
+      '#default_value' => $report_duplicate_matching['minimum_body_length'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['minimum_length_ratio'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum length ratio (Jaccard)'),
+      '#description' => $this->t('Shorter/longer normalized body length ratio required before Jaccard scoring (0–1). Soft TF-IDF scoring skips this gate.'),
+      '#default_value' => $report_duplicate_matching['minimum_length_ratio'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Jaccard similarity threshold'),
+      '#description' => $this->t('Minimum word 3-gram Jaccard score (0–1) for a hard near-duplicate.'),
+      '#default_value' => $report_duplicate_matching['similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['tfidf_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('TF-IDF similarity threshold'),
+      '#description' => $this->t('Minimum pairwise TF-IDF cosine (0–1) to send a candidate for embedding confirmation when Jaccard does not pass.'),
+      '#default_value' => $report_duplicate_matching['tfidf_similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding similarity threshold'),
+      '#description' => $this->t('Minimum embedding cosine (0–1) for nearest-neighbor retrieval and soft near-duplicates after TF-IDF filtering. Uses stored vectors or the Content embeddings embed endpoint.'),
+      '#default_value' => $report_duplicate_matching['embedding_similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_topk'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding nearest-neighbor limit'),
+      '#description' => $this->t('Maximum candidates retrieved from embedding storage (unioned with the window/source set).'),
+      '#default_value' => $report_duplicate_matching['embedding_topk'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_lookback_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding lookback days'),
+      '#description' => $this->t('Days before the report created date for embedding nearest-neighbor search (no source filter). Default 1095 (~3 years).'),
+      '#default_value' => $report_duplicate_matching['embedding_lookback_days'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['jaccard_target_status'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Jaccard target moderation status'),
+      '#description' => $this->t('Applied when hard Jaccard matches exist. Demotion-only via restrictiveness order.'),
+      '#options' => $moderation_options,
+      '#default_value' => $report_duplicate_matching['jaccard_target_status'],
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['tfidf_target_status'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Soft match target moderation status'),
+      '#description' => $this->t('Applied when only embedding-confirmed soft matches exist. Demotion-only via restrictiveness order.'),
+      '#options' => $moderation_options,
+      '#default_value' => $report_duplicate_matching['tfidf_target_status'],
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['candidate_moderation_statuses'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Candidate moderation statuses'),
+      '#description' => $this->t('One status machine name per line.'),
+      '#default_value' => $this->sequenceToLines($report_duplicate_matching['candidate_moderation_statuses'] ?? []),
+      '#rows' => 3,
+    ];
+
+    $form['report_duplicate_matching']['skip_moderation_statuses'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Skip moderation statuses'),
+      '#description' => $this->t('Detection is skipped when the new report already has one of these statuses. One per line.'),
+      '#default_value' => $this->sequenceToLines($report_duplicate_matching['skip_moderation_statuses'] ?? []),
+      '#rows' => 3,
+    ];
+
+    $form['content_embeddings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Content embeddings'),
+      '#group' => 'report_duplicate_matching_tabs',
+      '#tree' => TRUE,
+      '#description' => $this->t('Stores Model2Vec embeddings for near-duplicate search (default backend: MariaDB VECTOR). Generate with <code>drush rwca:embed</code>. The duplicate matcher uses this embed endpoint for probe/candidate vectors when not already stored.'),
+    ];
+
+    $form['content_embeddings']['embed_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Embed endpoint'),
+      '#description' => $this->t('AI helper URL for POST /text/deduplicate/embed.'),
+      '#default_value' => $content_embeddings->embedEndpoint,
+      '#maxlength' => 512,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['dimensions'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Vector dimensions'),
+      '#description' => $this->t('Must match the helper model (default 256). Changing this requires recreating the embeddings table.'),
+      '#default_value' => $content_embeddings->dimensions,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['default_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Default HTTP timeout (seconds)'),
+      '#default_value' => $content_embeddings->defaultTimeout,
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Report (node)'),
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable embedding generation for reports'),
+      '#default_value' => $report_source->enabled,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['fields'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Fields to embed'),
+      '#description' => $this->t('Concatenated in order with blank lines between. File extraction failures are ignored.'),
+      '#options' => [
+        'title' => $this->t('Title'),
+        'body' => $this->t('Body'),
+        'field_file' => $this->t('Attachments (field_file text)'),
+      ],
+      '#default_value' => array_combine($report_source->fields, $report_source->fields),
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['min_text_length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum text length'),
+      '#default_value' => $report_source->minTextLength,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
 
     $form['report_series_matching'] = [
       '#type' => 'vertical_tabs',
@@ -748,6 +1006,147 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
         $this->t('A valid attachment download source URL is required when download is enabled.'),
       );
     }
+
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'minimum_length_ratio'],
+      $this->t('Minimum length ratio must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'similarity_threshold'],
+      $this->t('Jaccard similarity threshold must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'tfidf_similarity_threshold'],
+      $this->t('TF-IDF similarity threshold must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'embedding_similarity_threshold'],
+      $this->t('Embedding similarity threshold must be between 0 and 1.'),
+    );
+
+    $lookback_days = (int) $form_state->getValue(['report_duplicate_matching', 'lookback_days']);
+    if ($lookback_days < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][lookback_days',
+        $this->t('Lookback days must be at least 1.'),
+      );
+    }
+
+    $lookforward_days = (int) $form_state->getValue(['report_duplicate_matching', 'lookforward_days']);
+    if ($lookforward_days < 0) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][lookforward_days',
+        $this->t('Lookforward days must be 0 or greater.'),
+      );
+    }
+
+    $candidate_limit = (int) $form_state->getValue(['report_duplicate_matching', 'candidate_limit']);
+    if ($candidate_limit < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][candidate_limit',
+        $this->t('Candidate limit must be at least 1.'),
+      );
+    }
+    $embedding_topk = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_topk']);
+    if ($embedding_topk < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_topk',
+        $this->t('Embedding nearest-neighbor limit must be at least 1.'),
+      );
+    }
+    $embedding_lookback = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_lookback_days']);
+    if ($embedding_lookback < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_lookback_days',
+        $this->t('Embedding lookback days must be at least 1.'),
+      );
+    }
+
+    $minimum_body_length = (int) $form_state->getValue(['report_duplicate_matching', 'minimum_body_length']);
+    if ($minimum_body_length < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][minimum_body_length',
+        $this->t('Minimum body length must be at least 1.'),
+      );
+    }
+
+    $valid_statuses = array_keys($this->reportModeration->getStatuses());
+    foreach ([
+      'candidate_moderation_statuses' => $this->t('Candidate moderation statuses'),
+      'skip_moderation_statuses' => $this->t('Skip moderation statuses'),
+    ] as $key => $label) {
+      $statuses = $this->linesToSequence((string) $form_state->getValue(['report_duplicate_matching', $key]));
+      $unknown = array_values(array_diff($statuses, $valid_statuses));
+      if ($unknown !== []) {
+        $form_state->setErrorByName(
+          'report_duplicate_matching][' . $key,
+          $this->t('@label: unknown status(es): @statuses', [
+            '@label' => $label,
+            '@statuses' => implode(', ', $unknown),
+          ]),
+        );
+      }
+    }
+
+    foreach ([
+      'jaccard_target_status' => $this->t('Jaccard target moderation status'),
+      'tfidf_target_status' => $this->t('Soft match target moderation status'),
+    ] as $key => $label) {
+      $status = (string) $form_state->getValue(['report_duplicate_matching', $key]);
+      if ($status === '' || !in_array($status, $valid_statuses, TRUE)) {
+        $form_state->setErrorByName(
+          'report_duplicate_matching][' . $key,
+          $this->t('@label must be a valid report moderation status.', [
+            '@label' => $label,
+          ]),
+        );
+      }
+    }
+
+    $embedding_fields = array_keys(array_filter(
+      (array) $form_state->getValue(['content_embeddings', 'sources', 'node', 'report', 'fields'], []),
+    ));
+    foreach ($embedding_fields as $field) {
+      if (!in_array($field, EmbeddingSourceSettings::ALLOWED_FIELDS, TRUE)) {
+        $form_state->setErrorByName(
+          'content_embeddings][sources][node][report][fields',
+          $this->t('Invalid embedding field: @field', ['@field' => $field]),
+        );
+      }
+      elseif ($field !== 'title') {
+        $definitions = $this->entityFieldManager->getFieldDefinitions('node', 'report');
+        if (!isset($definitions[$field])) {
+          $form_state->setErrorByName(
+            'content_embeddings][sources][node][report][fields',
+            $this->t('Report does not have field @field.', ['@field' => $field]),
+          );
+        }
+      }
+    }
+    if ($embedding_fields === [] && (bool) $form_state->getValue([
+      'content_embeddings',
+      'sources',
+      'node',
+      'report',
+      'enabled',
+    ])) {
+      $form_state->setErrorByName(
+        'content_embeddings][sources][node][report][fields',
+        $this->t('Select at least one field when report embeddings are enabled.'),
+      );
+    }
+
+    $dimensions = (int) $form_state->getValue(['content_embeddings', 'dimensions']);
+    if ($dimensions < 1) {
+      $form_state->setErrorByName(
+        'content_embeddings][dimensions',
+        $this->t('Vector dimensions must be at least 1.'),
+      );
+    }
   }
 
   /**
@@ -755,6 +1154,57 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state): void {
     $config = $this->config('reliefweb_content_analyzer.settings');
+
+    $report_values = $form_state->getValue('report_duplicate_matching') ?? [];
+    $defaults = DuplicateMatchSettings::defaultConfig();
+    $config->set('report_duplicate_matching', [
+      'automation_enabled_form_created' => (bool) ($report_values['automation_enabled_form_created'] ?? FALSE),
+      'automation_enabled_imported' => (bool) ($report_values['automation_enabled_imported'] ?? FALSE),
+      'skip_with_attachments' => (bool) ($report_values['skip_with_attachments'] ?? FALSE),
+      'filter_by_source' => (bool) ($report_values['filter_by_source'] ?? FALSE),
+      'lookback_days' => (int) ($report_values['lookback_days'] ?? $defaults['lookback_days']),
+      'lookforward_days' => (int) ($report_values['lookforward_days'] ?? $defaults['lookforward_days']),
+      'candidate_limit' => (int) ($report_values['candidate_limit'] ?? $defaults['candidate_limit']),
+      'minimum_body_length' => (int) ($report_values['minimum_body_length'] ?? $defaults['minimum_body_length']),
+      'minimum_length_ratio' => (float) ($report_values['minimum_length_ratio'] ?? $defaults['minimum_length_ratio']),
+      'similarity_threshold' => (float) ($report_values['similarity_threshold'] ?? $defaults['similarity_threshold']),
+      'tfidf_similarity_threshold' => (float) ($report_values['tfidf_similarity_threshold'] ?? $defaults['tfidf_similarity_threshold']),
+      'embedding_similarity_threshold' => (float) ($report_values['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
+      'embedding_topk' => (int) ($report_values['embedding_topk'] ?? $defaults['embedding_topk']),
+      'embedding_lookback_days' => (int) ($report_values['embedding_lookback_days'] ?? $defaults['embedding_lookback_days']),
+      'jaccard_target_status' => (string) ($report_values['jaccard_target_status'] ?? $defaults['jaccard_target_status']),
+      'tfidf_target_status' => (string) ($report_values['tfidf_target_status'] ?? $defaults['tfidf_target_status']),
+      'candidate_moderation_statuses' => $this->linesToSequence((string) ($report_values['candidate_moderation_statuses'] ?? '')),
+      'skip_moderation_statuses' => $this->linesToSequence((string) ($report_values['skip_moderation_statuses'] ?? '')),
+    ]);
+
+    $embedding_values = $form_state->getValue('content_embeddings') ?? [];
+    $report_source_values = $embedding_values['sources']['node']['report'] ?? [];
+    $selected_fields = array_values(array_keys(array_filter((array) ($report_source_values['fields'] ?? []))));
+    if ($selected_fields === []) {
+      $selected_fields = ['body'];
+    }
+    // Preserve UI order: title, body, field_file.
+    $ordered_fields = [];
+    foreach (EmbeddingSourceSettings::ALLOWED_FIELDS as $field) {
+      if (in_array($field, $selected_fields, TRUE)) {
+        $ordered_fields[] = $field;
+      }
+    }
+    $config->set('content_embeddings', [
+      'embed_endpoint' => trim((string) ($embedding_values['embed_endpoint'] ?? '')),
+      'dimensions' => max(1, (int) ($embedding_values['dimensions'] ?? 256)),
+      'default_timeout' => max(1.0, (float) ($embedding_values['default_timeout'] ?? 60)),
+      'sources' => [
+        'node' => [
+          'report' => [
+            'enabled' => (bool) ($report_source_values['enabled'] ?? FALSE),
+            'fields' => $ordered_fields,
+            'min_text_length' => max(1, (int) ($report_source_values['min_text_length'] ?? 200)),
+          ],
+        ],
+      ],
+    ]);
 
     $config->set(
       'report_series_matching.workflow.automation_enabled_form_created',
