@@ -1435,6 +1435,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     // Other error: do not keep trying.
+    $this->getLogger()->notice(strtr('HTTP @status error on attempt for @url with user agent "@agent".', [
+      '@status' => $status,
+      '@url' => $url,
+      '@agent' => $user_agent,
+    ]));
     return [$response, FALSE];
   }
 
