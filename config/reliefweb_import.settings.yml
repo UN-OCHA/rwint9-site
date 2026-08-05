@@ -1,1 +1,6 @@
 extract_url: 'http://10.10.0.101:8448/extract'
+user_agents: ''
+download_delay: 8
+download_delay_jitter: 4
+user_agent_retry_delay: 15
+stream_fallback_delay: 2

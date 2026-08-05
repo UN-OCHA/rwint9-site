@@ -35,6 +35,7 @@ use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\TransferException;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Mime\MimeTypeGuesserInterface;
@@ -51,6 +52,11 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * @var \Psr\Log\LoggerInterface
    */
   protected LoggerInterface $logger;
+
+  /**
+   * Timestamp of the last remote file download start in this process.
+   */
+  protected static ?float $lastRemoteFileRequestAt = NULL;
 
   /**
    * Constructor.
@@ -591,9 +597,12 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * {@inheritdoc}
    */
   public function alterContentClassificationSkipClassification(bool &$skip, ClassificationWorkflowInterface $workflow, array $context): void {
-    // Skip if classification is not enabled for this plugin.
+    // Skip if classification is not enabled for this plugin. When enabled,
+    // leave $skip unchanged so other modules (e.g. series matching) can skip.
     $setting = $this->getPluginSetting('classification.enabled', FALSE, FALSE);
-    $skip = empty($setting);
+    if (empty($setting)) {
+      $skip = TRUE;
+    }
   }
 
   /**
@@ -1177,69 +1186,30 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
 
     // Remote file.
     try {
-      $user_agents = [
-        [
-          'ua' => 'curl/8.5.0',
-          'stream' => TRUE,
-        ],
-        [
-          'ua' => 'curl/8.5.0',
-          'stream' => FALSE,
-        ],
-        [
-          'ua' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-          'stream' => TRUE,
-        ],
-        [
-          'ua' => 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36',
-          'stream' => FALSE,
-        ],
-        [
-          'ua' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0',
-          'stream' => TRUE,
-        ],
-        [
-          'ua' => 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0',
-          'stream' => FALSE,
-        ],
-      ];
+      $user_agents = $this->getRemoteFileUserAgents();
+
+      $this->throttleRemoteFileDownload();
 
       $response = NULL;
-      foreach ($user_agents as $index => $user_agent) {
-        $response = $this->httpClient->request('GET', $url, [
-          'stream' => $user_agent['stream'],
-          // @todo retrieve that from the configuration.
-          'connect_timeout' => 30,
-          'timeout' => 600,
-          'headers' => [
-            'User-Agent' => $user_agent['ua'],
-            'Accept' => '*/*',
-            'X-ReliefWeb-Import' => '2',
-          ],
-        ]);
+      // Empty list: one attempt with the default Drupal HTTP client User-Agent.
+      if ($user_agents === []) {
+        [$response] = $this->requestRemoteFile($url);
+      }
+      else {
+        foreach ($user_agents as $index => $user_agent) {
+          [$response, $should_retry] = $this->requestRemoteFile($url, $user_agent);
 
-        if ($response->getStatusCode() == 200) {
-          break;
+          if ($should_retry && $index < count($user_agents) - 1) {
+            $this->sleepSeconds($this->getRemoteFileThrottleSetting('user_agent_retry_delay', 15));
+          }
+          else {
+            break;
+          }
         }
-
-        // Check if we are rate limited.
-        // @todo we need to do something there, like checking the retry-after
-        // header and possibly stop the import to try later.
-        if ($response->getStatusCode() == 429) {
-          $this->getLogger()->notice(strtr('Rate limited on attempt @attempt for @url with user agent "@agent".', [
-            '@attempt' => $index + 1,
-            '@url' => $url,
-            '@agent' => $user_agent['ua'],
-          ]));
-          break;
-        }
-
-        // 2-second delay between user agent attempts to be respectful.
-        sleep(2);
       }
 
-      if ($response->getStatusCode() !== 200) {
-        throw new ReliefwebImportException('Unexpected HTTP status: ' . $response->getStatusCode());
+      if ($response === NULL || $response->getStatusCode() !== 200) {
+        throw new ReliefwebImportException('Unexpected HTTP status: ' . ($response?->getStatusCode() ?? 'none'));
       }
 
       $content_length = $response->getHeaderLine('Content-Length');
@@ -1314,6 +1284,174 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       // in the post api content processor.
       'bytes' => $content,
     ];
+  }
+
+  /**
+   * Returns User-Agent strings to try when downloading remote files.
+   *
+   * Reads reliefweb_import.settings:user_agents (one per line).
+   *
+   * @return list<string>
+   *   Non-empty User-Agent strings in try order. Empty means use the default
+   *   Drupal HTTP client User-Agent (do not override).
+   */
+  protected function getRemoteFileUserAgents(): array {
+    $configured = (string) ($this->configFactory->get('reliefweb_import.settings')->get('user_agents') ?? '');
+    $user_agents = [];
+    foreach (preg_split('/\R/', $configured) ?: [] as $line) {
+      $line = trim($line);
+      if ($line !== '') {
+        $user_agents[] = $line;
+      }
+    }
+
+    return $user_agents;
+  }
+
+  /**
+   * Paces remote file downloads to avoid bursting remote hosts.
+   */
+  protected function throttleRemoteFileDownload(): void {
+    $delay = $this->getRemoteFileThrottleSetting('download_delay', 8);
+    $jitter = $this->getRemoteFileThrottleSetting('download_delay_jitter', 4);
+    $wait = $delay;
+    if ($jitter > 0) {
+      $wait += random_int(0, $jitter);
+    }
+
+    if (static::$lastRemoteFileRequestAt !== NULL && $wait > 0) {
+      $elapsed = microtime(TRUE) - static::$lastRemoteFileRequestAt;
+      $remaining = $wait - $elapsed;
+      if ($remaining > 0) {
+        $this->sleepSeconds($remaining);
+      }
+    }
+
+    static::$lastRemoteFileRequestAt = microtime(TRUE);
+  }
+
+  /**
+   * Returns a non-negative throttle setting from reliefweb_import.settings.
+   *
+   * @param string $key
+   *   Config key.
+   * @param int $default
+   *   Default when unset or invalid.
+   *
+   * @return int
+   *   Seconds (or whole seconds used as a delay budget).
+   */
+  protected function getRemoteFileThrottleSetting(string $key, int $default): int {
+    $value = $this->configFactory->get('reliefweb_import.settings')->get($key);
+    if ($value === NULL || $value === '') {
+      return $default;
+    }
+    return max(0, (int) $value);
+  }
+
+  /**
+   * Sleeps for the given number of seconds (supports fractional seconds).
+   *
+   * @param int|float $seconds
+   *   Seconds to sleep.
+   */
+  protected function sleepSeconds(int|float $seconds): void {
+    if ($seconds <= 0) {
+      return;
+    }
+    usleep((int) round($seconds * 1_000_000));
+  }
+
+  /**
+   * Performs one remote file download attempt for a user agent.
+   *
+   * Tries streaming first, then non-streaming if the server does not support
+   * streaming (transport layer error). Returns whether the caller
+   * should retry with the next user agent (typically after HTTP 403).
+   *
+   * @param string $url
+   *   Remote file URL.
+   * @param string|null $user_agent
+   *   User agent to send, or NULL to keep the default Drupal HTTP client
+   *   User-Agent.
+   * @param bool $stream
+   *   Whether to use streaming. Defaults to TRUE.
+   *
+   * @return array{0: \Psr\Http\Message\ResponseInterface|null, 1: bool}
+   *   List of the HTTP response (if any) and whether the caller should try the
+   *   next user agent.
+   *
+   * @throws \GuzzleHttp\Exception\TransferException
+   *   When a non-streaming attempt fails at the transport layer.
+   */
+  protected function requestRemoteFile(string $url, ?string $user_agent = NULL, bool $stream = TRUE): array {
+    $headers = [
+      'Accept' => '*/*',
+      'X-ReliefWeb-Import' => '2',
+    ];
+    if ($user_agent !== NULL && $user_agent !== '') {
+      $headers['User-Agent'] = $user_agent;
+    }
+
+    try {
+      $response = $this->httpClient->request('GET', $url, [
+        // Avoid throwing on HTTP errors so we can inspect the status and try
+        // other stream modes / user agents when appropriate.
+        'http_errors' => FALSE,
+        'stream' => $stream,
+        'connect_timeout' => 30,
+        'timeout' => 600,
+        'headers' => $headers,
+      ]);
+    }
+    catch (TransferException $exception) {
+      // Streaming transport failure: try non-streaming with the same UA.
+      if ($stream === TRUE) {
+        $this->sleepSeconds($this->getRemoteFileThrottleSetting('stream_fallback_delay', 2));
+        return $this->requestRemoteFile($url, $user_agent, FALSE);
+      }
+      throw $exception;
+    }
+
+    // Get the response status code.
+    $status = $response->getStatusCode();
+
+    // Success: return the response and do not retry.
+    if ($status === 200) {
+      return [$response, FALSE];
+    }
+
+    // Close non-success bodies before retrying or returning.
+    $response->getBody()->close();
+
+    $agent_label = $user_agent ?: 'default';
+
+    // Rate limited: do not keep trying.
+    if ($status === 429) {
+      // @todo check the retry-after header and possibly stop the import.
+      $this->getLogger()->notice(strtr('Rate limited on attempt for @url with user agent "@agent".', [
+        '@url' => $url,
+        '@agent' => $agent_label,
+      ]));
+      return [$response, FALSE];
+    }
+
+    // Bot/WAF filtering: try the next user agent.
+    if ($status === 403) {
+      $this->getLogger()->notice(strtr('Bot/WAF filtering on attempt for @url with user agent "@agent".', [
+        '@url' => $url,
+        '@agent' => $agent_label,
+      ]));
+      return [$response, TRUE];
+    }
+
+    // Other error: do not keep trying.
+    $this->getLogger()->notice(strtr('HTTP @status error on attempt for @url with user agent "@agent".', [
+      '@status' => $status,
+      '@url' => $url,
+      '@agent' => $agent_label,
+    ]));
+    return [$response, FALSE];
   }
 
   /**

@@ -5,6 +5,21 @@ reliefweb_import.settings:
     extract_url:
       type: string
       label: 'The URL of the extract service.'
+    user_agents:
+      type: string
+      label: 'HTTP User-Agent strings for remote file downloads (one per line).'
+    download_delay:
+      type: integer
+      label: 'Minimum seconds between remote file download starts.'
+    download_delay_jitter:
+      type: integer
+      label: 'Extra random seconds (0..jitter) added to the download delay.'
+    user_agent_retry_delay:
+      type: integer
+      label: 'Seconds to wait before trying the next user agent after HTTP 403.'
+    stream_fallback_delay:
+      type: integer
+      label: 'Seconds to wait before retrying without streaming after a transfer failure.'
 
 reliefweb_import.workday.*:
   type: config_object
