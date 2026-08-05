@@ -97,6 +97,26 @@ class TitlePatternHelperTest extends UnitTestCase {
         'Aperçu opérationnel, janvier - mars 2026',
         'Aperçu opérationnel, %',
       ],
+      'us month-first range' => [
+        'Global Weather Hazards Summary, May 7, 2026 - May 13, 2026',
+        'Global Weather Hazards Summary, %',
+      ],
+      'us month-first cross month' => [
+        'Global Weather Hazards Summary, April 30, 2026 – May 06, 2026',
+        'Global Weather Hazards Summary, %',
+      ],
+      'french du au range' => [
+        'Bulletin du 7 au 13 mai 2026',
+        'Bulletin %',
+      ],
+      'spanish del al range' => [
+        'Informe del 7 al 13 de mayo de 2026',
+        'Informe %',
+      ],
+      'english cross-month day range' => [
+        'Report 30 April - 6 May 2026',
+        'Report %',
+      ],
     ];
   }
 
@@ -285,6 +305,72 @@ class TitlePatternHelperTest extends UnitTestCase {
         [],
         [],
       ],
+      'us month-first range' => [
+        'Global Weather Hazards Summary, May 7, 2026 - May 13, 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'us month-first shorthand' => [
+        'Report May 7-13, 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'us month-first single' => [
+        'Report May 7, 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-07']],
+      ],
+      'english cross-month day range' => [
+        'Report 30 April - 6 May 2026',
+        [],
+        [],
+        [['start' => '2026-04-30', 'end' => '2026-05-06']],
+      ],
+      'english dual full date range merged' => [
+        'Report 7 May 2026 - 13 May 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'french du au same month' => [
+        'Bulletin du 7 au 13 mai 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'french du au cross month' => [
+        'Bulletin du 30 avril au 6 mai 2026',
+        [],
+        [],
+        [['start' => '2026-04-30', 'end' => '2026-05-06']],
+      ],
+      'spanish del al same month' => [
+        'Informe del 7 al 13 de mayo de 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'spanish del al cross month' => [
+        'Informe del 30 de abril al 6 de mayo de 2026',
+        [],
+        [],
+        [['start' => '2026-04-30', 'end' => '2026-05-06']],
+      ],
+      'portuguese de a same month' => [
+        'Relatório de 7 a 13 de maio de 2026',
+        [],
+        [],
+        [['start' => '2026-05-07', 'end' => '2026-05-13']],
+      ],
+      'portuguese de a cross month' => [
+        'Relatório de 30 de abril a 6 de maio de 2026',
+        [],
+        [],
+        [['start' => '2026-04-30', 'end' => '2026-05-06']],
+      ],
     ];
   }
 
@@ -404,6 +490,16 @@ class TitlePatternHelperTest extends UnitTestCase {
       'same issue different months still sibling' => [
         'Bulletin Issue 10, May 2026',
         'Bulletin Issue 10, June 2026',
+        TitlePatternHelper::COMPARE_SERIES_SIBLING,
+      ],
+      'fews us week ranges sibling' => [
+        'Global Weather Hazards Summary, May 7, 2026 - May 13, 2026',
+        'Global Weather Hazards Summary, April 30, 2026 – May 06, 2026',
+        TitlePatternHelper::COMPARE_SERIES_SIBLING,
+      ],
+      'fews comma vs no comma sibling' => [
+        'Global Weather Hazards Summary, April 02, 2026 – April 08, 2026',
+        'Global Weather Hazards Summary March 26, 2026 - April 1, 2026',
         TitlePatternHelper::COMPARE_SERIES_SIBLING,
       ],
     ];

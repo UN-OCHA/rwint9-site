@@ -491,6 +491,7 @@ class TitlePatternHelper {
     $optional_le = $context['optional_le'];
     $optional_fi = $context['optional_fi'];
     $day = $context['day'];
+    $dash = $context['dash'];
 
     return [
       // Date patterns (most specific first).
@@ -501,14 +502,47 @@ class TitlePatternHelper {
       // Chinese: 2026年4月 or 2026年十二月.
       '/(?<![0-9])\d{4}年(?:' . $months . '|\d{1,2}月)/u' => $wildcard,
 
+      // US month-first range: "May 7, 2026 - May 13, 2026".
+      '/\b(?:' . $months . ')\s+' . $day . '\s*,?\s*\d{4}\s*' . $dash . '\s*(?:' . $months . ')\s+' . $day . '\s*,?\s*\d{4}\b/iu' => $wildcard,
+
+      // US same-month shorthand: "May 7-13, 2026".
+      '/\b(?:' . $months . ')\s+' . $day . '\s*' . $dash . '\s*' . $day . '\s*,?\s*\d{4}\b/iu' => $wildcard,
+
+      // US month-first single: "May 7, 2026".
+      '/\b(?:' . $months . ')\s+' . $day . '\s*,?\s*\d{4}\b/iu' => $wildcard,
+
+      // FR cross-month: "du 30 avril au 6 mai 2026".
+      '/\bdu\s+' . $day . '\s+(?:' . $months . ')\s+au\s+' . $day . '\s+(?:' . $months . ')\s+\d{4}\b/iu' => $wildcard,
+
+      // FR same-month: "du 7 au 13 mai 2026".
+      '/\bdu\s+' . $day . '\s+au\s+' . $day . '\s+(?:' . $months . ')\s+\d{4}\b/iu' => $wildcard,
+
+      // ES cross-month: "del 30 de abril al 6 de mayo de 2026".
+      '/\bdel\s+' . $day . '\s+de\s+(?:' . $months . ')\s+al\s+' . $day . '\s+de\s+(?:' . $months . ')\s+de\s+\d{4}\b/iu' => $wildcard,
+
+      // ES same-month: "del 7 al 13 de mayo de 2026".
+      '/\bdel\s+' . $day . '\s+al\s+' . $day . '\s+de\s+(?:' . $months . ')\s+de\s+\d{4}\b/iu' => $wildcard,
+
+      // PT cross-month: "de 30 de abril a 6 de maio de 2026".
+      '/\bde\s+' . $day . '\s+de\s+(?:' . $months . ')\s+a\s+' . $day . '\s+de\s+(?:' . $months . ')\s+de\s+\d{4}\b/iu' => $wildcard,
+
+      // PT same-month: "de 7 a 13 de maio de 2026".
+      '/\bde\s+' . $day . '\s+a\s+' . $day . '\s+de\s+(?:' . $months . ')\s+de\s+\d{4}\b/iu' => $wildcard,
+
+      // Dual full day+month+year range: "7 May 2026 - 13 May 2026".
+      '/\b' . $optional_le . $optional_fi . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\s*' . $dash . '\s*' . $optional_le . $optional_fi . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
+
+      // Cross-month day range, year once: "30 April - 6 May 2026".
+      '/\b' . $day . '\s+' . $optional_de . '(?:' . $months . ')\s*' . $dash . '\s*' . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
+
       // Numeric day range + month + year: "02 - 06 May 2026".
-      '/\b\d{1,2}\s*[-–—]\s*\d{1,2}\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
+      '/\b\d{1,2}\s*' . $dash . '\s*\d{1,2}\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
       // Day + month name + year: "27 April 2026", "le 1er avril 2026".
       '/\b' . $optional_le . $optional_fi . $day . '\s+' . $optional_de . '(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
       // Month range + year: "Jan-Mar 2026", "October - December 2025".
-      '/\b(?:' . $months . ')\s*[-–—]\s*(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
+      '/\b(?:' . $months . ')\s*' . $dash . '\s*(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
 
       // Month name + year: "December 2025", "diciembre de 2025".
       '/\b(?:' . $months . ')\s+' . $optional_de . '\d{4}\b/iu' => $wildcard,
@@ -518,7 +552,7 @@ class TitlePatternHelper {
 
       // Number patterns.
       // Numeric ranges (not dates): "12-13", "12 - 13", "2024-2025".
-      '/\b\d{1,4}\s*[-–—]\s*\d{1,4}\b/u' => $wildcard,
+      '/\b\d{1,4}\s*' . $dash . '\s*\d{1,4}\b/u' => $wildcard,
 
       // Hash-prefixed: #193, #60.
       '/#\d+\w*/u' => $wildcard,
@@ -545,7 +579,8 @@ class TitlePatternHelper {
    *   optional_de: string,
    *   optional_le: string,
    *   optional_fi: string,
-   *   day: string
+   *   day: string,
+   *   dash: string
    *   }
    *   Regex fragments.
    */
@@ -556,6 +591,7 @@ class TitlePatternHelper {
       'optional_le' => '(?:le\s+)?',
       'optional_fi' => '(?:في\s+)?',
       'day' => '(?:1er|1ère|1e|\d{1,2})',
+      'dash' => '[-–—]',
     ];
   }
 
@@ -693,6 +729,7 @@ class TitlePatternHelper {
     $optional_le = $context['optional_le'];
     $optional_fi = $context['optional_fi'];
     $day = $context['day'];
+    $dash = $context['dash'];
 
     $remaining = $title;
     $periods = [];
@@ -732,24 +769,220 @@ class TitlePatternHelper {
       return $month === NULL ? NULL : self::periodFromMonthYear((int) $g[1], $month);
     });
 
+    // US month-first range: "May 7, 2026 - May 13, 2026".
+    $consume(
+      '/\b(' . $months . ')\s+(' . $day . ')\s*,?\s*(\d{4})\s*' . $dash . '\s*(' . $months . ')\s+(' . $day . ')\s*,?\s*(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month_start = self::parseMonthToken($g[1]);
+        $day_start = self::parseDayToken($g[2]);
+        $month_end = self::parseMonthToken($g[4]);
+        $day_end = self::parseDayToken($g[5]);
+        if ($month_start === NULL || $day_start === NULL || $month_end === NULL || $day_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd((int) $g[3], $month_start, $day_start),
+          self::periodFromYmd((int) $g[6], $month_end, $day_end),
+        );
+      },
+    );
+
+    // US same-month shorthand: "May 7-13, 2026".
+    $consume(
+      '/\b(' . $months . ')\s+(' . $day . ')\s*' . $dash . '\s*(' . $day . ')\s*,?\s*(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month = self::parseMonthToken($g[1]);
+        $day_start = self::parseDayToken($g[2]);
+        $day_end = self::parseDayToken($g[3]);
+        $year = (int) $g[4];
+        if ($month === NULL || $day_start === NULL || $day_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month, $day_start),
+          self::periodFromYmd($year, $month, $day_end),
+        );
+      },
+    );
+
+    // US month-first single: "May 7, 2026".
+    $consume(
+      '/\b(' . $months . ')\s+(' . $day . ')\s*,?\s*(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $month = self::parseMonthToken($g[1]);
+        $day_num = self::parseDayToken($g[2]);
+        if ($month === NULL || $day_num === NULL) {
+          return NULL;
+        }
+        return self::periodFromYmd((int) $g[3], $month, $day_num);
+      },
+    );
+
+    // FR cross-month: "du 30 avril au 6 mai 2026".
+    $consume(
+      '/\bdu\s+(' . $day . ')\s+(' . $months . ')\s+au\s+(' . $day . ')\s+(' . $months . ')\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $month_start = self::parseMonthToken($g[2]);
+        $day_end = self::parseDayToken($g[3]);
+        $month_end = self::parseMonthToken($g[4]);
+        $year = (int) $g[5];
+        if ($day_start === NULL || $month_start === NULL || $day_end === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month_start, $day_start),
+          self::periodFromYmd($year, $month_end, $day_end),
+          TRUE,
+        );
+      },
+    );
+
+    // FR same-month: "du 7 au 13 mai 2026".
+    $consume(
+      '/\bdu\s+(' . $day . ')\s+au\s+(' . $day . ')\s+(' . $months . ')\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $day_end = self::parseDayToken($g[2]);
+        $month = self::parseMonthToken($g[3]);
+        $year = (int) $g[4];
+        if ($day_start === NULL || $day_end === NULL || $month === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month, $day_start),
+          self::periodFromYmd($year, $month, $day_end),
+        );
+      },
+    );
+
+    // ES cross-month: "del 30 de abril al 6 de mayo de 2026".
+    $consume(
+      '/\bdel\s+(' . $day . ')\s+de\s+(' . $months . ')\s+al\s+(' . $day . ')\s+de\s+(' . $months . ')\s+de\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $month_start = self::parseMonthToken($g[2]);
+        $day_end = self::parseDayToken($g[3]);
+        $month_end = self::parseMonthToken($g[4]);
+        $year = (int) $g[5];
+        if ($day_start === NULL || $month_start === NULL || $day_end === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month_start, $day_start),
+          self::periodFromYmd($year, $month_end, $day_end),
+          TRUE,
+        );
+      },
+    );
+
+    // ES same-month: "del 7 al 13 de mayo de 2026".
+    $consume(
+      '/\bdel\s+(' . $day . ')\s+al\s+(' . $day . ')\s+de\s+(' . $months . ')\s+de\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $day_end = self::parseDayToken($g[2]);
+        $month = self::parseMonthToken($g[3]);
+        $year = (int) $g[4];
+        if ($day_start === NULL || $day_end === NULL || $month === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month, $day_start),
+          self::periodFromYmd($year, $month, $day_end),
+        );
+      },
+    );
+
+    // PT cross-month: "de 30 de abril a 6 de maio de 2026".
+    $consume(
+      '/\bde\s+(' . $day . ')\s+de\s+(' . $months . ')\s+a\s+(' . $day . ')\s+de\s+(' . $months . ')\s+de\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $month_start = self::parseMonthToken($g[2]);
+        $day_end = self::parseDayToken($g[3]);
+        $month_end = self::parseMonthToken($g[4]);
+        $year = (int) $g[5];
+        if ($day_start === NULL || $month_start === NULL || $day_end === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month_start, $day_start),
+          self::periodFromYmd($year, $month_end, $day_end),
+          TRUE,
+        );
+      },
+    );
+
+    // PT same-month: "de 7 a 13 de maio de 2026".
+    $consume(
+      '/\bde\s+(' . $day . ')\s+a\s+(' . $day . ')\s+de\s+(' . $months . ')\s+de\s+(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $day_end = self::parseDayToken($g[2]);
+        $month = self::parseMonthToken($g[3]);
+        $year = (int) $g[4];
+        if ($day_start === NULL || $day_end === NULL || $month === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month, $day_start),
+          self::periodFromYmd($year, $month, $day_end),
+        );
+      },
+    );
+
+    // Dual full day+month+year range: "7 May 2026 - 13 May 2026".
+    $consume(
+      '/\b' . $optional_le . $optional_fi . '(' . $day . ')\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\s*' . $dash . '\s*' . $optional_le . $optional_fi . '(' . $day . ')\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $month_start = self::parseMonthToken($g[2]);
+        $day_end = self::parseDayToken($g[4]);
+        $month_end = self::parseMonthToken($g[5]);
+        if ($day_start === NULL || $month_start === NULL || $day_end === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd((int) $g[3], $month_start, $day_start),
+          self::periodFromYmd((int) $g[6], $month_end, $day_end),
+        );
+      },
+    );
+
+    // Cross-month day range, year once: "30 April - 6 May 2026".
+    $consume(
+      '/\b(' . $day . ')\s+' . $optional_de . '(' . $months . ')\s*' . $dash . '\s*(' . $day . ')\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      static function (array $g): ?array {
+        $day_start = self::parseDayToken($g[1]);
+        $month_start = self::parseMonthToken($g[2]);
+        $day_end = self::parseDayToken($g[3]);
+        $month_end = self::parseMonthToken($g[4]);
+        $year = (int) $g[5];
+        if ($day_start === NULL || $month_start === NULL || $day_end === NULL || $month_end === NULL) {
+          return NULL;
+        }
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month_start, $day_start),
+          self::periodFromYmd($year, $month_end, $day_end),
+          TRUE,
+        );
+      },
+    );
+
     // Numeric day range + month + year: "02 - 06 May 2026".
     $consume(
-      '/\b(\d{1,2})\s*[-–—]\s*(\d{1,2})\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      '/\b(\d{1,2})\s*' . $dash . '\s*(\d{1,2})\s+' . $optional_de . '(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
       static function (array $g): ?array {
         $month = self::parseMonthToken($g[3]);
         $year = (int) $g[4];
         if ($month === NULL) {
           return NULL;
         }
-        $start = self::periodFromYmd($year, $month, (int) $g[1]);
-        $end = self::periodFromYmd($year, $month, (int) $g[2]);
-        if ($start === NULL || $end === NULL) {
-          return NULL;
-        }
-        return [
-          'start' => min($start['start'], $end['start']),
-          'end' => max($start['end'], $end['end']),
-        ];
+        return self::mergeDayPeriods(
+          self::periodFromYmd($year, $month, (int) $g[1]),
+          self::periodFromYmd($year, $month, (int) $g[2]),
+        );
       },
     );
 
@@ -769,7 +1002,7 @@ class TitlePatternHelper {
     // Month range + year: "Jan-Mar 2026", "Nov-Feb 2026" (wraps into next
     // year).
     $consume(
-      '/\b(' . $months . ')\s*[-–—]\s*(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
+      '/\b(' . $months . ')\s*' . $dash . '\s*(' . $months . ')\s+' . $optional_de . '(\d{4})\b/iu',
       static function (array $g): ?array {
         $month_start = self::parseMonthToken($g[1]);
         $month_end = self::parseMonthToken($g[2]);
@@ -805,6 +1038,37 @@ class TitlePatternHelper {
     });
 
     return self::normalizePeriodList($periods);
+  }
+
+  /**
+   * Merge two single-day periods into an inclusive range.
+   *
+   * @param array{start: string, end: string}|null $start
+   *   Start day period.
+   * @param array{start: string, end: string}|null $end
+   *   End day period.
+   * @param bool $wrap_start_year
+   *   When TRUE and start is after end (year shared on the end date only),
+   *   move the start back one year (e.g. 30 Dec - 5 Jan 2026).
+   *
+   * @return array{start: string, end: string}|null
+   *   Merged period or NULL.
+   */
+  private static function mergeDayPeriods(?array $start, ?array $end, bool $wrap_start_year = FALSE): ?array {
+    if ($start === NULL || $end === NULL) {
+      return NULL;
+    }
+    if ($wrap_start_year && $start['start'] > $end['end']) {
+      [$year, $month, $day] = array_map('intval', explode('-', $start['start']));
+      $start = self::periodFromYmd($year - 1, $month, $day);
+      if ($start === NULL) {
+        return NULL;
+      }
+    }
+    return [
+      'start' => min($start['start'], $end['start']),
+      'end' => max($start['end'], $end['end']),
+    ];
   }
 
   /**
@@ -1020,8 +1284,22 @@ class TitlePatternHelper {
     if ($stem_a === $stem_b) {
       return TRUE;
     }
+    // Treat commas as optional so "Summary, %" and "Summary %" stay compatible
+    // when source titles omit the comma before a date.
+    if (self::stemCompatibilityKey($stem_a) === self::stemCompatibilityKey($stem_b)) {
+      return TRUE;
+    }
     return self::titleMatchesLikePattern($stem_b, $stem_a)
       || self::titleMatchesLikePattern($stem_a, $stem_b);
+  }
+
+  /**
+   * Normalize a stem for compatibility checks (ignore commas / extra spaces).
+   */
+  private static function stemCompatibilityKey(string $stem): string {
+    $key = str_replace(',', ' ', $stem);
+    $key = preg_replace('/\s+/u', ' ', $key) ?? $key;
+    return trim($key);
   }
 
   /**
