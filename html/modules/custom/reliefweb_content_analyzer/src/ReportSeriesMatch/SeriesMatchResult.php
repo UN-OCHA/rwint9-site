@@ -50,7 +50,9 @@ final readonly class SeriesMatchResult {
    *   selected cluster)
    * - 0.25 cluster composite score
    * - 0.20 dual title+URL retrieval ratio
-   * - 0.15 single-cluster bonus (all candidates collapsed into one cluster)
+   * - 0.15 dominance bonus (0.15 × bestClusterShare)
+   *
+   * Equivalent to 0.55 × share + 0.25 × cluster_score + 0.20 × both_ratio.
    *
    * @return float|null
    *   A score between 0.0 and 1.0, or NULL when the match is not scorable.
@@ -60,9 +62,10 @@ final readonly class SeriesMatchResult {
       return NULL;
     }
 
+    $share = min(1.0, max(0.0, $this->evidence->bestClusterShare));
     $score = 0.0;
 
-    $score += 0.40 * min(1.0, max(0.0, $this->evidence->bestClusterShare));
+    $score += 0.40 * $share;
     $score += 0.25 * min(1.0, $this->evidence->clusterScore);
 
     if ($this->evidence->mergedAfterLimitCount > 0) {
@@ -70,9 +73,7 @@ final readonly class SeriesMatchResult {
       $score += 0.20 * min(1.0, $both_ratio);
     }
 
-    if ($this->evidence->clusterCount === 1) {
-      $score += 0.15;
-    }
+    $score += 0.15 * $share;
 
     return round(min(1.0, max(0.0, $score)), 4);
   }

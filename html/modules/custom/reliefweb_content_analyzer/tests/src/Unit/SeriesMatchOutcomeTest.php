@@ -225,7 +225,7 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
    * ceiling match outcome to medium / to-review.
    *
    * Series: 17/17 cluster, 1 cluster, no URL both-signal.
-   *   = 0.40×1.0 + 0.25×1.0 + 0.20×0 + 0.15×1 = 0.80 → high.
+   *   = 0.40×1.0 + 0.25×1.0 + 0.20×0 + 0.15×1.0 = 0.80 → high.
    *
    * Tagging remains high from field/title weights, but field policies demote.
    */
@@ -310,7 +310,7 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
       ),
       new SeriesMatchEvidence(
         candidateIds: [1, 2, 3, 4],
-        // 0.40*0.5 + 0.25*1 + 0.20*1 = 0.65 → medium (passes min, not high).
+        // 0.55*0.5 + 0.25*1 + 0.20*1 = 0.725 → medium (passes min, not high).
         bestClusterShare: 0.5,
         clusterScore: 1.0,
         clusterCount: 3,
@@ -381,13 +381,11 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
    */
   private function buildResult(float $series, float $tagging): SeriesMatchResult {
     // Evidence values yielding the requested series score.
-    // series = 0.40*share + 0.25*clusterScore + 0.20*both + 0.15*bonus.
-    // Single cluster, no URL: 0.40*share + 0.25 + 0.15.
-    // share = (series - 0.40) / 0.40 when series > 0.40.
+    // series = 0.40*share + 0.25*clusterScore + 0.20*both + 0.15*share.
+    // No URL: 0.55*share + 0.25 → share = (series - 0.25) / 0.55.
     // For series tier: >= 0.80 high, >= 0.60 medium, else low.
-    // clusterCount=1, clusterScore=1.0 → 0.40*share + 0.40.
-    // x = (series - 0.40) / 0.40; floor 0.40 for lower series.
-    $share = $series >= 0.40 ? ($series - 0.40) / 0.40 : 0.0;
+    // clusterScore=1.0, both=0 → 0.55*share + 0.25.
+    $share = $series >= 0.25 ? ($series - 0.25) / 0.55 : 0.0;
     $share = min(1.0, max(0.0, $share));
     // Tagging: 0.70*field_score + 0.30*title_score.
     // Strategy: 10 fields, N AllCandidates, (10-N) Skipped.

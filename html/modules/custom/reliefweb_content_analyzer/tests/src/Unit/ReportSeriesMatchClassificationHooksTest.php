@@ -198,7 +198,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
   /**
    * Builds a SeriesMatchResult with confidence scores above the high tier.
    *
-   * Series confidence: 0.40*1 + 0.25*1 + 0.20*(3/3) + 0.15 = 1.00.
+   * Series confidence: 0.40*1 + 0.25*1 + 0.20*(3/3) + 0.15*1 = 1.00.
    * Tagging confidence: 0.70*1.0 + 0.30*1.0 = 1.00.
    * Both above the high threshold (0.80) → outcome tier 'high'.
    *
@@ -232,7 +232,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
    * Strong series confidence (high tier) passes the apply minimum and avoids
    * the mismatch skip rule; weak tagging forces the outcome tier to low.
    *
-   * Series: 0.40*1 + 0.25*1 + 0.15 = 0.80 → high.
+   * Series: 0.40*1 + 0.25*1 + 0.15*1 = 0.80 → high.
    * Tagging: skipped field + AI title → low.
    *
    * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult
@@ -613,7 +613,7 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
         seriesBodyRatio: 0.0,
       ),
     );
-    // Series = 0.40*0.5 + 0.25*1 + 0.20*1 = 0.65 → medium, passes apply min.
+    // Series = 0.55*0.5 + 0.25*1 + 0.20*1 = 0.725 → medium, passes apply min.
     // Mismatch rule: not high + share<=0.5 + clusters>=2 → skip_match.
     $matcher = $this->createMock(ReportSeriesMatcherInterface::class);
     $matcher->expects($this->once())

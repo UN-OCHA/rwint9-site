@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_content_analyzer\Form;
 
-use Drupal\Component\Utility\Html;
 use Drupal\Core\Datetime\DateFormatterInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -417,8 +416,8 @@ final class ReportSeriesMatchForm extends FormBase {
           continue;
         }
         $row = [
-          ['data' => Link::fromTextAndUrl((string) $nid, $candidate->toUrl())->toRenderable()],
-          Html::escape($candidate->label() ?? ''),
+          (string) $nid,
+          ['data' => Link::fromTextAndUrl($candidate->label(), $candidate->toUrl())->toRenderable()],
           $this->dateFormatter->format((int) $candidate->getCreatedTime(), 'short'),
         ];
         if ($scores !== []) {

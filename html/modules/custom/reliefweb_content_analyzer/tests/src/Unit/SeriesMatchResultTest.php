@@ -51,9 +51,9 @@ class SeriesMatchResultTest extends UnitTestCase {
   }
 
   /**
-   * Perfect cluster, single cluster, no dual signal.
+   * Perfect cluster share, no dual signal.
    *
-   * Expected: 0.40+0.25+0+0.15 = 0.80.
+   * Expected: 0.40×1 + 0.25×1 + 0 + 0.15×1 = 0.80.
    */
   public function testSeriesConfidencePerfectClusterNoUrl(): void {
     $result = $this->buildResultWithEvidence(
@@ -67,9 +67,9 @@ class SeriesMatchResultTest extends UnitTestCase {
   }
 
   /**
-   * Perfect cluster, single cluster, full dual signal.
+   * Perfect cluster share, full dual signal.
    *
-   * Expected: 0.40+0.25+0.20+0.15 = 1.00.
+   * Expected: 0.40×1 + 0.25×1 + 0.20×1 + 0.15×1 = 1.00.
    */
   public function testSeriesConfidencePerfect(): void {
     $result = $this->buildResultWithEvidence(
@@ -83,17 +83,38 @@ class SeriesMatchResultTest extends UnitTestCase {
   }
 
   /**
-   * Multiple clusters prevents single-cluster bonus; 0.40+0.25+0 = 0.65.
+   * Dominant cluster with a singleton outlier still clears the apply minimum.
+   *
+   * Chad-like 29+1 split: 0.55×0.967 + 0.25×0.985 = 0.77785 → 0.7779.
    */
-  public function testSeriesConfidenceMultipleClustersPenalty(): void {
+  public function testSeriesConfidenceDominantSplitClearsMinimum(): void {
     $result = $this->buildResultWithEvidence(
-      bestClusterShare: 1.0,
-      clusterScore: 1.0,
-      clusterCount: 3,
+      bestClusterShare: 0.967,
+      clusterScore: 0.985,
+      clusterCount: 2,
       bothSignalsCount: 0,
-      mergedAfterLimitCount: 17,
+      mergedAfterLimitCount: 30,
     );
-    $this->assertEqualsWithDelta(0.65, $result->calculateSeriesConfidence(), 0.0001);
+    $expected = round(0.55 * 0.967 + 0.25 * 0.985, 4);
+    $this->assertEqualsWithDelta($expected, $result->calculateSeriesConfidence(), 0.0001);
+    $this->assertGreaterThanOrEqual(0.65, $result->calculateSeriesConfidence());
+  }
+
+  /**
+   * Competing weak-blob share stays well below the apply minimum.
+   *
+   * Strong core vs weak blob: 0.55×0.5 + 0.25×1.0 = 0.525.
+   */
+  public function testSeriesConfidenceCompetingWeakBlobStaysBelowMinimum(): void {
+    $result = $this->buildResultWithEvidence(
+      bestClusterShare: 0.5,
+      clusterScore: 1.0,
+      clusterCount: 2,
+      bothSignalsCount: 0,
+      mergedAfterLimitCount: 24,
+    );
+    $this->assertEqualsWithDelta(0.525, $result->calculateSeriesConfidence(), 0.0001);
+    $this->assertLessThan(0.65, $result->calculateSeriesConfidence());
   }
 
   /**
