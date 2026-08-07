@@ -6,6 +6,14 @@ reliefweb_import.reliefweb_importer.plugin.list:
   requirements:
     _permission: 'administer reliefweb content importers'
 
+reliefweb_import.reliefweb_importer.settings:
+  path: '/admin/config/reliefweb/content-importers/settings'
+  defaults:
+    _form: '\Drupal\reliefweb_import\Form\ReliefWebImportSettingsForm'
+    _title: 'ReliefWeb import settings'
+  requirements:
+    _permission: 'administer reliefweb content importers'
+
 reliefweb_import.reliefweb_importer.plugin.configure:
   path: '/admin/config/reliefweb/content-importers/{plugin_id}/configure'
   defaults:
