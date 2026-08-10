@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_content_analyzer\Unit;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchCandidate;
 use Drupal\reliefweb_content_analyzer\Services\ReportDuplicateMatcher;
 use Drupal\reliefweb_utility\Helpers\TitlePatternHelper;
@@ -32,6 +34,18 @@ class ReportDuplicateMatcherEmbeddingTest extends UnitTestCase {
   protected function invoke(string $method, array $args = []): mixed {
     $matcher = (new \ReflectionClass(ReportDuplicateMatcher::class))
       ->newInstanceWithoutConstructor();
+
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')
+      ->with('report_series_matching.matcher.title_pattern_similarity_threshold')
+      ->willReturn(TitlePatternHelper::DEFAULT_SERIES_STEM_SIMILARITY);
+    $factory = $this->createMock(ConfigFactoryInterface::class);
+    $factory->method('get')
+      ->with('reliefweb_content_analyzer.settings')
+      ->willReturn($config);
+    $property = new \ReflectionProperty(ReportDuplicateMatcher::class, 'configFactory');
+    $property->setValue($matcher, $factory);
+
     $ref = new \ReflectionMethod(ReportDuplicateMatcher::class, $method);
     return $ref->invoke($matcher, ...$args);
   }
@@ -47,6 +61,10 @@ class ReportDuplicateMatcherEmbeddingTest extends UnitTestCase {
     $this->assertFalse($this->invoke('isSeriesSibling', [
       'Completely unrelated headline about floods',
       'Another different story about earthquakes',
+    ]));
+    $this->assertTrue($this->invoke('isSeriesSibling', [
+      'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026',
+      'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026',
     ]));
     $this->assertSame(
       TitlePatternHelper::COMPARE_SERIES_SIBLING,

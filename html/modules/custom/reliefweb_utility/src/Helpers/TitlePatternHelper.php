@@ -32,6 +32,13 @@ class TitlePatternHelper {
   public const COMPARE_INCONCLUSIVE = 'inconclusive';
 
   /**
+   * Default minimum title-pattern similarity for soft stem compatibility.
+   *
+   * Matches report_series_matching.matcher.title_pattern_similarity_threshold.
+   */
+  public const float DEFAULT_SERIES_STEM_SIMILARITY = 0.90;
+
+  /**
    * Convert a title to SQL LIKE prefix patterns.
    *
    * @param string $title
@@ -457,21 +464,98 @@ class TitlePatternHelper {
   }
 
   /**
+   * Whether two titles look like the same series line.
+   *
+   * @param string $title_a
+   *   First title.
+   * @param string $title_b
+   *   Second title.
+   * @param float $minSimilarity
+   *   Minimum scoreTitleSimilarity for a soft match.
+   *
+   * @return bool
+   *   TRUE when both titles have a compatible stem (exact, LIKE, or similar).
+   */
+  public static function seriesTitlesCompatible(
+    string $title_a,
+    string $title_b,
+    float $minSimilarity = self::DEFAULT_SERIES_STEM_SIMILARITY,
+  ): bool {
+    $title_a = trim($title_a);
+    $title_b = trim($title_b);
+    if ($title_a === '' || $title_b === '') {
+      return FALSE;
+    }
+    return self::seriesStemsCompatible(
+      self::normalizeSeriesStem($title_a),
+      self::normalizeSeriesStem($title_b),
+      $minSimilarity,
+    );
+  }
+
+  /**
+   * Whether two already-patternized stems look like the same series line.
+   *
+   * Hard checks (literal content, equality, comma-normalized key, mutual LIKE)
+   * run first; otherwise scorePatternSimilarity must meet $minSimilarity.
+   *
+   * @param string $stem_a
+   *   First patternized stem (typically from normalizeSeriesStem()).
+   * @param string $stem_b
+   *   Second patternized stem.
+   * @param float $minSimilarity
+   *   Minimum scorePatternSimilarity for a soft match.
+   *
+   * @return bool
+   *   TRUE when the stems are compatible.
+   */
+  public static function seriesStemsCompatible(
+    string $stem_a,
+    string $stem_b,
+    float $minSimilarity = self::DEFAULT_SERIES_STEM_SIMILARITY,
+  ): bool {
+    if (!self::stemHasLiteralContent($stem_a) || !self::stemHasLiteralContent($stem_b)) {
+      return FALSE;
+    }
+    if ($stem_a === $stem_b) {
+      return TRUE;
+    }
+    // Treat commas as optional so "Summary, %" and "Summary %" stay compatible
+    // when source titles omit the comma before a date.
+    if (self::stemCompatibilityKey($stem_a) === self::stemCompatibilityKey($stem_b)) {
+      return TRUE;
+    }
+    if (
+      self::titleMatchesLikePattern($stem_b, $stem_a)
+      || self::titleMatchesLikePattern($stem_a, $stem_b)
+    ) {
+      return TRUE;
+    }
+    return self::scorePatternSimilarity($stem_a, $stem_b) >= $minSimilarity;
+  }
+
+  /**
    * Compare two marker payloads from extractSeriesMarkers().
    *
    * @param SeriesMarkers $a
    *   First markers.
    * @param SeriesMarkers $b
    *   Second markers.
+   * @param float $minStemSimilarity
+   *   Minimum stem similarity when hard stem checks fail.
    *
    * @return string
    *   One of COMPARE_* constants.
    */
-  public static function compareSeriesMarkers(array $a, array $b): string {
+  public static function compareSeriesMarkers(
+    array $a,
+    array $b,
+    float $minStemSimilarity = self::DEFAULT_SERIES_STEM_SIMILARITY,
+  ): string {
     $stem_a = (string) ($a['stem'] ?? '');
     $stem_b = (string) ($b['stem'] ?? '');
-    // Differen stems: unrelated.
-    if (!self::stemsCompatible($stem_a, $stem_b)) {
+    // Different stems: unrelated.
+    if (!self::seriesStemsCompatible($stem_a, $stem_b, $minStemSimilarity)) {
       return self::COMPARE_UNRELATED;
     }
 
@@ -1566,25 +1650,6 @@ class TitlePatternHelper {
       }
     }
     return $map;
-  }
-
-  /**
-   * Whether two stems look like the same series line.
-   */
-  private static function stemsCompatible(string $stem_a, string $stem_b): bool {
-    if (!self::stemHasLiteralContent($stem_a) || !self::stemHasLiteralContent($stem_b)) {
-      return FALSE;
-    }
-    if ($stem_a === $stem_b) {
-      return TRUE;
-    }
-    // Treat commas as optional so "Summary, %" and "Summary %" stay compatible
-    // when source titles omit the comma before a date.
-    if (self::stemCompatibilityKey($stem_a) === self::stemCompatibilityKey($stem_b)) {
-      return TRUE;
-    }
-    return self::titleMatchesLikePattern($stem_b, $stem_a)
-      || self::titleMatchesLikePattern($stem_a, $stem_b);
   }
 
   /**

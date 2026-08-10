@@ -573,7 +573,24 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     return TitlePatternHelper::compareSeriesMarkers(
       TitlePatternHelper::extractSeriesMarkers($title_a),
       TitlePatternHelper::extractSeriesMarkers($title_b),
+      $this->getTitlePatternSimilarityThreshold(),
     ) === TitlePatternHelper::COMPARE_SERIES_SIBLING;
+  }
+
+  /**
+   * Stem similarity threshold shared with the series matcher.
+   *
+   * @return float
+   *   Configured title_pattern_similarity_threshold, or the helper default.
+   */
+  protected function getTitlePatternSimilarityThreshold(): float {
+    $value = $this->configFactory
+      ->get('reliefweb_content_analyzer.settings')
+      ->get('report_series_matching.matcher.title_pattern_similarity_threshold');
+    if (!is_numeric($value)) {
+      return TitlePatternHelper::DEFAULT_SERIES_STEM_SIMILARITY;
+    }
+    return (float) $value;
   }
 
   /**

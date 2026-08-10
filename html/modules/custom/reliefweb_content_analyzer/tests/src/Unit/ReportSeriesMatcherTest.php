@@ -803,16 +803,18 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    * Skips AI when required series markers are missing from ranked candidates.
    */
   public function testGenerateReportTitleWithAiSkipsWhenRequiredMarkersMissing(): void {
-    $pages = [[
+    $pages = [
       [
-        'text' => 'UNHCR Middle East Situation Emergency Flash Update',
-        'x' => 10.0,
-        'y' => 10.0,
-        'w' => 200.0,
-        'h' => 16.0,
-        'size' => 14.0,
+        [
+          'text' => 'UNHCR Middle East Situation Emergency Flash Update',
+          'x' => 10.0,
+          'y' => 10.0,
+          'w' => 200.0,
+          'h' => 16.0,
+          'size' => 14.0,
+        ],
       ],
-    ]];
+    ];
     $matched_title = 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026';
     // Region matches series stem but has no issue/date markers; dissimilar
     // import.
@@ -958,16 +960,18 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    * AI titles that ignore the series naming stem are rejected.
    */
   public function testGenerateReportTitleWithAiRejectsSeriesPatternMismatch(): void {
-    $pages = [[
+    $pages = [
       [
-        'text' => 'OPERATIONAL UPDATE – SYRIA',
-        'x' => 10.0,
-        'y' => 10.0,
-        'w' => 200.0,
-        'h' => 16.0,
-        'size' => 14.0,
+        [
+          'text' => 'OPERATIONAL UPDATE – SYRIA',
+          'x' => 10.0,
+          'y' => 10.0,
+          'w' => 200.0,
+          'h' => 16.0,
+          'size' => 14.0,
+        ],
       ],
-    ]];
+    ];
     $matched_title = 'UNHCR Syria Operational Update, December 2025';
     $candidates = [
       [

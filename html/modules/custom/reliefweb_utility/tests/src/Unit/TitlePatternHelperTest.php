@@ -314,6 +314,27 @@ class TitlePatternHelperTest extends UnitTestCase {
   }
 
   /**
+   * Soft stem gate treats Flash vs Update as the same series line.
+   */
+  public function testSeriesTitlesCompatibleFlashNearMiss(): void {
+    $update = 'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026';
+    $flash = 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026';
+    $unrelated = 'Drought and displacement in Somalia';
+
+    $this->assertTrue(TitlePatternHelper::seriesTitlesCompatible(
+      $update,
+      $flash,
+      TitlePatternHelper::DEFAULT_SERIES_STEM_SIMILARITY,
+    ));
+    $this->assertFalse(TitlePatternHelper::seriesTitlesCompatible(
+      $update,
+      $unrelated,
+      TitlePatternHelper::DEFAULT_SERIES_STEM_SIMILARITY,
+    ));
+    $this->assertFalse(TitlePatternHelper::seriesTitlesCompatible('', $flash));
+  }
+
+  /**
    * Data provider for extractSeriesMarkers cases.
    *
    * @return array<string, array{string, int[], int[], list<array{start: string, end: string}>}>
@@ -612,6 +633,11 @@ class TitlePatternHelperTest extends UnitTestCase {
       'fews comma vs no comma sibling' => [
         'Global Weather Hazards Summary, April 02, 2026 – April 08, 2026',
         'Global Weather Hazards Summary March 26, 2026 - April 1, 2026',
+        TitlePatternHelper::COMPARE_SERIES_SIBLING,
+      ],
+      'flash vs update issue and date sibling' => [
+        'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026',
+        'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026',
         TitlePatternHelper::COMPARE_SERIES_SIBLING,
       ],
     ];

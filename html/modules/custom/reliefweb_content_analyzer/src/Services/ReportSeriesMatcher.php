@@ -2381,13 +2381,11 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $example_titles = $this->selectConsistentExampleTitles($candidate_titles);
     if ($example_titles !== NULL) {
       $example_title = $example_titles[0];
-      $example_stem = TitlePatternHelper::stringToLikePattern($example_title);
-      $original_stem = TitlePatternHelper::stringToLikePattern($original_title);
-      $similar_enough = TitlePatternHelper::scoreTitleSimilarity(
+      if (TitlePatternHelper::seriesTitlesCompatible(
         $original_title,
         $example_title,
-      ) >= $this->getTitlePatternSimilarityThreshold();
-      if ($original_stem === $example_stem || $similar_enough) {
+        $this->getTitlePatternSimilarityThreshold(),
+      )) {
         return [
           'title' => $original_title,
           'source' => SeriesMatchTitleSource::KeptOriginalPatternMatch,
@@ -3114,8 +3112,8 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *   Series member titles used as style examples.
    *
    * @return bool
-   *   TRUE when TitlePatternHelper::scoreTitleSimilarity() meets the
-   *   configured title_pattern_similarity_threshold for at least one match.
+   *   TRUE when TitlePatternHelper::seriesTitlesCompatible() holds for at
+   *   least one matched title at the configured similarity threshold.
    */
   protected function generatedTitleMatchesSeriesPattern(string $title, array $matched_titles): bool {
     if ($title === '') {
@@ -3126,7 +3124,7 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       if (!is_string($matched_title) || $matched_title === '') {
         continue;
       }
-      if (TitlePatternHelper::scoreTitleSimilarity($title, $matched_title) >= $threshold) {
+      if (TitlePatternHelper::seriesTitlesCompatible($title, $matched_title, $threshold)) {
         return TRUE;
       }
     }
