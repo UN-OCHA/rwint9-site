@@ -25,6 +25,7 @@ use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
 use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_utility\Helpers\TitlePatternHelper;
+use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -61,7 +62,7 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  *   aiDurationSeconds: ?float,
  * }
  */
-final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
+class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
 
   /**
    * Complex Emergency disaster type term ID.
@@ -90,6 +91,8 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *   The database connection.
    * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completionPluginManager
    *   The OCHA AI completion plugin manager.
+   * @param \GuzzleHttp\ClientInterface $httpClient
+   *   HTTP client for ocha_ai_helper title matching.
    */
   public function __construct(
     protected readonly ConfigFactoryInterface $configFactory,
@@ -99,6 +102,8 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     protected readonly Connection $database,
     #[Autowire(service: 'plugin.manager.ocha_ai.completion')]
     protected readonly CompletionPluginManagerInterface $completionPluginManager,
+    #[Autowire(service: 'http_client')]
+    protected readonly ClientInterface $httpClient,
   ) {}
 
   /**
@@ -481,13 +486,52 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
+   * Minimum titles sharing one stem required before AI title generation.
+   *
+   * @return int
+   *   Configured minimum consistent example count.
+   */
+  protected function getAiTitleMinConsistentExamples(): int {
+    return $this->matcherSettings()->aiTitleMinConsistentExamples;
+  }
+
+  /**
+   * Number of PDF pages to extract for series title matching.
+   *
+   * @return int
+   *   Page count starting from page 1 (at least 1).
+   */
+  protected function getAiTitleExtractPageCount(): int {
+    return max(1, $this->matcherSettings()->aiTitleExtractPageCount);
+  }
+
+  /**
+   * Get the ocha_ai_helper series title match endpoint.
+   *
+   * @return string
+   *   Absolute URL for POST /text/match/series-title.
+   */
+  protected function getAiTitleMatchEndpoint(): string {
+    return $this->matcherSettings()->aiTitleMatchEndpoint;
+  }
+
+  /**
+   * Minimum helper confidence required before calling the title LLM.
+   *
+   * @return float
+   *   Confidence threshold in 0–1.
+   */
+  protected function getAiTitleMatchMinConfidence(): float {
+    return $this->matcherSettings()->aiTitleMatchMinConfidence;
+  }
+
+  /**
    * Get the template for the structured output title field description.
    *
    * @return string
    *   Description template; @examples is replaced with numbered example titles.
    */
   protected function getAiTitleDescriptionTemplate(): string {
-    // @todo review the wording of the description if necessary after testing.
     return $this->matcherSettings()->aiTitleDescriptionTemplate;
   }
 
@@ -2258,12 +2302,17 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
-    if ($this->checkReportTitleSimilarity($original_title, $candidate_titles)) {
-      return [
-        'title' => $original_title,
-        'source' => SeriesMatchTitleSource::KeptOriginalPatternMatch,
-        'aiDurationSeconds' => NULL,
-      ];
+    // Keep the import title when it already matches the dominant series stem.
+    $example_titles = $this->selectConsistentExampleTitles($candidate_titles);
+    if ($example_titles !== NULL) {
+      $example_stem = TitlePatternHelper::stringToLikePattern($example_titles[0]);
+      if (TitlePatternHelper::stringToLikePattern($original_title) === $example_stem) {
+        return [
+          'title' => $original_title,
+          'source' => SeriesMatchTitleSource::KeptOriginalPatternMatch,
+          'aiDurationSeconds' => NULL,
+        ];
+      }
     }
 
     if (!$this->matcherSettings()->aiTitleGenerationEnabled) {
@@ -2274,6 +2323,8 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
+    // Helper matching selects extract-aligned examples; do not require a
+    // dominant LIKE stem before calling the layout-aware matcher.
     return $this->generateReportTitleWithAi($entity, $original_title, $candidate_titles);
   }
 
@@ -2304,31 +2355,66 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
-   * Check if the title is similar to the candidate titles.
+   * Selects recency-ordered example titles from the dominant LIKE stem group.
    *
-   * @param string $title
-   *   The title to check.
+   * Groups candidate titles by TitlePatternHelper::stringToLikePattern(). Picks
+   * the largest group; ties go to the group whose first member appears earliest
+   * in the recency-ordered input. Returns NULL when the winning group is below
+   * the configured minimum (or below the candidate count when fewer titles
+   * exist than the minimum).
+   *
    * @param string[] $candidate_titles
-   *   The candidate titles to check.
+   *   Non-empty candidate titles in recency order (most recent first).
    *
-   * @return bool
-   *   TRUE if the title is similar to the candidate titles, FALSE otherwise.
+   * @return string[]|null
+   *   Up to ai_title_example_line_count titles from the winning stem, or NULL
+   *   when examples are too inconsistent for AI title generation.
    */
-  protected function checkReportTitleSimilarity(
-    string $title,
-    array $candidate_titles,
-  ): bool {
-    // Generate SQL pattern for all the titles. If they are all the same, then
-    // we keep the document title as is. Otherwise we generate a new title
-    // using the AI.
-    $patterns = [TitlePatternHelper::stringToLikePattern($title)];
-    foreach ($candidate_titles as $candidate_title) {
-      $patterns[] = TitlePatternHelper::stringToLikePattern($candidate_title);
+  protected function selectConsistentExampleTitles(array $candidate_titles): ?array {
+    if ($candidate_titles === []) {
+      return NULL;
     }
-    // @todo we could be a bit lenient to allow for slight varations like
-    // dashes, mdashes, etc.
-    $patterns = array_unique($patterns);
-    return count($patterns) === 1;
+
+    /** @var array<string, list<string>> $groups */
+    $groups = [];
+    /** @var array<string, int> $stem_first_index */
+    $stem_first_index = [];
+    foreach ($candidate_titles as $index => $title) {
+      $stem = TitlePatternHelper::stringToLikePattern($title);
+      if (!isset($groups[$stem])) {
+        $groups[$stem] = [];
+        $stem_first_index[$stem] = $index;
+      }
+      $groups[$stem][] = $title;
+    }
+
+    $best_stem = NULL;
+    $best_size = -1;
+    $best_first_index = PHP_INT_MAX;
+    foreach ($groups as $stem => $titles) {
+      $size = count($titles);
+      $first_index = $stem_first_index[$stem];
+      if ($size > $best_size
+        || ($size === $best_size && $first_index < $best_first_index)) {
+        $best_stem = $stem;
+        $best_size = $size;
+        $best_first_index = $first_index;
+      }
+    }
+
+    if ($best_stem === NULL) {
+      return NULL;
+    }
+
+    $required = min(
+      $this->getAiTitleMinConsistentExamples(),
+      count($candidate_titles),
+    );
+    if ($best_size < $required) {
+      return NULL;
+    }
+
+    return array_slice($groups[$best_stem], 0, $this->getAiTitleExampleLineCount());
   }
 
   /**
@@ -2339,7 +2425,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    * @param string $original_title
    *   The original title of the report.
    * @param string[] $candidate_titles
-   *   The candidate titles to use as examples.
+   *   Recency-ordered series candidate titles for helper matching.
    *
    * @return TitleGenerationResult
    *   Generated title, provenance, and optional AI duration.
@@ -2359,8 +2445,9 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     }
 
     $file = $this->getFirstFile($entity);
-    $source = $file !== NULL ? trim($file->extractText(1)) : '';
-    if ($source === '') {
+    $page_count = $this->getAiTitleExtractPageCount();
+    $pages = $file !== NULL ? $file->extractStructuredTextSpans(1, $page_count) : [];
+    if ($pages === [] || array_filter($pages) === []) {
       $this->getLogger()->warning('Report title unchanged: no attachment text.');
       return [
         'title' => $original_title,
@@ -2369,6 +2456,52 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
+    $match = $this->matchSeriesTitleRegion($pages, $candidate_titles);
+    if ($match === NULL) {
+      $this->getLogger()->warning('Report title unchanged: low title match confidence.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $title_region_text = trim((string) ($match['title_region_text'] ?? ''));
+    $matched_titles = array_values(array_filter(
+      $match['matched_titles'] ?? [],
+      static fn ($title): bool => is_string($title) && $title !== '',
+    ));
+    $confidence = (float) ($match['confidence'] ?? 0.0);
+    $nearby_date = $this->nullableMatchString($match['nearby_date'] ?? NULL);
+    $nearby_issue = $this->nullableMatchString($match['nearby_issue'] ?? NULL);
+    $nearby_week = $this->nullableMatchString($match['nearby_week'] ?? NULL);
+
+    if (
+      $title_region_text === ''
+      || $matched_titles === []
+      || $confidence < $this->getAiTitleMatchMinConfidence()
+    ) {
+      $this->getLogger()->warning('Report title unchanged: low title match confidence.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $source = $this->buildAiTitlePromptSource(
+      $title_region_text,
+      $nearby_date,
+      $nearby_issue,
+      $nearby_week,
+    );
+    $grounding_source = $this->buildAiTitleGroundingSource(
+      $title_region_text,
+      $nearby_date,
+      $nearby_issue,
+      $nearby_week,
+    );
+
     // Truncate the source to reduce the number of tokens passed to the AI.
     $max_source_length = $this->getAiTitleSourceLengthLimit();
     if (mb_strlen($source) > $max_source_length) {
@@ -2376,7 +2509,7 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     }
 
     $example_lines = [];
-    foreach (array_slice($candidate_titles, 0, $this->getAiTitleExampleLineCount()) as $index => $title) {
+    foreach ($matched_titles as $index => $title) {
       $example_lines[] = ($index + 1) . '. ' . $title;
     }
 
@@ -2458,11 +2591,303 @@ final class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
+    if (!$this->generatedTitleMarkersAreGrounded($title, $grounding_source)) {
+      $this->getLogger()->warning('Report title unchanged: AI title has ungrounded date or series marker.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
     return [
       'title' => $title,
       'source' => SeriesMatchTitleSource::AiGenerated,
       'aiDurationSeconds' => $ai_duration ?? NULL,
     ];
+  }
+
+  /**
+   * POSTs page spans and candidate titles to ocha_ai_helper series-title match.
+   *
+   * @param list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>> $pages
+   *   Per-page structured PDF spans from the configured extract range.
+   * @param string[] $candidate_titles
+   *   Recency-ordered series member titles.
+   *
+   * @return array<string, mixed>|null
+   *   Decoded helper response, or NULL on HTTP/JSON failure.
+   */
+  protected function matchSeriesTitleRegion(array $pages, array $candidate_titles): ?array {
+    $endpoint = $this->getAiTitleMatchEndpoint();
+    if ($endpoint === '' || $pages === [] || array_filter($pages) === [] || $candidate_titles === []) {
+      return NULL;
+    }
+
+    try {
+      $response = $this->httpClient->request('POST', $endpoint, [
+        'json' => [
+          'pages' => array_values($pages),
+          'titles' => array_values($candidate_titles),
+          'top_page_fraction' => 0.4,
+          'match_threshold' => 70,
+          'max_matched_titles' => $this->getAiTitleExampleLineCount(),
+        ],
+        'timeout' => 30,
+        'http_errors' => FALSE,
+      ]);
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error('Series title match request failed: @message', [
+        '@message' => $exception->getMessage(),
+      ]);
+      return NULL;
+    }
+
+    $status = $response->getStatusCode();
+    $body = (string) $response->getBody();
+    if ($status < 200 || $status >= 300) {
+      $this->getLogger()->warning('Series title match returned HTTP @status: @body', [
+        '@status' => $status,
+        '@body' => mb_substr($body, 0, 500),
+      ]);
+      return NULL;
+    }
+
+    try {
+      $decoded = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $exception) {
+      $this->getLogger()->warning('Series title match returned invalid JSON: @message', [
+        '@message' => $exception->getMessage(),
+      ]);
+      return NULL;
+    }
+
+    return is_array($decoded) ? $decoded : NULL;
+  }
+
+  /**
+   * Builds LLM prompt text from title region and markers.
+   *
+   * @param string $title_region_text
+   *   Layout-matched title region text.
+   * @param string|null $nearby_date
+   *   Nearby date marker, if any.
+   * @param string|null $nearby_issue
+   *   Nearby issue marker, if any.
+   * @param string|null $nearby_week
+   *   Nearby week marker, if any.
+   *
+   * @return string
+   *   Prompt source text for the completion plugin.
+   */
+  protected function buildAiTitlePromptSource(
+    string $title_region_text,
+    ?string $nearby_date,
+    ?string $nearby_issue,
+    ?string $nearby_week,
+  ): string {
+    $parts = [$title_region_text];
+    $markers = [];
+    if ($nearby_date !== NULL) {
+      $markers[] = 'Date: ' . $nearby_date;
+    }
+    if ($nearby_issue !== NULL) {
+      $markers[] = 'Issue: ' . $nearby_issue;
+    }
+    if ($nearby_week !== NULL) {
+      $markers[] = 'Week: ' . $nearby_week;
+    }
+    if ($markers !== []) {
+      $parts[] = "Grounded markers from the document (copy exactly if used; omit if unused):\n"
+        . implode("\n", $markers);
+    }
+    return implode("\n\n", $parts);
+  }
+
+  /**
+   * Builds the grounding corpus for post-AI marker checks.
+   *
+   * @param string $title_region_text
+   *   Layout-matched title region text.
+   * @param string|null $nearby_date
+   *   Nearby date marker, if any.
+   * @param string|null $nearby_issue
+   *   Nearby issue marker, if any.
+   * @param string|null $nearby_week
+   *   Nearby week marker, if any.
+   *
+   * @return string
+   *   Text that may legitimately ground date/issue/week markers.
+   */
+  protected function buildAiTitleGroundingSource(
+    string $title_region_text,
+    ?string $nearby_date,
+    ?string $nearby_issue,
+    ?string $nearby_week,
+  ): string {
+    $parts = [$title_region_text];
+    foreach ([$nearby_date, $nearby_issue, $nearby_week] as $marker) {
+      if ($marker !== NULL) {
+        $parts[] = $marker;
+      }
+    }
+    return implode("\n", $parts);
+  }
+
+  /**
+   * Normalizes a nullable helper string field.
+   *
+   * @param mixed $value
+   *   Raw response value.
+   *
+   * @return string|null
+   *   Trimmed non-empty string, or NULL.
+   */
+  protected function nullableMatchString(mixed $value): ?string {
+    if (!is_string($value)) {
+      return NULL;
+    }
+    $trimmed = trim($value);
+    return $trimmed !== '' ? $trimmed : NULL;
+  }
+
+  /**
+   * Whether date/issue/week markers in a generated title appear in the source.
+   *
+   * @param string $title
+   *   AI-generated title.
+   * @param string $source
+   *   Attachment source text passed to the model.
+   *
+   * @return bool
+   *   TRUE when every extracted marker is grounded in the source, or when the
+   *   title has no markers to check.
+   */
+  protected function generatedTitleMarkersAreGrounded(string $title, string $source): bool {
+    $markers = $this->extractTitleMarkerSubstrings($title);
+    if ($markers === []) {
+      return TRUE;
+    }
+
+    foreach ($markers as $marker) {
+      if (!$this->markerIsGroundedInSource($marker, $source)) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Extracts date, issue, and week marker substrings from a title.
+   *
+   * @param string $title
+   *   Title to scan.
+   *
+   * @return string[]
+   *   Distinct marker substrings as they appear in the title.
+   */
+  protected function extractTitleMarkerSubstrings(string $title): array {
+    $markers = [];
+    $patterns = [
+      // Parenthetical segments that include a 4-digit year.
+      '/\(\s*(?:au\s+)?[^)]*\d{4}[^)]*\)/iu',
+      // Issue / No. markers.
+      '/\b(?:issues?|n[o°]\.?|num(?:bero?|éro)?\.?)\s*[#:]?\s*\d+\b/iu',
+      // Week N.
+      '/\bweeks?\s+\d+\b/iu',
+      // Hash-prefixed numbers often used as issue IDs.
+      '/#\d+\w*/u',
+      // ISO dates.
+      '/\b\d{4}-\d{2}-\d{2}\b/u',
+      // Day + month name + year outside parentheses.
+      '/\b(?:le\s+)?(?:1er|1ère|1e|\d{1,2})\s+(?:de\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\s+(?:de\s+)?\d{4}\b/iu',
+      // Month name + year.
+      '/\b(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\s+(?:de\s+)?\d{4}\b/iu',
+    ];
+
+    foreach ($patterns as $pattern) {
+      if (preg_match_all($pattern, $title, $matches) !== FALSE) {
+        foreach ($matches[0] as $match) {
+          $markers[] = $match;
+        }
+      }
+    }
+
+    return array_values(array_unique($markers));
+  }
+
+  /**
+   * Checks whether a marker substring is supported by the source text.
+   *
+   * @param string $marker
+   *   Marker as extracted from the title.
+   * @param string $source
+   *   Attachment source text.
+   *
+   * @return bool
+   *   TRUE when the marker or its essential date parts appear in the source.
+   */
+  protected function markerIsGroundedInSource(string $marker, string $source): bool {
+    if ($source === '') {
+      return FALSE;
+    }
+
+    if (mb_stripos($source, $marker) !== FALSE) {
+      return TRUE;
+    }
+
+    $trimmed = trim($marker, " \t()[]");
+    $trimmed = preg_replace('/^(?:au|le)\s+/iu', '', $trimmed) ?? $trimmed;
+    $trimmed = trim($trimmed);
+    if ($trimmed !== '' && mb_stripos($source, $trimmed) !== FALSE) {
+      return TRUE;
+    }
+
+    if (!preg_match('/\d{4}/', $marker, $year_match)) {
+      // Non-date markers (issue/week) must match as a full substring.
+      return FALSE;
+    }
+
+    $year = $year_match[0];
+    if (mb_stripos($source, $year) === FALSE) {
+      return FALSE;
+    }
+
+    $month_tokens = $this->extractMonthTokensFromMarker($marker);
+    if ($month_tokens === []) {
+      if (preg_match('/\d{4}-\d{2}-\d{2}/', $marker, $iso_match)) {
+        return mb_stripos($source, $iso_match[0]) !== FALSE;
+      }
+      return FALSE;
+    }
+
+    foreach ($month_tokens as $token) {
+      if (mb_stripos($source, $token) !== FALSE) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Extracts English/French month name tokens from a marker string.
+   *
+   * @param string $marker
+   *   Marker substring.
+   *
+   * @return string[]
+   *   Month tokens found in the marker (original casing).
+   */
+  protected function extractMonthTokensFromMarker(string $marker): array {
+    $pattern = '/\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\b/iu';
+    if (preg_match_all($pattern, $marker, $matches) === FALSE) {
+      return [];
+    }
+    return array_values(array_unique($matches[1]));
   }
 
   /**

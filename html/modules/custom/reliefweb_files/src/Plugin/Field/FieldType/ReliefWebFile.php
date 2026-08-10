@@ -973,6 +973,22 @@ class ReliefWebFile extends FieldItemBase {
   }
 
   /**
+   * Extract structured text spans from the given PDF page or page range.
+   *
+   * @param int $page
+   *   1-based start page number (default: 1).
+   * @param ?int $end_page
+   *   Inclusive 1-based end page, or NULL for a single page.
+   *
+   * @return list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>>
+   *   Per-page span lists, or an empty list on failure.
+   */
+  public function extractStructuredTextSpans(int $page = 1, ?int $end_page = NULL): array {
+    $file = $this->loadFile();
+    return isset($file) ? FileHelper::extractStructuredTextSpans($file, $page, $end_page) : [];
+  }
+
+  /**
    * Regenerate the preview.
    *
    * @return bool

@@ -195,9 +195,13 @@ class SeriesMatchResultTest extends UnitTestCase {
     return [
       'no candidate titles'   => [SeriesMatchTitleSource::FailedNoCandidateTitles],
       'no attachment text'    => [SeriesMatchTitleSource::SkippedNoAttachmentText],
+      'inconsistent examples' => [SeriesMatchTitleSource::SkippedInconsistentExamples],
+      'low title match confidence' => [SeriesMatchTitleSource::SkippedLowTitleMatchConfidence],
+      'ai disabled'           => [SeriesMatchTitleSource::SkippedAiDisabled],
       'unsupported ai plugin' => [SeriesMatchTitleSource::FailedUnsupportedAiPlugin],
       'ai call error'         => [SeriesMatchTitleSource::FailedAiCallError],
       'empty ai output'       => [SeriesMatchTitleSource::FailedEmptyAiOutput],
+      'ungrounded markers'    => [SeriesMatchTitleSource::FailedUngroundedTitleMarkers],
     ];
   }
 

@@ -148,6 +148,18 @@ reliefweb_content_analyzer.settings:
             ai_title_example_line_count:
               type: integer
               label: 'Number of example titles for title AI generation'
+            ai_title_min_consistent_examples:
+              type: integer
+              label: 'Minimum consistent example titles sharing one stem for AI title generation'
+            ai_title_extract_page_count:
+              type: integer
+              label: 'Number of PDF pages to extract for AI title matching'
+            ai_title_match_endpoint:
+              type: string
+              label: 'ocha_ai_helper series title match endpoint'
+            ai_title_match_min_confidence:
+              type: float
+              label: 'Minimum series title match confidence before AI title generation'
             ai_title_description_template:
               type: string
               label: 'Structured output title field description template'

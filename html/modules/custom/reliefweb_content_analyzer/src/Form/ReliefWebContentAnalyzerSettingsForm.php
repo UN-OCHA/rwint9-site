@@ -403,8 +403,46 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $form['matcher']['ai_title_example_line_count'] = [
       '#type' => 'number',
       '#title' => $this->t('AI title example count'),
+      '#description' => $this->t('Maximum matched series titles returned by the helper and passed as style examples to the LLM.'),
       '#default_value' => $matcher['ai_title_example_line_count'],
       '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_min_consistent_examples'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum consistent AI title examples'),
+      '#description' => $this->t('Minimum candidate titles sharing one date-stripped stem used to decide when the import title already matches the series pattern.'),
+      '#default_value' => $matcher['ai_title_min_consistent_examples'] ?? 3,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_extract_page_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('AI title PDF page extract count'),
+      '#description' => $this->t('Number of pages (starting from page 1) to extract as structured spans for series title matching.'),
+      '#default_value' => $matcher['ai_title_extract_page_count'] ?? 2,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_match_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Series title match endpoint'),
+      '#description' => $this->t('ocha_ai_helper POST endpoint that matches PDF spans to series member titles.'),
+      '#default_value' => $matcher['ai_title_match_endpoint'] ?? 'http://ocha-ai-helper/text/match/series-title',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_match_min_confidence'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum title match confidence'),
+      '#description' => $this->t('Skip AI title generation when the helper confidence is below this threshold (0–1).'),
+      '#default_value' => $matcher['ai_title_match_min_confidence'] ?? 0.65,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
       '#required' => TRUE,
     ];
 
@@ -715,6 +753,22 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       );
     }
 
+    $title_match_confidence = (float) $form_state->getValue(['matcher', 'ai_title_match_min_confidence']);
+    if ($title_match_confidence < 0 || $title_match_confidence > 1) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_match_min_confidence',
+        $this->t('Minimum title match confidence must be between 0 and 1.'),
+      );
+    }
+
+    $title_match_endpoint = trim((string) $form_state->getValue(['matcher', 'ai_title_match_endpoint']));
+    if ($title_match_endpoint === '') {
+      $form_state->setErrorByName(
+        'matcher][ai_title_match_endpoint',
+        $this->t('Series title match endpoint is required.'),
+      );
+    }
+
     $max_tokens = (int) $form_state->getValue(['matcher', 'ai_title_inference', 'max_tokens']);
     if ($max_tokens < 1 || $max_tokens > 4096) {
       $form_state->setErrorByName(
@@ -817,6 +871,10 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'ai_title_generation_enabled' => (bool) $matcher_values['ai_title_generation_enabled'],
       'ai_title_source_length_limit' => (int) $matcher_values['ai_title_source_length_limit'],
       'ai_title_example_line_count' => (int) $matcher_values['ai_title_example_line_count'],
+      'ai_title_min_consistent_examples' => (int) $matcher_values['ai_title_min_consistent_examples'],
+      'ai_title_extract_page_count' => (int) $matcher_values['ai_title_extract_page_count'],
+      'ai_title_match_endpoint' => trim((string) $matcher_values['ai_title_match_endpoint']),
+      'ai_title_match_min_confidence' => (float) $matcher_values['ai_title_match_min_confidence'],
       'ai_title_description_template' => (string) $matcher_values['ai_title_description_template'],
       'ai_title_inference' => [
         'plugin_id' => trim((string) $matcher_values['ai_title_inference']['plugin_id']),

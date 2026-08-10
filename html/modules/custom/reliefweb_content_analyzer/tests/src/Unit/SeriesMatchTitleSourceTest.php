@@ -41,13 +41,46 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
    */
   public static function unchangedReasonProvider(): array {
     return [
-      'pattern match' => [SeriesMatchTitleSource::KeptOriginalPatternMatch, 'matches series pattern'],
-      'ai disabled' => [SeriesMatchTitleSource::SkippedAiDisabled, 'AI disabled'],
-      'no attachment text' => [SeriesMatchTitleSource::SkippedNoAttachmentText, 'no attachment text'],
-      'no candidate titles' => [SeriesMatchTitleSource::FailedNoCandidateTitles, 'no candidate titles'],
-      'unsupported plugin' => [SeriesMatchTitleSource::FailedUnsupportedAiPlugin, 'unsupported AI plugin'],
-      'ai call error' => [SeriesMatchTitleSource::FailedAiCallError, 'AI call error'],
-      'empty ai output' => [SeriesMatchTitleSource::FailedEmptyAiOutput, 'empty AI output'],
+      'pattern match' => [
+        SeriesMatchTitleSource::KeptOriginalPatternMatch,
+        'matches series pattern',
+      ],
+      'ai disabled' => [
+        SeriesMatchTitleSource::SkippedAiDisabled,
+        'AI disabled',
+      ],
+      'no attachment text' => [
+        SeriesMatchTitleSource::SkippedNoAttachmentText,
+        'no attachment text',
+      ],
+      'inconsistent examples' => [
+        SeriesMatchTitleSource::SkippedInconsistentExamples,
+        'inconsistent series title examples',
+      ],
+      'low title match confidence' => [
+        SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'low title match confidence',
+      ],
+      'no candidate titles' => [
+        SeriesMatchTitleSource::FailedNoCandidateTitles,
+        'no candidate titles',
+      ],
+      'unsupported plugin' => [
+        SeriesMatchTitleSource::FailedUnsupportedAiPlugin,
+        'unsupported AI plugin',
+      ],
+      'ai call error' => [
+        SeriesMatchTitleSource::FailedAiCallError,
+        'AI call error',
+      ],
+      'empty ai output' => [
+        SeriesMatchTitleSource::FailedEmptyAiOutput,
+        'empty AI output',
+      ],
+      'ungrounded markers' => [
+        SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        'ungrounded date or series marker',
+      ],
     ];
   }
 
@@ -134,14 +167,50 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
    */
   public static function attentionLevelProvider(): array {
     return [
-      'pattern match' => [SeriesMatchTitleSource::KeptOriginalPatternMatch, SeriesMatchAttentionLevel::Ok],
-      'ai generated' => [SeriesMatchTitleSource::AiGenerated, SeriesMatchAttentionLevel::Info],
-      'ai disabled' => [SeriesMatchTitleSource::SkippedAiDisabled, SeriesMatchAttentionLevel::Warning],
-      'no attachment text' => [SeriesMatchTitleSource::SkippedNoAttachmentText, SeriesMatchAttentionLevel::Warning],
-      'no candidate titles' => [SeriesMatchTitleSource::FailedNoCandidateTitles, SeriesMatchAttentionLevel::Error],
-      'unsupported plugin' => [SeriesMatchTitleSource::FailedUnsupportedAiPlugin, SeriesMatchAttentionLevel::Error],
-      'ai call error' => [SeriesMatchTitleSource::FailedAiCallError, SeriesMatchAttentionLevel::Error],
-      'empty ai output' => [SeriesMatchTitleSource::FailedEmptyAiOutput, SeriesMatchAttentionLevel::Error],
+      'pattern match' => [
+        SeriesMatchTitleSource::KeptOriginalPatternMatch,
+        SeriesMatchAttentionLevel::Ok,
+      ],
+      'ai generated' => [
+        SeriesMatchTitleSource::AiGenerated,
+        SeriesMatchAttentionLevel::Info,
+      ],
+      'ai disabled' => [
+        SeriesMatchTitleSource::SkippedAiDisabled,
+        SeriesMatchAttentionLevel::Warning,
+      ],
+      'no attachment text' => [
+        SeriesMatchTitleSource::SkippedNoAttachmentText,
+        SeriesMatchAttentionLevel::Warning,
+      ],
+      'inconsistent examples' => [
+        SeriesMatchTitleSource::SkippedInconsistentExamples,
+        SeriesMatchAttentionLevel::Warning,
+      ],
+      'low title match confidence' => [
+        SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        SeriesMatchAttentionLevel::Warning,
+      ],
+      'no candidate titles' => [
+        SeriesMatchTitleSource::FailedNoCandidateTitles,
+        SeriesMatchAttentionLevel::Error,
+      ],
+      'unsupported plugin' => [
+        SeriesMatchTitleSource::FailedUnsupportedAiPlugin,
+        SeriesMatchAttentionLevel::Error,
+      ],
+      'ai call error' => [
+        SeriesMatchTitleSource::FailedAiCallError,
+        SeriesMatchAttentionLevel::Error,
+      ],
+      'empty ai output' => [
+        SeriesMatchTitleSource::FailedEmptyAiOutput,
+        SeriesMatchAttentionLevel::Error,
+      ],
+      'ungrounded markers' => [
+        SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        SeriesMatchAttentionLevel::Error,
+      ],
     ];
   }
 

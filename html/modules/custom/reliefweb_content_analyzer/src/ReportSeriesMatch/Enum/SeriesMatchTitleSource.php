@@ -13,10 +13,13 @@ enum SeriesMatchTitleSource: string {
   case AiGenerated = 'ai_generated';
   case SkippedAiDisabled = 'skipped_ai_disabled';
   case SkippedNoAttachmentText = 'skipped_no_attachment_text';
+  case SkippedInconsistentExamples = 'skipped_inconsistent_examples';
+  case SkippedLowTitleMatchConfidence = 'skipped_low_title_match_confidence';
   case FailedNoCandidateTitles = 'failed_no_candidate_titles';
   case FailedUnsupportedAiPlugin = 'failed_unsupported_ai_plugin';
   case FailedAiCallError = 'failed_ai_call_error';
   case FailedEmptyAiOutput = 'failed_empty_ai_output';
+  case FailedUngroundedTitleMarkers = 'failed_ungrounded_title_markers';
 
   /**
    * Returns the reason phrase for unchanged-title outcomes.
@@ -29,10 +32,13 @@ enum SeriesMatchTitleSource: string {
       self::KeptOriginalPatternMatch => 'matches series pattern',
       self::SkippedAiDisabled => 'AI disabled',
       self::SkippedNoAttachmentText => 'no attachment text',
+      self::SkippedInconsistentExamples => 'inconsistent series title examples',
+      self::SkippedLowTitleMatchConfidence => 'low title match confidence',
       self::FailedNoCandidateTitles => 'no candidate titles',
       self::FailedUnsupportedAiPlugin => 'unsupported AI plugin',
       self::FailedAiCallError => 'AI call error',
       self::FailedEmptyAiOutput => 'empty AI output',
+      self::FailedUngroundedTitleMarkers => 'ungrounded date or series marker',
       self::AiGenerated => NULL,
     };
   }
@@ -60,9 +66,12 @@ enum SeriesMatchTitleSource: string {
     return match ($this) {
       self::KeptOriginalPatternMatch => SeriesMatchAttentionLevel::Ok,
       self::AiGenerated => SeriesMatchAttentionLevel::Info,
-      self::SkippedAiDisabled, self::SkippedNoAttachmentText => SeriesMatchAttentionLevel::Warning,
+      self::SkippedAiDisabled, self::SkippedNoAttachmentText,
+      self::SkippedInconsistentExamples,
+      self::SkippedLowTitleMatchConfidence => SeriesMatchAttentionLevel::Warning,
       self::FailedNoCandidateTitles, self::FailedUnsupportedAiPlugin,
-      self::FailedAiCallError, self::FailedEmptyAiOutput => SeriesMatchAttentionLevel::Error,
+      self::FailedAiCallError, self::FailedEmptyAiOutput,
+      self::FailedUngroundedTitleMarkers => SeriesMatchAttentionLevel::Error,
     };
   }
 

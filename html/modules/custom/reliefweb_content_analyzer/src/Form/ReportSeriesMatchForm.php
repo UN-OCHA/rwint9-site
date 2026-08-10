@@ -639,10 +639,13 @@ final class ReportSeriesMatchForm extends FormBase {
       SeriesMatchTitleSource::KeptOriginalPatternMatch => $this->t('matches series pattern'),
       SeriesMatchTitleSource::SkippedAiDisabled => $this->t('AI disabled'),
       SeriesMatchTitleSource::SkippedNoAttachmentText => $this->t('no attachment text'),
+      SeriesMatchTitleSource::SkippedInconsistentExamples => $this->t('inconsistent series title examples'),
+      SeriesMatchTitleSource::SkippedLowTitleMatchConfidence => $this->t('low title match confidence'),
       SeriesMatchTitleSource::FailedNoCandidateTitles => $this->t('no candidate titles'),
       SeriesMatchTitleSource::FailedUnsupportedAiPlugin => $this->t('unsupported AI plugin'),
       SeriesMatchTitleSource::FailedAiCallError => $this->t('AI call error'),
       SeriesMatchTitleSource::FailedEmptyAiOutput => $this->t('empty AI output'),
+      SeriesMatchTitleSource::FailedUngroundedTitleMarkers => $this->t('ungrounded date or series marker'),
       SeriesMatchTitleSource::AiGenerated => '',
     };
   }

@@ -27,6 +27,14 @@ final readonly class SeriesMatchMatcherSettings {
    *   Maximum source text length for title AI generation.
    * @param int $aiTitleExampleLineCount
    *   Number of example titles for title AI generation.
+   * @param int $aiTitleMinConsistentExamples
+   *   Minimum titles sharing one stem required before AI title generation.
+   * @param int $aiTitleExtractPageCount
+   *   Number of PDF pages to extract as structured spans for title matching.
+   * @param string $aiTitleMatchEndpoint
+   *   ocha_ai_helper URL for layout-aware series title matching.
+   * @param float $aiTitleMatchMinConfidence
+   *   Minimum helper confidence required before calling the title LLM.
    * @param string $aiTitleDescriptionTemplate
    *   Structured output title field description template.
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\AiTitleInferenceSettings $aiTitleInference
@@ -59,6 +67,10 @@ final readonly class SeriesMatchMatcherSettings {
     public bool $aiTitleGenerationEnabled,
     public int $aiTitleSourceLengthLimit,
     public int $aiTitleExampleLineCount,
+    public int $aiTitleMinConsistentExamples,
+    public int $aiTitleExtractPageCount,
+    public string $aiTitleMatchEndpoint,
+    public float $aiTitleMatchMinConfidence,
     public string $aiTitleDescriptionTemplate,
     public AiTitleInferenceSettings $aiTitleInference,
     public array $patternTokenCounts,
@@ -93,6 +105,10 @@ final readonly class SeriesMatchMatcherSettings {
       aiTitleGenerationEnabled: (bool) ($config['ai_title_generation_enabled'] ?? TRUE),
       aiTitleSourceLengthLimit: self::requireInt($config, 'ai_title_source_length_limit'),
       aiTitleExampleLineCount: self::requireInt($config, 'ai_title_example_line_count'),
+      aiTitleMinConsistentExamples: self::requireInt($config, 'ai_title_min_consistent_examples'),
+      aiTitleExtractPageCount: self::requireInt($config, 'ai_title_extract_page_count'),
+      aiTitleMatchEndpoint: self::requireString($config, 'ai_title_match_endpoint'),
+      aiTitleMatchMinConfidence: self::requireFloat($config, 'ai_title_match_min_confidence'),
       aiTitleDescriptionTemplate: self::requireString($config, 'ai_title_description_template'),
       aiTitleInference: AiTitleInferenceSettings::fromConfigArray(
         self::requireMapping($config, 'ai_title_inference'),

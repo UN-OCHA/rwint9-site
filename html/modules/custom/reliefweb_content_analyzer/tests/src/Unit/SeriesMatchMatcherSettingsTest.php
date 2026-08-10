@@ -28,6 +28,13 @@ class SeriesMatchMatcherSettingsTest extends UnitTestCase {
     $this->assertTrue($settings->aiTitleGenerationEnabled);
     $this->assertSame(30, $settings->seriesCandidateLimit);
     $this->assertSame(18, $settings->seriesCandidateDateRangeMonths);
+    $this->assertSame(3, $settings->aiTitleMinConsistentExamples);
+    $this->assertSame(2, $settings->aiTitleExtractPageCount);
+    $this->assertSame(
+      'http://ocha-ai-helper/text/match/series-title',
+      $settings->aiTitleMatchEndpoint,
+    );
+    $this->assertSame(0.65, $settings->aiTitleMatchMinConfidence);
     $this->assertSame([10, 8, 6, 4], $settings->patternTokenCounts);
     $this->assertSame(
       'field_original_publication_date',
