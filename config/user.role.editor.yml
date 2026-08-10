@@ -69,6 +69,7 @@ permissions:
   - 'access reliefweb links field validation'
   - 'access reliefweb private files'
   - 'access reliefweb user posting rights field validation'
+  - 'access report duplicate matching'
   - 'access report series matching'
   - 'access user contact forms'
   - 'access user profiles'

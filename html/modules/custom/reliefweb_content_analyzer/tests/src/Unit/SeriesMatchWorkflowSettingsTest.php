@@ -29,7 +29,7 @@ class SeriesMatchWorkflowSettingsTest extends UnitTestCase {
     $this->assertSame(0.65, $settings->minimumSeriesConfidence);
     $this->assertSame(['high' => 0.80, 'medium' => 0.60], $settings->seriesConfidenceTiers);
     $this->assertSame('published', $settings->moderationByOutcomeTier['high']);
-    $this->assertSame(['refused'], $settings->skipSeriesMatchModerationStatuses);
+    $this->assertSame(['refused', 'duplicate'], $settings->skipSeriesMatchModerationStatuses);
     $this->assertSame('max_low', $settings->fieldOutcomePolicies['field_primary_country']['most_recent']);
     $this->assertTrue($settings->globalOutcomeRules['empty_body_when_series_has_body']['enabled']);
   }

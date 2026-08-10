@@ -3,6 +3,7 @@ name: 'ReliefWeb content analyzer'
 description: 'Analyzes ReliefWeb content (series matching and related helpers).'
 package: reliefweb
 core_version_requirement: ^11
+configure: reliefweb_content_analyzer.settings
 dependencies:
   - reliefweb_files:reliefweb_files
   - reliefweb_api:reliefweb_api

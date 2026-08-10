@@ -28,3 +28,18 @@ reliefweb_content_analyzer.report_series_match:
     parameters:
       node:
         type: entity:node
+
+reliefweb_content_analyzer.report_duplicate_match:
+  path: '/node/{node}/report-duplicate-match'
+  defaults:
+    _form: '\Drupal\reliefweb_content_analyzer\Form\ReportDuplicateMatchForm'
+    _title: 'Report duplicate matching'
+  requirements:
+    _permission: 'access report duplicate matching'
+    _entity_access: 'node.update'
+    _entity_bundles: 'node:report'
+    node: \d+
+  options:
+    parameters:
+      node:
+        type: entity:node
