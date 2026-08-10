@@ -24,8 +24,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
 use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_utility\Helpers\SeriesTitleMatchHelper;
 use Drupal\reliefweb_utility\Helpers\TitlePatternHelper;
-use GuzzleHttp\ClientInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
@@ -91,8 +91,6 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *   The database connection.
    * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completionPluginManager
    *   The OCHA AI completion plugin manager.
-   * @param \GuzzleHttp\ClientInterface $httpClient
-   *   HTTP client for ocha_ai_helper title matching.
    */
   public function __construct(
     protected readonly ConfigFactoryInterface $configFactory,
@@ -102,8 +100,6 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     protected readonly Connection $database,
     #[Autowire(service: 'plugin.manager.ocha_ai.completion')]
     protected readonly CompletionPluginManagerInterface $completionPluginManager,
-    #[Autowire(service: 'http_client')]
-    protected readonly ClientInterface $httpClient,
   ) {}
 
   /**
@@ -224,6 +220,14 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
     $retrieved_scored_candidates = $merged_scored_candidates;
 
     $metadata = $this->getCandidateMetadata(array_keys($merged_scored_candidates));
+    $boost = $this->boostPatternScoresWithTitleSimilarity(
+      $original_title,
+      $merged_scored_candidates,
+      $metadata,
+    );
+    $merged_scored_candidates = $boost['scores'];
+    $candidate_title_similarities = $boost['similarities'];
+    $retrieved_scored_candidates = $merged_scored_candidates;
     $selection = $this->selectSeriesCandidatesFromCoreAndSupport(
       $merged_scored_candidates,
       $metadata,
@@ -259,6 +263,7 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       'clusterScoreTagging' => $selection['tagging_consistency'],
       'candidateIds' => $candidate_ids,
       'candidatePatternScores' => $candidate_evidence['candidatePatternScores'],
+      'candidateTitleSimilarities' => $candidate_title_similarities,
       'lookbackMonths' => $display_lookback_months,
     ]);
 
@@ -506,16 +511,6 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
-   * Get the ocha_ai_helper series title match endpoint.
-   *
-   * @return string
-   *   Absolute URL for POST /text/match/series-title.
-   */
-  protected function getAiTitleMatchEndpoint(): string {
-    return $this->matcherSettings()->aiTitleMatchEndpoint;
-  }
-
-  /**
    * Minimum helper confidence required before calling the title LLM.
    *
    * @return float
@@ -523,6 +518,16 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    */
   protected function getAiTitleMatchMinConfidence(): float {
     return $this->matcherSettings()->aiTitleMatchMinConfidence;
+  }
+
+  /**
+   * Minimum title-pattern similarity for title matching.
+   *
+   * @return float
+   *   Threshold in [0, 1].
+   */
+  protected function getTitlePatternSimilarityThreshold(): float {
+    return $this->matcherSettings()->titlePatternSimilarityThreshold;
   }
 
   /**
@@ -876,7 +881,7 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   /**
    * Pattern-score-weighted share of the selected cluster over retrieval.
    *
-   * @param array<int, int> $retrieved_scored
+   * @param array<int, int|float> $retrieved_scored
    *   Pattern scores for all candidates after the retrieval limit.
    * @param int[] $selected_ids
    *   Node IDs in the selected series cluster.
@@ -904,14 +909,14 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   /**
    * Builds selected candidate IDs and full retrieval pattern-score map.
    *
-   * @param array<int, int> $retrieved_scored
+   * @param array<int, int|float> $retrieved_scored
    *   Pattern scores for all candidates after the retrieval limit.
    * @param int[] $selected_cluster
    *   Node IDs kept in the selected series cluster.
    *
    * @return array{
    *   candidateIds: int[],
-   *   candidatePatternScores: array<int, int>,
+   *   candidatePatternScores: array<int, int|float>,
    *   }
    *   Selected IDs (score order) and the full retrieved score map.
    */
@@ -941,8 +946,9 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    * enough to at least one core member. Recency/NID only ranks consideration
    * order and never admits by themselves.
    *
-   * @param array<int, int> $scored_candidates
-   *   Merged pattern scores keyed by node ID.
+   * @param array<int, int|float> $scored_candidates
+   *   Merged pattern scores keyed by node ID (SQL score plus optional
+   *   title-similarity boost).
    * @param CandidateMetadataSet $metadata
    *   Candidate metadata from getCandidateMetadata().
    *
@@ -973,10 +979,13 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       return $empty;
     }
 
-    $max_score = max($scored_candidates);
+    // Core tier uses the integer SQL score component (floor). Fractional
+    // title-similarity boosts reorder within a tier without shrinking the core
+    // to a single unique max float.
+    $max_tier = (int) floor((float) max($scored_candidates));
     $core_scored = array_filter(
       $scored_candidates,
-      static fn(int $score): bool => $score === $max_score,
+      static fn(int|float $score): bool => (int) floor((float) $score) === $max_tier,
     );
 
     $core_clusters = $this->clusterCandidates($core_scored, $metadata);
@@ -1189,7 +1198,7 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *
    * @param array<int, int[]> $clusters
    *   Clusters of node IDs from clusterCandidates().
-   * @param array<int, int> $scored_candidates
+   * @param array<int, int|float> $scored_candidates
    *   Merged pattern scores keyed by node ID.
    * @param CandidateMetadataSet $metadata
    *   Candidate metadata from getCandidateMetadata().
@@ -1865,6 +1874,71 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
+   * Boosts SQL pattern scores with title-pattern similarity to the document.
+   *
+   * @param string $original_title
+   *   Document original title.
+   * @param array<int, int|float> $scored_candidates
+   *   SQL merged pattern scores keyed by node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata including current titles.
+   *
+   * @return array{
+   *   scores: array<int, float>,
+   *   similarities: array<int, float>,
+   *   }
+   *   Boosted scores (sql + similarity) and per-candidate similarities.
+   */
+  protected function boostPatternScoresWithTitleSimilarity(
+    string $original_title,
+    array $scored_candidates,
+    array $metadata,
+  ): array {
+    $similarities = [];
+    $scores = [];
+    if ($scored_candidates === []) {
+      return ['scores' => [], 'similarities' => []];
+    }
+
+    $original_titles = $this->getOriginalTitles(array_keys($scored_candidates));
+    foreach ($scored_candidates as $nid => $sql_score) {
+      $sim = 0.0;
+      if ($original_title !== '') {
+        $candidate_original = $original_titles[$nid] ?? '';
+        $candidate_current = '';
+        $current = $metadata[$nid]['title'] ?? '';
+        if (is_string($current)) {
+          $candidate_current = $current;
+        }
+        $scores_for_nid = [];
+        if ($candidate_original !== '') {
+          $scores_for_nid[] = TitlePatternHelper::scoreTitleSimilarity(
+            $original_title,
+            $candidate_original,
+          );
+        }
+        if ($candidate_current !== '') {
+          $scores_for_nid[] = TitlePatternHelper::scoreTitleSimilarity(
+            $original_title,
+            $candidate_current,
+          );
+        }
+        if ($scores_for_nid !== []) {
+          $sim = max($scores_for_nid);
+        }
+      }
+      $similarities[$nid] = $sim;
+      $scores[$nid] = (float) $sql_score + $sim;
+    }
+
+    arsort($scores, \SORT_NUMERIC);
+    return [
+      'scores' => $scores,
+      'similarities' => $similarities,
+    ];
+  }
+
+  /**
    * Get the original titles of entities from their first revision.
    *
    * @param int[] $ids
@@ -2302,11 +2376,18 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
-    // Keep the import title when it already matches the dominant series stem.
+    // Keep the import title when it already matches the dominant series stem
+    // (exact or soft title-pattern similarity).
     $example_titles = $this->selectConsistentExampleTitles($candidate_titles);
     if ($example_titles !== NULL) {
-      $example_stem = TitlePatternHelper::stringToLikePattern($example_titles[0]);
-      if (TitlePatternHelper::stringToLikePattern($original_title) === $example_stem) {
+      $example_title = $example_titles[0];
+      $example_stem = TitlePatternHelper::stringToLikePattern($example_title);
+      $original_stem = TitlePatternHelper::stringToLikePattern($original_title);
+      $similar_enough = TitlePatternHelper::scoreTitleSimilarity(
+        $original_title,
+        $example_title,
+      ) >= $this->getTitlePatternSimilarityThreshold();
+      if ($original_stem === $example_stem || $similar_enough) {
         return [
           'title' => $original_title,
           'source' => SeriesMatchTitleSource::KeptOriginalPatternMatch,
@@ -2466,18 +2547,16 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
-    $title_region_text = trim((string) ($match['title_region_text'] ?? ''));
     $matched_titles = array_values(array_filter(
       $match['matched_titles'] ?? [],
       static fn ($title): bool => is_string($title) && $title !== '',
     ));
-    $confidence = (float) ($match['confidence'] ?? 0.0);
-    $nearby_date = $this->nullableMatchString($match['nearby_date'] ?? NULL);
-    $nearby_issue = $this->nullableMatchString($match['nearby_issue'] ?? NULL);
-    $nearby_week = $this->nullableMatchString($match['nearby_week'] ?? NULL);
+    $candidates = $this->normalizeSeriesTitleCandidates($match);
+    $best = $candidates[0] ?? NULL;
+    $confidence = (float) ($best['confidence'] ?? 0.0);
 
     if (
-      $title_region_text === ''
+      $best === NULL
       || $matched_titles === []
       || $confidence < $this->getAiTitleMatchMinConfidence()
     ) {
@@ -2489,18 +2568,25 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
-    $source = $this->buildAiTitlePromptSource(
-      $title_region_text,
-      $nearby_date,
-      $nearby_issue,
-      $nearby_week,
+    $series_reference_titles = $matched_titles !== []
+      ? $matched_titles
+      : $candidate_titles;
+    $candidates = $this->prepareAiTitleCandidates(
+      $candidates,
+      $original_title,
+      $series_reference_titles,
     );
-    $grounding_source = $this->buildAiTitleGroundingSource(
-      $title_region_text,
-      $nearby_date,
-      $nearby_issue,
-      $nearby_week,
-    );
+    if ($candidates === []) {
+      $this->getLogger()->warning('Report title unchanged: insufficient title markers for generation.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedInsufficientTitleMarkers,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $source = $this->buildAiTitlePromptSource($candidates);
+    $grounding_source = $this->buildAiTitleGroundingSource($candidates);
 
     // Truncate the source to reduce the number of tokens passed to the AI.
     $max_source_length = $this->getAiTitleSourceLengthLimit();
@@ -2600,6 +2686,15 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       ];
     }
 
+    if (!$this->generatedTitleMatchesSeriesPattern($title, $matched_titles)) {
+      $this->getLogger()->warning('Report title unchanged: AI title does not match series pattern.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedSeriesPatternMismatch,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
     return [
       'title' => $title,
       'source' => SeriesMatchTitleSource::AiGenerated,
@@ -2608,7 +2703,7 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
   }
 
   /**
-   * POSTs page spans and candidate titles to ocha_ai_helper series-title match.
+   * Matches series titles against PDF page spans locally.
    *
    * @param list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>> $pages
    *   Per-page structured PDF spans from the configured extract range.
@@ -2616,124 +2711,426 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    *   Recency-ordered series member titles.
    *
    * @return array<string, mixed>|null
-   *   Decoded helper response, or NULL on HTTP/JSON failure.
+   *   Local match result, or NULL when no matches.
    */
   protected function matchSeriesTitleRegion(array $pages, array $candidate_titles): ?array {
-    $endpoint = $this->getAiTitleMatchEndpoint();
-    if ($endpoint === '' || $pages === [] || array_filter($pages) === [] || $candidate_titles === []) {
+    if ($pages === [] || array_filter($pages) === [] || $candidate_titles === []) {
       return NULL;
     }
 
-    try {
-      $response = $this->httpClient->request('POST', $endpoint, [
-        'json' => [
-          'pages' => array_values($pages),
-          'titles' => array_values($candidate_titles),
-          'top_page_fraction' => 0.4,
-          'match_threshold' => 70,
-          'max_matched_titles' => $this->getAiTitleExampleLineCount(),
-        ],
-        'timeout' => 30,
-        'http_errors' => FALSE,
-      ]);
-    }
-    catch (\Exception $exception) {
-      $this->getLogger()->error('Series title match request failed: @message', [
-        '@message' => $exception->getMessage(),
-      ]);
+    $result = SeriesTitleMatchHelper::matchPages(
+      array_values($pages),
+      array_values($candidate_titles),
+      $this->getAiTitleExampleLineCount(),
+    );
+    if (($result['matched_titles'] ?? []) === [] && ($result['candidates'] ?? []) === []) {
       return NULL;
     }
-
-    $status = $response->getStatusCode();
-    $body = (string) $response->getBody();
-    if ($status < 200 || $status >= 300) {
-      $this->getLogger()->warning('Series title match returned HTTP @status: @body', [
-        '@status' => $status,
-        '@body' => mb_substr($body, 0, 500),
-      ]);
-      return NULL;
-    }
-
-    try {
-      $decoded = json_decode($body, TRUE, 512, JSON_THROW_ON_ERROR);
-    }
-    catch (\JsonException $exception) {
-      $this->getLogger()->warning('Series title match returned invalid JSON: @message', [
-        '@message' => $exception->getMessage(),
-      ]);
-      return NULL;
-    }
-
-    return is_array($decoded) ? $decoded : NULL;
+    return $result;
   }
 
   /**
-   * Builds LLM prompt text from title region and markers.
+   * Merges, re-ranks, and marker-gates AI title candidates.
    *
-   * @param string $title_region_text
-   *   Layout-matched title region text.
-   * @param string|null $nearby_date
-   *   Nearby date marker, if any.
-   * @param string|null $nearby_issue
-   *   Nearby issue marker, if any.
-   * @param string|null $nearby_week
-   *   Nearby week marker, if any.
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper PDF candidates.
+   * @param string $original_title
+   *   Document original title.
+   * @param string[] $series_reference_titles
+   *   Series example titles used for similarity and required-marker detection.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Ranked candidates ready for the LLM, or empty when AI should be skipped.
+   */
+  protected function prepareAiTitleCandidates(
+    array $candidates,
+    string $original_title,
+    array $series_reference_titles,
+  ): array {
+    $import = $this->buildImportTitleCandidate($original_title, $series_reference_titles);
+    if ($import !== NULL) {
+      $candidates[] = $import;
+    }
+
+    $ranked = $this->rankAiTitleCandidatesBySeriesSimilarity(
+      $candidates,
+      $series_reference_titles,
+    );
+    if ($ranked === []) {
+      return [];
+    }
+
+    if (!$this->aiTitleCandidatesCoverRequiredMarkers($ranked, $series_reference_titles)) {
+      return [];
+    }
+
+    return $ranked;
+  }
+
+  /**
+   * Builds a peer AI title candidate from the import title when similar enough.
+   *
+   * @param string $original_title
+   *   Document original title.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}|null
+   *   Synthetic candidate, or NULL when the import title is not similar enough.
+   */
+  protected function buildImportTitleCandidate(
+    string $original_title,
+    array $series_reference_titles,
+  ): ?array {
+    $original_title = trim($original_title);
+    if ($original_title === '' || $series_reference_titles === []) {
+      return NULL;
+    }
+
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    $best_sim = 0.0;
+    foreach ($series_reference_titles as $reference) {
+      if (!is_string($reference) || $reference === '') {
+        continue;
+      }
+      $best_sim = max(
+        $best_sim,
+        TitlePatternHelper::scoreTitleSimilarity($original_title, $reference),
+      );
+    }
+    if ($best_sim < $threshold) {
+      return NULL;
+    }
+
+    $markers = TitlePatternHelper::extractSeriesMarkers($original_title);
+    $nearby_issue = NULL;
+    if (($markers['issues'][0] ?? NULL) !== NULL) {
+      $nearby_issue = '#' . (int) $markers['issues'][0];
+    }
+    $nearby_week = NULL;
+    if (($markers['weeks'][0] ?? NULL) !== NULL) {
+      $nearby_week = 'Week ' . (int) $markers['weeks'][0];
+    }
+
+    return [
+      'page' => 0,
+      'title_region_text' => $original_title,
+      'nearby_date' => $this->extractPrimaryDateMarkerFromTitle($original_title),
+      'nearby_issue' => $nearby_issue,
+      'nearby_week' => $nearby_week,
+      'confidence' => 1.0,
+    ];
+  }
+
+  /**
+   * Drops low-similarity AI candidates and sorts by series similarity.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Candidates including optional import peer.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Filtered and similarity-sorted candidates.
+   */
+  protected function rankAiTitleCandidatesBySeriesSimilarity(
+    array $candidates,
+    array $series_reference_titles,
+  ): array {
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    $scored = [];
+    foreach ($candidates as $index => $candidate) {
+      $region = $candidate['title_region_text'] ?? '';
+      if (!is_string($region) || $region === '') {
+        continue;
+      }
+      $sim = $this->maxTitleSimilarityAgainstReferences($region, $series_reference_titles);
+      if ($sim < $threshold) {
+        continue;
+      }
+      $scored[] = [
+        'similarity' => $sim,
+        'index' => $index,
+        'candidate' => $candidate,
+      ];
+    }
+
+    usort(
+      $scored,
+      static function (array $a, array $b): int {
+        $cmp = $b['similarity'] <=> $a['similarity'];
+        return $cmp !== 0 ? $cmp : ($a['index'] <=> $b['index']);
+      },
+    );
+
+    return array_map(
+      static fn(array $row): array => $row['candidate'],
+      $scored,
+    );
+  }
+
+  /**
+   * Whether ranked AI candidates cover marker kinds used by series examples.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Final ranked candidates.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return bool
+   *   TRUE when every required marker kind is present in at least one
+   *   candidate.
+   */
+  protected function aiTitleCandidatesCoverRequiredMarkers(
+    array $candidates,
+    array $series_reference_titles,
+  ): bool {
+    $required = $this->detectRequiredTitleMarkerKinds($series_reference_titles);
+    if ($required === []) {
+      return TRUE;
+    }
+
+    $available = $this->collectAvailableTitleMarkerKinds($candidates);
+    foreach ($required as $kind) {
+      if (!isset($available[$kind])) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Detects issue/week/date marker kinds used by series example titles.
+   *
+   * @param string[] $titles
+   *   Series example titles.
+   *
+   * @return list<string>
+   *   Marker kinds among "issue", "week", "date".
+   */
+  protected function detectRequiredTitleMarkerKinds(array $titles): array {
+    $required = [];
+    foreach ($titles as $title) {
+      if (!is_string($title) || $title === '') {
+        continue;
+      }
+      $markers = TitlePatternHelper::extractSeriesMarkers($title);
+      if ($markers['issues'] !== []) {
+        $required['issue'] = TRUE;
+      }
+      if ($markers['weeks'] !== []) {
+        $required['week'] = TRUE;
+      }
+      if ($markers['periods'] !== []) {
+        $required['date'] = TRUE;
+      }
+    }
+    return array_keys($required);
+  }
+
+  /**
+   * Collects marker kinds available across AI title candidates.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Ranked candidates.
+   *
+   * @return array<string, true>
+   *   Present kinds keyed by "issue", "week", or "date".
+   */
+  protected function collectAvailableTitleMarkerKinds(array $candidates): array {
+    $available = [];
+    foreach ($candidates as $candidate) {
+      if (!empty($candidate['nearby_issue'])) {
+        $available['issue'] = TRUE;
+      }
+      if (!empty($candidate['nearby_week'])) {
+        $available['week'] = TRUE;
+      }
+      if (!empty($candidate['nearby_date'])) {
+        $available['date'] = TRUE;
+      }
+
+      $region = $candidate['title_region_text'] ?? '';
+      if (!is_string($region) || $region === '') {
+        continue;
+      }
+      $markers = TitlePatternHelper::extractSeriesMarkers($region);
+      if ($markers['issues'] !== []) {
+        $available['issue'] = TRUE;
+      }
+      if ($markers['weeks'] !== []) {
+        $available['week'] = TRUE;
+      }
+      if ($markers['periods'] !== []) {
+        $available['date'] = TRUE;
+      }
+    }
+    return $available;
+  }
+
+  /**
+   * Max title-pattern similarity of text against a list of references.
+   *
+   * @param string $text
+   *   Candidate or region text.
+   * @param string[] $references
+   *   Reference titles.
+   *
+   * @return float
+   *   Best similarity in [0, 1].
+   */
+  protected function maxTitleSimilarityAgainstReferences(string $text, array $references): float {
+    $best = 0.0;
+    foreach ($references as $reference) {
+      if (!is_string($reference) || $reference === '') {
+        continue;
+      }
+      $best = max($best, TitlePatternHelper::scoreTitleSimilarity($text, $reference));
+    }
+    return $best;
+  }
+
+  /**
+   * Extracts the primary human-readable date marker from a title.
+   *
+   * @param string $title
+   *   Title text.
+   *
+   * @return string|null
+   *   Date marker substring, or NULL when none found.
+   */
+  protected function extractPrimaryDateMarkerFromTitle(string $title): ?string {
+    $markers = $this->extractTitleMarkerSubstrings($title);
+    $best = NULL;
+    $best_length = 0;
+    foreach ($markers as $marker) {
+      if (!preg_match('/\d{4}/', $marker)) {
+        continue;
+      }
+      if (preg_match('/^#\d+/', $marker) || preg_match('/\bweeks?\s+\d+\b/iu', $marker)) {
+        continue;
+      }
+      $length = mb_strlen($marker);
+      if ($length > $best_length) {
+        $best = $marker;
+        $best_length = $length;
+      }
+    }
+    return $best;
+  }
+
+  /**
+   * Normalizes helper series-title candidates for the LLM prompt and grounding.
+   *
+   * @param array<string, mixed> $match
+   *   Decoded helper response with candidates.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Ranked candidates with non-empty title regions.
+   */
+  protected function normalizeSeriesTitleCandidates(array $match): array {
+    $candidates = [];
+    $raw_candidates = $match['candidates'] ?? NULL;
+    if (!is_array($raw_candidates)) {
+      return [];
+    }
+
+    foreach ($raw_candidates as $raw) {
+      if (!is_array($raw)) {
+        continue;
+      }
+      $region = trim((string) ($raw['title_region_text'] ?? ''));
+      if ($region === '') {
+        continue;
+      }
+      $candidates[] = [
+        'page' => max(1, (int) ($raw['page'] ?? 1)),
+        'title_region_text' => $region,
+        'nearby_date' => $this->nullableMatchString($raw['nearby_date'] ?? NULL),
+        'nearby_issue' => $this->nullableMatchString($raw['nearby_issue'] ?? NULL),
+        'nearby_week' => $this->nullableMatchString($raw['nearby_week'] ?? NULL),
+        'confidence' => (float) ($raw['confidence'] ?? 0.0),
+      ];
+    }
+
+    return $candidates;
+  }
+
+  /**
+   * Builds LLM prompt JSON from ranked series-title candidates.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper candidates.
    *
    * @return string
-   *   Prompt source text for the completion plugin.
+   *   Compact JSON string for the completion plugin user prompt.
    */
-  protected function buildAiTitlePromptSource(
-    string $title_region_text,
-    ?string $nearby_date,
-    ?string $nearby_issue,
-    ?string $nearby_week,
-  ): string {
-    $parts = [$title_region_text];
-    $markers = [];
-    if ($nearby_date !== NULL) {
-      $markers[] = 'Date: ' . $nearby_date;
+  protected function buildAiTitlePromptSource(array $candidates): string {
+    $payload = [];
+    foreach ($candidates as $candidate) {
+      $payload[] = [
+        'page' => $candidate['page'],
+        'title_region_text' => $candidate['title_region_text'],
+        'nearby_date' => $candidate['nearby_date'],
+        'nearby_issue' => $candidate['nearby_issue'],
+        'nearby_week' => $candidate['nearby_week'],
+      ];
     }
-    if ($nearby_issue !== NULL) {
-      $markers[] = 'Issue: ' . $nearby_issue;
-    }
-    if ($nearby_week !== NULL) {
-      $markers[] = 'Week: ' . $nearby_week;
-    }
-    if ($markers !== []) {
-      $parts[] = "Grounded markers from the document (copy exactly if used; omit if unused):\n"
-        . implode("\n", $markers);
-    }
-    return implode("\n\n", $parts);
+    return json_encode(
+      ['candidates' => $payload],
+      JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+    ) ?: '{"candidates":[]}';
   }
 
   /**
    * Builds the grounding corpus for post-AI marker checks.
    *
-   * @param string $title_region_text
-   *   Layout-matched title region text.
-   * @param string|null $nearby_date
-   *   Nearby date marker, if any.
-   * @param string|null $nearby_issue
-   *   Nearby issue marker, if any.
-   * @param string|null $nearby_week
-   *   Nearby week marker, if any.
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper candidates.
    *
    * @return string
    *   Text that may legitimately ground date/issue/week markers.
    */
-  protected function buildAiTitleGroundingSource(
-    string $title_region_text,
-    ?string $nearby_date,
-    ?string $nearby_issue,
-    ?string $nearby_week,
-  ): string {
-    $parts = [$title_region_text];
-    foreach ([$nearby_date, $nearby_issue, $nearby_week] as $marker) {
-      if ($marker !== NULL) {
-        $parts[] = $marker;
+  protected function buildAiTitleGroundingSource(array $candidates): string {
+    $parts = [];
+    foreach ($candidates as $candidate) {
+      $parts[] = $candidate['title_region_text'];
+      foreach (['nearby_date', 'nearby_issue', 'nearby_week'] as $key) {
+        $marker = $candidate[$key] ?? NULL;
+        if (is_string($marker) && $marker !== '') {
+          $parts[] = $marker;
+        }
       }
     }
     return implode("\n", $parts);
+  }
+
+  /**
+   * Whether an AI title matches the series naming pattern of matched titles.
+   *
+   * @param string $title
+   *   AI-generated title.
+   * @param string[] $matched_titles
+   *   Series member titles used as style examples.
+   *
+   * @return bool
+   *   TRUE when TitlePatternHelper::scoreTitleSimilarity() meets the
+   *   configured title_pattern_similarity_threshold for at least one match.
+   */
+  protected function generatedTitleMatchesSeriesPattern(string $title, array $matched_titles): bool {
+    if ($title === '') {
+      return FALSE;
+    }
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    foreach ($matched_titles as $matched_title) {
+      if (!is_string($matched_title) || $matched_title === '') {
+        continue;
+      }
+      if (TitlePatternHelper::scoreTitleSimilarity($title, $matched_title) >= $threshold) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**

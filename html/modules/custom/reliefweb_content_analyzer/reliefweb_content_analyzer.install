@@ -356,3 +356,27 @@ function reliefweb_content_analyzer_update_10006(): void {
 
   $config->set('report_series_matching.matcher', $matcher)->save();
 }
+
+/**
+ * Add title pattern similarity threshold for series matching.
+ */
+function reliefweb_content_analyzer_update_10007(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matcher = $config->get('report_series_matching.matcher') ?? [];
+
+  if (!isset($matcher['title_pattern_similarity_threshold'])) {
+    $matcher['title_pattern_similarity_threshold'] = 0.90;
+  }
+
+  $config->set('report_series_matching.matcher', $matcher)->save();
+}
+
+/**
+ * Remove obsolete series title match HTTP endpoint setting.
+ */
+function reliefweb_content_analyzer_update_10008(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matcher = $config->get('report_series_matching.matcher') ?? [];
+  unset($matcher['ai_title_match_endpoint']);
+  $config->set('report_series_matching.matcher', $matcher)->save();
+}

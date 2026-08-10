@@ -202,6 +202,7 @@ class SeriesMatchResultTest extends UnitTestCase {
       'ai call error'         => [SeriesMatchTitleSource::FailedAiCallError],
       'empty ai output'       => [SeriesMatchTitleSource::FailedEmptyAiOutput],
       'ungrounded markers'    => [SeriesMatchTitleSource::FailedUngroundedTitleMarkers],
+      'series pattern mismatch' => [SeriesMatchTitleSource::FailedSeriesPatternMismatch],
     ];
   }
 

@@ -334,33 +334,8 @@ final class ReportSeriesMatchLogController extends ControllerBase {
     }
 
     return (string) $this->t('Unchanged (@reason)', [
-      '@reason' => $this->formatTitleUnchangedReason($title_source),
+      '@reason' => $title_source->unchangedReason() ?? '',
     ]);
-  }
-
-  /**
-   * Returns a translatable reason phrase for unchanged title outcomes.
-   *
-   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $source
-   *   The title source enum case.
-   *
-   * @return string
-   *   Translated reason text, or empty for AI-generated titles.
-   */
-  protected function formatTitleUnchangedReason(SeriesMatchTitleSource $source): string {
-    return (string) match ($source) {
-      SeriesMatchTitleSource::KeptOriginalPatternMatch => $this->t('matches series pattern'),
-      SeriesMatchTitleSource::SkippedAiDisabled => $this->t('AI disabled'),
-      SeriesMatchTitleSource::SkippedNoAttachmentText => $this->t('no attachment text'),
-      SeriesMatchTitleSource::SkippedInconsistentExamples => $this->t('inconsistent series title examples'),
-      SeriesMatchTitleSource::SkippedLowTitleMatchConfidence => $this->t('low title match confidence'),
-      SeriesMatchTitleSource::FailedNoCandidateTitles => $this->t('no candidate titles'),
-      SeriesMatchTitleSource::FailedUnsupportedAiPlugin => $this->t('unsupported AI plugin'),
-      SeriesMatchTitleSource::FailedAiCallError => $this->t('AI call error'),
-      SeriesMatchTitleSource::FailedEmptyAiOutput => $this->t('empty AI output'),
-      SeriesMatchTitleSource::FailedUngroundedTitleMarkers => $this->t('ungrounded date or series marker'),
-      SeriesMatchTitleSource::AiGenerated => '',
-    };
   }
 
   /**

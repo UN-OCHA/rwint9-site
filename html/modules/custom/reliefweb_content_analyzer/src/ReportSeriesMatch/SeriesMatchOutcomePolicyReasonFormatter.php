@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_content_analyzer\ReportSeriesMatch;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyReason;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomePolicyAction;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 
 /**
  * Builds editor-facing messages for outcome policy reasons.
@@ -81,13 +82,39 @@ final class SeriesMatchOutcomePolicyReasonFormatter {
   ): SeriesMatchOutcomePolicyReason {
     $message = match ($rule) {
       'empty_body_when_series_has_body' => 'no body while series usually has body',
-      'title_ai_failed_or_skipped' => 'title could not be generated',
+      'title_ai_failed_or_skipped' => 'title generation skipped',
       'low_series_confidence_with_mismatch' => 'weak series match with conflicting candidates',
       default => str_replace('_', ' ', $rule),
     };
 
     return new SeriesMatchOutcomePolicyReason(
       code: 'global:' . $rule . ':' . $action->value,
+      message: $message,
+    );
+  }
+
+  /**
+   * Constructs a title AI failed/skipped policy reason from title source.
+   *
+   * Message is a problem phrase suitable for "Outcome reduced because:", not
+   * the "title unchanged (...)" wording used on the Title field row.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomePolicyAction $action
+   *   Policy action for the rule.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource|null $title_source
+   *   Title decision source used to build a specific reason phrase.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyReason
+   *   Reason with code and editor-facing message.
+   */
+  public static function forTitleAiFailedOrSkipped(
+    SeriesMatchOutcomePolicyAction $action,
+    ?SeriesMatchTitleSource $title_source = NULL,
+  ): SeriesMatchOutcomePolicyReason {
+    $message = $title_source?->outcomePolicyReason() ?? 'title generation skipped';
+
+    return new SeriesMatchOutcomePolicyReason(
+      code: 'global:title_ai_failed_or_skipped:' . $action->value,
       message: $message,
     );
   }

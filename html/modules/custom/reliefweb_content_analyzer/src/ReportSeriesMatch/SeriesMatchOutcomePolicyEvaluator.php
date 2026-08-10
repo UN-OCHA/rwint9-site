@@ -143,9 +143,9 @@ final class SeriesMatchOutcomePolicyEvaluator {
     if ($title_rule['enabled'] && $this->isTitleAiFailedOrSkipped($result->proposal->titleSource)) {
       $rule_action = SeriesMatchOutcomePolicyAction::fromConfig($title_rule['action']);
       $action = $action->stricter($rule_action);
-      $reasons[] = SeriesMatchOutcomePolicyReasonFormatter::forGlobal(
-        'title_ai_failed_or_skipped',
+      $reasons[] = SeriesMatchOutcomePolicyReasonFormatter::forTitleAiFailedOrSkipped(
         $rule_action,
+        $result->proposal->titleSource,
       );
     }
 

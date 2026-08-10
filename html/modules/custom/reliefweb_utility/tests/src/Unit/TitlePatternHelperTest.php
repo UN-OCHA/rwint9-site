@@ -202,6 +202,118 @@ class TitlePatternHelperTest extends UnitTestCase {
   }
 
   /**
+   * Fingerprint lowercases and strips date/issue markers.
+   */
+  public function testFingerprintTitle(): void {
+    $fp = TitlePatternHelper::fingerprintTitle(
+      'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026',
+    );
+    $this->assertStringContainsString('unhcr middle east situation', $fp);
+    $this->assertStringContainsString('emergency flash update', $fp);
+    $this->assertStringNotContainsString('14', $fp);
+    $this->assertStringNotContainsString('2026', $fp);
+  }
+
+  /**
+   * StripSeriesMarkers removes spaced hashes and non-Latin issue forms.
+   */
+  public function testStripSeriesMarkersRemovesSpacedAndNonLatinIssues(): void {
+    $spaced = TitlePatternHelper::stripSeriesMarkers(
+      'Emergency Flash Update # 14 as of 21 April 2026',
+    );
+    $this->assertStringContainsString('Emergency Flash Update', $spaced);
+    $this->assertStringNotContainsString('#', $spaced);
+    $this->assertStringNotContainsString('14', $spaced);
+    $this->assertStringNotContainsString('2026', $spaced);
+
+    $cyrillic = TitlePatternHelper::stripSeriesMarkers('Bulletin № 5 summary');
+    $this->assertStringContainsString('Bulletin', $cyrillic);
+    $this->assertStringContainsString('summary', $cyrillic);
+    $this->assertStringNotContainsString('№', $cyrillic);
+    $this->assertStringNotContainsString('5', $cyrillic);
+
+    $cjk = TitlePatternHelper::stripSeriesMarkers('局势报告第5期');
+    $this->assertStringNotContainsString('第', $cjk);
+    $this->assertStringNotContainsString('5', $cjk);
+    $this->assertStringNotContainsString('期', $cjk);
+  }
+
+  /**
+   * FingerprintTitle uses stripSeriesMarkers for spaced issue forms.
+   */
+  public function testFingerprintTitleRemovesSpacedIssue(): void {
+    $fp = TitlePatternHelper::fingerprintTitle(
+      'UNHCR Update # 15 as of 29 April 2026',
+    );
+    $this->assertStringContainsString('unhcr update', $fp);
+    $this->assertStringNotContainsString('#', $fp);
+    $this->assertStringNotContainsString('15', $fp);
+    $this->assertStringNotContainsString('2026', $fp);
+  }
+
+  /**
+   * Component split prefers multi-token segments on colon separators.
+   */
+  public function testSplitTitleComponents(): void {
+    $parts = TitlePatternHelper::splitTitleComponents(
+      "Situation d'urgence au Tchad : Mise à jour des arrivées du Soudan (03 Mai 2026)",
+    );
+    $this->assertSame([
+      "Situation d'urgence au Tchad",
+      'Mise à jour des arrivées du Soudan',
+    ], $parts);
+  }
+
+  /**
+   * Nearby extractors return surface substrings.
+   */
+  public function testExtractNearbyMarkers(): void {
+    $text = 'Emergency Flash Update #14 as of 21 April 2026';
+    $this->assertSame('21 April 2026', TitlePatternHelper::extractNearbyDate($text));
+    $this->assertSame('#14', TitlePatternHelper::extractNearbyIssue($text));
+    $this->assertNull(TitlePatternHelper::extractNearbyWeek($text));
+    $this->assertSame('Week 12', TitlePatternHelper::extractNearbyWeek('Bulletin Week 12 summary'));
+    $this->assertTrue(TitlePatternHelper::isMarkerOnlyLine('21 April 2026'));
+    $this->assertFalse(TitlePatternHelper::isMarkerOnlyLine('Emergency Flash Update'));
+  }
+
+  /**
+   * Punctuation variants normalize to the same similarity key.
+   */
+  public function testNormalizePatternForSimilarityCollapsesSeparators(): void {
+    $a = TitlePatternHelper::normalizePatternForSimilarity(
+      'UNHCR Middle East Situation: Emergency Flash Update % as of %',
+    );
+    $b = TitlePatternHelper::normalizePatternForSimilarity(
+      'UNHCR Middle East Situation : Emergency Flash Update % as of %',
+    );
+    $c = TitlePatternHelper::normalizePatternForSimilarity(
+      'UNHCR Middle East Situation, Emergency Flash Update % as of %',
+    );
+    $this->assertSame($a, $b);
+    $this->assertSame($a, $c);
+  }
+
+  /**
+   * Flash near-miss scores high; Cross Regional Weekly scores low.
+   */
+  public function testScoreTitleSimilarityUnhcrExamples(): void {
+    $original = 'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026';
+    $flash = 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026';
+    $punct = 'UNHCR Middle East Situation, Emergency Flash Update #14 as of 21 April 2026';
+    $weekly = 'UNHCR Middle East Situation: Cross Regional Refugee Coordination Weekly Update (29 April 2026)';
+
+    $flash_score = TitlePatternHelper::scoreTitleSimilarity($original, $flash);
+    $punct_score = TitlePatternHelper::scoreTitleSimilarity($original, $punct);
+    $weekly_score = TitlePatternHelper::scoreTitleSimilarity($original, $weekly);
+
+    $this->assertGreaterThanOrEqual(0.90, $flash_score);
+    $this->assertEqualsWithDelta($flash_score, $punct_score, 0.02);
+    $this->assertLessThan(0.75, $weekly_score);
+    $this->assertGreaterThan($weekly_score, $flash_score);
+  }
+
+  /**
    * Data provider for extractSeriesMarkers cases.
    *
    * @return array<string, array{string, int[], int[], list<array{start: string, end: string}>}>

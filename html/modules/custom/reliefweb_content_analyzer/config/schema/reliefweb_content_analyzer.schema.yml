@@ -154,12 +154,12 @@ reliefweb_content_analyzer.settings:
             ai_title_extract_page_count:
               type: integer
               label: 'Number of PDF pages to extract for AI title matching'
-            ai_title_match_endpoint:
-              type: string
-              label: 'ocha_ai_helper series title match endpoint'
             ai_title_match_min_confidence:
               type: float
               label: 'Minimum series title match confidence before AI title generation'
+            title_pattern_similarity_threshold:
+              type: float
+              label: 'Minimum title pattern similarity for keep-original, score boost, and AI candidate ranking'
             ai_title_description_template:
               type: string
               label: 'Structured output title field description template'

@@ -685,19 +685,22 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $form['matcher']['ai_title_match_endpoint'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Series title match endpoint'),
-      '#description' => $this->t('ocha_ai_helper POST endpoint that matches PDF spans to series member titles.'),
-      '#default_value' => $matcher['ai_title_match_endpoint'] ?? 'http://ocha-ai-helper/text/match/series-title',
-      '#required' => TRUE,
-    ];
-
     $form['matcher']['ai_title_match_min_confidence'] = [
       '#type' => 'number',
       '#title' => $this->t('Minimum title match confidence'),
       '#description' => $this->t('Skip AI title generation when the helper confidence is below this threshold (0–1).'),
       '#default_value' => $matcher['ai_title_match_min_confidence'] ?? 0.65,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['title_pattern_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Title pattern similarity threshold'),
+      '#description' => $this->t('Minimum similarity (0–1) between patternized titles for keeping the original title, boosting candidate scores, admitting the import title as an AI candidate, filtering PDF title regions, and validating AI output.'),
+      '#default_value' => $matcher['title_pattern_similarity_threshold'] ?? 0.90,
       '#min' => 0,
       '#max' => 1,
       '#step' => 0.01,
@@ -1019,11 +1022,11 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       );
     }
 
-    $title_match_endpoint = trim((string) $form_state->getValue(['matcher', 'ai_title_match_endpoint']));
-    if ($title_match_endpoint === '') {
+    $title_pattern_similarity = (float) $form_state->getValue(['matcher', 'title_pattern_similarity_threshold']);
+    if ($title_pattern_similarity < 0 || $title_pattern_similarity > 1) {
       $form_state->setErrorByName(
-        'matcher][ai_title_match_endpoint',
-        $this->t('Series title match endpoint is required.'),
+        'matcher][title_pattern_similarity_threshold',
+        $this->t('Title pattern similarity threshold must be between 0 and 1.'),
       );
     }
 
@@ -1323,8 +1326,8 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'ai_title_example_line_count' => (int) $matcher_values['ai_title_example_line_count'],
       'ai_title_min_consistent_examples' => (int) $matcher_values['ai_title_min_consistent_examples'],
       'ai_title_extract_page_count' => (int) $matcher_values['ai_title_extract_page_count'],
-      'ai_title_match_endpoint' => trim((string) $matcher_values['ai_title_match_endpoint']),
       'ai_title_match_min_confidence' => (float) $matcher_values['ai_title_match_min_confidence'],
+      'title_pattern_similarity_threshold' => (float) $matcher_values['title_pattern_similarity_threshold'],
       'ai_title_description_template' => (string) $matcher_values['ai_title_description_template'],
       'ai_title_inference' => [
         'plugin_id' => trim((string) $matcher_values['ai_title_inference']['plugin_id']),

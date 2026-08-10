@@ -390,6 +390,7 @@ final class ReportSeriesMatchForm extends FormBase {
   protected function buildCandidatesDetails(SeriesMatchResult $result): array {
     $selected_ids = $result->evidence->candidateIds;
     $scores = $result->evidence->candidatePatternScores;
+    $similarities = $result->evidence->candidateTitleSimilarities;
     $selected_lookup = array_fill_keys($selected_ids, TRUE);
 
     $display_ids = $scores !== []
@@ -403,6 +404,9 @@ final class ReportSeriesMatchForm extends FormBase {
     ];
     if ($scores !== []) {
       $headers[] = $this->t('Pattern score');
+    }
+    if ($similarities !== []) {
+      $headers[] = $this->t('Title sim');
     }
     $headers[] = $this->t('Status');
 
@@ -421,7 +425,14 @@ final class ReportSeriesMatchForm extends FormBase {
           $this->dateFormatter->format((int) $candidate->getCreatedTime(), 'short'),
         ];
         if ($scores !== []) {
-          $row[] = isset($scores[$nid]) ? (string) (int) $scores[$nid] : '';
+          $row[] = isset($scores[$nid])
+            ? number_format((float) $scores[$nid], 2, '.', '')
+            : '';
+        }
+        if ($similarities !== []) {
+          $row[] = isset($similarities[$nid])
+            ? number_format((float) $similarities[$nid] * 100, 1, '.', '') . '%'
+            : '';
         }
         $row[] = isset($selected_lookup[$nid])
           ? $this->t('Selected')
@@ -595,15 +606,16 @@ final class ReportSeriesMatchForm extends FormBase {
     }
 
     if ($title_source === SeriesMatchTitleSource::AiGenerated) {
-      $label = (string) $this->t('AI generated');
       if ($result->proposal->titleAiDurationSeconds !== NULL) {
-        $label .= ' (' . number_format($result->proposal->titleAiDurationSeconds, 2) . 's)';
+        return (string) $this->t('AI generated (@duration s)', [
+          '@duration' => number_format($result->proposal->titleAiDurationSeconds, 2),
+        ]);
       }
-      return $label;
+      return (string) $this->t('AI generated');
     }
 
     return (string) $this->t('Original title kept (@reason)', [
-      '@reason' => $this->formatTitleUnchangedReason($title_source),
+      '@reason' => $title_source->unchangedReason() ?? '',
     ]);
   }
 
@@ -622,31 +634,6 @@ final class ReportSeriesMatchForm extends FormBase {
       SeriesMatchAttentionLevel::Info => $this->t('Review suggested'),
       SeriesMatchAttentionLevel::Warning => $this->t('Weaker source'),
       SeriesMatchAttentionLevel::Error => $this->t('Not applied / failed'),
-    };
-  }
-
-  /**
-   * Returns a translatable reason phrase for unchanged title outcomes.
-   *
-   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource $source
-   *   The title source enum case.
-   *
-   * @return string
-   *   Translated reason text, or empty for AI-generated titles.
-   */
-  protected function formatTitleUnchangedReason(SeriesMatchTitleSource $source): string {
-    return (string) match ($source) {
-      SeriesMatchTitleSource::KeptOriginalPatternMatch => $this->t('matches series pattern'),
-      SeriesMatchTitleSource::SkippedAiDisabled => $this->t('AI disabled'),
-      SeriesMatchTitleSource::SkippedNoAttachmentText => $this->t('no attachment text'),
-      SeriesMatchTitleSource::SkippedInconsistentExamples => $this->t('inconsistent series title examples'),
-      SeriesMatchTitleSource::SkippedLowTitleMatchConfidence => $this->t('low title match confidence'),
-      SeriesMatchTitleSource::FailedNoCandidateTitles => $this->t('no candidate titles'),
-      SeriesMatchTitleSource::FailedUnsupportedAiPlugin => $this->t('unsupported AI plugin'),
-      SeriesMatchTitleSource::FailedAiCallError => $this->t('AI call error'),
-      SeriesMatchTitleSource::FailedEmptyAiOutput => $this->t('empty AI output'),
-      SeriesMatchTitleSource::FailedUngroundedTitleMarkers => $this->t('ungrounded date or series marker'),
-      SeriesMatchTitleSource::AiGenerated => '',
     };
   }
 

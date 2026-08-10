@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_content_analyzer\Unit;
 
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchOutcomePolicyAction;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcomePolicyReasonFormatter;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -60,6 +61,25 @@ class SeriesMatchOutcomePolicyReasonFormatterTest extends UnitTestCase {
       $reason->code,
     );
     $this->assertSame('no body while series usually has body', $reason->message);
+  }
+
+  /**
+   * Title AI failed reasons include the title-source detail.
+   */
+  public function testForTitleAiFailedOrSkipped(): void {
+    $reason = SeriesMatchOutcomePolicyReasonFormatter::forTitleAiFailedOrSkipped(
+      SeriesMatchOutcomePolicyAction::MaxMedium,
+      SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+    );
+
+    $this->assertSame(
+      'global:title_ai_failed_or_skipped:max_medium',
+      $reason->code,
+    );
+    $this->assertSame(
+      'generated title failed validation (ungrounded markers)',
+      $reason->message,
+    );
   }
 
   /**

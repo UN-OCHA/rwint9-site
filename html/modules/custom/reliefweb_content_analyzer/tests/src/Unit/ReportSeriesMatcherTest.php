@@ -21,8 +21,6 @@ use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture\SeriesMatchMatcherConfigFixture;
 use Drupal\Tests\UnitTestCase;
-use GuzzleHttp\ClientInterface;
-use GuzzleHttp\Psr7\Response;
 use Psr\Log\LoggerInterface;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -65,8 +63,6 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    *
    * @param array<string, mixed> $matcher_overrides
    *   Optional overrides for matcher config.
-   * @param \GuzzleHttp\ClientInterface|null $http_client
-   *   Optional HTTP client mock.
    * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface|null $completion
    *   Optional completion plugin manager mock.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface|null $logger_factory
@@ -77,18 +73,20 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    */
   private function buildMatcher(
     array $matcher_overrides = [],
-    ?ClientInterface $http_client = NULL,
     ?CompletionPluginManagerInterface $completion = NULL,
     ?LoggerChannelFactoryInterface $logger_factory = NULL,
   ): ReportSeriesMatcher {
+    if ($logger_factory === NULL) {
+      $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+      $logger_factory->method('get')->willReturn($this->createMock(LoggerInterface::class));
+    }
     return new ReportSeriesMatcher(
       $this->buildConfigFactory($matcher_overrides),
-      $logger_factory ?? $this->createMock(LoggerChannelFactoryInterface::class),
+      $logger_factory,
       $this->createMock(EntityFieldManagerInterface::class),
       $this->createMock(TimeInterface::class),
       $this->createMock(Connection::class),
       $completion ?? $this->createMock(CompletionPluginManagerInterface::class),
-      $http_client ?? $this->createMock(ClientInterface::class),
     );
   }
 
@@ -97,8 +95,8 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    *
    * @param list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>> $pages
    *   Per-page spans returned by the attachment.
-   * @param \GuzzleHttp\ClientInterface $http_client
-   *   HTTP client mock for the helper endpoint.
+   * @param array<string, mixed>|null $match_result
+   *   Stubbed SeriesTitleMatchHelper-shaped result, or NULL.
    * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completion
    *   Completion plugin manager mock.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface|null $logger_factory
@@ -109,26 +107,31 @@ class ReportSeriesMatcherTest extends UnitTestCase {
    */
   private function buildMatcherWithSpans(
     array $pages,
-    ClientInterface $http_client,
+    ?array $match_result,
     CompletionPluginManagerInterface $completion,
     ?LoggerChannelFactoryInterface $logger_factory = NULL,
   ): ReportSeriesMatcher {
     $file = $this->createMock(ReliefWebFile::class);
     $file->method('extractStructuredTextSpans')->with(1, 2)->willReturn($pages);
 
+    if ($logger_factory === NULL) {
+      $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+      $logger_factory->method('get')->willReturn($this->createMock(LoggerInterface::class));
+    }
+
     $matcher = $this->getMockBuilder(ReportSeriesMatcher::class)
       ->setConstructorArgs([
         $this->buildConfigFactory(),
-        $logger_factory ?? $this->createMock(LoggerChannelFactoryInterface::class),
+        $logger_factory,
         $this->createMock(EntityFieldManagerInterface::class),
         $this->createMock(TimeInterface::class),
         $this->createMock(Connection::class),
         $completion,
-        $http_client,
       ])
-      ->onlyMethods(['getFirstFile'])
+      ->onlyMethods(['getFirstFile', 'matchSeriesTitleRegion'])
       ->getMock();
     $matcher->method('getFirstFile')->willReturn($file);
+    $matcher->method('matchSeriesTitleRegion')->willReturn($match_result);
     return $matcher;
   }
 
@@ -508,7 +511,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($logger);
 
-    $matcher = $this->buildMatcher([], NULL, NULL, $logger_factory);
+    $matcher = $this->buildMatcher([], NULL, $logger_factory);
 
     $original_title = 'Annual Review 2026';
     $metadata = [
@@ -539,7 +542,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($logger);
 
-    $matcher = $this->buildMatcher([], NULL, NULL, $logger_factory);
+    $matcher = $this->buildMatcher([], NULL, $logger_factory);
 
     $original_title = 'Annual Review 2026';
     $metadata = [
@@ -631,7 +634,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($logger);
 
-    $matcher = $this->buildMatcher([], NULL, NULL, $logger_factory);
+    $matcher = $this->buildMatcher([], NULL, $logger_factory);
 
     $original_title = 'Some Import Title (01 June 2026)';
     $metadata = [
@@ -662,7 +665,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $completion = $this->createMock(CompletionPluginManagerInterface::class);
     $completion->expects($this->never())->method('getPlugin');
 
-    $matcher = $this->buildMatcher([], NULL, $completion);
+    $matcher = $this->buildMatcher([], $completion);
 
     $original_title = "Situation d'urgence au Tchad : Mise à jour des arrivées du Soudan (01 Juin 2026)";
     $metadata = [
@@ -686,7 +689,176 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
-   * High helper confidence calls the LLM with region text and matched titles.
+   * Soft-keeps original when one series word differs (Flash near-miss).
+   */
+  public function testGenerateReportTitleKeepsOriginalOnHighTitleSimilarity(): void {
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $completion = $this->createMock(CompletionPluginManagerInterface::class);
+    $completion->expects($this->never())->method('getPlugin');
+
+    $matcher = $this->buildMatcher();
+
+    $original_title = 'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026';
+    $metadata = [
+      101 => ['title' => 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026'],
+      102 => ['title' => 'UNHCR Middle East Situation: Emergency Flash Update #13 as of 16 April 2026'],
+      103 => ['title' => 'UNHCR Middle East Situation: Emergency Flash Update #12 as of 14 April 2026'],
+    ];
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'generateReportTitle',
+      $entity,
+      $original_title,
+      [101, 102, 103],
+      $metadata,
+    );
+
+    $this->assertSame($original_title, $result['title']);
+    $this->assertSame(SeriesMatchTitleSource::KeptOriginalPatternMatch, $result['source']);
+  }
+
+  /**
+   * Boosts SQL pattern scores with title-pattern similarity.
+   */
+  public function testBoostPatternScoresWithTitleSimilarity(): void {
+    $matcher = $this->getMockBuilder(ReportSeriesMatcher::class)
+      ->setConstructorArgs([
+        $this->buildConfigFactory(),
+        $this->createMock(LoggerChannelFactoryInterface::class),
+        $this->createMock(EntityFieldManagerInterface::class),
+        $this->createMock(TimeInterface::class),
+        $this->createMock(Connection::class),
+        $this->createMock(CompletionPluginManagerInterface::class),
+      ])
+      ->onlyMethods(['getOriginalTitles'])
+      ->getMock();
+    $matcher->method('getOriginalTitles')->willReturn([
+      101 => 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026',
+      102 => 'UNHCR Middle East Situation: Cross Regional Refugee Coordination Weekly Update (21 April 2026)',
+    ]);
+
+    $doc = 'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026';
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'boostPatternScoresWithTitleSimilarity',
+      $doc,
+      [101 => 3, 102 => 3],
+      [
+        101 => ['title' => 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026'],
+        102 => ['title' => 'UNHCR Middle East Situation: Cross Regional Refugee Coordination Weekly Update (21 April 2026)'],
+      ],
+    );
+
+    $this->assertGreaterThan($result['scores'][102], $result['scores'][101]);
+    $this->assertGreaterThanOrEqual(0.90, $result['similarities'][101]);
+    $this->assertLessThan(0.75, $result['similarities'][102]);
+    $this->assertEqualsWithDelta(
+      3.0 + $result['similarities'][101],
+      $result['scores'][101],
+      0.0001,
+    );
+  }
+
+  /**
+   * Admits import title as page-0 peer and drops low-similarity PDF regions.
+   */
+  public function testPrepareAiTitleCandidatesAdmitsImportAndFiltersPdf(): void {
+    $series = 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026';
+    $import = 'UNHCR Middle East Situation: Emergency Update #15 as of 29 April 2026';
+    $candidates = [
+      [
+        'page' => 1,
+        'title_region_text' => "Update\nMiddle East Situation",
+        'nearby_date' => '29 April 2026',
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.88,
+      ],
+      [
+        'page' => 2,
+        'title_region_text' => "MIDDLE EAST SITUATION | WEEKLY UPDATE\nKey Figures from the Cross-regional Response as of 26 April 2026",
+        'nearby_date' => '26 April 2026',
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.88,
+      ],
+    ];
+
+    $ranked = $this->invokeProtected(
+      'prepareAiTitleCandidates',
+      $candidates,
+      $import,
+      [$series],
+    );
+
+    $this->assertCount(1, $ranked);
+    $this->assertSame(0, $ranked[0]['page']);
+    $this->assertSame($import, $ranked[0]['title_region_text']);
+    $this->assertSame('#15', $ranked[0]['nearby_issue']);
+    $this->assertSame('29 April 2026', $ranked[0]['nearby_date']);
+  }
+
+  /**
+   * Skips AI when required series markers are missing from ranked candidates.
+   */
+  public function testGenerateReportTitleWithAiSkipsWhenRequiredMarkersMissing(): void {
+    $pages = [[
+      [
+        'text' => 'UNHCR Middle East Situation Emergency Flash Update',
+        'x' => 10.0,
+        'y' => 10.0,
+        'w' => 200.0,
+        'h' => 16.0,
+        'size' => 14.0,
+      ],
+    ]];
+    $matched_title = 'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026';
+    // Region matches series stem but has no issue/date markers; dissimilar
+    // import.
+    $candidates = [
+      [
+        'page' => 1,
+        'title_region_text' => 'UNHCR Middle East Situation: Emergency Flash Update',
+        'nearby_date' => NULL,
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.95,
+      ],
+    ];
+
+    $match_result = [
+      'matched_titles' => [$matched_title],
+      'candidates' => $candidates,
+    ];
+
+    $completion = $this->createMock(CompletionPluginManagerInterface::class);
+    $completion->expects($this->never())->method('getPlugin');
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger->expects($this->once())->method('warning');
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($logger);
+
+    $matcher = $this->buildMatcherWithSpans($pages, $match_result, $completion, $logger_factory);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $original = 'Completely unrelated portal title without markers';
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'generateReportTitleWithAi',
+      $entity,
+      $original,
+      [$matched_title],
+    );
+
+    $this->assertSame($original, $result['title']);
+    $this->assertSame(SeriesMatchTitleSource::SkippedInsufficientTitleMarkers, $result['source']);
+    $this->assertNull($result['aiDurationSeconds']);
+  }
+
+  /**
+   * High confidence triggers LLM call with JSON candidates and matched titles.
    */
   public function testGenerateReportTitleWithAiUsesMatchedRegionAndExamples(): void {
     $page_spans = [
@@ -703,29 +875,42 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $matched_title = "Situation d'urgence au Tchad : Mise à jour des arrivées du Soudan (03 Mai 2026)";
     $region = "SITUATION D'URGENCE AU TCHAD\nMise à jour des arrivées du Soudan";
     $generated = "Situation d'urgence au Tchad : Mise à jour des arrivées du Soudan (03 Mai 2026)";
-
-    $http = $this->createMock(ClientInterface::class);
-    $http->expects($this->once())
-      ->method('request')
-      ->with(
-        'POST',
-        'http://ocha-ai-helper/text/match/series-title',
-        $this->callback(static function (array $options) use ($pages, $matched_title): bool {
-          $json = $options['json'] ?? [];
-          return ($json['pages'] ?? NULL) === $pages
-            && ($json['titles'][0] ?? NULL) === $matched_title
-            && ($json['max_matched_titles'] ?? NULL) === 5;
-        }),
-      )
-      ->willReturn(new Response(200, [], json_encode([
+    $candidates = [
+      [
+        'page' => 2,
         'title_region_text' => $region,
         'nearby_date' => '03 Mai 2026',
         'nearby_issue' => NULL,
         'nearby_week' => NULL,
-        'matched_titles' => [$matched_title],
         'confidence' => 0.82,
-        'took' => 0.01,
-      ], JSON_THROW_ON_ERROR)));
+      ],
+      [
+        'page' => 1,
+        'title_region_text' => "SITUATION D'URGENCE",
+        'nearby_date' => NULL,
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.55,
+      ],
+    ];
+    $expected_prompt_candidates = [
+      [
+        'page' => 2,
+        'title_region_text' => $region,
+        'nearby_date' => '03 Mai 2026',
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+      ],
+    ];
+    $expected_prompt = json_encode(
+      ['candidates' => $expected_prompt_candidates],
+      JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+    );
+
+    $match_result = [
+      'matched_titles' => [$matched_title],
+      'candidates' => $candidates,
+    ];
 
     $plugin = $this->createMock(CompletionPluginBase::class);
     $plugin->method('hasCapability')
@@ -734,9 +919,8 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $plugin->expects($this->once())
       ->method('queryStructured')
       ->with(
-        $this->callback(static function (string $prompt) use ($region): bool {
-          return str_contains($prompt, $region)
-            && str_contains($prompt, 'Date: 03 Mai 2026');
+        $this->callback(static function (string $prompt) use ($expected_prompt): bool {
+          return $prompt === $expected_prompt;
         }),
         $this->callback(static function (array $schema) use ($matched_title): bool {
           $description = $schema['properties']['title']['description'] ?? '';
@@ -751,7 +935,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $completion = $this->createMock(CompletionPluginManagerInterface::class);
     $completion->method('getPlugin')->willReturn($plugin);
 
-    $matcher = $this->buildMatcherWithSpans($pages, $http, $completion);
+    $matcher = $this->buildMatcherWithSpans($pages, $match_result, $completion);
     $entity = $this->createMock(ContentEntityInterface::class);
 
     $result = $this->invokeProtectedWithMatcher(
@@ -767,6 +951,71 @@ class ReportSeriesMatcherTest extends UnitTestCase {
 
     $this->assertSame($generated, $result['title']);
     $this->assertSame(SeriesMatchTitleSource::AiGenerated, $result['source']);
+    $this->assertNotNull($result['aiDurationSeconds']);
+  }
+
+  /**
+   * AI titles that ignore the series naming stem are rejected.
+   */
+  public function testGenerateReportTitleWithAiRejectsSeriesPatternMismatch(): void {
+    $pages = [[
+      [
+        'text' => 'OPERATIONAL UPDATE – SYRIA',
+        'x' => 10.0,
+        'y' => 10.0,
+        'w' => 200.0,
+        'h' => 16.0,
+        'size' => 14.0,
+      ],
+    ]];
+    $matched_title = 'UNHCR Syria Operational Update, December 2025';
+    $candidates = [
+      [
+        'page' => 1,
+        'title_region_text' => "UNHCR Syria Operational Update\nFebruary 2026",
+        'nearby_date' => 'February 2026',
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.9,
+      ],
+    ];
+    $pdf_verbatim = 'OPERATIONAL UPDATE / SYRIA / FEBRUARY 2026';
+
+    $match_result = [
+      'matched_titles' => [$matched_title],
+      'candidates' => $candidates,
+    ];
+
+    $plugin = $this->createMock(CompletionPluginBase::class);
+    $plugin->method('hasCapability')
+      ->with(CompletionCapability::StructuredOutput)
+      ->willReturn(TRUE);
+    $plugin->expects($this->once())
+      ->method('queryStructured')
+      ->willReturn(['title' => $pdf_verbatim]);
+
+    $completion = $this->createMock(CompletionPluginManagerInterface::class);
+    $completion->method('getPlugin')->willReturn($plugin);
+
+    $logger = $this->createMock(LoggerInterface::class);
+    $logger->expects($this->once())->method('warning');
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($logger);
+
+    $matcher = $this->buildMatcherWithSpans($pages, $match_result, $completion, $logger_factory);
+    $entity = $this->createMock(ContentEntityInterface::class);
+    $original = 'Import title without series style';
+
+    $result = $this->invokeProtectedWithMatcher(
+      $matcher,
+      'generateReportTitleWithAi',
+      $entity,
+      $original,
+      [$matched_title],
+    );
+
+    $this->assertSame($original, $result['title']);
+    $this->assertSame(SeriesMatchTitleSource::FailedSeriesPatternMismatch, $result['source']);
     $this->assertNotNull($result['aiDurationSeconds']);
   }
 
@@ -787,19 +1036,6 @@ class ReportSeriesMatcherTest extends UnitTestCase {
       ],
     ];
 
-    $http = $this->createMock(ClientInterface::class);
-    $http->expects($this->once())
-      ->method('request')
-      ->willReturn(new Response(200, [], json_encode([
-        'title_region_text' => '',
-        'nearby_date' => NULL,
-        'nearby_issue' => NULL,
-        'nearby_week' => NULL,
-        'matched_titles' => [],
-        'confidence' => 0.2,
-        'took' => 0.01,
-      ], JSON_THROW_ON_ERROR)));
-
     $completion = $this->createMock(CompletionPluginManagerInterface::class);
     $completion->expects($this->never())->method('getPlugin');
 
@@ -808,7 +1044,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($logger);
 
-    $matcher = $this->buildMatcherWithSpans($pages, $http, $completion, $logger_factory);
+    $matcher = $this->buildMatcherWithSpans($pages, NULL, $completion, $logger_factory);
     $entity = $this->createMock(ContentEntityInterface::class);
     $original = 'Import title (01 June 2026)';
 
@@ -823,6 +1059,59 @@ class ReportSeriesMatcherTest extends UnitTestCase {
     $this->assertSame($original, $result['title']);
     $this->assertSame(SeriesMatchTitleSource::SkippedLowTitleMatchConfidence, $result['source']);
     $this->assertNull($result['aiDurationSeconds']);
+  }
+
+  /**
+   * Grounding corpus includes markers from secondary candidates.
+   */
+  public function testBuildAiTitleGroundingSourceIncludesSecondaryCandidateMarkers(): void {
+    $candidates = [
+      [
+        'page' => 2,
+        'title_region_text' => 'Syrian Arab Republic',
+        'nearby_date' => NULL,
+        'nearby_issue' => NULL,
+        'nearby_week' => NULL,
+        'confidence' => 0.8,
+      ],
+      [
+        'page' => 1,
+        'title_region_text' => 'OPERATIONAL UPDATE – SYRIA',
+        'nearby_date' => 'February 2026',
+        'nearby_issue' => 'Issue 12',
+        'nearby_week' => NULL,
+        'confidence' => 0.5,
+      ],
+    ];
+
+    $grounding = $this->invokeProtected('buildAiTitleGroundingSource', $candidates);
+
+    $this->assertStringContainsString('Syrian Arab Republic', $grounding);
+    $this->assertStringContainsString('OPERATIONAL UPDATE – SYRIA', $grounding);
+    $this->assertStringContainsString('February 2026', $grounding);
+    $this->assertStringContainsString('Issue 12', $grounding);
+  }
+
+  /**
+   * Accepts reformatted series stems, rejects verbatim PDF titles.
+   */
+  public function testGeneratedTitleMatchesSeriesPattern(): void {
+    $matched = ['UNHCR Syria Operational Update, December 2025'];
+
+    $this->assertTrue(
+      $this->invokeProtected(
+        'generatedTitleMatchesSeriesPattern',
+        'UNHCR Syria Operational Update, February 2026',
+        $matched,
+      ),
+    );
+    $this->assertFalse(
+      $this->invokeProtected(
+        'generatedTitleMatchesSeriesPattern',
+        'OPERATIONAL UPDATE / SYRIA / FEBRUARY 2026',
+        $matched,
+      ),
+    );
   }
 
   /**
@@ -1077,7 +1366,6 @@ class ReportSeriesMatcherTest extends UnitTestCase {
       $this->createMock(TimeInterface::class),
       $database,
       $this->createMock(CompletionPluginManagerInterface::class),
-      $this->createMock(ClientInterface::class),
     );
   }
 

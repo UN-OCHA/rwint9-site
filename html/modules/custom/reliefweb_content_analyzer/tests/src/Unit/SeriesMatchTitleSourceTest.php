@@ -61,6 +61,10 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
         SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
         'low title match confidence',
       ],
+      'insufficient title markers' => [
+        SeriesMatchTitleSource::SkippedInsufficientTitleMarkers,
+        'insufficient title markers',
+      ],
       'no candidate titles' => [
         SeriesMatchTitleSource::FailedNoCandidateTitles,
         'no candidate titles',
@@ -80,6 +84,84 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
       'ungrounded markers' => [
         SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
         'ungrounded date or series marker',
+      ],
+      'series pattern mismatch' => [
+        SeriesMatchTitleSource::FailedSeriesPatternMismatch,
+        'does not match series title pattern',
+      ],
+    ];
+  }
+
+  /**
+   * Outcome-policy demotion phrases are problem-oriented.
+   */
+  #[DataProvider('outcomePolicyReasonProvider')]
+  public function testOutcomePolicyReason(
+    SeriesMatchTitleSource $source,
+    ?string $expected,
+  ): void {
+    $this->assertSame($expected, $source->outcomePolicyReason());
+  }
+
+  /**
+   * Data provider for outcome-policy reason phrases.
+   *
+   * @return array<string, array{0: \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource, 1: string|null}>
+   *   Source enum case and expected policy reason (NULL when not demoting).
+   */
+  public static function outcomePolicyReasonProvider(): array {
+    return [
+      'pattern match' => [
+        SeriesMatchTitleSource::KeptOriginalPatternMatch,
+        NULL,
+      ],
+      'ai generated' => [
+        SeriesMatchTitleSource::AiGenerated,
+        NULL,
+      ],
+      'ai disabled' => [
+        SeriesMatchTitleSource::SkippedAiDisabled,
+        'title AI disabled',
+      ],
+      'no attachment text' => [
+        SeriesMatchTitleSource::SkippedNoAttachmentText,
+        'no attachment text for title generation',
+      ],
+      'inconsistent examples' => [
+        SeriesMatchTitleSource::SkippedInconsistentExamples,
+        'inconsistent series title examples',
+      ],
+      'low title match confidence' => [
+        SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'title match confidence too low',
+      ],
+      'insufficient title markers' => [
+        SeriesMatchTitleSource::SkippedInsufficientTitleMarkers,
+        'insufficient title markers for generation',
+      ],
+      'no candidate titles' => [
+        SeriesMatchTitleSource::FailedNoCandidateTitles,
+        'no candidate titles for generation',
+      ],
+      'unsupported plugin' => [
+        SeriesMatchTitleSource::FailedUnsupportedAiPlugin,
+        'unsupported AI plugin for title generation',
+      ],
+      'ai call error' => [
+        SeriesMatchTitleSource::FailedAiCallError,
+        'title generation failed',
+      ],
+      'empty ai output' => [
+        SeriesMatchTitleSource::FailedEmptyAiOutput,
+        'title generation returned empty output',
+      ],
+      'ungrounded markers' => [
+        SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        'generated title failed validation (ungrounded markers)',
+      ],
+      'series pattern mismatch' => [
+        SeriesMatchTitleSource::FailedSeriesPatternMismatch,
+        'generated title does not match series pattern',
       ],
     ];
   }
@@ -191,6 +273,10 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
         SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
         SeriesMatchAttentionLevel::Warning,
       ],
+      'insufficient title markers' => [
+        SeriesMatchTitleSource::SkippedInsufficientTitleMarkers,
+        SeriesMatchAttentionLevel::Warning,
+      ],
       'no candidate titles' => [
         SeriesMatchTitleSource::FailedNoCandidateTitles,
         SeriesMatchAttentionLevel::Error,
@@ -209,6 +295,10 @@ class SeriesMatchTitleSourceTest extends UnitTestCase {
       ],
       'ungrounded markers' => [
         SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        SeriesMatchAttentionLevel::Error,
+      ],
+      'series pattern mismatch' => [
+        SeriesMatchTitleSource::FailedSeriesPatternMismatch,
         SeriesMatchAttentionLevel::Error,
       ],
     ];

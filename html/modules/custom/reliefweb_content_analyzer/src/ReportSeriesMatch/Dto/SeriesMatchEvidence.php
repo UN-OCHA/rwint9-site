@@ -14,9 +14,13 @@ final readonly class SeriesMatchEvidence {
    *
    * @param int[] $candidateIds
    *   Selected series member node IDs in pattern score order (descending).
-   * @param array<int, int> $candidatePatternScores
-   *   Merged pattern score per retrieved candidate after the limit, including
-   *   both selected and discarded candidates.
+   * @param array<int, float|int> $candidatePatternScores
+   *   Merged pattern score per retrieved candidate after the limit (SQL score
+   *   plus title-pattern similarity boost), including both selected and
+   *   discarded candidates.
+   * @param array<int, float> $candidateTitleSimilarities
+   *   Best title-pattern similarity (0–1) of each retrieved candidate against
+   *   the document original title (max of original vs current candidate title).
    * @param int $titleMatchCount
    *   Candidates matched by title patterns.
    * @param int $urlMatchCount
@@ -55,6 +59,7 @@ final readonly class SeriesMatchEvidence {
   public function __construct(
     public array $candidateIds = [],
     public array $candidatePatternScores = [],
+    public array $candidateTitleSimilarities = [],
     public int $titleMatchCount = 0,
     public int $urlMatchCount = 0,
     public int $bothSignalsCount = 0,

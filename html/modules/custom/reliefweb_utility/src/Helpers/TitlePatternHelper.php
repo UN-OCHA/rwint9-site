@@ -128,7 +128,7 @@ class TitlePatternHelper {
    */
   public static function stringToLikePattern(string $string, string $wildcard = '%'): string {
     // Escape the string for SQL LIKE.
-    return trim(self::applyDateStripping(self::escapeLike($string), $wildcard));
+    return trim(self::stripDatesAndNumbers(self::escapeLike($string), $wildcard));
   }
 
   /**
@@ -141,7 +141,296 @@ class TitlePatternHelper {
    *   Stem with dates/numbers replaced by % wildcards.
    */
   public static function normalizeSeriesStem(string $title): string {
-    return trim(self::applyDateStripping($title, '%'));
+    return trim(self::stripDatesAndNumbers($title, '%'));
+  }
+
+  /**
+   * Normalize a patternized stem for similarity scoring.
+   *
+   * Lowercases, replaces % wildcards with spaces, strips non-alphanumeric
+   * characters to spaces, and collapses whitespace so punctuation variants
+   * compare equally.
+   *
+   * @param string $pattern
+   *   Patternized title stem (typically from normalizeSeriesStem()).
+   *
+   * @return string
+   *   Normalized comparison string.
+   */
+  public static function normalizePatternForSimilarity(string $pattern): string {
+    $normalized = mb_strtolower($pattern);
+    $normalized = str_replace('%', ' ', $normalized);
+    $normalized = preg_replace('/[^a-z0-9]+/u', ' ', $normalized) ?? $normalized;
+    $normalized = preg_replace('/\s+/u', ' ', $normalized) ?? $normalized;
+    return trim($normalized);
+  }
+
+  /**
+   * Scores similarity between two already-patternized title stems.
+   *
+   * Uses 0.9 * similar_text on normalizePatternForSimilarity() forms plus
+   * 0.1 * similar_text on the raw patternized stems so punctuation-preserving
+   * near-matches get a small bonus.
+   *
+   * @param string $a
+   *   First patternized stem.
+   * @param string $b
+   *   Second patternized stem.
+   *
+   * @return float
+   *   Similarity in [0, 1].
+   */
+  public static function scorePatternSimilarity(string $a, string $b): float {
+    if ($a === '' && $b === '') {
+      return 1.0;
+    }
+    if ($a === '' || $b === '') {
+      return 0.0;
+    }
+
+    $norm_a = self::normalizePatternForSimilarity($a);
+    $norm_b = self::normalizePatternForSimilarity($b);
+    if ($norm_a === '' && $norm_b === '') {
+      return 1.0;
+    }
+    if ($norm_a === '' || $norm_b === '') {
+      return 0.0;
+    }
+
+    similar_text($norm_a, $norm_b, $norm_percent);
+    similar_text($a, $b, $raw_percent);
+
+    return (0.9 * ((float) $norm_percent / 100.0)) + (0.1 * ((float) $raw_percent / 100.0));
+  }
+
+  /**
+   * Scores similarity between two document titles after patternizing.
+   *
+   * @param string $title_a
+   *   First title.
+   * @param string $title_b
+   *   Second title.
+   *
+   * @return float
+   *   Similarity in [0, 1].
+   */
+  public static function scoreTitleSimilarity(string $title_a, string $title_b): float {
+    return self::scorePatternSimilarity(
+      self::normalizeSeriesStem($title_a),
+      self::normalizeSeriesStem($title_b),
+    );
+  }
+
+  /**
+   * Fingerprint a title for series-title grouping (strip markers, lowercase).
+   *
+   * @param string $title
+   *   Document title.
+   *
+   * @return string
+   *   Lowercased stem with markers removed and whitespace collapsed.
+   */
+  public static function fingerprintTitle(string $title): string {
+    return mb_strtolower(self::stripSeriesMarkers($title, FALSE), 'UTF-8');
+  }
+
+  /**
+   * Split a title into fuzzy-matchable components on : | dash separators.
+   *
+   * @param string $title
+   *   Document title.
+   *
+   * @return string[]
+   *   Non-empty components (prefers multi-token parts when available).
+   */
+  public static function splitTitleComponents(string $title): array {
+    $title = trim(preg_replace('/\s+/u', ' ', $title) ?? $title);
+    if ($title === '') {
+      return [];
+    }
+
+    $stripped = self::stripSeriesMarkers($title, TRUE);
+    $parts = preg_split('/\s*[:|]\s*|\s+[-–—]\s+/u', $stripped) ?: [];
+    $parts = array_values(array_filter(
+      array_map(
+        static fn(string $part): string => trim(preg_replace('/\s+/u', ' ', $part) ?? $part),
+        $parts,
+      ),
+      static fn(string $part): bool => mb_strlen($part) >= 4,
+    ));
+
+    $multi = array_values(array_filter(
+      $parts,
+      static fn(string $part): bool => count(preg_split('/\s+/u', $part) ?: []) >= 2,
+    ));
+    if ($multi !== []) {
+      return $multi;
+    }
+    if ($parts !== []) {
+      return $parts;
+    }
+
+    $clean = self::stripSeriesMarkers($title, FALSE);
+    return $clean !== '' ? [$clean] : [];
+  }
+
+  /**
+   * First surface date/range substring in text, or NULL.
+   *
+   * @param string $text
+   *   Text that may contain a date.
+   *
+   * @return string|null
+   *   Matched date substring as written.
+   */
+  public static function extractNearbyDate(string $text): ?string {
+    foreach (self::getNearbyDatePatterns() as $pattern) {
+      if (preg_match($pattern, $text, $matches) === 1) {
+        return trim($matches[0]);
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * First surface issue marker substring in text, or NULL.
+   *
+   * @param string $text
+   *   Text that may contain an issue marker.
+   *
+   * @return string|null
+   *   Matched issue substring as written.
+   */
+  public static function extractNearbyIssue(string $text): ?string {
+    $labels = self::getIssueLabelAlternation();
+    $patterns = [
+      '/#\s*\d+/u',
+      '/№\s*\d+/u',
+      '/第\s*\d+\s*期/u',
+      '/(?<![\p{L}\p{N}])(?:' . $labels . ')\s*#?\s*\d+(?![\p{L}\p{N}])/iu',
+    ];
+    foreach ($patterns as $pattern) {
+      if (preg_match($pattern, $text, $matches) === 1) {
+        return trim($matches[0]);
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * First surface week marker substring in text, or NULL.
+   *
+   * @param string $text
+   *   Text that may contain a week marker.
+   *
+   * @return string|null
+   *   Matched week substring as written.
+   */
+  public static function extractNearbyWeek(string $text): ?string {
+    $labels = self::getWeekLabelAlternation();
+    $patterns = [
+      '/(?<![\p{L}\p{N}])(?:' . $labels . ')\s+\d+(?![\p{L}\p{N}])/iu',
+      '/第\s*\d+\s*周/u',
+    ];
+    foreach ($patterns as $pattern) {
+      if (preg_match($pattern, $text, $matches) === 1) {
+        return trim($matches[0]);
+      }
+    }
+    return NULL;
+  }
+
+  /**
+   * Whether a line is only date/issue/week marker content.
+   *
+   * @param string $text
+   *   Line text.
+   *
+   * @return bool
+   *   TRUE when the line collapses after stripping markers.
+   */
+  public static function isMarkerOnlyLine(string $text): bool {
+    $cleaned = trim($text);
+    if ($cleaned === '') {
+      return FALSE;
+    }
+    if (self::extractNearbyDate($cleaned) === $cleaned
+      || self::extractNearbyIssue($cleaned) === $cleaned
+      || self::extractNearbyWeek($cleaned) === $cleaned) {
+      return TRUE;
+    }
+    $remainder = $cleaned;
+    if ($date = self::extractNearbyDate($remainder)) {
+      $remainder = str_replace($date, ' ', $remainder);
+    }
+    if ($issue = self::extractNearbyIssue($remainder)) {
+      $remainder = str_replace($issue, ' ', $remainder);
+    }
+    if ($week = self::extractNearbyWeek($remainder)) {
+      $remainder = str_replace($week, ' ', $remainder);
+    }
+    $remainder = preg_replace('/[\s,;|\/_\-–—]+/u', '', $remainder) ?? $remainder;
+    return $remainder === '';
+  }
+
+  /**
+   * Strip dates, issue/week markers, and leftover numbers from a title.
+   *
+   * @param string $title
+   *   Title text.
+   * @param bool $keep_separators
+   *   When TRUE, keep : | dash separators for component splitting.
+   *
+   * @return string
+   *   Stripped text with whitespace collapsed.
+   */
+  public static function stripSeriesMarkers(string $title, bool $keep_separators = FALSE): string {
+    // Remove issue/week surfaces before number stripping so forms like "# 14"
+    // and "№ 5" are not reduced to leftover punctuation (Python order).
+    $stripped = $title;
+    if ($issue = self::extractNearbyIssue($stripped)) {
+      $stripped = str_replace($issue, ' ', $stripped);
+    }
+    if ($week = self::extractNearbyWeek($stripped)) {
+      $stripped = str_replace($week, ' ', $stripped);
+    }
+    $stripped = self::stripDatesAndNumbers($stripped, ' ');
+
+    if (!$keep_separators) {
+      $stripped = preg_replace('/[()|]+/u', ' ', $stripped) ?? $stripped;
+      $stripped = preg_replace('/[,;_\/]+/u', ' ', $stripped) ?? $stripped;
+      $stripped = preg_replace('/\s*[-–—]+\s*/u', ' ', $stripped) ?? $stripped;
+      $stripped = preg_replace('/\s*[:\-–—]\s*$/u', '', $stripped) ?? $stripped;
+    }
+    else {
+      $stripped = preg_replace('/[()]+/u', ' ', $stripped) ?? $stripped;
+      $stripped = preg_replace('/,+/u', ' ', $stripped) ?? $stripped;
+    }
+
+    $stripped = preg_replace('/\s+/u', ' ', $stripped) ?? $stripped;
+    return trim($stripped);
+  }
+
+  /**
+   * Date patterns used for nearby surface extraction (most specific first).
+   *
+   * @return string[]
+   *   PCRE patterns with delimiters.
+   */
+  private static function getNearbyDatePatterns(): array {
+    $replacements = self::getStripReplacements('%');
+    $patterns = [];
+    foreach (array_keys($replacements) as $pattern) {
+      // Stop before generic number-stripping patterns.
+      if (str_contains($pattern, '#\\d+') || str_contains($pattern, '\\b\\d+\\b')) {
+        break;
+      }
+      if (str_contains($pattern, '([A-Za-z]+)\\s+\\d+') || str_contains($pattern, '\\d+(?:st|nd|rd|th)?\\s+([A-Za-z]+)')) {
+        break;
+      }
+      $patterns[] = $pattern;
+    }
+    return $patterns;
   }
 
   /**
@@ -222,7 +511,7 @@ class TitlePatternHelper {
    */
   public static function stringToRegexPattern(string $string): string {
     $wildcard = '.*';
-    $stripped = self::applyDateStripping($string, $wildcard);
+    $stripped = self::stripDatesAndNumbers($string, $wildcard);
     $parts = explode($wildcard, $stripped);
     $quoted = array_map(
       static fn(string $part): string => preg_quote($part, '/'),
@@ -447,17 +736,22 @@ class TitlePatternHelper {
   }
 
   /**
-   * Apply multilingual date and number stripping to a string.
+   * Strip dates and other volatile title tokens (numbers, hashes, ranges).
+   *
+   * Used for series LIKE stems and marker scrubbing: dates first, then
+   * numeric ranges, issue hashes, decimals, label+number pairs, and bare
+   * integers — replaced by the given wildcard.
    *
    * @param string $string
    *   Input string.
    * @param string $wildcard
-   *   Wildcard replacement string.
+   *   Wildcard replacement string (e.g. "%" for LIKE stems, " " for
+   *   fingerprints).
    *
    * @return string
-   *   String with dates and numbers replaced by wildcards.
+   *   String with dates and volatile numbers replaced by wildcards.
    */
-  private static function applyDateStripping(string $string, string $wildcard): string {
+  private static function stripDatesAndNumbers(string $string, string $wildcard): string {
     $replacements = self::getStripReplacements($wildcard);
 
     // @todo we should replace common mistaken characters like dashes, mdashes,

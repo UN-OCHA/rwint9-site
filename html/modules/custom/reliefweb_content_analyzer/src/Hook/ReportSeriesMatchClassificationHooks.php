@@ -1029,6 +1029,7 @@ final class ReportSeriesMatchClassificationHooks {
     return [
       'candidate_ids' => $evidence->candidateIds,
       'candidate_pattern_scores' => $evidence->candidatePatternScores,
+      'candidate_title_similarities' => $evidence->candidateTitleSimilarities,
       'title_match_count' => $evidence->titleMatchCount,
       'url_match_count' => $evidence->urlMatchCount,
       'both_signals_count' => $evidence->bothSignalsCount,

@@ -127,7 +127,7 @@ class SeriesMatchOutcomePolicyEvaluatorTest extends UnitTestCase {
 
     $this->assertSame(SeriesMatchOutcomePolicyAction::MaxMedium, $policy->action);
     $this->assertContains(
-      'title could not be generated',
+      'no attachment text for title generation',
       SeriesMatchOutcomePolicyReasonFormatter::messages($policy->reasons),
     );
   }

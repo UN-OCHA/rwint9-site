@@ -78,16 +78,16 @@ report_series_matching:
     ai_title_example_line_count: 5
     ai_title_min_consistent_examples: 3
     ai_title_extract_page_count: 2
-    ai_title_match_endpoint: 'http://ocha-ai-helper/text/match/series-title'
     ai_title_match_min_confidence: 0.65
-    ai_title_description_template: "Extract the title of the document from the source text and rewrite it only enough to match the naming style of these example titles from the same report series. Use the examples for style (separators, language, casing), not for facts. Never invent dates, issue numbers, or week numbers; omit those parts if they are not present in the source text. When grounded markers are listed, copy them exactly or omit them.\n@examples"
+    title_pattern_similarity_threshold: 0.90
+    ai_title_description_template: "Generate a title based on the provided raw title candidates using the same pattern as the following examples:\n@examples\nDo not invent dates, issue numbers, or week numbers."
     ai_title_inference:
       plugin_id: aws_bedrock_nova_lite_v1
       temperature: 0.0
       top_p: 0.9
       max_tokens: 512
       thinking_mode: none
-      system_prompt: 'Generate a title for this humanitarian report that matches the series naming style shown in the structured output schema. Prefer the title as it appears in the document. Never invent dates, issue numbers, or week numbers that are not present in the source text. Use the `structured_output` tool.'
+      system_prompt: 'Generate a humanitarian report title using the `structured_output` tool.'
     pattern_token_counts:
       - 10
       - 8
