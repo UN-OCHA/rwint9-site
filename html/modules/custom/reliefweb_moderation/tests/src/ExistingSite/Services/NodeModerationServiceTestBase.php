@@ -181,7 +181,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
     $bundle = $this->getBundle();
     return match ($bundle) {
       'job', 'training' => ['refused', 'duplicate'],
-      'report' => ['refused', 'archive'],
+      'report' => ['refused', 'duplicate', 'archive'],
       default => ['refused'],
     };
   }

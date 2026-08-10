@@ -18,6 +18,7 @@ is_admin: null
 permissions:
   - 'access own reliefweb private files'
   - 'apply posting rights'
+  - 'apply report duplication automation on form create'
   - 'apply report series matching automation on form create'
   - 'check for duplicate files'
   - 'create report content'

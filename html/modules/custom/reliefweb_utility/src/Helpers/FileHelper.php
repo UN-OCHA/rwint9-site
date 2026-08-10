@@ -353,9 +353,9 @@ class FileHelper {
    * @param \Drupal\file\Entity\File $file
    *   The Drupal File object to extract from.
    * @param int $page
-   *   1-based start page number (default: 1).
+   *   Start page number (1-based, default: 1).
    * @param ?int $end_page
-   *   Inclusive 1-based end page, or NULL for a single page.
+   *   Inclusive end page number (1-based), or NULL for a single page.
    * @param ?\Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
    *
@@ -412,7 +412,7 @@ class FileHelper {
       $xml = $process->getOutput();
     }
     elseif (!empty($process->getOutput())) {
-      // mutool may write useful stext even when exit status is non-zero.
+      // Mutool may write useful stext even when exit status is non-zero.
       $xml = $process->getOutput();
     }
     else {

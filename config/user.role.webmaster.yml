@@ -46,6 +46,7 @@ permissions:
   - 'access administration pages'
   - 'access any reliefweb api user dashboard'
   - 'access editorial guidelines'
+  - 'access report duplicate matching'
   - 'access report series matching'
   - 'access role capabilities overview'
   - 'access taxonomy overview'

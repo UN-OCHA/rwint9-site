@@ -7,6 +7,37 @@
 
 declare(strict_types=1);
 
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
+use Drupal\reliefweb_content_analyzer\Services\EmbeddingsStorageInterface;
+
+/**
+ * Implements hook_install().
+ */
+function reliefweb_content_analyzer_install(): void {
+  try {
+    $storage = \Drupal::service('reliefweb_content_analyzer.embeddings_storage');
+    assert($storage instanceof EmbeddingsStorageInterface);
+    if ($storage->isAvailable()) {
+      $settings = ContentEmbeddingsSettings::fromConfigArray(
+        \Drupal::config('reliefweb_content_analyzer.settings')->get('content_embeddings'),
+      );
+      $storage->ensureReady($settings->dimensions);
+    }
+    else {
+      \Drupal::logger('reliefweb_content_analyzer')->notice(
+        'Skipped preparing embeddings storage on install: storage is not available.',
+      );
+    }
+  }
+  catch (\Throwable $exception) {
+    \Drupal::logger('reliefweb_content_analyzer')->warning(
+      'Could not prepare embeddings storage on install: @message',
+      ['@message' => $exception->getMessage()],
+    );
+  }
+}
+
 /**
  * Implements hook_schema().
  *
@@ -158,9 +189,158 @@ function reliefweb_content_analyzer_update_10001(): void {
 }
 
 /**
- * Add layout-aware series title match settings.
+ * Add report near-duplicate detection settings and series skip status.
  */
 function reliefweb_content_analyzer_update_10002(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+
+  if ($config->get('report_duplicate_matching') === NULL) {
+    $config->set(
+      'report_duplicate_matching',
+      DuplicateMatchSettings::defaultConfig(),
+    );
+  }
+
+  $skip = $config->get('report_series_matching.workflow.skip_series_match_moderation_statuses') ?? [];
+  if (!in_array('duplicate', $skip, TRUE)) {
+    $skip[] = 'duplicate';
+    $config->set('report_series_matching.workflow.skip_series_match_moderation_statuses', $skip);
+  }
+
+  $order = $config->get('report_series_matching.workflow.restrictiveness_order') ?? [];
+  if (!in_array('duplicate', $order, TRUE)) {
+    $refused_index = array_search('refused', $order, TRUE);
+    if ($refused_index === FALSE) {
+      array_unshift($order, 'duplicate');
+    }
+    else {
+      array_splice($order, (int) $refused_index + 1, 0, ['duplicate']);
+    }
+    $config->set('report_series_matching.workflow.restrictiveness_order', $order);
+  }
+
+  $config->save();
+}
+
+/**
+ * Add TF-IDF soft gate settings and reduce default lookback to 7 days.
+ */
+function reliefweb_content_analyzer_update_10003(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  $current = $config->get('report_duplicate_matching') ?? [];
+
+  foreach ([
+    'tfidf_similarity_threshold',
+    'embedding_endpoint',
+    'embedding_similarity_threshold',
+    'jaccard_target_status',
+    'tfidf_target_status',
+  ] as $key) {
+    if (!array_key_exists($key, $current)) {
+      $current[$key] = $defaults[$key];
+    }
+  }
+
+  // Sites that still have the previous default lookback of 60 move to 7.
+  if (!isset($current['lookback_days']) || (int) $current['lookback_days'] === 60) {
+    $current['lookback_days'] = $defaults['lookback_days'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}
+
+/**
+ * Ensure embeddings storage and content_embeddings config defaults.
+ */
+function reliefweb_content_analyzer_update_10004(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = ContentEmbeddingsSettings::defaultConfig();
+  $current = $config->get('content_embeddings');
+  if (!is_array($current) || $current === []) {
+    $config->set('content_embeddings', $defaults);
+  }
+  else {
+    $merged = ContentEmbeddingsSettings::fromConfigArray($current)->toConfigArray();
+    $config->set('content_embeddings', $merged);
+  }
+  $config->save();
+
+  try {
+    $storage = \Drupal::service('reliefweb_content_analyzer.embeddings_storage');
+    assert($storage instanceof EmbeddingsStorageInterface);
+    if ($storage->isAvailable()) {
+      $settings = ContentEmbeddingsSettings::fromConfigArray($config->get('content_embeddings'));
+      $storage->ensureReady($settings->dimensions);
+    }
+    else {
+      \Drupal::logger('reliefweb_content_analyzer')->notice(
+        'Skipped preparing embeddings storage in update 10004: storage is not available.',
+      );
+    }
+  }
+  catch (\Throwable $exception) {
+    \Drupal::logger('reliefweb_content_analyzer')->warning(
+      'Could not prepare embeddings storage in update 10004: @message',
+      ['@message' => $exception->getMessage()],
+    );
+  }
+}
+
+/**
+ * Update embedding retrieval settings and threshold.
+ */
+function reliefweb_content_analyzer_update_10005(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  unset($current['embedding_endpoint']);
+
+  foreach (['embedding_topk', 'embedding_lookback_days'] as $key) {
+    if (!array_key_exists($key, $current)) {
+      $current[$key] = $defaults[$key];
+    }
+  }
+
+  // Raise soft/retrieval threshold to the new default when still at 0.85.
+  if (!isset($current['embedding_similarity_threshold'])
+    || (float) $current['embedding_similarity_threshold'] === 0.85) {
+    $current['embedding_similarity_threshold'] = $defaults['embedding_similarity_threshold'];
+  }
+
+  $merged = DuplicateMatchSettings::fromConfigArray($current);
+  $config->set('report_duplicate_matching', [
+    'automation_enabled_form_created' => $merged->automationEnabledFormCreated,
+    'automation_enabled_imported' => $merged->automationEnabledImported,
+    'skip_with_attachments' => $merged->skipWithAttachments,
+    'filter_by_source' => $merged->filterBySource,
+    'lookback_days' => $merged->lookbackDays,
+    'lookforward_days' => $merged->lookforwardDays,
+    'candidate_limit' => $merged->candidateLimit,
+    'minimum_body_length' => $merged->minimumBodyLength,
+    'minimum_length_ratio' => $merged->minimumLengthRatio,
+    'similarity_threshold' => $merged->similarityThreshold,
+    'tfidf_similarity_threshold' => $merged->tfidfSimilarityThreshold,
+    'embedding_similarity_threshold' => $merged->embeddingSimilarityThreshold,
+    'embedding_topk' => $merged->embeddingTopk,
+    'embedding_lookback_days' => $merged->embeddingLookbackDays,
+    'jaccard_target_status' => $merged->jaccardTargetStatus,
+    'tfidf_target_status' => $merged->tfidfTargetStatus,
+    'candidate_moderation_statuses' => $merged->candidateModerationStatuses,
+    'skip_moderation_statuses' => $merged->skipModerationStatuses,
+  ]);
+  $config->save();
+}
+
+/**
+ * Add layout-aware series title match settings.
+ */
+function reliefweb_content_analyzer_update_10006(): void {
   $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
   $matcher = $config->get('report_series_matching.matcher') ?? [];
 
@@ -170,17 +350,6 @@ function reliefweb_content_analyzer_update_10002(): void {
   if (!isset($matcher['ai_title_match_min_confidence'])) {
     $matcher['ai_title_match_min_confidence'] = 0.65;
   }
-
-  $config->set('report_series_matching.matcher', $matcher)->save();
-}
-
-/**
- * Add AI title PDF page extract count setting.
- */
-function reliefweb_content_analyzer_update_10003(): void {
-  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
-  $matcher = $config->get('report_series_matching.matcher') ?? [];
-
   if (!isset($matcher['ai_title_extract_page_count'])) {
     $matcher['ai_title_extract_page_count'] = 2;
   }

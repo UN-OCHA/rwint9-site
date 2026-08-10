@@ -249,6 +249,7 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
+      'duplicate' => $this->t('Duplicate'),
       'embargoed' => $this->t('Embargoed'),
       'reference' => $this->t('Reference'),
       'archive' => $this->t('Archived'),
@@ -262,6 +263,7 @@ class ReportModeration extends ModerationServiceBase {
     $statuses = $this->getFilterStatuses();
     unset($statuses['archive']);
     unset($statuses['refused']);
+    unset($statuses['duplicate']);
     return array_keys($statuses);
   }
 
@@ -329,6 +331,13 @@ class ReportModeration extends ModerationServiceBase {
     if (($api_submitted || $status === 'refused') && $account->hasPermission('edit refused content')) {
       $buttons['refused'] = [
         '#value' => $this->t('Refused'),
+      ];
+    }
+
+    // Allow editors with permission to mark reports as duplicates.
+    if ($account->hasPermission('edit duplicate content')) {
+      $buttons['duplicate'] = [
+        '#value' => $this->t('Duplicate'),
       ];
     }
 
@@ -445,6 +454,7 @@ class ReportModeration extends ModerationServiceBase {
     return match ($status) {
       'archive' => $account->hasPermission('edit archived content'),
       'refused' => $account->hasPermission('edit refused content'),
+      'duplicate' => $account->hasPermission('edit duplicate content'),
       default => TRUE,
     };
   }

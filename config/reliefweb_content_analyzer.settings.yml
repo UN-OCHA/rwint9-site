@@ -18,8 +18,10 @@ report_series_matching:
       high: published
     skip_series_match_moderation_statuses:
       - refused
+      - duplicate
     restrictiveness_order:
       - refused
+      - duplicate
       - draft
       - on-hold
       - pending
@@ -115,3 +117,45 @@ report_series_matching:
   testing:
     download_missing_attachment: true
     download_missing_attachment_source_url: 'https://reliefweb.int'
+report_duplicate_matching:
+  automation_enabled_form_created: true
+  automation_enabled_imported: true
+  skip_with_attachments: false
+  filter_by_source: true
+  lookback_days: 7
+  lookforward_days: 2
+  candidate_limit: 50
+  minimum_body_length: 200
+  minimum_length_ratio: 0.85
+  similarity_threshold: 0.92
+  tfidf_similarity_threshold: 0.70
+  embedding_similarity_threshold: 0.90
+  embedding_topk: 50
+  embedding_lookback_days: 1095
+  jaccard_target_status: duplicate
+  tfidf_target_status: to-review
+  candidate_moderation_statuses:
+    - draft
+    - pending
+    - on-hold
+    - to-review
+    - published
+    - refused
+    - duplicate
+    - embargoed
+    - reference
+    - archive
+  skip_moderation_statuses:
+    - refused
+    - duplicate
+content_embeddings:
+  embed_endpoint: 'http://ocha-ai-helper/text/deduplicate/embed'
+  dimensions: 256
+  default_timeout: 60
+  sources:
+    node:
+      report:
+        enabled: true
+        fields:
+          - body
+        min_text_length: 200

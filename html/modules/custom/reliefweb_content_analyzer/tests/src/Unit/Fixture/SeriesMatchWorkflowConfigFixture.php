@@ -29,10 +29,10 @@ final class SeriesMatchWorkflowConfigFixture {
         'high' => 'published',
       ],
       'restrictiveness_order' => [
-        'refused', 'draft', 'on-hold', 'pending', 'to-review',
+        'refused', 'duplicate', 'draft', 'on-hold', 'pending', 'to-review',
         'embargoed', 'reference', 'published',
       ],
-      'skip_series_match_moderation_statuses' => ['refused'],
+      'skip_series_match_moderation_statuses' => ['refused', 'duplicate'],
       'field_outcome_policies' => [
         'field_primary_country' => [
           'most_recent' => 'max_low',

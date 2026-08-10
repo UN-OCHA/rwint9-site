@@ -234,3 +234,104 @@ reliefweb_content_analyzer.settings:
             download_missing_attachment_source_url:
               type: string
               label: 'Source URL for downloading missing attachments'
+    report_duplicate_matching:
+      type: mapping
+      label: 'Report near-duplicate detection'
+      mapping:
+        automation_enabled_form_created:
+          type: boolean
+          label: 'Enable for reports created via the editorial form'
+        automation_enabled_imported:
+          type: boolean
+          label: 'Enable for reports submitted via the Post API or an import pipeline'
+        skip_with_attachments:
+          type: boolean
+          label: 'Skip reports that have file attachments'
+        filter_by_source:
+          type: boolean
+          label: 'Filter candidates by shared source'
+        lookback_days:
+          type: integer
+          label: 'Days before the report created date for candidates'
+        lookforward_days:
+          type: integer
+          label: 'Days after the report created date for candidates'
+        candidate_limit:
+          type: integer
+          label: 'Maximum number of candidate reports to compare'
+        minimum_body_length:
+          type: integer
+          label: 'Minimum normalized body length required to run detection'
+        minimum_length_ratio:
+          type: float
+          label: 'Minimum shorter/longer body length ratio before Jaccard scoring'
+        similarity_threshold:
+          type: float
+          label: 'Minimum word 3-gram Jaccard similarity for a hard near-duplicate'
+        tfidf_similarity_threshold:
+          type: float
+          label: 'Minimum pairwise TF-IDF cosine to candidate for embedding confirmation'
+        embedding_similarity_threshold:
+          type: float
+          label: 'Minimum embedding cosine for NN retrieval and soft near-duplicates'
+        embedding_topk:
+          type: integer
+          label: 'Maximum nearest neighbors from embedding storage'
+        embedding_lookback_days:
+          type: integer
+          label: 'Days before the report created date for embedding nearest-neighbor search'
+        jaccard_target_status:
+          type: string
+          label: 'Moderation status target when hard Jaccard matches exist'
+        tfidf_target_status:
+          type: string
+          label: 'Moderation status target when only soft embedding-confirmed matches exist'
+        candidate_moderation_statuses:
+          type: sequence
+          label: 'Candidate moderation statuses'
+          sequence:
+            type: string
+            label: 'Moderation status'
+        skip_moderation_statuses:
+          type: sequence
+          label: 'Moderation statuses that skip detection'
+          sequence:
+            type: string
+            label: 'Moderation status'
+    content_embeddings:
+      type: mapping
+      label: 'Content embeddings'
+      mapping:
+        embed_endpoint:
+          type: string
+          label: 'AI helper endpoint for generating embeddings'
+        dimensions:
+          type: integer
+          label: 'Embedding vector dimensions'
+        default_timeout:
+          type: float
+          label: 'Default HTTP timeout in seconds for embed requests'
+        sources:
+          type: mapping
+          label: 'Embedding sources keyed by entity type then bundle'
+          mapping:
+            node:
+              type: mapping
+              label: 'Node entity type'
+              mapping:
+                report:
+                  type: mapping
+                  label: 'Report bundle embedding source'
+                  mapping:
+                    enabled:
+                      type: boolean
+                      label: 'Enabled'
+                    fields:
+                      type: sequence
+                      label: 'Fields to concatenate for the embedding text'
+                      sequence:
+                        type: string
+                        label: 'Field machine name'
+                    min_text_length:
+                      type: integer
+                      label: 'Minimum concatenated text length'

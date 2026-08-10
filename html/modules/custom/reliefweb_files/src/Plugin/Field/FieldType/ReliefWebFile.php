@@ -976,9 +976,9 @@ class ReliefWebFile extends FieldItemBase {
    * Extract structured text spans from the given PDF page or page range.
    *
    * @param int $page
-   *   1-based start page number (default: 1).
+   *   Start page number (1-based, default: 1).
    * @param ?int $end_page
-   *   Inclusive 1-based end page, or NULL for a single page.
+   *   Inclusive end page number (1-based), or NULL for a single page.
    *
    * @return list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>>
    *   Per-page span lists, or an empty list on failure.
