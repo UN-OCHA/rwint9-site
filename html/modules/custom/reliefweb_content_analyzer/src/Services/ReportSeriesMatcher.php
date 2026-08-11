@@ -941,10 +941,9 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
    * Select series candidates from a high-score core plus similar support.
    *
    * Builds the core from candidates at the maximum pattern score (best
-   * connected component within that tier). When the core is below the minimum
-   * series size, admits lower-score candidates only when they are similar
-   * enough to at least one core member. Recency/NID only ranks consideration
-   * order and never admits by themselves.
+   * connected component within that tier). Then admits lower-score candidates
+   * when they are similar enough to at least one core member. Recency/NID only
+   * ranks consideration order and never admits by themselves.
    *
    * @param array<int, int|float> $scored_candidates
    *   Merged pattern scores keyed by node ID (SQL score plus optional
@@ -996,25 +995,22 @@ class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
       return $empty;
     }
 
-    $minimum = $this->getMinimumSeriesReportCount();
     $selected = $core;
 
-    if (count($core) < $minimum) {
-      $support_ids = array_values(array_diff(
-        array_keys($scored_candidates),
-        $core,
-      ));
-      $ranked_support = $this->rankSupportCandidatesByProximityToCore(
-        $support_ids,
-        $core,
-        $metadata,
-      );
-      $threshold = $this->getCandidateClusteringSimilarityThreshold();
+    $support_ids = array_values(array_diff(
+      array_keys($scored_candidates),
+      $core,
+    ));
+    $ranked_support = $this->rankSupportCandidatesByProximityToCore(
+      $support_ids,
+      $core,
+      $metadata,
+    );
+    $threshold = $this->getCandidateClusteringSimilarityThreshold();
 
-      foreach ($ranked_support as $support_nid) {
-        if ($this->maxSimilarityToCore($support_nid, $core, $metadata) >= $threshold) {
-          $selected[] = $support_nid;
-        }
+    foreach ($ranked_support as $support_nid) {
+      if ($this->maxSimilarityToCore($support_nid, $core, $metadata) >= $threshold) {
+        $selected[] = $support_nid;
       }
     }
 

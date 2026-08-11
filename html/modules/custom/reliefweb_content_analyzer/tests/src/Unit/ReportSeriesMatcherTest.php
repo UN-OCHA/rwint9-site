@@ -397,7 +397,7 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
-   * Similar weak candidates are admitted when the high-score core is too small.
+   * Similar weak candidates are admitted into a high-score core.
    */
   public function testCoreAndSupportAdmitsSimilarWeakCandidate(): void {
     $scored = [
@@ -426,9 +426,9 @@ class ReportSeriesMatcherTest extends UnitTestCase {
   }
 
   /**
-   * When the core already meets the minimum size, weaker matches are ignored.
+   * Similar weaker matches are still included when core is sufficient.
    */
-  public function testCoreAndSupportDoesNotAddWeakWhenCoreMeetsMinimum(): void {
+  public function testCoreAndSupportAdmitsSimilarWeakWhenCoreMeetsMinimum(): void {
     $scored = [
       101 => 4,
       102 => 4,
@@ -450,8 +450,51 @@ class ReportSeriesMatcherTest extends UnitTestCase {
 
     $cluster = $selection['cluster'];
     sort($cluster);
-    $this->assertSame([101, 102, 103], $cluster);
-    $this->assertNotContains(201, $selection['cluster']);
+    $this->assertSame([101, 102, 103, 201], $cluster);
+  }
+
+  /**
+   * Flash near-misses join a large Emergency/Weekly SQL core.
+   */
+  public function testCoreAndSupportAdmitsFlashWhenEmergencyCoreMeetsMinimum(): void {
+    $scored = [
+      101 => 5.0,
+      102 => 5.0,
+      103 => 5.0,
+      104 => 5.0,
+      201 => 1.94,
+    ];
+    $metadata = [
+      101 => $this->candidateMetadata(
+        'UNHCR Middle East Situation: Emergency Update #18 as of 19 May 2026',
+        '2026-05-20',
+      ),
+      102 => $this->candidateMetadata(
+        'UNHCR Middle East Situation: Weekly Update (12 May 2026)',
+        '2026-05-12',
+      ),
+      103 => $this->candidateMetadata(
+        'UNHCR Middle East Situation: Weekly Update (5 May 2026)',
+        '2026-05-06',
+      ),
+      104 => $this->candidateMetadata(
+        'UNHCR Middle East Situation: Cross Regional Refugee Coordination Weekly Update (29 April 2026)',
+        '2026-04-29',
+      ),
+      201 => $this->candidateMetadata(
+        'UNHCR Middle East Situation: Emergency Flash Update #14 as of 21 April 2026',
+        '2026-04-21',
+      ),
+    ];
+
+    $selection = $this->invokeProtected(
+      'selectSeriesCandidatesFromCoreAndSupport',
+      $scored,
+      $metadata,
+    );
+
+    $this->assertContains(201, $selection['cluster']);
+    $this->assertCount(5, $selection['cluster']);
   }
 
   /**
