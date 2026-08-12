@@ -21,6 +21,7 @@ use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Hook\Order\OrderBefore;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchApplyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchOutcomePolicyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
@@ -393,6 +394,12 @@ final class ReportSeriesMatchClassificationHooks {
     }
 
     if (!$this->isImportedReport($entity) && !$this->currentUser->hasPermission('apply report series matching automation on form create')) {
+      return FALSE;
+    }
+
+    // Duplicate two-save forces draft on rev 1, so the series skip list
+    // (refused/duplicate) does not apply. Skip from the duplicate context.
+    if (DuplicateMatchApplyContext::fromEntity($entity)?->result->hasMatches()) {
       return FALSE;
     }
 

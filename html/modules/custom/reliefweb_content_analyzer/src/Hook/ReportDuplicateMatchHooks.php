@@ -12,11 +12,15 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Hook\Attribute\Hook;
+use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Hook\Order\OrderBefore;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\reliefweb_api\Indexing\ReliefWebApiIndexingSkipStore;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatch;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchApplyContext;
@@ -24,15 +28,29 @@ use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\Services\ReportDuplicateMatcherInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 
 /**
  * Applies report near-duplicate detection on new report create.
  *
- * Runs before series matching. Any production match (hard Jaccard or
- * embedding-confirmed soft) applies the configured target status (default
- * "duplicate") via demotion-only restrictiveness comparison. Series matching
- * is skipped when the result is "duplicate".
+ * Two-save flow when any production match is found:
+ *
+ * Save 1 (isNew): Runs detection in entity_presave. When matches exist,
+ * captures the posting-rights-resolved moderation status, forces draft
+ * (suppressing publish-path side effects), stashes matcher output on the
+ * entity, and skips API indexing and OCHA classification. Series matching
+ * is skipped via DuplicateMatchApplyContext. Revision 1 is committed with
+ * original form/import field values.
+ *
+ * entity_after_save: Saves a new revision (rev 2). entity_presave on the
+ * nested save sets the final moderation status using the stored pre-draft
+ * baseline compared restrictiveness-only against the configured target
+ * (default "duplicate").
+ *
+ * The result is:
+ * - Rev 1: original submission snapshot (draft; revertable).
+ * - Rev 2: original fields and final duplicate moderation status.
  */
 final class ReportDuplicateMatchHooks {
 
@@ -59,6 +77,8 @@ final class ReportDuplicateMatchHooks {
    *   Current user.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   Messenger service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -66,12 +86,17 @@ final class ReportDuplicateMatchHooks {
     #[Autowire(service: 'current_user')]
     protected readonly AccountInterface $currentUser,
     protected readonly MessengerInterface $messenger,
+    protected readonly LoggerChannelFactoryInterface $loggerFactory,
   ) {
     $this->config = $config_factory->get('reliefweb_content_analyzer.settings');
   }
 
   /**
-   * Detect near-duplicates and demote moderation status when found.
+   * Detect near-duplicates and force draft when matches are found.
+   *
+   * Runs before series matching, reliefweb_moderation (so draft is set before
+   * node.status is synced), and ocha_content_classification (so OCHA
+   * classification is skipped on rev 1).
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
    *   The entity being saved.
@@ -95,51 +120,179 @@ final class ReportDuplicateMatchHooks {
     }
 
     $target_status = $this->resolveTargetStatus($result);
-    if ($target_status !== NULL && $entity instanceof EntityModeratedInterface) {
-      $current = $entity->getModerationStatus() ?? '';
-      $final = SeriesMatchOutcome::moreRestrictiveStatus(
-        $current,
-        $target_status,
-        $this->restrictivenessOrder(),
-      );
-      if ($final !== $current) {
-        $entity->setModerationStatus($final);
-      }
+    if ($target_status === NULL) {
+      return;
     }
 
+    $original_log = '';
     if ($entity instanceof RevisionLogInterface) {
-      $entity->setRevisionLogMessage($this->buildRevisionLogMessage($result));
+      $original_log = trim((string) ($entity->getRevisionLogMessage() ?? ''));
     }
 
-    DuplicateMatchApplyContext::set(
+    $pre_draft_status = NULL;
+    if ($entity instanceof EntityModeratedInterface) {
+      $pre_draft_status = $entity->getModerationStatus();
+      $entity->setModerationStatus('draft');
+    }
+
+    ReliefWebApiIndexingSkipStore::markSkip($entity);
+
+    DuplicateMatchApplyContext::attach(
       $entity,
-      new DuplicateMatchApplyContext(
-        result: $result,
-        isFormCreate: !$this->isImportedReport($entity),
+      DuplicateMatchApplyContext::createForDetectPass(
+        $result,
+        !$this->isImportedReport($entity),
+        $original_log,
+        $pre_draft_status,
+        $target_status,
       ),
     );
+
+    $this->appendDetectionRevisionLog($entity, $result, $pre_draft_status);
   }
 
   /**
-   * Show a messenger warning with links after form create.
+   * Apply duplicate status after rev 1 is committed.
+   *
+   * Saves a new revision (rev 2) with the final moderation status. Shows a
+   * messenger warning after form create.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
-   *   The saved entity.
+   *   The entity that was just saved (rev 1).
    */
   #[Hook('entity_after_save')]
   public function entityAfterSave(EntityInterface $entity): void {
-    $context = DuplicateMatchApplyContext::get($entity);
-    if ($context === NULL) {
+    $context = DuplicateMatchApplyContext::fromEntity($entity);
+
+    if ($context?->applying) {
       return;
     }
 
-    DuplicateMatchApplyContext::clear($entity);
-
-    if (!$context->isFormCreate || !$context->result->hasMatches()) {
+    if (!$context?->pendingApply) {
       return;
     }
 
-    $this->messenger->addWarning($this->buildMessengerMessage($context->result));
+    if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
+      return;
+    }
+
+    $context->beginApplying();
+
+    if ($entity instanceof RevisionLogInterface) {
+      $entity->setRevisionLogMessage($context->originalRevisionLog);
+    }
+
+    $this->appendToRevisionLog($entity, $this->buildRevisionLogMessage($context->result));
+
+    $context->markApplied();
+    $entity->setNewRevision(TRUE);
+
+    try {
+      $entity->save();
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error(
+        'Duplicate match apply save failed for node @id: @message',
+        ['@id' => $entity->id(), '@message' => $exception->getMessage()],
+      );
+      DuplicateMatchApplyContext::detach($entity);
+      return;
+    }
+
+    if ($context->isFormCreate && $context->result->hasMatches()) {
+      $this->messenger->addWarning($this->buildMessengerMessage($context->result));
+    }
+
+    DuplicateMatchApplyContext::detach($entity);
+  }
+
+  /**
+   * Set moderation state on rev 2 using the pre-draft baseline.
+   *
+   * Runs before ocha_content_classification and reliefweb_moderation so that
+   * the final moderation status and its revision log clause are set before
+   * skipClassificationAlter appends "Automated classification skipped.", and
+   * before node.status is synced.
+   *
+   * On save 1 (entityPresave detect pass) this returns early because the
+   * context's applied flag is not yet set.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity being saved.
+   */
+  #[Hook('entity_presave', order: new OrderBefore(
+    modules: ['ocha_content_classification', 'reliefweb_moderation'],
+    classesAndMethods: [
+      [ReportSeriesMatchClassificationHooks::class, 'entityPresave'],
+      [ReportSeriesMatchClassificationHooks::class, 'entityPresaveModerationAfterPostingRights'],
+    ],
+  ))]
+  public function entityPresaveModerationAfterPostingRights(EntityInterface $entity): void {
+    $context = DuplicateMatchApplyContext::fromEntity($entity);
+    if (!$context?->applied) {
+      return;
+    }
+
+    if (!$entity instanceof EntityModeratedInterface) {
+      $context->recordAppliedModerationStatus('');
+      return;
+    }
+
+    $current_status = $entity->getModerationStatus();
+    $stored = $context->preDraftModerationStatus;
+    $baseline = ($current_status === 'draft' && $stored !== NULL) ? $stored : $current_status;
+
+    $final_status = SeriesMatchOutcome::moreRestrictiveStatus(
+      $baseline,
+      $context->targetStatus,
+      $this->restrictivenessOrder(),
+    );
+
+    if (!isset($entity->getAllowedModerationStatuses()[$final_status])) {
+      $final_status = $baseline;
+    }
+
+    if ($final_status !== $current_status) {
+      $entity->setModerationStatus($final_status);
+    }
+
+    $context->recordAppliedModerationStatus($final_status);
+    $this->appendModerationRevisionLog($entity, $final_status, $baseline);
+  }
+
+  /**
+   * Skip OCHA classification when duplicate matching will be applied.
+   *
+   * Uses the skipClassification flag (set during detect presave) so this
+   * fires on both rev 1 and rev 2 (flag persists on the context object for
+   * the nested save).
+   *
+   * @param bool $skip_classification
+   *   Whether to skip classification (altered).
+   * @param \Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface $workflow
+   *   The classification workflow.
+   * @param array $context
+   *   Hook context; must include an 'entity' key when skipping applies.
+   */
+  #[Hook(
+    'ocha_content_classification_skip_classification_alter',
+    order: new OrderAfter(modules: ['reliefweb_import', 'reliefweb_entities']),
+  )]
+  public function skipClassificationAlter(
+    bool &$skip_classification,
+    ClassificationWorkflowInterface $workflow,
+    array $context,
+  ): void {
+    $entity = $context['entity'] ?? NULL;
+    if (!$entity instanceof EntityInterface) {
+      return;
+    }
+
+    $apply_context = DuplicateMatchApplyContext::fromEntity($entity);
+    if ($apply_context?->skipClassification) {
+      $skip_classification = TRUE;
+      $this->appendClassificationSkippedRevisionLog($entity);
+    }
   }
 
   /**
@@ -259,6 +412,92 @@ final class ReportDuplicateMatchHooks {
   }
 
   /**
+   * Append the rev 1 detection log: matches found + interim draft notice.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity being saved.
+   * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult $result
+   *   Detection result with matches.
+   * @param string|null $pre_draft_status
+   *   Moderation status captured before forcing draft.
+   */
+  protected function appendDetectionRevisionLog(
+    EntityInterface $entity,
+    DuplicateMatchResult $result,
+    ?string $pre_draft_status,
+  ): void {
+    if (!($entity instanceof RevisionLogInterface)) {
+      return;
+    }
+
+    $parts = [$this->buildRevisionLogMessage($result)];
+    if ($pre_draft_status !== NULL) {
+      $parts[] = 'Moderation status: draft (original: ' . $pre_draft_status . ', reason: interim while applying duplicate status).';
+    }
+
+    $this->appendToRevisionLog($entity, implode(' ', $parts));
+  }
+
+  /**
+   * Append the final moderation decision to the rev 2 revision log.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity being saved.
+   * @param string $applied_moderation
+   *   The moderation status that was actually set.
+   * @param string $baseline
+   *   The pre-draft posting-rights moderation status used as the original.
+   */
+  protected function appendModerationRevisionLog(
+    EntityInterface $entity,
+    string $applied_moderation,
+    string $baseline,
+  ): void {
+    $this->appendToRevisionLog(
+      $entity,
+      'Moderation status: ' . $applied_moderation . ' (original: ' . $baseline . ', reason: near-duplicate detection).',
+    );
+  }
+
+  /**
+   * Append a message to an entity's revision log with a space separator.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity whose revision log is being updated.
+   * @param string $message
+   *   The message to append.
+   */
+  protected function appendToRevisionLog(EntityInterface $entity, string $message): void {
+    if (!($entity instanceof RevisionLogInterface) || $message === '') {
+      return;
+    }
+
+    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
+    $combined = $existing === '' ? $message : $existing . ' ' . $message;
+    $entity->setRevisionLogMessage($combined);
+  }
+
+  /**
+   * Note in the revision log that OCHA classification was skipped.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity being saved.
+   */
+  protected function appendClassificationSkippedRevisionLog(EntityInterface $entity): void {
+    if (!($entity instanceof RevisionLogInterface)) {
+      return;
+    }
+
+    $message = 'Automated classification skipped.';
+    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
+    if ($existing !== '' && str_contains($existing, $message)) {
+      return;
+    }
+
+    $this->appendToRevisionLog($entity, $message);
+  }
+
+  /**
    * Build revision log text listing matched reports.
    *
    * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult $result
@@ -312,6 +551,16 @@ final class ReportDuplicateMatchHooks {
       '@label' => $label,
       '@links' => new FormattableMarkup(implode(', ', $links), []),
     ]);
+  }
+
+  /**
+   * Returns the module logger.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   Logger channel.
+   */
+  protected function getLogger(): LoggerInterface {
+    return $this->loggerFactory->get('reliefweb_content_analyzer');
   }
 
 }
