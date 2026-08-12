@@ -95,7 +95,8 @@ final class ReportDuplicateMatchForm extends FormBase {
     if ($node === NULL) {
       return [
         'error' => [
-          '#markup' => '<p>' . $this->t('Report not found.') . '</p>',
+          '#type' => 'inline_template',
+          '#template' => '<p>{% trans %}Report not found.{% endtrans %}</p>',
         ],
       ];
     }
@@ -108,7 +109,8 @@ final class ReportDuplicateMatchForm extends FormBase {
     $form['entity_context'] = $this->buildEntityReferenceElement($node);
 
     $form['description'] = [
-      '#markup' => '<p>' . $this->t('Runs near-duplicate detection on this report using current analyzer settings. Nothing is saved.') . '</p>',
+      '#type' => 'inline_template',
+      '#template' => '<p>{% trans %}Runs near-duplicate detection on this report using current analyzer settings. Nothing is saved.{% endtrans %}</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -151,7 +153,15 @@ final class ReportDuplicateMatchForm extends FormBase {
     DuplicateMatchResult $result,
   ): array {
     $form['entity_context'] = $this->buildEntityReferenceElement($node);
-    $form['description'] = $this->buildResultsDescription($result);
+    $duration = $form_state->get('match_duration_seconds');
+    $form['description'] = $this->buildResultsDescription(
+      $result,
+      is_float($duration) ? $duration : NULL,
+    );
+
+    if ($result->hasMatches()) {
+      $form['matches'] = $this->buildMatchesList($result);
+    }
 
     if ($result->hasCandidates()) {
       $form['candidates'] = $this->buildCandidatesTable($result);
@@ -181,46 +191,67 @@ final class ReportDuplicateMatchForm extends FormBase {
    *
    * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult $result
    *   The detection result.
+   * @param float|null $duration_seconds
+   *   Wall-clock seconds for the matcher call, when measured.
    *
    * @return array
    *   Render array for the results description.
    */
-  protected function buildResultsDescription(DuplicateMatchResult $result): array {
-    if ($result->hasCandidates()) {
-      $candidate_count = count($result->candidates);
-      $duplicate_count = $result->duplicateCandidateCount();
-      if ($duplicate_count > 0) {
-        $method = $result->targetMethod();
-        $tier = $method === DuplicateMatch::METHOD_JACCARD
-          ? $this->t('hard Jaccard')
-          : $this->t('soft embedding');
-        return [
-          '#markup' => '<p>' . $this->formatPlural(
-            $candidate_count,
-            'Scored 1 candidate; @duplicates flagged as near-duplicate (apply tier: @tier).',
-            'Scored @count candidates; @duplicates flagged as near-duplicate (apply tier: @tier).',
-            [
-              '@duplicates' => $duplicate_count,
-              '@tier' => $tier,
-            ],
-          ) . '</p>',
-        ];
-      }
+  protected function buildResultsDescription(
+    DuplicateMatchResult $result,
+    ?float $duration_seconds = NULL,
+  ): array {
+    $duration = $duration_seconds !== NULL
+      ? number_format($duration_seconds, 2)
+      : NULL;
 
+    if ($result->hasCandidates()) {
       return [
-        '#markup' => '<p>' . $this->formatPlural(
-          $candidate_count,
-          'Scored 1 candidate; none met the configured similarity thresholds.',
-          'Scored @count candidates; none met the configured similarity thresholds.',
-        ) . '</p>',
+        '#type' => 'inline_template',
+        '#template' => <<<TEMPLATE
+          <p>
+            {% trans %}
+              Scored 1 candidate.
+            {% plural candidate_count %}
+              Scored {{ candidate_count }} candidates.
+            {% endtrans %}
+            <strong>
+            {% if duplicate_count > 0 %}
+              {% trans %}
+                1 near-duplicate found.
+              {% plural duplicate_count %}
+                {{ duplicate_count }} near-duplicates found.
+              {% endtrans %}
+            {% else %}
+              {% trans %}None met the configured similarity thresholds.{% endtrans %}
+            {% endif %}
+            </strong>
+            {% if duration %}
+              {% trans %}Completed in {{ duration }}s.{% endtrans %}
+            {% endif %}
+          </p>
+          TEMPLATE,
+        '#context' => [
+          'candidate_count' => count($result->candidates),
+          'duplicate_count' => $result->duplicateCandidateCount(),
+          'duration' => $duration,
+        ],
       ];
     }
 
     return [
       '#type' => 'inline_template',
-      '#template' => '<p><strong>{% trans %}No near-duplicates found{% endtrans %}.</strong> {{ reason }}</p>',
+      '#template' => <<<TEMPLATE
+        <p>
+          <strong>{% trans %}No near-duplicates found{% endtrans %}.</strong> {{ reason }}
+          {% if duration %}
+            {% trans %}Completed in {{ duration }}s.{% endtrans %}
+          {% endif %}
+        </p>
+        TEMPLATE,
       '#context' => [
         'reason' => $this->formatReason($result->reason),
+        'duration' => $duration,
       ],
     ];
   }
@@ -247,6 +278,36 @@ final class ReportDuplicateMatchForm extends FormBase {
       'none' => $this->t('Detection did not run.'),
       default => $this->t('Reason: @reason', ['@reason' => $reason]),
     };
+  }
+
+  /**
+   * Builds a simple list of linked production near-duplicates.
+   *
+   * Score details live in the All candidates table; this list is for quick
+   * navigation to the reports that would apply.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult $result
+   *   Detection result with matches.
+   *
+   * @return array
+   *   Render array for the matches list.
+   */
+  protected function buildMatchesList(DuplicateMatchResult $result): array {
+    $items = [];
+    foreach ($result->matches as $match) {
+      assert($match instanceof DuplicateMatch);
+      $url = Url::fromRoute('entity.node.canonical', ['node' => $match->nid]);
+      $items[] = Link::fromTextAndUrl(
+        $match->title !== '' ? $match->title : (string) $match->nid,
+        $url,
+      )->toRenderable();
+    }
+
+    return [
+      '#theme' => 'item_list',
+      '#items' => $items,
+      '#empty' => $this->t('No near-duplicates.'),
+    ];
   }
 
   /**
@@ -286,8 +347,8 @@ final class ReportDuplicateMatchForm extends FormBase {
 
     return [
       '#type' => 'details',
-      '#title' => $this->t('Candidates'),
-      '#open' => TRUE,
+      '#title' => $this->t('All candidates'),
+      '#open' => FALSE,
       'table' => [
         '#type' => 'table',
         '#header' => [
@@ -309,6 +370,24 @@ final class ReportDuplicateMatchForm extends FormBase {
   }
 
   /**
+   * Human-readable gate method for a production match.
+   *
+   * @param string|null $method
+   *   DuplicateMatch::METHOD_* value, or NULL.
+   *
+   * @return string|\Drupal\Core\StringTranslation\TranslatableMarkup
+   *   Localized method label.
+   */
+  protected function formatMatchMethod(?string $method): string|TranslatableMarkup {
+    return match ($method) {
+      DuplicateMatch::METHOD_JACCARD => $this->t('Hard (Jaccard)'),
+      DuplicateMatch::METHOD_EMBEDDING => $this->t('Soft (embedding)'),
+      DuplicateMatch::METHOD_TFIDF => $this->t('Soft (TF-IDF)'),
+      default => $method ?? '—',
+    };
+  }
+
+  /**
    * Human-readable disposition for a scored candidate row.
    *
    * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchCandidate $candidate
@@ -325,7 +404,7 @@ final class ReportDuplicateMatchForm extends FormBase {
       return $candidate->skipReason;
     }
     if ($candidate->method !== NULL) {
-      return $candidate->method;
+      return $this->formatMatchMethod($candidate->method);
     }
     return '—';
   }
@@ -340,6 +419,7 @@ final class ReportDuplicateMatchForm extends FormBase {
    */
   public function resetMatching(array &$form, FormStateInterface $form_state): void {
     $form_state->set('match_result', NULL);
+    $form_state->set('match_duration_seconds', NULL);
     $form_state->setRebuild();
   }
 
@@ -352,10 +432,10 @@ final class ReportDuplicateMatchForm extends FormBase {
       return;
     }
 
-    $form_state->set(
-      'match_result',
-      $this->reportDuplicateMatcher->findDuplicates($node),
-    );
+    $start = hrtime(TRUE);
+    $result = $this->reportDuplicateMatcher->findDuplicates($node);
+    $form_state->set('match_duration_seconds', (hrtime(TRUE) - $start) / 1e9);
+    $form_state->set('match_result', $result);
     $form_state->setRebuild();
   }
 

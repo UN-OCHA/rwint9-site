@@ -13,7 +13,7 @@ created-date/source window **unioned** with embedding nearest neighbors:
 1. **Hard (Jaccard):** word 3-gram Jaccard at or above the configured threshold (default **0.92**), after a length-ratio gate.
 2. **Soft (TF-IDF filter + embedding confirm):** if Jaccard does not pass, pairwise TF-IDF cosine with language stopwords must be at or above the filter threshold (default **0.70**). Those candidates are confirmed with **local cosine** on stored vectors (or freshly generated via the Content embeddings **`/embed`** endpoint). Soft matches skip the length-ratio gate. Default embedding threshold **0.90** (also used as the NN retrieval floor). If the probe cannot be embedded and no stored probe vector exists, soft confirmation is skipped (fail closed); Jaccard still works.
 
-Any production match (hard or soft) applies the configured **target status** (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching and OCHA classification are skipped. The inspection form still shows which gate and method scored each candidate.
+Any production match (hard or soft) applies the configured **target status** (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching and OCHA classification are skipped. The inspection form lists linked near-duplicates first, then the full scored candidate set with gate/method details.
 
 **Series siblings:** when first-revision titles compare as `COMPARE_SERIES_SIBLING` via `TitlePatternHelper`, hard and soft matches are discarded (shown as `series_sibling` on the inspection form) and do not demote.
 
@@ -56,7 +56,7 @@ When a match is applied automatically, two revisions are created. The first revi
 
 ### For editors
 
-Inspect detection on the **Report duplicate matching** tab of any report: `/node/{nid}/report-duplicate-match` (requires the `access report duplicate matching` permission). This runs the matcher with current settings and shows **all scored candidates** with length ratio, Jaccard, TF-IDF, Embedding, candidate **source**, duplicate flag, and **disposition** (gate, `series_sibling` discard, or skip reason) — or a skip reason when detection cannot run. Nothing is saved.
+Inspect detection on the **Report duplicate matching** tab of any report: `/node/{nid}/report-duplicate-match` (requires the `access report duplicate matching` permission). This runs the matcher with current settings and shows a short list of linked near-duplicates, then a collapsible **All candidates** table with length ratio, Jaccard, TF-IDF, Embedding, candidate **source**, duplicate flag, and **disposition** (gate, `series_sibling` discard, or skip reason) — or a skip reason when detection cannot run. Nothing is saved.
 
 ### For developers
 

@@ -122,7 +122,8 @@ final class ReportSeriesMatchForm extends FormBase {
     if ($node === NULL) {
       return [
         'error' => [
-          '#markup' => '<p>' . $this->t('Report not found.') . '</p>',
+          '#type' => 'inline_template',
+          '#template' => '<p>{% trans %}Report not found.{% endtrans %}</p>',
         ],
       ];
     }
@@ -135,7 +136,8 @@ final class ReportSeriesMatchForm extends FormBase {
     $form['entity_context'] = $this->buildEntityReferenceElement($node);
 
     $form['description'] = [
-      '#markup' => '<p>' . $this->t('Runs series candidate lookup on this report. Nothing is saved.') . '</p>',
+      '#type' => 'inline_template',
+      '#template' => '<p>{% trans %}Runs series candidate lookup on this report. Nothing is saved.{% endtrans %}</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -189,7 +191,12 @@ final class ReportSeriesMatchForm extends FormBase {
       $this->buildOutcomePolicyContext($node, $result),
     );
 
-    $form['description'] = $this->buildResultsDescription($result, $outcome);
+    $duration = $form_state->get('match_duration_seconds');
+    $form['description'] = $this->buildResultsDescription(
+      $result,
+      $outcome,
+      is_float($duration) ? $duration : NULL,
+    );
 
     $form['proposed_updates'] = $this->buildUpdatedFieldsDetails($result);
     $form['candidates'] = $this->buildCandidatesDetails($result);
@@ -223,12 +230,21 @@ final class ReportSeriesMatchForm extends FormBase {
    *   The match result.
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome|null $outcome
    *   Resolved outcome when workflow settings allow scoring.
+   * @param float|null $duration_seconds
+   *   Wall-clock seconds for the matcher call, when measured.
    *
    * @return array
    *   Render array for the results description.
    */
-  protected function buildResultsDescription(SeriesMatchResult $result, ?SeriesMatchOutcome $outcome): array {
+  protected function buildResultsDescription(
+    SeriesMatchResult $result,
+    ?SeriesMatchOutcome $outcome,
+    ?float $duration_seconds = NULL,
+  ): array {
     $series_summary = $this->formatSeriesMatchSummary($result);
+    $duration = $duration_seconds !== NULL
+      ? number_format($duration_seconds, 2)
+      : NULL;
 
     if ($outcome !== NULL) {
       $policy_messages = $outcome->policyReasonMessages();
@@ -237,6 +253,9 @@ final class ReportSeriesMatchForm extends FormBase {
         '#template' => <<<TEMPLATE
           <p>
             <strong>{% trans %}Series candidate reports found for this content{% endtrans %}</strong>{% if series_summary %} ({{ series_summary }}){% endif %}.
+            {% if duration %}
+              {% trans %}Completed in {{ duration }}s.{% endtrans %}
+            {% endif %}
           </p>
           <p>
             <strong>Series confidence:</strong> {{ series_confidence }}% —
@@ -271,6 +290,7 @@ final class ReportSeriesMatchForm extends FormBase {
           'status' => $outcome->targetModerationStatus,
           'apply_match' => $outcome->applyMatch,
           'policy_messages' => array_map('mb_ucfirst', $policy_messages),
+          'duration' => $duration,
         ],
       ];
     }
@@ -280,10 +300,16 @@ final class ReportSeriesMatchForm extends FormBase {
       return [
         '#type' => 'inline_template',
         '#template' => <<<TEMPLATE
-          <p><strong>{{ stop_message }}</strong></p>
+          <p>
+            <strong>{{ stop_message }}</strong>
+            {% if duration %}
+              {% trans %}Completed in {{ duration }}s.{% endtrans %}
+            {% endif %}
+          </p>
           TEMPLATE,
         '#context' => [
           'stop_message' => $stop_message,
+          'duration' => $duration,
         ],
       ];
     }
@@ -296,6 +322,9 @@ final class ReportSeriesMatchForm extends FormBase {
       '#template' => <<<TEMPLATE
         <p>
           <strong>{% trans %}Series candidate reports found for this content{% endtrans %}</strong>{% if series_summary %} ({{ series_summary }}){% endif %}.
+          {% if duration %}
+            {% trans %}Completed in {{ duration }}s.{% endtrans %}
+          {% endif %}
         </p>
         <p>
           <strong>Series confidence:</strong> {{ series_confidence }} —
@@ -306,6 +335,7 @@ final class ReportSeriesMatchForm extends FormBase {
         'series_summary' => $series_summary,
         'series_confidence' => $series_confidence !== NULL ? number_format($series_confidence * 100, 1) . '%' : 'n/a',
         'tagging_confidence' => $tagging_confidence !== NULL ? number_format($tagging_confidence * 100, 1) . '%' : 'n/a',
+        'duration' => $duration,
       ],
     ];
   }
@@ -977,6 +1007,7 @@ final class ReportSeriesMatchForm extends FormBase {
    */
   public function resetMatching(array &$form, FormStateInterface $form_state): void {
     $form_state->set('match_result', NULL);
+    $form_state->set('match_duration_seconds', NULL);
     $form_state->setRebuild();
   }
 
@@ -1018,10 +1049,10 @@ final class ReportSeriesMatchForm extends FormBase {
 
     $this->ensureMissingAttachmentForTesting($node);
 
-    $form_state->set(
-      'match_result',
-      $this->reportSeriesMatcher->findSeriesCandidates($node, includeDebug: TRUE),
-    );
+    $start = hrtime(TRUE);
+    $result = $this->reportSeriesMatcher->findSeriesCandidates($node, includeDebug: TRUE);
+    $form_state->set('match_duration_seconds', (hrtime(TRUE) - $start) / 1e9);
+    $form_state->set('match_result', $result);
     $form_state->setRebuild();
   }
 
