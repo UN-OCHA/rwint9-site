@@ -519,11 +519,7 @@ final class ReportDuplicateMatchHooks {
       );
     }
 
-    $prefix = $result->hasHardMatches()
-      ? 'Near-duplicate of'
-      : 'Possible near-duplicate of';
-
-    return $prefix . ': ' . implode('; ', $parts);
+    return 'Near-duplicate of: ' . implode('; ', $parts);
   }
 
   /**
@@ -543,12 +539,8 @@ final class ReportDuplicateMatchHooks {
       $links[] = '<a href="' . Html::escape($url) . '">' . Html::escape($match->title) . '</a> (' . Html::escape($match->method) . ' ' . Html::escape($match->similarityPercentage()) . ')';
     }
 
-    $label = $result->hasHardMatches()
-      ? $this->t('Possible duplicate of:')
-      : $this->t('Possible duplicate (soft match) — demoted for review:');
-
     return new FormattableMarkup('@label @links', [
-      '@label' => $label,
+      '@label' => $this->t('Possible duplicate of:'),
       '@links' => new FormattableMarkup(implode(', ', $links), []),
     ]);
   }
