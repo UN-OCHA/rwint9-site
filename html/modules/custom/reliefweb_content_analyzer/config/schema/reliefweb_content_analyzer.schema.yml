@@ -280,12 +280,9 @@ reliefweb_content_analyzer.settings:
         embedding_lookback_days:
           type: integer
           label: 'Days before the report created date for embedding nearest-neighbor search'
-        jaccard_target_status:
+        target_status:
           type: string
-          label: 'Moderation status target when hard Jaccard matches exist'
-        tfidf_target_status:
-          type: string
-          label: 'Moderation status target when only soft embedding-confirmed matches exist'
+          label: 'Moderation status target when any near-duplicate match exists'
         candidate_moderation_statuses:
           type: sequence
           label: 'Candidate moderation statuses'

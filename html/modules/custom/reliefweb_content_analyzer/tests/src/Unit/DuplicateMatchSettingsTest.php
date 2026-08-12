@@ -36,8 +36,7 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
     $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
     $this->assertSame(1095, $settings->embeddingLookbackDays);
-    $this->assertSame('duplicate', $settings->jaccardTargetStatus);
-    $this->assertSame('to-review', $settings->tfidfTargetStatus);
+    $this->assertSame('duplicate', $settings->targetStatus);
     $this->assertSame([
       'draft',
       'pending',
@@ -66,8 +65,7 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
     $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
     $this->assertSame(1095, $settings->embeddingLookbackDays);
-    $this->assertSame('duplicate', $settings->jaccardTargetStatus);
-    $this->assertSame('to-review', $settings->tfidfTargetStatus);
+    $this->assertSame('duplicate', $settings->targetStatus);
   }
 
   /**
@@ -86,7 +84,17 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
     $this->assertSame(0.70, $settings->tfidfSimilarityThreshold);
     $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
-    $this->assertSame('to-review', $settings->tfidfTargetStatus);
+    $this->assertSame('duplicate', $settings->targetStatus);
+  }
+
+  /**
+   * Explicit target_status is honored.
+   */
+  public function testTargetStatusCanBeOverridden(): void {
+    $settings = DuplicateMatchSettings::fromConfigArray([
+      'target_status' => 'pending',
+    ]);
+    $this->assertSame('pending', $settings->targetStatus);
   }
 
   /**

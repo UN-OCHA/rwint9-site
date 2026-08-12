@@ -41,10 +41,8 @@ final class DuplicateMatchSettings {
    *   Maximum nearest neighbors from embedding storage.
    * @param int $embeddingLookbackDays
    *   Days before the entity created date for embedding NN search.
-   * @param string $jaccardTargetStatus
-   *   Moderation status target when hard Jaccard matches exist.
-   * @param string $tfidfTargetStatus
-   *   Moderation status target when only soft embedding matches exist.
+   * @param string $targetStatus
+   *   Moderation status target when any near-duplicate match exists.
    * @param string[] $candidateModerationStatuses
    *   Candidate moderation statuses to include.
    * @param string[] $skipModerationStatuses
@@ -65,8 +63,7 @@ final class DuplicateMatchSettings {
     public readonly float $embeddingSimilarityThreshold,
     public readonly int $embeddingTopk,
     public readonly int $embeddingLookbackDays,
-    public readonly string $jaccardTargetStatus,
-    public readonly string $tfidfTargetStatus,
+    public readonly string $targetStatus,
     public readonly array $candidateModerationStatuses,
     public readonly array $skipModerationStatuses,
   ) {}
@@ -98,13 +95,9 @@ final class DuplicateMatchSettings {
       embeddingSimilarityThreshold: (float) ($config['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
       embeddingTopk: max(1, (int) ($config['embedding_topk'] ?? $defaults['embedding_topk'])),
       embeddingLookbackDays: max(1, (int) ($config['embedding_lookback_days'] ?? $defaults['embedding_lookback_days'])),
-      jaccardTargetStatus: self::nonEmptyString(
-        $config['jaccard_target_status'] ?? NULL,
-        (string) $defaults['jaccard_target_status'],
-      ),
-      tfidfTargetStatus: self::nonEmptyString(
-        $config['tfidf_target_status'] ?? NULL,
-        (string) $defaults['tfidf_target_status'],
+      targetStatus: self::nonEmptyString(
+        $config['target_status'] ?? NULL,
+        (string) $defaults['target_status'],
       ),
       candidateModerationStatuses: array_values(array_filter(
         $config['candidate_moderation_statuses'] ?? $defaults['candidate_moderation_statuses'],
@@ -139,8 +132,7 @@ final class DuplicateMatchSettings {
       'embedding_similarity_threshold' => 0.90,
       'embedding_topk' => 50,
       'embedding_lookback_days' => 1095,
-      'jaccard_target_status' => 'duplicate',
-      'tfidf_target_status' => 'to-review',
+      'target_status' => 'duplicate',
       'candidate_moderation_statuses' => [
         'draft',
         'pending',

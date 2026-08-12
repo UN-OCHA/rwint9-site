@@ -96,7 +96,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Report duplication'),
       '#group' => 'report_duplicate_matching_tabs',
       '#tree' => TRUE,
-      '#description' => $this->t('Detects near-duplicate reports on create. Candidates come from the date/source window unioned with embedding nearest neighbors. Hard matches use word 3-gram Jaccard; soft matches require TF-IDF then local embedding cosine (stored vectors or /embed). Series siblings are discarded. Status changes are demotion-only via the series restrictiveness order.'),
+      '#description' => $this->t('Detects near-duplicate reports on create. Candidates come from the date/source window unioned with embedding nearest neighbors. Hard matches use word 3-gram Jaccard; soft matches require TF-IDF then local embedding cosine (stored vectors or /embed). Series siblings are discarded. Any match applies the target moderation status (demotion-only via the series restrictiveness order). Series matching is skipped when the result is duplicate.'),
     ];
 
     $form['report_duplicate_matching']['automation_enabled_form_created'] = [
@@ -223,21 +223,12 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
-    $form['report_duplicate_matching']['jaccard_target_status'] = [
+    $form['report_duplicate_matching']['target_status'] = [
       '#type' => 'select',
-      '#title' => $this->t('Jaccard target moderation status'),
-      '#description' => $this->t('Applied when hard Jaccard matches exist. Demotion-only via restrictiveness order.'),
+      '#title' => $this->t('Target moderation status'),
+      '#description' => $this->t('Applied when any near-duplicate match exists (hard Jaccard or embedding-confirmed soft). Demotion-only via restrictiveness order.'),
       '#options' => $moderation_options,
-      '#default_value' => $report_duplicate_matching['jaccard_target_status'],
-      '#required' => TRUE,
-    ];
-
-    $form['report_duplicate_matching']['tfidf_target_status'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Soft match target moderation status'),
-      '#description' => $this->t('Applied when only embedding-confirmed soft matches exist. Demotion-only via restrictiveness order.'),
-      '#options' => $moderation_options,
-      '#default_value' => $report_duplicate_matching['tfidf_target_status'],
+      '#default_value' => $report_duplicate_matching['target_status'],
       '#required' => TRUE,
     ];
 
@@ -1149,19 +1140,12 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       }
     }
 
-    foreach ([
-      'jaccard_target_status' => $this->t('Jaccard target moderation status'),
-      'tfidf_target_status' => $this->t('Soft match target moderation status'),
-    ] as $key => $label) {
-      $status = (string) $form_state->getValue(['report_duplicate_matching', $key]);
-      if ($status === '' || !in_array($status, $valid_statuses, TRUE)) {
-        $form_state->setErrorByName(
-          'report_duplicate_matching][' . $key,
-          $this->t('@label must be a valid report moderation status.', [
-            '@label' => $label,
-          ]),
-        );
-      }
+    $target_status = (string) $form_state->getValue(['report_duplicate_matching', 'target_status']);
+    if ($target_status === '' || !in_array($target_status, $valid_statuses, TRUE)) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][target_status',
+        $this->t('Target moderation status must be a valid report moderation status.'),
+      );
     }
 
     $embedding_fields = array_keys(array_filter(
@@ -1229,8 +1213,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'embedding_similarity_threshold' => (float) ($report_values['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
       'embedding_topk' => (int) ($report_values['embedding_topk'] ?? $defaults['embedding_topk']),
       'embedding_lookback_days' => (int) ($report_values['embedding_lookback_days'] ?? $defaults['embedding_lookback_days']),
-      'jaccard_target_status' => (string) ($report_values['jaccard_target_status'] ?? $defaults['jaccard_target_status']),
-      'tfidf_target_status' => (string) ($report_values['tfidf_target_status'] ?? $defaults['tfidf_target_status']),
+      'target_status' => (string) ($report_values['target_status'] ?? $defaults['target_status']),
       'candidate_moderation_statuses' => $this->linesToSequence((string) ($report_values['candidate_moderation_statuses'] ?? '')),
       'skip_moderation_statuses' => $this->linesToSequence((string) ($report_values['skip_moderation_statuses'] ?? '')),
     ]);

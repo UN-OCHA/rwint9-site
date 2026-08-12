@@ -234,10 +234,9 @@ function reliefweb_content_analyzer_update_10003(): void {
     'tfidf_similarity_threshold',
     'embedding_endpoint',
     'embedding_similarity_threshold',
-    'jaccard_target_status',
-    'tfidf_target_status',
+    'target_status',
   ] as $key) {
-    if (!array_key_exists($key, $current)) {
+    if (!array_key_exists($key, $current) && array_key_exists($key, $defaults)) {
       $current[$key] = $defaults[$key];
     }
   }
@@ -329,8 +328,7 @@ function reliefweb_content_analyzer_update_10005(): void {
     'embedding_similarity_threshold' => $merged->embeddingSimilarityThreshold,
     'embedding_topk' => $merged->embeddingTopk,
     'embedding_lookback_days' => $merged->embeddingLookbackDays,
-    'jaccard_target_status' => $merged->jaccardTargetStatus,
-    'tfidf_target_status' => $merged->tfidfTargetStatus,
+    'target_status' => $merged->targetStatus,
     'candidate_moderation_statuses' => $merged->candidateModerationStatuses,
     'skip_moderation_statuses' => $merged->skipModerationStatuses,
   ]);
@@ -379,4 +377,23 @@ function reliefweb_content_analyzer_update_10008(): void {
   $matcher = $config->get('report_series_matching.matcher') ?? [];
   unset($matcher['ai_title_match_endpoint']);
   $config->set('report_series_matching.matcher', $matcher)->save();
+}
+
+/**
+ * Use a single target moderation status for all near-duplicate matches.
+ */
+function reliefweb_content_analyzer_update_10009(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  unset($current['jaccard_target_status'], $current['tfidf_target_status']);
+  if (!isset($current['target_status']) || $current['target_status'] === '') {
+    $current['target_status'] = DuplicateMatchSettings::defaultConfig()['target_status'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
 }

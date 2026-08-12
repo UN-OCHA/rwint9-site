@@ -132,8 +132,7 @@ report_duplicate_matching:
   embedding_similarity_threshold: 0.90
   embedding_topk: 50
   embedding_lookback_days: 1095
-  jaccard_target_status: duplicate
-  tfidf_target_status: to-review
+  target_status: duplicate
   candidate_moderation_statuses:
     - draft
     - pending

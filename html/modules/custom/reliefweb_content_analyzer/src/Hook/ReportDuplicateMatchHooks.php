@@ -29,11 +29,10 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
 /**
  * Applies report near-duplicate detection on new report create.
  *
- * Runs before series matching. Hard Jaccard matches apply the configured
- * Jaccard target status (default "duplicate"), which causes series automation
- * to be skipped via the series skip list. Soft embedding-confirmed matches
- * apply a softer demotion target (default "to-review") without blocking series
- * matching.
+ * Runs before series matching. Any production match (hard Jaccard or
+ * embedding-confirmed soft) applies the configured target status (default
+ * "duplicate") via demotion-only restrictiveness comparison. Series matching
+ * is skipped when the result is "duplicate".
  */
 final class ReportDuplicateMatchHooks {
 
@@ -225,15 +224,11 @@ final class ReportDuplicateMatchHooks {
    *   Target status machine name, or NULL when no matches.
    */
   protected function resolveTargetStatus(DuplicateMatchResult $result): ?string {
-    $method = $result->targetMethod();
-    if ($method === NULL) {
+    if (!$result->hasMatches()) {
       return NULL;
     }
 
-    $settings = $this->settings();
-    return $method === DuplicateMatch::METHOD_JACCARD
-      ? $settings->jaccardTargetStatus
-      : $settings->tfidfTargetStatus;
+    return $this->settings()->targetStatus;
   }
 
   /**
