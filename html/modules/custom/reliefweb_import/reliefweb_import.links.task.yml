@@ -5,3 +5,15 @@ reliefweb_moderation.content.reliefweb_import:
     service: reliefweb_import
   title: Imported content
   weight: 99
+
+reliefweb_import.reliefweb_importer.plugin.list:
+  title: 'Importers'
+  route_name: reliefweb_import.reliefweb_importer.plugin.list
+  base_route: reliefweb_import.reliefweb_importer.plugin.list
+  weight: 0
+
+reliefweb_import.reliefweb_importer.settings:
+  title: 'Settings'
+  route_name: reliefweb_import.reliefweb_importer.settings
+  base_route: reliefweb_import.reliefweb_importer.plugin.list
+  weight: 10

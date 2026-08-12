@@ -173,3 +173,8 @@ parameters:
 services:
   cache.backend.null:
     class: Drupal\Core\Cache\NullBackendFactory
+  logger.drupaltodrush:
+    class: Drush\Log\DrushLog
+    arguments: ['@logger.log_message_parser']
+    tags:
+      - { name: logger }
