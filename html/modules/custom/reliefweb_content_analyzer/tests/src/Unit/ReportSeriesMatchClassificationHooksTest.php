@@ -15,6 +15,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_content_analyzer\Hook\ReportSeriesMatchClassificationHooks;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatch;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchApplyContext;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchApplyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
@@ -668,6 +671,55 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     $entity->method('bundle')->willReturn('report');
     $entity->method('hasField')->willReturn(FALSE);
     $entity->method('getModerationStatus')->willReturn('refused');
+
+    $entity->expects($this->never())->method('setModerationStatus');
+
+    $hooks->entityPresave($entity);
+
+    $this->assertNull(SeriesMatchApplyContext::fromEntity($entity));
+  }
+
+  /**
+   * Skips series matching when duplicate detection attached a match context.
+   *
+   * Rev 1 of the duplicate two-save is draft, so the series skip list would
+   * not apply; the duplicate context is the skip signal.
+   */
+  public function testEntityPresaveSkipsWhenDuplicateMatchContextHasMatches(): void {
+    $matcher = $this->createMock(ReportSeriesMatcherInterface::class);
+    $matcher->expects($this->never())->method('findSeriesCandidates');
+
+    $classifier = $this->createStub(ContentEntityClassifierInterface::class);
+    $classifier->method('isEntityClassifiable')->willReturn(TRUE);
+
+    $hooks = $this->buildHooks(
+      self::hooksConfig(),
+      $matcher,
+      $classifier,
+    );
+
+    $entity = $this->buildEntityMock();
+    $entity->method('isNew')->willReturn(TRUE);
+    $entity->method('getEntityTypeId')->willReturn('node');
+    $entity->method('bundle')->willReturn('report');
+    $entity->method('hasField')->willReturn(FALSE);
+    $entity->method('getModerationStatus')->willReturn('draft');
+
+    DuplicateMatchApplyContext::attach(
+      $entity,
+      DuplicateMatchApplyContext::createForDetectPass(
+        new DuplicateMatchResult(
+          matches: [
+            new DuplicateMatch(1, 'Other', 0.95, '/node/1', DuplicateMatch::METHOD_JACCARD),
+          ],
+          reason: 'matched',
+        ),
+        TRUE,
+        '',
+        'published',
+        'duplicate',
+      ),
+    );
 
     $entity->expects($this->never())->method('setModerationStatus');
 

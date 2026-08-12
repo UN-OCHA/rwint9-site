@@ -10,8 +10,10 @@ When a **new** report is saved, this feature looks for recent reports that appea
 Matching uses two gates, after building a candidate set from the short
 created-date/source window **unioned** with embedding nearest neighbors:
 
-1. **Hard (Jaccard):** word 3-gram Jaccard at or above the configured threshold (default **0.92**), after a length-ratio gate. Applies the configured Jaccard target status (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching is skipped when the result is `duplicate`.
-2. **Soft (TF-IDF filter + embedding confirm):** if Jaccard does not pass, pairwise TF-IDF cosine with language stopwords must be at or above the filter threshold (default **0.70**). Those candidates are confirmed with **local cosine** on stored vectors (or freshly generated via the Content embeddings **`/embed`** endpoint). Soft matches skip the length-ratio gate. Default embedding threshold **0.90** (also used as the NN retrieval floor). Applies the configured soft target status (default **`to-review`**) demotion-only; series matching can still run afterward. If the probe cannot be embedded and no stored probe vector exists, soft confirmation is skipped (fail closed); Jaccard still works.
+1. **Hard (Jaccard):** word 3-gram Jaccard at or above the configured threshold (default **0.92**), after a length-ratio gate.
+2. **Soft (TF-IDF filter + embedding confirm):** if Jaccard does not pass, pairwise TF-IDF cosine with language stopwords must be at or above the filter threshold (default **0.70**). Those candidates are confirmed with **local cosine** on stored vectors (or freshly generated via the Content embeddings **`/embed`** endpoint). Soft matches skip the length-ratio gate. Default embedding threshold **0.90** (also used as the NN retrieval floor). If the probe cannot be embedded and no stored probe vector exists, soft confirmation is skipped (fail closed); Jaccard still works.
+
+Any production match (hard or soft) applies the configured **target status** (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching and OCHA classification are skipped. The inspection form still shows which gate and method scored each candidate.
 
 **Series siblings:** when first-revision titles compare as `COMPARE_SERIES_SIBLING` via `TitlePatternHelper`, hard and soft matches are discarded (shown as `series_sibling` on the inspection form) and do not demote.
 
@@ -48,6 +50,10 @@ On **editorial form create**, a Messenger warning lists links to the matched rep
 
 Configure under **Report near-duplicate detection** at `/admin/config/content/reliefweb-content-analyzer`.
 
+### How revisions work
+
+When a match is applied automatically, two revisions are created. The first revision saves the original submission as a draft (API indexing and OCHA classification skipped) so it is always there to revert to. The second revision keeps the original fields and sets the final duplicate moderation status. Series matching does not run: rev 1 is still `draft`, so skip is driven by the duplicate apply context rather than the series skip list.
+
 ### For editors
 
 Inspect detection on the **Report duplicate matching** tab of any report: `/node/{nid}/report-duplicate-match` (requires the `access report duplicate matching` permission). This runs the matcher with current settings and shows **all scored candidates** with length ratio, Jaccard, TF-IDF, Embedding, candidate **source**, duplicate flag, and **disposition** (gate, `series_sibling` discard, or skip reason) — or a skip reason when detection cannot run. Nothing is saved.
@@ -67,7 +73,7 @@ When a new report is saved, this feature looks for earlier reports in the same r
 
 The final moderation status is adjusted based on confidence: a high-confidence match may keep the original status, while a low-confidence match will downgrade to pending. Configurable **outcome policies** can further ceiling the outcome tier (or skip applying the match) based on field provenance (e.g. tags copied only from the most recent candidate) and global rules (e.g. empty body when the series usually has body text). The applied status is never more permissive than what the submission would have received without a match.
 
-Report near-duplicate detection runs **before** series matching. If the report is set to `duplicate`, series automation does not run.
+Report near-duplicate detection runs **before** series matching. If a near-duplicate is found, series automation does not run (skip is driven by the duplicate apply context, because rev 1 is still `draft`).
 
 ### For editors
 
