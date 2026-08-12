@@ -76,6 +76,28 @@ class ReportDuplicateMatcherEmbeddingTest extends UnitTestCase {
   }
 
   /**
+   * Candidate current title can discard when first-revision title cannot.
+   */
+  public function testSeriesSiblingCandidateUsesCurrentTitle(): void {
+    $probe = 'UNHCR-Syria-operational-update -March 2026';
+    $first = 'UNHCR Syria Operational Update -February';
+    $current = 'UNHCR Syria Operational Update, February 2026';
+
+    $this->assertFalse($this->invoke('isSeriesSibling', [$probe, $first]));
+    $this->assertTrue($this->invoke('isSeriesSibling', [$probe, $current]));
+    $this->assertFalse($this->invoke('isSeriesSiblingCandidate', [
+      $probe,
+      $first,
+      $first,
+    ]));
+    $this->assertTrue($this->invoke('isSeriesSiblingCandidate', [
+      $probe,
+      $first,
+      $current,
+    ]));
+  }
+
+  /**
    * Union tags both / window / embedding sources.
    */
   public function testUnionCandidateSources(): void {

@@ -110,7 +110,7 @@ final class ReportDuplicateMatchForm extends FormBase {
 
     $form['description'] = [
       '#type' => 'inline_template',
-      '#template' => '<p>{% trans %}Runs near-duplicate detection on this report using current analyzer settings. Nothing is saved.{% endtrans %}</p>',
+      '#template' => '<p>{% trans %}Runs near-duplicate detection on this report. Nothing is saved.{% endtrans %}</p>',
     ];
 
     $form['actions'] = ['#type' => 'actions'];
@@ -211,9 +211,9 @@ final class ReportDuplicateMatchForm extends FormBase {
         '#template' => <<<TEMPLATE
           <p>
             {% trans %}
-              Scored 1 candidate.
+              Checked 1 candidate.
             {% plural candidate_count %}
-              Scored {{ candidate_count }} candidates.
+              Checked {{ candidate_count }} candidates.
             {% endtrans %}
             <strong>
             {% if duplicate_count > 0 %}
@@ -223,7 +223,7 @@ final class ReportDuplicateMatchForm extends FormBase {
                 {{ duplicate_count }} near-duplicates found.
               {% endtrans %}
             {% else %}
-              {% trans %}None met the configured similarity thresholds.{% endtrans %}
+              {% trans %}No near-duplicates found.{% endtrans %}
             {% endif %}
             </strong>
             {% if duration %}

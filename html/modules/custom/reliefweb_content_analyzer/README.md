@@ -15,7 +15,7 @@ created-date/source window **unioned** with embedding nearest neighbors:
 
 Any production match (hard or soft) applies the configured **target status** (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching and OCHA classification are skipped. The inspection form lists linked near-duplicates first, then the full scored candidate set with gate/method details.
 
-**Series siblings:** when first-revision titles compare as `COMPARE_SERIES_SIBLING` via `TitlePatternHelper`, hard and soft matches are discarded (shown as `series_sibling` on the inspection form) and do not demote.
+**Series siblings:** when the probe first-revision title compares as `COMPARE_SERIES_SIBLING` via `TitlePatternHelper` against a candidate’s first-revision **or** current title, hard and soft matches are discarded (shown as `series_sibling` on the inspection form) and do not demote.
 
 ### Content embeddings
 

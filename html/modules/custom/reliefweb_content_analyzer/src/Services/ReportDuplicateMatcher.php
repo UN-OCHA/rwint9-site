@@ -135,9 +135,10 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
       if (
         $candidate->isDuplicate
         && $candidate->method === DuplicateMatch::METHOD_JACCARD
-        && $this->isSeriesSibling(
+        && $this->isSeriesSiblingCandidate(
           $probe_title,
-          $first_titles[$nid] ?? (string) $row->title,
+          $first_titles[$nid] ?? '',
+          (string) $row->title,
         )
       ) {
         $candidate = $candidate->withSeriesSiblingDiscard();
@@ -169,9 +170,10 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
         if (
           $scored[$scored_index]->isDuplicate
           && $scored[$scored_index]->method === DuplicateMatch::METHOD_EMBEDDING
-          && $this->isSeriesSibling(
+          && $this->isSeriesSiblingCandidate(
             $probe_title,
-            $first_titles[$nid] ?? $scored[$scored_index]->title,
+            $first_titles[$nid] ?? '',
+            $scored[$scored_index]->title,
           )
         ) {
           $scored[$scored_index] = $scored[$scored_index]->withSeriesSiblingDiscard();
@@ -721,6 +723,42 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
       TitlePatternHelper::extractSeriesMarkers($title_b),
       $this->getTitlePatternSimilarityThreshold(),
     ) === TitlePatternHelper::COMPARE_SERIES_SIBLING;
+  }
+
+  /**
+   * Whether probe title is a series sibling of a candidate title variant.
+   *
+   * Compares the probe against the candidate first-revision title and current
+   * title (unique non-empty values only).
+   *
+   * @param string $probe_title
+   *   Probe first-revision title (or current label fallback).
+   * @param string $candidate_first_title
+   *   Candidate first-revision title, or empty when unknown.
+   * @param string $candidate_current_title
+   *   Candidate current title.
+   *
+   * @return bool
+   *   TRUE when any comparison is COMPARE_SERIES_SIBLING.
+   */
+  protected function isSeriesSiblingCandidate(
+    string $probe_title,
+    string $candidate_first_title,
+    string $candidate_current_title,
+  ): bool {
+    $titles = [];
+    foreach ([$candidate_first_title, $candidate_current_title] as $title) {
+      $title = trim($title);
+      if ($title !== '') {
+        $titles[$title] = $title;
+      }
+    }
+    foreach ($titles as $title) {
+      if ($this->isSeriesSibling($probe_title, $title)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
   }
 
   /**
