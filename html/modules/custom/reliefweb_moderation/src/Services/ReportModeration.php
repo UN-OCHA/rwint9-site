@@ -263,7 +263,6 @@ class ReportModeration extends ModerationServiceBase {
     $statuses = $this->getFilterStatuses();
     unset($statuses['archive']);
     unset($statuses['refused']);
-    unset($statuses['duplicate']);
     return array_keys($statuses);
   }
 
