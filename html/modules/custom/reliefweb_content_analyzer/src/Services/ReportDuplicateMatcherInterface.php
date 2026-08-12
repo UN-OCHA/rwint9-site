@@ -21,6 +21,8 @@ interface ReportDuplicateMatcherInterface {
    * @return \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchResult
    *   Matches at or above threshold, or an empty result with a reason.
    */
-  public function findDuplicates(ContentEntityInterface $entity): DuplicateMatchResult;
+  public function findDuplicates(
+    ContentEntityInterface $entity,
+  ): DuplicateMatchResult;
 
 }

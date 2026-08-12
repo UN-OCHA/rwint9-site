@@ -63,7 +63,9 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
   /**
    * {@inheritdoc}
    */
-  public function findDuplicates(ContentEntityInterface $entity): DuplicateMatchResult {
+  public function findDuplicates(
+    ContentEntityInterface $entity,
+  ): DuplicateMatchResult {
     if ($entity->getEntityTypeId() !== 'node' || $entity->bundle() !== 'report') {
       return new DuplicateMatchResult(reason: 'not_report');
     }
@@ -88,10 +90,13 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     }
 
     $query_vec = $this->resolveQueryVector($entity, $normalized);
+
     $window_rows = $this->loadCandidates($entity, $source_ids, $settings);
+
     $emb_rows = $query_vec !== NULL
       ? $this->loadEmbeddingCandidates($entity, $query_vec, $settings)
       : [];
+
     $rows = $this->unionCandidateRows($window_rows, $emb_rows);
     if ($rows === []) {
       return new DuplicateMatchResult(reason: 'no_candidates');
@@ -103,6 +108,7 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
       $title_nids[] = $probe_nid;
     }
     $first_titles = $this->loadFirstRevisionTitles($title_nids);
+
     $probe_title = $first_titles[$probe_nid]
       ?? ($entity->label() !== NULL ? trim((string) $entity->label()) : '');
 
@@ -149,6 +155,7 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
         $pending_nids[] = $scored[$scored_index]->nid;
       }
       $candidate_vectors = $this->resolveCandidateVectors($pending_nids, $rows, $settings);
+
       foreach ($pending_indices as $scored_index) {
         $nid = $scored[$scored_index]->nid;
         $cand_vec = $candidate_vectors[$nid] ?? NULL;
@@ -421,7 +428,7 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
   }
 
   /**
-   * Resolve min/max report nids in the embedding created-date lookback.
+   * Resolve min/max nids for embedding NN from first-revision lookback/forward.
    *
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   Probe entity.
@@ -435,28 +442,167 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     ContentEntityInterface $entity,
     DuplicateMatchSettings $settings,
   ): ?array {
-    $now = $this->time->getRequestTime();
-    $anchor = $this->resolveAnchorTimestamp($entity);
-    $window_start = $anchor - ($settings->embeddingLookbackDays * 86400);
-    $window_end = $now;
+    $anchor_nid = (int) $entity->id();
 
-    $row = $this->database->query(
-      'SELECT MIN(n.nid) AS min_nid, MAX(n.nid) AS max_nid
-       FROM {node_field_data} n
-       WHERE n.type = :bundle
-         AND n.created >= :window_start
-         AND n.created <= :window_end',
-      [
-        ':bundle' => 'report',
-        ':window_start' => $window_start,
-        ':window_end' => $window_end,
-      ],
-    )->fetchAssoc();
+    // If the anchor nid is not set, use the max report nid (most recent report)
+    // from the database.
+    if ($anchor_nid <= 0) {
+      $max_nid = $this->minOrMaxReportNid(FALSE);
+      if ($max_nid === NULL) {
+        return NULL;
+      }
+      $anchor_nid = $max_nid;
+    }
 
-    if (!$row || $row['min_nid'] === NULL || $row['max_nid'] === NULL) {
+    // Convert lookback/lookforward days into a first-revision time window, then
+    // approximate that window as an nid range (embedding NN filters by nid).
+    $anchor_first_timestamp = $this->firstRevisionTimestamp($anchor_nid);
+    if ($anchor_first_timestamp === NULL) {
       return NULL;
     }
-    return [(int) $row['min_nid'], (int) $row['max_nid']];
+
+    $window_start = $anchor_first_timestamp - ($settings->embeddingLookbackDays * 86400);
+    $window_end = $anchor_first_timestamp + ($settings->embeddingLookforwardDays * 86400);
+
+    $min_nid = $this->nidNearFirstRevisionTimestamp($anchor_nid, $window_start, 'backward', 20000);
+
+    // No lookforward: upper bound is the anchor itself.
+    if ($settings->embeddingLookforwardDays === 0) {
+      $max_nid = $anchor_nid;
+    }
+    else {
+      $max_nid = $this->nidNearFirstRevisionTimestamp($anchor_nid, $window_end, 'forward', 2000);
+    }
+
+    if ($min_nid > $max_nid) {
+      [$min_nid, $max_nid] = [$max_nid, $min_nid];
+    }
+
+    return [$min_nid, $max_nid];
+  }
+
+  /**
+   * Get the first revision timestamp for a node.
+   *
+   * We cannot rely on the created property to know the real creation date
+   * because it can be changed for example for buried or embargoed reports.
+   * So we need to get the first revision timestamp.
+   *
+   * @param int $nid
+   *   Node ID.
+   *
+   * @return int|null
+   *   Unix timestamp, or NULL if none.
+   */
+  protected function firstRevisionTimestamp(int $nid): ?int {
+    // Oldest revision by vid is the best proxy for real creation time.
+    $timestamp = $this->database->select('node_revision', 'nr')
+      ->fields('nr', ['revision_timestamp'])
+      ->condition('nr.nid', $nid)
+      ->orderBy('nr.vid', 'ASC')
+      ->range(0, 1)
+      ->execute()
+      ->fetchField();
+    if ($timestamp === FALSE || $timestamp === NULL) {
+      return NULL;
+    }
+    return (int) $timestamp;
+  }
+
+  /**
+   * Approximate nid whose first revision crosses a timestamp, walking by nid.
+   *
+   * Nids are roughly chronological, so we jump by large nid steps from the
+   * anchor until a node's first revision timestamp crosses the target.
+   * If no crossing is found (e.g. lookforward past available content), fall
+   * back to the min or max report nid so the range still covers the tip or
+   * start of the corpus.
+   *
+   * @param int $anchor_nid
+   *   Starting node ID.
+   * @param int $target_timestamp
+   *   First-revision timestamp to cross.
+   * @param string $direction
+   *   Direction: "backward" or "forward".
+   * @param int $step
+   *   Nid jump size.
+   * @param int $max_jumps
+   *   Safety cap on iterations.
+   *
+   * @return int
+   *   Approximate nid near the target timestamp.
+   */
+  protected function nidNearFirstRevisionTimestamp(
+    int $anchor_nid,
+    int $target_timestamp,
+    string $direction,
+    int $step,
+    int $max_jumps = 80,
+  ): int {
+    $backward = $direction === 'backward';
+    $probe = $anchor_nid;
+    $last_nid = $anchor_nid;
+
+    for ($i = 1; $i <= $max_jumps; $i++) {
+      $probe = $backward ? $probe - $step : $probe + $step;
+      if ($probe <= 0) {
+        break;
+      }
+
+      // Snap the probe to the nearest existing default-langcode row (nid gaps).
+      $query = $this->database->select('node_field_data', 'nfd');
+      $query->fields('nfd', ['nid']);
+      $query->condition('nfd.default_langcode', 1);
+      if ($backward) {
+        $query->condition('nfd.nid', $probe, '<=');
+        $query->orderBy('nfd.nid', 'DESC');
+      }
+      else {
+        $query->condition('nfd.nid', $probe, '>=');
+        $query->orderBy('nfd.nid', 'ASC');
+      }
+      $query->range(0, 1);
+      $nearest = $query->execute()->fetchField();
+
+      if ($nearest === FALSE || $nearest === NULL) {
+        break;
+      }
+      $last_nid = (int) $nearest;
+      $first_timestamp = $this->firstRevisionTimestamp($last_nid);
+      if ($first_timestamp === NULL) {
+        continue;
+      }
+      // Stop once we have crossed the target first-revision timestamp.
+      if ($backward && $first_timestamp <= $target_timestamp) {
+        return $last_nid;
+      }
+      if (!$backward && $first_timestamp >= $target_timestamp) {
+        return $last_nid;
+      }
+    }
+
+    // No crossing found: use min (backward) or max (forward) report nid.
+    return $this->minOrMaxReportNid($backward) ?? $last_nid;
+  }
+
+  /**
+   * Get the minimum or maximum report nid.
+   *
+   * @param bool $minimum
+   *   TRUE for MIN(nid), FALSE for MAX(nid).
+   *
+   * @return int|null
+   *   Min or max report nid, or NULL if none.
+   */
+  protected function minOrMaxReportNid(bool $minimum): ?int {
+    $query = $this->database->select('node_field_data', 'n');
+    $query->addExpression($minimum ? 'MIN(n.nid)' : 'MAX(n.nid)', 'nid');
+    $query->condition('n.type', 'report');
+    $value = $query->execute()->fetchField();
+    if ($value === FALSE || $value === NULL) {
+      return NULL;
+    }
+    return (int) $value;
   }
 
   /**

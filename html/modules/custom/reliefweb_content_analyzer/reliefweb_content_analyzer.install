@@ -397,3 +397,22 @@ function reliefweb_content_analyzer_update_10009(): void {
   $config->set('report_duplicate_matching', $current);
   $config->save();
 }
+
+/**
+ * Add embedding lookforward days for nearest-neighbor nid range.
+ */
+function reliefweb_content_analyzer_update_10010(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  if (!array_key_exists('embedding_lookforward_days', $current)) {
+    $current['embedding_lookforward_days'] = $defaults['embedding_lookforward_days'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}

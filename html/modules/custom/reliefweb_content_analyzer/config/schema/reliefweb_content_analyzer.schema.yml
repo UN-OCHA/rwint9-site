@@ -279,7 +279,10 @@ reliefweb_content_analyzer.settings:
           label: 'Maximum nearest neighbors from embedding storage'
         embedding_lookback_days:
           type: integer
-          label: 'Days before the report created date for embedding nearest-neighbor search'
+          label: 'Days before the first revision for embedding nearest-neighbor search'
+        embedding_lookforward_days:
+          type: integer
+          label: 'Days after the first revision for embedding nearest-neighbor search'
         target_status:
           type: string
           label: 'Moderation status target when any near-duplicate match exists'

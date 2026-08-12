@@ -217,9 +217,18 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $form['report_duplicate_matching']['embedding_lookback_days'] = [
       '#type' => 'number',
       '#title' => $this->t('Embedding lookback days'),
-      '#description' => $this->t('Days before the report created date for embedding nearest-neighbor search (no source filter). Default 1095 (~3 years).'),
+      '#description' => $this->t('Days before the report first revision for embedding nearest-neighbor search (no source filter). Converted to an nid range. Default 1095 (~3 years).'),
       '#default_value' => $report_duplicate_matching['embedding_lookback_days'],
       '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_lookforward_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding lookforward days'),
+      '#description' => $this->t('Days after the report first revision for embedding nearest-neighbor search. Converted to an nid range. Default 2.'),
+      '#default_value' => $report_duplicate_matching['embedding_lookforward_days'] ?? 2,
+      '#min' => 0,
       '#required' => TRUE,
     ];
 
@@ -1113,6 +1122,13 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
         $this->t('Embedding lookback days must be at least 1.'),
       );
     }
+    $embedding_lookforward = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_lookforward_days']);
+    if ($embedding_lookforward < 0) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_lookforward_days',
+        $this->t('Embedding lookforward days must be at least 0.'),
+      );
+    }
 
     $minimum_body_length = (int) $form_state->getValue(['report_duplicate_matching', 'minimum_body_length']);
     if ($minimum_body_length < 1) {
@@ -1213,6 +1229,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'embedding_similarity_threshold' => (float) ($report_values['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
       'embedding_topk' => (int) ($report_values['embedding_topk'] ?? $defaults['embedding_topk']),
       'embedding_lookback_days' => (int) ($report_values['embedding_lookback_days'] ?? $defaults['embedding_lookback_days']),
+      'embedding_lookforward_days' => (int) ($report_values['embedding_lookforward_days'] ?? $defaults['embedding_lookforward_days']),
       'target_status' => (string) ($report_values['target_status'] ?? $defaults['target_status']),
       'candidate_moderation_statuses' => $this->linesToSequence((string) ($report_values['candidate_moderation_statuses'] ?? '')),
       'skip_moderation_statuses' => $this->linesToSequence((string) ($report_values['skip_moderation_statuses'] ?? '')),

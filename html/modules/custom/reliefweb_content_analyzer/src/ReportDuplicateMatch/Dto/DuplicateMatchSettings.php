@@ -40,7 +40,9 @@ final class DuplicateMatchSettings {
    * @param int $embeddingTopk
    *   Maximum nearest neighbors from embedding storage.
    * @param int $embeddingLookbackDays
-   *   Days before the entity created date for embedding NN search.
+   *   Days before the first revision for embedding NN search.
+   * @param int $embeddingLookforwardDays
+   *   Days after the first revision for embedding NN search.
    * @param string $targetStatus
    *   Moderation status target when any near-duplicate match exists.
    * @param string[] $candidateModerationStatuses
@@ -63,6 +65,7 @@ final class DuplicateMatchSettings {
     public readonly float $embeddingSimilarityThreshold,
     public readonly int $embeddingTopk,
     public readonly int $embeddingLookbackDays,
+    public readonly int $embeddingLookforwardDays,
     public readonly string $targetStatus,
     public readonly array $candidateModerationStatuses,
     public readonly array $skipModerationStatuses,
@@ -95,6 +98,7 @@ final class DuplicateMatchSettings {
       embeddingSimilarityThreshold: (float) ($config['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
       embeddingTopk: max(1, (int) ($config['embedding_topk'] ?? $defaults['embedding_topk'])),
       embeddingLookbackDays: max(1, (int) ($config['embedding_lookback_days'] ?? $defaults['embedding_lookback_days'])),
+      embeddingLookforwardDays: max(0, (int) ($config['embedding_lookforward_days'] ?? $defaults['embedding_lookforward_days'])),
       targetStatus: self::nonEmptyString(
         $config['target_status'] ?? NULL,
         (string) $defaults['target_status'],
@@ -132,6 +136,7 @@ final class DuplicateMatchSettings {
       'embedding_similarity_threshold' => 0.90,
       'embedding_topk' => 50,
       'embedding_lookback_days' => 1095,
+      'embedding_lookforward_days' => 2,
       'target_status' => 'duplicate',
       'candidate_moderation_statuses' => [
         'draft',
