@@ -132,6 +132,7 @@ report_duplicate_matching:
   embedding_similarity_threshold: 0.90
   embedding_topk: 50
   embedding_lookback_days: 1095
+  embedding_lookforward_days: 2
   target_status: duplicate
   candidate_moderation_statuses:
     - draft
