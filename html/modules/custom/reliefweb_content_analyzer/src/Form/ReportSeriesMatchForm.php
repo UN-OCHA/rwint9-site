@@ -25,6 +25,7 @@ use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult;
 use Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface;
 use Drupal\reliefweb_files\Services\MissingFileDownloaderInterface;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -190,18 +191,26 @@ final class ReportSeriesMatchForm extends FormBase {
       $workflow,
       $this->buildOutcomePolicyContext($node, $result),
     );
+    $moderation_display = $outcome !== NULL
+      ? $this->resolveProjectedModerationDisplay($node, $outcome, $workflow)
+      : ['current' => '', 'target' => '', 'cap' => ''];
 
     $duration = $form_state->get('match_duration_seconds');
     $form['description'] = $this->buildResultsDescription(
       $result,
       $outcome,
       is_float($duration) ? $duration : NULL,
+      $moderation_display['cap'],
     );
 
     $form['proposed_updates'] = $this->buildUpdatedFieldsDetails($result);
     $form['candidates'] = $this->buildCandidatesDetails($result);
     if ($result->debug !== NULL) {
-      $form['diagnostics'] = $this->buildDiagnosticsDetails($result, $outcome);
+      $form['diagnostics'] = $this->buildDiagnosticsDetails(
+        $result,
+        $outcome,
+        $moderation_display,
+      );
     }
 
     $form['actions'] = ['#type' => 'actions'];
@@ -232,6 +241,8 @@ final class ReportSeriesMatchForm extends FormBase {
    *   Resolved outcome when workflow settings allow scoring.
    * @param float|null $duration_seconds
    *   Wall-clock seconds for the matcher call, when measured.
+   * @param string $status_cap
+   *   Current status when it caps a more permissive match target, or empty.
    *
    * @return array
    *   Render array for the results description.
@@ -240,6 +251,7 @@ final class ReportSeriesMatchForm extends FormBase {
     SeriesMatchResult $result,
     ?SeriesMatchOutcome $outcome,
     ?float $duration_seconds = NULL,
+    string $status_cap = '',
   ): array {
     $series_summary = $this->formatSeriesMatchSummary($result);
     $duration = $duration_seconds !== NULL
@@ -262,7 +274,7 @@ final class ReportSeriesMatchForm extends FormBase {
             <strong>Tagging confidence:</strong> {{ tagging_confidence }}% —
             {% if apply_match %}
               <strong>Outcome:</strong> {{ outcome_tier }} —
-              <strong>Projected moderation:</strong> {{ status }}
+              <strong>Projected moderation:</strong> {{ status }}{% if status_cap %} — <strong>Capped by current status:</strong> {{ status_cap }}{% endif %}
             {% else %}
               <strong>Outcome:</strong> {% trans %}skip{% endtrans %}
             {% endif %}
@@ -288,6 +300,7 @@ final class ReportSeriesMatchForm extends FormBase {
           'tagging_confidence' => number_format($outcome->taggingConfidence * 100, 1),
           'outcome_tier' => $outcome->outcomeTier->value,
           'status' => $outcome->targetModerationStatus,
+          'status_cap' => $status_cap,
           'apply_match' => $outcome->applyMatch,
           'policy_messages' => array_map('mb_ucfirst', $policy_messages),
           'duration' => $duration,
@@ -674,6 +687,8 @@ final class ReportSeriesMatchForm extends FormBase {
    *   The match result.
    * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome|null $outcome
    *   Resolved outcome when available.
+   * @param array{current: string, target: string, cap: string} $moderation_display
+   *   Current status, match target, and cap when the current status binds.
    *
    * @return array
    *   Render array for the diagnostics details element, or empty when no debug.
@@ -681,6 +696,7 @@ final class ReportSeriesMatchForm extends FormBase {
   protected function buildDiagnosticsDetails(
     SeriesMatchResult $result,
     ?SeriesMatchOutcome $outcome = NULL,
+    array $moderation_display = ['current' => '', 'target' => '', 'cap' => ''],
   ): array {
     $debug = $result->debug;
     if ($debug === NULL) {
@@ -710,6 +726,24 @@ final class ReportSeriesMatchForm extends FormBase {
         $this->t('Apply match'),
         $outcome->applyMatch ? $this->t('Yes') : $this->t('No'),
       ];
+      if ($moderation_display['current'] !== '') {
+        $rows[] = [
+          $this->t('Current moderation'),
+          $moderation_display['current'],
+        ];
+      }
+      if ($moderation_display['target'] !== '') {
+        $rows[] = [
+          $this->t('Match target'),
+          $moderation_display['target'],
+        ];
+      }
+      if ($moderation_display['cap'] !== '') {
+        $rows[] = [
+          $this->t('Capped by current status'),
+          $moderation_display['cap'],
+        ];
+      }
       $messages = $outcome->policyReasonMessages();
       if ($messages !== []) {
         $rows[] = [
@@ -1009,6 +1043,58 @@ final class ReportSeriesMatchForm extends FormBase {
     $form_state->set('match_result', NULL);
     $form_state->set('match_duration_seconds', NULL);
     $form_state->setRebuild();
+  }
+
+  /**
+   * Resolves current status, match target, and cap for inspection display.
+   *
+   * The cap is the current status when it is more restrictive than the match
+   * target (never promote). Falls back to current when the applied status is
+   * not in the entity's allowed moderation statuses, matching the apply hook.
+   *
+   * @param \Drupal\node\NodeInterface $node
+   *   The report node.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchOutcome $outcome
+   *   Resolved match outcome.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings $workflow
+   *   Workflow settings including restrictiveness order.
+   *
+   * @return array{current: string, target: string, cap: string}
+   *   Current status, match target, and cap when the current status binds.
+   */
+  protected function resolveProjectedModerationDisplay(
+    NodeInterface $node,
+    SeriesMatchOutcome $outcome,
+    SeriesMatchWorkflowSettings $workflow,
+  ): array {
+    $target = $outcome->targetModerationStatus;
+    $current = '';
+    $allowed = [];
+    if ($node instanceof EntityModeratedInterface) {
+      $current = (string) $node->getModerationStatus();
+      $allowed = $node->getAllowedModerationStatuses();
+    }
+
+    $cap = SeriesMatchOutcome::currentStatusCap(
+      $current,
+      $target,
+      $workflow->restrictivenessOrder,
+    );
+
+    $applied = SeriesMatchOutcome::moreRestrictiveStatus(
+      $current,
+      $target,
+      $workflow->restrictivenessOrder,
+    );
+    if ($current !== '' && $allowed !== [] && !isset($allowed[$applied])) {
+      $cap = $current !== $target ? $current : NULL;
+    }
+
+    return [
+      'current' => $current,
+      'target' => $target,
+      'cap' => $cap ?? '',
+    ];
   }
 
   /**

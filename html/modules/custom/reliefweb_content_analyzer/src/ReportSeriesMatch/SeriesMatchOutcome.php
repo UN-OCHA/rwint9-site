@@ -193,4 +193,34 @@ final readonly class SeriesMatchOutcome {
     return $current_pos <= $proposed_pos ? $current : $proposed;
   }
 
+  /**
+   * Returns the current status when it blocks a more permissive match target.
+   *
+   * Used by the inspection form to show "Capped by current status" only when
+   * series matching would otherwise promote. Returns NULL when current equals
+   * the target, or when the target is more restrictive (a demotion).
+   *
+   * @param string $current
+   *   The current moderation status on the entity.
+   * @param string $target
+   *   The target status proposed by series-match outcome.
+   * @param string[] $restrictivenessOrder
+   *   Ordered list of status machine names, most restrictive first.
+   *
+   * @return string|null
+   *   Current status when the cap binds, or NULL otherwise.
+   */
+  public static function currentStatusCap(
+    string $current,
+    string $target,
+    array $restrictivenessOrder,
+  ): ?string {
+    if ($current === $target || $current === '') {
+      return NULL;
+    }
+
+    $applied = self::moreRestrictiveStatus($current, $target, $restrictivenessOrder);
+    return $applied === $current ? $current : NULL;
+  }
+
 }

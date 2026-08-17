@@ -190,6 +190,44 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
   }
 
   /**
+   * Returns current status only when it blocks a more permissive match target.
+   */
+  #[DataProvider('currentStatusCapProvider')]
+  public function testCurrentStatusCap(
+    string $current,
+    string $target,
+    ?string $expected,
+  ): void {
+    $order = [
+      'refused', 'draft', 'on-hold', 'pending', 'to-review', 'embargoed',
+      'reference', 'published',
+    ];
+    $this->assertSame(
+      $expected,
+      SeriesMatchOutcome::currentStatusCap($current, $target, $order),
+    );
+  }
+
+  /**
+   * Data provider for currentStatusCap tests.
+   *
+   * @return array<string, array{0: string, 1: string, 2: string|null}>
+   *   Current status, match target, expected cap (NULL when cap does not bind).
+   */
+  public static function currentStatusCapProvider(): array {
+    return [
+      'pending caps to-review' => ['pending', 'to-review', 'pending'],
+      'pending caps published' => ['pending', 'published', 'pending'],
+      'to-review caps published' => ['to-review', 'published', 'to-review'],
+      'demote published to pending' => ['published', 'pending', NULL],
+      'demote published to to-review' => ['published', 'to-review', NULL],
+      'same pending unchanged' => ['pending', 'pending', NULL],
+      'same to-review unchanged' => ['to-review', 'to-review', NULL],
+      'empty current' => ['', 'published', NULL],
+    ];
+  }
+
+  /**
    * Resolve() returns NULL when series confidence is not computable.
    */
   public function testResolveNullWhenSeriesNotComputable(): void {
