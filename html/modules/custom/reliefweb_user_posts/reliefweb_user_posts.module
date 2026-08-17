@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * @file
+ * Provides theme hooks for the ReliefWeb user posts module.
+ */
+
+/**
+ * Implements hook_theme().
+ */
+function reliefweb_user_posts_theme() {
+  return [
+    // Theme for the My posts overview page.
+    'reliefweb_user_posts_overview' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Links for creating available post types.
+        'intro' => NULL,
+        // Navigation tabs with the overview and the post types.
+        'tabs' => NULL,
+        // List of post types with their number of posts and links.
+        'sections' => [],
+        // Message when there is no post type available for the user.
+        'empty' => NULL,
+      ],
+    ],
+    // Theme for the My posts list of a given post type.
+    'reliefweb_user_posts_page' => [
+      'variables' => [
+        // Wrapper attributes.
+        'attributes' => NULL,
+        // Navigation tabs with the overview and the post types.
+        'tabs' => NULL,
+        // Links for creating available post types.
+        'intro' => NULL,
+        // Post list filters.
+        'filters' => NULL,
+        // Attributes for the filters.
+        'filters_attributes' => NULL,
+        // List of posts. @see reliefweb_moderation_table.
+        'list' => NULL,
+        // Attributes for the list.
+        'list_attributes' => NULL,
+      ],
+    ],
+  ];
+}

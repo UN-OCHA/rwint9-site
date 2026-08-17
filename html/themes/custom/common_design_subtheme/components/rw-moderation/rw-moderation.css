@@ -28,7 +28,7 @@
 .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  grid-gap: 0 24px;
+  gap: 0 24px;
   margin-bottom: -12px;
 }
 .path-moderation-content-disaster .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
@@ -98,7 +98,6 @@
 .rw-moderation-list > h3 {
   position: absolute;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
   width: 1px;
   height: 1px;
   margin: -1px;
@@ -110,7 +109,7 @@
 .rw-moderation-content__total-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  grid-gap: 24px;
+  gap: 24px;
   margin: 0 0 24px 0;
   padding: 0;
   text-align: center;
@@ -151,7 +150,7 @@
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
   width: 100%;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) div + div {
   margin-top: 4px;
@@ -223,51 +222,6 @@
   border-top: none;
 }
 
-.rw-moderation-filters--user-posts .rw-moderation-intro {
-  padding-bottom: 24px;
-  text-align: center;
-  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
-}
-
-/* Display "other" filters on separate lines. */
-.rw-moderation-filters--user-posts .rw-moderation-filter-other .fieldset-wrapper > fieldset + fieldset {
-  display: block;
-  margin-top: 24px;
-}
-/* User posts type column */
-.rw-moderation-list--user-posts .rw-moderation-table tr td:nth-child(2) {
-  width: auto;
-  word-break: unset;
-}
-/* User posts source list */
-.rw-moderation-list--user-posts .rw-moderation-table ul {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-/* User posts status column */
-.rw-moderation-list--user-posts td .rw-moderation-status[data-moderation-status] {
-  margin: 0;
-}
-/* User posts posted and deadline date columns */
-.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
-.rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
-  text-align: center;
-  white-space: unset;
-  font-size: 15px;
-}
-/* Prevent the Sortable icon from break to a new line */
-.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__header--date {
-  white-space: nowrap;
-}
-
-@media screen and (min-width: 768px) {
-  .rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
-  .rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
-    white-space: nowrap;
-  }
-}
-
 .reliefweb-importer-statistics-low {
   background-color: #e47474 !important;
 }
@@ -285,7 +239,7 @@
   }
 
   .rw-moderation-table tr td {
-    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .rw-moderation-table tr td:nth-child(1) {

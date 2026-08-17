@@ -3,3 +3,8 @@ reliefweb_user_posts.user:
   base_route: entity.user.canonical
   title: 'My posts'
   weight: 100
+
+reliefweb_user_posts.user.tab:
+  route_name: reliefweb_user_posts.content.bundle
+  title: 'My posts'
+  parent_id: reliefweb_user_posts.user
