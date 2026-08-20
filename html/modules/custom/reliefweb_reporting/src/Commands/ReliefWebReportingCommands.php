@@ -583,11 +583,7 @@ class ReliefWebReportingCommands extends DrushCommands {
     $references = new References();
 
     // Create a new elasticsearch handler.
-    $elasticsearch = new Elasticsearch(
-      $indexer_options->elasticsearch,
-      $indexer_options->baseIndexName,
-      $indexer_options->tag,
-    );
+    $elasticsearch = new Elasticsearch($indexer_options);
 
     // Create a new field processor object to prepare items before indexing.
     $processor = new Processor($indexer_options->website, $connection, $references);

@@ -10,6 +10,18 @@ cache_enabled: true
 verify_ssl: true
 # URL of the elasticsearch instance for indexing.
 elasticsearch: http://elasticsearch:9200
+# Elasticsearch authentication type: none, basic or apikey.
+elasticsearch_auth_type: none
+# Elasticsearch basic authentication username.
+elasticsearch_username: ''
+# Elasticsearch basic authentication password.
+elasticsearch_password: ''
+# Elasticsearch API key authentication credentials.
+elasticsearch_api_key: ''
+# Verify TLS certificates when connecting to Elasticsearch.
+elasticsearch_verify_tls: true
+# Path to a custom CA certificate file for Elasticsearch TLS verification.
+elasticsearch_ca_file: ''
 # Index base name in elasticsearch.
 base_index_name: reliefweb
 # Scheme and host to use as base for the URLs in the indexed content.

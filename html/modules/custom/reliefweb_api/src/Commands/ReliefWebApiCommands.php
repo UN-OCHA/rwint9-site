@@ -111,11 +111,23 @@ class ReliefWebApiCommands extends DrushCommands {
    *
    * @command reliefweb-api:index
    *
-   * @option elasticsearch Elasticsearch URL (http://host:port), defaults to
-   *   the 'reliefweb_api.settings:elasticsearch' setting or
-   *   'http://elasticsearch:9200'.
-   * @option base-index-name Base index name, deaults to the
-   *   'reliefweb_api.settings:base_index_name' setting or the database name.
+   * @option elasticsearch Elasticsearch cluster URL, defaults to
+   *   reliefweb_api.settings:elasticsearch or http://elasticsearch:9200.
+   * @option base-index-name Base index name, defaults to
+   *   reliefweb_api.settings:base_index_name or the database name.
+   * @option elasticsearch-auth-type Authentication type: none, basic or apikey.
+   *   Defaults to reliefweb_api.settings:elasticsearch_auth_type.
+   * @option elasticsearch-username Basic authentication username. Defaults to
+   *   reliefweb_api.settings:elasticsearch_username.
+   * @option elasticsearch-password Basic authentication password. Defaults to
+   *   reliefweb_api.settings:elasticsearch_password.
+   * @option elasticsearch-api-key API key authentication credentials.
+   *   Defaults to reliefweb_api.settings:elasticsearch_api_key.
+   * @option elasticsearch-verify-tls Verify TLS certificates when connecting
+   *   to Elasticsearch.
+   *   Defaults to reliefweb_api.settings:elasticsearch_verify_tls.
+   * @option elasticsearch-ca-file Path to a custom CA certificate file for TLS
+   *   verification. Defaults to reliefweb_api.settings:elasticsearch_ca_file.
    * @option website Site scheme and hostname to use as base for the URLs,
    *   defaults to the 'reliefweb_api.settings:website' setting or
    *   'https://reliefweb.int'.
@@ -171,6 +183,12 @@ class ReliefWebApiCommands extends DrushCommands {
     array $options = [
       'elasticsearch' => '',
       'base-index-name' => '',
+      'elasticsearch-auth-type' => '',
+      'elasticsearch-username' => '',
+      'elasticsearch-password' => '',
+      'elasticsearch-api-key' => '',
+      'elasticsearch-verify-tls' => NULL,
+      'elasticsearch-ca-file' => '',
       'website' => '',
       'limit' => 0,
       'offset' => 0,
@@ -224,8 +242,7 @@ class ReliefWebApiCommands extends DrushCommands {
     // Index indexing options.
     $indexing_options = reliefweb_api_get_indexer_base_options();
     $indexing_options['bundle'] = $bundle;
-    $indexing_options['elasticsearch'] = $options['elasticsearch'] ?: $indexing_options['elasticsearch'];
-    $indexing_options['base-index-name'] = $options['base-index-name'] ?: $indexing_options['base-index-name'];
+    $indexing_options = $this->applyElasticsearchCliOptions($indexing_options, $options);
     $indexing_options['website'] = $options['website'] ?: $indexing_options['website'];
     $indexing_options['limit'] = (int) ($options['limit'] ?: 0);
     $indexing_options['offset'] = (int) ($options['offset'] ?: 0);
@@ -299,11 +316,23 @@ class ReliefWebApiCommands extends DrushCommands {
    * @param array $options
    *   Additional options for the command.
    *
-   * @option elasticsearch Elasticsearch URL (http://host:port), defaults to
-   *   the 'reliefweb_api.settings:elasticsearch' setting or
-   *   'http://elasticsearch:9200'.
-   * @option base-index-name Base index name, deaults to the
-   *   'reliefweb_api.settings:base_index_name' setting or the database name.
+   * @option elasticsearch Elasticsearch cluster URL, defaults to
+   *   reliefweb_api.settings:elasticsearch or http://elasticsearch:9200.
+   * @option base-index-name Base index name, defaults to
+   *   reliefweb_api.settings:base_index_name or the database name.
+   * @option elasticsearch-auth-type Authentication type: none, basic or apikey.
+   *   Defaults to reliefweb_api.settings:elasticsearch_auth_type.
+   * @option elasticsearch-username Basic authentication username. Defaults to
+   *   reliefweb_api.settings:elasticsearch_username.
+   * @option elasticsearch-password Basic authentication password. Defaults to
+   *   reliefweb_api.settings:elasticsearch_password.
+   * @option elasticsearch-api-key API key authentication credentials.
+   *   Defaults to reliefweb_api.settings:elasticsearch_api_key.
+   * @option elasticsearch-verify-tls Verify TLS certificates when connecting
+   *   to Elasticsearch.
+   *   Defaults to reliefweb_api.settings:elasticsearch_verify_tls.
+   * @option elasticsearch-ca-file Path to a custom CA certificate file for TLS
+   *   verification. Defaults to reliefweb_api.settings:elasticsearch_ca_file.
    *
    * @command reliefweb-api:replace
    *
@@ -321,6 +350,12 @@ class ReliefWebApiCommands extends DrushCommands {
     array $options = [
       'elasticsearch' => '',
       'base-index-name' => '',
+      'elasticsearch-auth-type' => '',
+      'elasticsearch-username' => '',
+      'elasticsearch-password' => '',
+      'elasticsearch-api-key' => '',
+      'elasticsearch-verify-tls' => NULL,
+      'elasticsearch-ca-file' => '',
     ],
   ) {
     if (!isset($oldtag)) {
@@ -333,8 +368,7 @@ class ReliefWebApiCommands extends DrushCommands {
     else {
       $base_options = reliefweb_api_get_indexer_base_options();
       $base_options['bundle'] = $bundle;
-      $base_options['elasticsearch'] = $options['elasticsearch'] ?: $base_options['elasticsearch'];
-      $base_options['base-index-name'] = $options['base-index-name'] ?: $base_options['base-index-name'];
+      $base_options = $this->applyElasticsearchCliOptions($base_options, $options);
 
       try {
         // Set the alias for the new index.
@@ -467,6 +501,48 @@ class ReliefWebApiCommands extends DrushCommands {
     if (!empty($options['email-recipients']) && !empty($output)) {
       $this->sendReindexNotification($output, $options);
     }
+  }
+
+  /**
+   * Apply Elasticsearch CLI overrides to indexer options.
+   *
+   * @param array<string, mixed> $indexing_options
+   *   Indexer options from reliefweb_api_get_indexer_base_options().
+   * @param array<string, mixed> $options
+   *   Drush command options.
+   *
+   * @return array<string, mixed>
+   *   Indexer options with CLI overrides applied.
+   */
+  protected function applyElasticsearchCliOptions(array $indexing_options, array $options): array {
+    if (!empty($options['elasticsearch'])) {
+      $indexing_options['elasticsearch'] = $options['elasticsearch'];
+    }
+    if (!empty($options['base-index-name'])) {
+      $indexing_options['base-index-name'] = $options['base-index-name'];
+    }
+    if (!empty($options['elasticsearch-auth-type'])) {
+      $indexing_options['elasticsearch-auth-type'] = strtolower((string) $options['elasticsearch-auth-type']);
+    }
+    if (($options['elasticsearch-username'] ?? '') !== '') {
+      $indexing_options['elasticsearch-username'] = (string) $options['elasticsearch-username'];
+    }
+    if (($options['elasticsearch-password'] ?? '') !== '') {
+      $indexing_options['elasticsearch-password'] = (string) $options['elasticsearch-password'];
+    }
+    if (($options['elasticsearch-api-key'] ?? '') !== '') {
+      $indexing_options['elasticsearch-api-key'] = (string) $options['elasticsearch-api-key'];
+    }
+    if (array_key_exists('elasticsearch-verify-tls', $options) && $options['elasticsearch-verify-tls'] !== NULL) {
+      $indexing_options['elasticsearch-verify-tls'] = filter_var(
+        $options['elasticsearch-verify-tls'],
+        FILTER_VALIDATE_BOOLEAN,
+      );
+    }
+    if (($options['elasticsearch-ca-file'] ?? '') !== '') {
+      $indexing_options['elasticsearch-ca-file'] = (string) $options['elasticsearch-ca-file'];
+    }
+    return $indexing_options;
   }
 
   /**

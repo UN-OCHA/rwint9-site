@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "dc2cca2e01007841ee90f7448adc3e8e",
+    "content-hash": "ec38ceac5a22b1d2f0e15e7357824567",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -9999,16 +9999,16 @@
         },
         {
             "name": "reliefweb/api-indexer",
-            "version": "v3.2.0",
+            "version": "v4.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/UN-OCHA/rwint-api-indexer.git",
-                "reference": "c6780a7012e127d68e4fb139f18f28cc566aa4af"
+                "reference": "47a42a3f6148ca45e78fbbee627d6963d805d5f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/c6780a7012e127d68e4fb139f18f28cc566aa4af",
-                "reference": "c6780a7012e127d68e4fb139f18f28cc566aa4af",
+                "url": "https://api.github.com/repos/UN-OCHA/rwint-api-indexer/zipball/47a42a3f6148ca45e78fbbee627d6963d805d5f6",
+                "reference": "47a42a3f6148ca45e78fbbee627d6963d805d5f6",
                 "shasum": ""
             },
             "require": {
@@ -10034,9 +10034,9 @@
             ],
             "support": {
                 "issues": "https://github.com/UN-OCHA/rwint-api-indexer/issues",
-                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v3.2.0"
+                "source": "https://github.com/UN-OCHA/rwint-api-indexer/tree/v4.0.0"
             },
-            "time": "2026-05-15T00:38:45+00:00"
+            "time": "2026-08-20T02:54:50+00:00"
         },
         {
             "name": "reliefweb/simple-autocomplete",

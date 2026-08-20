@@ -6,6 +6,12 @@ appname: reliefweb.int
 cache_enabled: true
 verify_ssl: true
 elasticsearch: 'http://elasticsearch:9200'
+elasticsearch_auth_type: none
+elasticsearch_username: ''
+elasticsearch_password: ''
+elasticsearch_api_key: ''
+elasticsearch_verify_tls: true
+elasticsearch_ca_file: ''
 base_index_name: reliefweb
 website: 'https://reliefweb.int'
 replicas: 0

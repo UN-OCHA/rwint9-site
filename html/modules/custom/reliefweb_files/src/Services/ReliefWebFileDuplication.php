@@ -13,8 +13,8 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\file\Entity\File;
+use Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient;
 use Drupal\reliefweb_utility\Helpers\FileHelper;
-use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
@@ -40,8 +40,8 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    *   The state service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   The config factory service.
-   * @param \GuzzleHttp\ClientInterface $httpClient
-   *   The HTTP client service.
+   * @param \Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient $elasticsearch
+   *   The Elasticsearch client.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory service.
    * @param \Drupal\Core\Database\Connection $database
@@ -56,7 +56,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
   public function __construct(
     protected StateInterface $state,
     protected ConfigFactoryInterface $configFactory,
-    protected ClientInterface $httpClient,
+    protected ReliefWebElasticsearchClient $elasticsearch,
     protected LoggerChannelFactoryInterface $loggerFactory,
     protected Connection $database,
     protected EntityTypeManagerInterface $entityTypeManager,
@@ -216,7 +216,6 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     $shards = $shards ?? $config->get('shards') ?? 1;
     $replicas = $replicas ?? $config->get('replicas') ?? 0;
     $index_name = $this->getFileFingerprintsIndexName();
-    $index_url = $this->getElasticsearchEndpointUrl();
 
     $settings = [
       'settings' => [
@@ -274,7 +273,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     ];
 
     try {
-      $response = $this->getHttpClient()->request('PUT', $index_url, [
+      $response = $this->requestFileFingerprintsIndex('PUT', '', [
         'json' => $settings,
       ]);
 
@@ -309,10 +308,9 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
   public function deleteFileFingerprintsIndex(): bool {
     $logger = $this->getLogger();
     $index_name = $this->getFileFingerprintsIndexName();
-    $index_url = $this->getElasticsearchEndpointUrl();
 
     try {
-      $response = $this->getHttpClient()->request('DELETE', $index_url);
+      $response = $this->requestFileFingerprintsIndex('DELETE');
 
       if ($response->getStatusCode() === 200) {
         $logger->info('File fingerprints index deleted successfully: @index', ['@index' => $index_name]);
@@ -835,11 +833,9 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     bool $retry_on_creation = TRUE,
   ): ?ResponseInterface {
     $logger = $this->getLogger();
-    $endpoint_url = $this->getElasticsearchEndpointUrl($endpoint);
 
     try {
-      $response = $this->getHttpClient()->request($method, $endpoint_url, $options);
-      return $response;
+      return $this->requestFileFingerprintsIndex($method, $endpoint, $options);
     }
     catch (RequestException $exception) {
       $response = $exception->getResponse();
@@ -859,7 +855,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
             // Retry the original request if requested.
             if ($retry_on_creation) {
               try {
-                return $this->getHttpClient()->request($method, $endpoint_url, $options);
+                return $this->requestFileFingerprintsIndex($method, $endpoint, $options);
               }
               catch (RequestException $retry_exception) {
                 $logger->error('Error retrying request after index creation: @error', [
@@ -1087,32 +1083,34 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    *   The file fingerprints index name.
    */
   protected function getFileFingerprintsIndexName(): string {
-    $config = $this->getConfigFactory()->get('reliefweb_api.settings');
-    $base_index_name = $config->get('base_index_name') ?? 'reliefweb';
-    return $base_index_name . '_file_fingerprints';
+    return $this->elasticsearch->getBaseIndexName() . '_file_fingerprints';
   }
 
   /**
-   * Get Elasticsearch URL.
+   * Send a request against the file fingerprints index.
    *
-   * @return string
-   *   The Elasticsearch URL.
-   */
-  protected function getElasticsearchUrl(): string {
-    $config = $this->getConfigFactory()->get('reliefweb_api.settings');
-    return rtrim($config->get('elasticsearch') ?? 'http://elasticsearch:9200', '/');
-  }
-
-  /**
-   * Get Elasticsearch endpoint URL.
+   * @param string $method
+   *   HTTP method (GET, POST, PUT, DELETE).
+   * @param string $endpoint
+   *   Path relative to the index (e.g. `_search`, `_doc/123`). Empty for the
+   *   index itself.
+   * @param array $options
+   *   Guzzle request options.
    *
-   * @return string
-   *   The Elasticsearch endpoint URL.
+   * @return \Psr\Http\Message\ResponseInterface
+   *   The HTTP response.
    */
-  protected function getElasticsearchEndpointUrl(string $endpoint = ''): string {
-    $elasticsearch_url = $this->getElasticsearchUrl();
-    $index_name = $this->getFileFingerprintsIndexName();
-    return rtrim($elasticsearch_url . '/' . $index_name . '/' . ltrim($endpoint, '/'), '/');
+  protected function requestFileFingerprintsIndex(
+    string $method,
+    string $endpoint = '',
+    array $options = [],
+  ): ResponseInterface {
+    $path = $this->getFileFingerprintsIndexName();
+    $endpoint = ltrim($endpoint, '/');
+    if ($endpoint !== '') {
+      $path .= '/' . $endpoint;
+    }
+    return $this->elasticsearch->request($method, $path, $options);
   }
 
   /**
@@ -1133,16 +1131,6 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    */
   protected function getConfigFactory(): ConfigFactoryInterface {
     return $this->configFactory;
-  }
-
-  /**
-   * Get the HTTP client service.
-   *
-   * @return \GuzzleHttp\ClientInterface
-   *   The HTTP client service.
-   */
-  protected function getHttpClient(): ClientInterface {
-    return $this->httpClient;
   }
 
   /**
