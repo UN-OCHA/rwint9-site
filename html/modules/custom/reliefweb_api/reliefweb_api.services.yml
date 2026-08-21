@@ -8,3 +8,6 @@ services:
   reliefweb_api.client:
     class: Drupal\reliefweb_api\Services\ReliefWebApiClient
     arguments: ['@cache.reliefweb_api', '@config.factory', '@datetime.time', '@http_client', '@logger.factory', '@request_stack']
+  reliefweb_api.elasticsearch:
+    class: Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient
+    arguments: ['@http_client', '@config.factory', '@database']

@@ -10,7 +10,7 @@ services:
     arguments:
       - '@state'
       - '@config.factory'
-      - '@http_client'
+      - '@reliefweb_api.elasticsearch'
       - '@logger.factory'
       - '@database'
       - '@entity_type.manager'
