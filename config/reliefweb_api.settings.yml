@@ -12,6 +12,7 @@ elasticsearch_password: ''
 elasticsearch_api_key: ''
 elasticsearch_verify_tls: true
 elasticsearch_ca_file: ''
+elasticsearch_retry: 2
 base_index_name: reliefweb
 website: 'https://reliefweb.int'
 replicas: 0

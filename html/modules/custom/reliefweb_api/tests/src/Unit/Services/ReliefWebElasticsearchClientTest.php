@@ -10,6 +10,9 @@ use Drupal\Core\Database\Connection;
 use Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
 use Psr\Http\Message\ResponseInterface;
@@ -34,6 +37,7 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
       'elasticsearch-api-key' => '',
       'elasticsearch-verify-tls' => TRUE,
       'elasticsearch-ca-file' => '',
+      'elasticsearch-retry' => 2,
       'base-index-name' => 'rwint',
     ], $client->getIndexerOptions());
   }
@@ -56,6 +60,7 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
       'elasticsearch_api_key' => 'token-value',
       'elasticsearch_verify_tls' => FALSE,
       'elasticsearch_ca_file' => '/path/to/ca.pem',
+      'elasticsearch_retry' => 4,
       'base_index_name' => 'rwint',
     ]);
     $this->assertSame('https://search.example.com:443', $client->getBaseUrl());
@@ -65,6 +70,7 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
     $this->assertSame('token-value', $options['elasticsearch-api-key']);
     $this->assertFalse($options['elasticsearch-verify-tls']);
     $this->assertSame('/path/to/ca.pem', $options['elasticsearch-ca-file']);
+    $this->assertSame(4, $options['elasticsearch-retry']);
   }
 
   /**
@@ -75,6 +81,16 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
       'elasticsearch_verify_tls' => FALSE,
     ]);
     $this->assertFalse($client->getIndexerOptions()['elasticsearch-verify-tls']);
+  }
+
+  /**
+   * Zero elasticsearch_retry is preserved (no retries after first request).
+   */
+  public function testGetIndexerOptionsPreservesZeroRetry(): void {
+    $client = $this->createElasticsearchClient([
+      'elasticsearch_retry' => 0,
+    ]);
+    $this->assertSame(0, $client->getIndexerOptions()['elasticsearch-retry']);
   }
 
   /**
@@ -243,6 +259,85 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
   }
 
   /**
+   * HTTP 429 is retried with square backoff until success.
+   */
+  public function testRequestRetriesOn429ThenSucceeds(): void {
+    $request = new Request('GET', 'https://search.example.com:443/index');
+    $too_many = new Response(429);
+    $ok = new Response(200);
+
+    $http_client = $this->createMock(ClientInterface::class);
+    $http_client->expects($this->exactly(3))
+      ->method('request')
+      ->willReturnOnConsecutiveCalls(
+        $this->throwException(new ClientException('Too Many Requests', $request, $too_many)),
+        $this->throwException(new ClientException('Too Many Requests', $request, $too_many)),
+        $ok,
+      );
+
+    $client = $this->createElasticsearchClient([
+      'elasticsearch' => 'https://search.example.com:443',
+      'elasticsearch_retry' => 2,
+    ], $http_client, 'rwint', TRUE);
+
+    $this->assertSame($ok, $client->request('GET', 'index'));
+    $this->assertSame([0, 1, 4], $client->getSleepCalls());
+  }
+
+  /**
+   * HTTP 429 is not retried when elasticsearch_retry is 0.
+   */
+  public function testRequestDoesNotRetryWhenRetryIsZero(): void {
+    $request = new Request('GET', 'https://search.example.com:443/index');
+    $too_many = new Response(429);
+    $exception = new ClientException('Too Many Requests', $request, $too_many);
+
+    $http_client = $this->createMock(ClientInterface::class);
+    $http_client->expects($this->once())
+      ->method('request')
+      ->willThrowException($exception);
+
+    $client = $this->createElasticsearchClient([
+      'elasticsearch' => 'https://search.example.com:443',
+      'elasticsearch_retry' => 0,
+    ], $http_client, 'rwint', TRUE);
+
+    $this->expectException(ClientException::class);
+    try {
+      $client->request('GET', 'index');
+    }
+    finally {
+      $this->assertSame([0], $client->getSleepCalls());
+    }
+  }
+
+  /**
+   * Non-429 errors are not retried.
+   */
+  public function testRequestDoesNotRetryNon429Errors(): void {
+    $request = new Request('GET', 'https://search.example.com:443/index');
+    $exception = new ClientException('Not Found', $request, new Response(404));
+
+    $http_client = $this->createMock(ClientInterface::class);
+    $http_client->expects($this->once())
+      ->method('request')
+      ->willThrowException($exception);
+
+    $client = $this->createElasticsearchClient([
+      'elasticsearch' => 'https://search.example.com:443',
+      'elasticsearch_retry' => 2,
+    ], $http_client, 'rwint', TRUE);
+
+    $this->expectException(ClientException::class);
+    try {
+      $client->request('GET', 'index');
+    }
+    finally {
+      $this->assertSame([0], $client->getSleepCalls());
+    }
+  }
+
+  /**
    * Create a client with mocked config and HTTP client.
    *
    * @param array<string, mixed> $config
@@ -251,14 +346,17 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
    *   Optional HTTP client mock.
    * @param string $database_name
    *   Default database name used when base_index_name is unset.
+   * @param bool $track_sleep
+   *   TRUE to use a client that records sleep() calls without waiting.
    *
-   * @return \Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient
+   * @return \Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient|\Drupal\Tests\reliefweb_api\Unit\Services\TestableReliefWebElasticsearchClient
    *   Client under test.
    */
   protected function createElasticsearchClient(
     array $config,
     ?ClientInterface $http_client = NULL,
     string $database_name = 'rwint',
+    bool $track_sleep = FALSE,
   ): ReliefWebElasticsearchClient {
     $immutable_config = $this->createMock(ImmutableConfig::class);
     $immutable_config->method('get')->willReturnCallback(function (string $key) use ($config) {
@@ -268,7 +366,8 @@ class ReliefWebElasticsearchClientTest extends UnitTestCase {
     $config_factory->method('get')->with('reliefweb_api.settings')->willReturn($immutable_config);
     $database = $this->createMock(Connection::class);
     $database->method('getConnectionOptions')->willReturn(['database' => $database_name]);
-    return new ReliefWebElasticsearchClient(
+    $class = $track_sleep ? TestableReliefWebElasticsearchClient::class : ReliefWebElasticsearchClient::class;
+    return new $class(
       $http_client ?? $this->createMock(ClientInterface::class),
       $config_factory,
       $database,

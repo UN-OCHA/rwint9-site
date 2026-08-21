@@ -128,6 +128,9 @@ class ReliefWebApiCommands extends DrushCommands {
    *   Defaults to reliefweb_api.settings:elasticsearch_verify_tls.
    * @option elasticsearch-ca-file Path to a custom CA certificate file for TLS
    *   verification. Defaults to reliefweb_api.settings:elasticsearch_ca_file.
+   * @option elasticsearch-retry Retries after the first request on HTTP 429
+   *   (square backoff). Defaults to reliefweb_api.settings:elasticsearch_retry
+   *   or 2.
    * @option website Site scheme and hostname to use as base for the URLs,
    *   defaults to the 'reliefweb_api.settings:website' setting or
    *   'https://reliefweb.int'.
@@ -189,6 +192,7 @@ class ReliefWebApiCommands extends DrushCommands {
       'elasticsearch-api-key' => '',
       'elasticsearch-verify-tls' => NULL,
       'elasticsearch-ca-file' => '',
+      'elasticsearch-retry' => NULL,
       'website' => '',
       'limit' => 0,
       'offset' => 0,
@@ -333,6 +337,9 @@ class ReliefWebApiCommands extends DrushCommands {
    *   Defaults to reliefweb_api.settings:elasticsearch_verify_tls.
    * @option elasticsearch-ca-file Path to a custom CA certificate file for TLS
    *   verification. Defaults to reliefweb_api.settings:elasticsearch_ca_file.
+   * @option elasticsearch-retry Retries after the first request on HTTP 429
+   *   (square backoff). Defaults to reliefweb_api.settings:elasticsearch_retry
+   *   or 2.
    *
    * @command reliefweb-api:replace
    *
@@ -356,6 +363,7 @@ class ReliefWebApiCommands extends DrushCommands {
       'elasticsearch-api-key' => '',
       'elasticsearch-verify-tls' => NULL,
       'elasticsearch-ca-file' => '',
+      'elasticsearch-retry' => NULL,
     ],
   ) {
     if (!isset($oldtag)) {
@@ -541,6 +549,9 @@ class ReliefWebApiCommands extends DrushCommands {
     }
     if (($options['elasticsearch-ca-file'] ?? '') !== '') {
       $indexing_options['elasticsearch-ca-file'] = (string) $options['elasticsearch-ca-file'];
+    }
+    if (array_key_exists('elasticsearch-retry', $options) && $options['elasticsearch-retry'] !== NULL) {
+      $indexing_options['elasticsearch-retry'] = (int) $options['elasticsearch-retry'];
     }
     return $indexing_options;
   }

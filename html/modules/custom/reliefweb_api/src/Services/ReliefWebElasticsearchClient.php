@@ -8,6 +8,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
 use GuzzleHttp\ClientInterface;
+use GuzzleHttp\Exception\BadResponseException;
 use Psr\Http\Message\ResponseInterface;
 
 /**
@@ -38,6 +39,9 @@ class ReliefWebElasticsearchClient {
    * Authentication and TLS options from reliefweb_api.settings are always
    * applied. Callers pass Guzzle options such as `json` or extra headers.
    *
+   * On HTTP 429, retries with square backoff (sleep 0, 1, 4, ... seconds) up
+   * to elasticsearch_retry times after the first request.
+   *
    * @param string $method
    *   HTTP method.
    * @param string $path
@@ -50,7 +54,21 @@ class ReliefWebElasticsearchClient {
    *   The HTTP response.
    */
   public function request(string $method, string $path, array $options = []): ResponseInterface {
-    return $this->httpClient->request($method, $this->buildUrl($path), $this->mergeHttpOptions($options));
+    $url = $this->buildUrl($path);
+    $http_options = $this->mergeHttpOptions($options);
+    $retry = $this->getRetry();
+
+    for ($attempt = 0; $attempt <= $retry; $attempt++) {
+      $this->sleep($attempt * $attempt);
+      try {
+        return $this->httpClient->request($method, $url, $http_options);
+      }
+      catch (BadResponseException $exception) {
+        if ($exception->getResponse()->getStatusCode() !== 429 || $attempt === $retry) {
+          throw $exception;
+        }
+      }
+    }
   }
 
   /**
@@ -89,6 +107,7 @@ class ReliefWebElasticsearchClient {
       'elasticsearch-api-key' => (string) ($this->config()->get('elasticsearch_api_key') ?? ''),
       'elasticsearch-verify-tls' => $this->verifyTls(),
       'elasticsearch-ca-file' => (string) ($this->config()->get('elasticsearch_ca_file') ?? ''),
+      'elasticsearch-retry' => $this->getRetry(),
       'base-index-name' => $this->getBaseIndexName(),
     ];
   }
@@ -196,6 +215,16 @@ class ReliefWebElasticsearchClient {
   }
 
   /**
+   * Get the maximum number of retries after the first request on HTTP 429.
+   *
+   * @return int
+   *   Retry count from config, defaulting to 2.
+   */
+  protected function getRetry(): int {
+    return (int) ($this->config()->get('elasticsearch_retry') ?? 2);
+  }
+
+  /**
    * Get the normalized Elasticsearch authentication type.
    *
    * @return string
@@ -203,6 +232,18 @@ class ReliefWebElasticsearchClient {
    */
   protected function getAuthType(): string {
     return strtolower((string) ($this->config()->get('elasticsearch_auth_type') ?? 'none'));
+  }
+
+  /**
+   * Sleep for the given number of seconds.
+   *
+   * @param int $seconds
+   *   Seconds to sleep.
+   */
+  protected function sleep(int $seconds): void {
+    if ($seconds > 0) {
+      sleep($seconds);
+    }
   }
 
   /**

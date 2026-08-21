@@ -47,6 +47,9 @@ reliefweb_api.settings:
     elasticsearch_ca_file:
       type: string
       label: 'Path to a custom CA certificate file for Elasticsearch TLS verification.'
+    elasticsearch_retry:
+      type: integer
+      label: 'Retries after the first Elasticsearch request on HTTP 429 (square backoff).'
     base_index_name:
       type: string
       label: 'Base index name in elasticsearch.'
