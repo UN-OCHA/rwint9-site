@@ -114,19 +114,19 @@ function reliefweb_api_get_indexer_base_options() {
 
   $pdo_options = (isset($database['pdo']) && is_array($database['pdo'])) ? $database['pdo'] : [];
 
-  // Config.
+  // Elasticsearch connection options (URL, auth, TLS, base index name).
+  /** @var \Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient $elasticsearch */
+  $elasticsearch = \Drupal::service('reliefweb_api.elasticsearch');
   $config = \Drupal::config('reliefweb_api.settings');
 
   // Indexing options to index all reports.
-  $options = [
-    'elasticsearch' => (string) ($config->get('elasticsearch') ?? 'http://elasticsearch:9200'),
+  $options = $elasticsearch->getIndexerOptions() + [
     'mysql-host' => (string) ($database['host'] ?? ''),
     'mysql-port' => !empty($database['port']) && is_numeric($database['port']) ? (int) $database['port'] : 3306,
     'mysql-user' => (string) ($database['username'] ?? ''),
     'mysql-pass' => (string) ($database['password'] ?? ''),
     'database' => (string) ($database['database'] ?? ''),
     'pdo-options' => $pdo_options,
-    'base-index-name' => (string) ($config->get('base_index_name') ?? ($database['database'] ?? '')),
     'website' => (string) ($config->get('website') ?? 'https://' . \Drupal::request()->getHost()),
     'replicas' => (int) ($config->get('replicas') ?? 0),
     'shards' => (int) ($config->get('shards') ?? 1),
