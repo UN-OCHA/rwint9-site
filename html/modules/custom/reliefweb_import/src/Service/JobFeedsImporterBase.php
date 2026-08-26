@@ -440,9 +440,11 @@ class JobFeedsImporterBase {
     }
 
     // Update the revision log message with the list of validation errors to
-    // help identify what was wrong.
-    if (!empty($job->_import_errors)) {
-      $job->setRevisionLogMessage(implode("\n", array_merge([$log], $job->_import_errors)));
+    // help identify what was wrong. Join with spaces so history rendering
+    // (Markdown inlines) still reads clearly when newlines collapse.
+    $formatted_errors = $this->formatImportErrorsForRevisionLog($job);
+    if (!empty($formatted_errors)) {
+      $job->setRevisionLogMessage(implode(' ', array_merge([$log], $formatted_errors)));
     }
     else {
       $job->setRevisionLogMessage($log);
@@ -462,20 +464,64 @@ class JobFeedsImporterBase {
     $this->getLogger()->info($log);
 
     // If there were validation errors, throw a soft violation exception with
-    // the cancatenated error messages.
-    if (!empty($job->_import_errors)) {
-      $message = '';
-      foreach ($job->_import_errors as $field => $error) {
-        $field_label = $job->{$field}->getFieldDefinition()->getLabel();
-        $message .= "\n--- {$field_label}: {$error}";
-      }
-
+    // the concatenated error messages.
+    if (!empty($formatted_errors)) {
       throw new ReliefwebImportExceptionSoftViolation(strtr('Validation errors for job @guid imported from @url: @errors', [
         '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
-        '@errors' => $message,
+        '@errors' => ' ' . implode(' ', $formatted_errors),
       ]));
     }
+  }
+
+  /**
+   * Format import validation errors for editorial revision log messages.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job with optional `_import_errors` keyed by field name.
+   *
+   * @return string[]
+   *   Editorial error messages including field labels.
+   */
+  protected function formatImportErrorsForRevisionLog(Job $job): array {
+    if (empty($job->_import_errors) || !is_array($job->_import_errors)) {
+      return [];
+    }
+
+    $messages = [];
+    foreach ($job->_import_errors as $field => $error) {
+      if (!isset($job->{$field})) {
+        continue;
+      }
+      $label = (string) $job->{$field}->getFieldDefinition()->getLabel();
+      $error = trim((string) $error);
+      if ($this->isMissingRequiredValueMessage($error)) {
+        $messages[] = strtr('@field is missing.', [
+          '@field' => $label,
+        ]);
+      }
+      else {
+        $messages[] = strtr('@field: @error', [
+          '@field' => $label,
+          '@error' => $error,
+        ]);
+      }
+    }
+
+    return $messages;
+  }
+
+  /**
+   * Check whether a validation message is the default required/empty message.
+   *
+   * @param string $message
+   *   Raw validation or import error message.
+   *
+   * @return bool
+   *   TRUE if the message is Drupal/Symfony's default NotNull message.
+   */
+  protected function isMissingRequiredValueMessage(string $message): bool {
+    return strcasecmp(rtrim($message, '.'), 'This value should not be null') === 0;
   }
 
   /**

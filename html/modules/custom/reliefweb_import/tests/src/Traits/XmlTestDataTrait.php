@@ -239,4 +239,27 @@ XML;
 XML;
   }
 
+  /**
+   * Test data 8: missing required job type.
+   *
+   * @return string
+   *   XML data.
+   */
+  private function getTestXml8(): string {
+    $year = gmdate('Y') + 1;
+    return str_replace(
+      [
+        'https://www.aplitrak.com?adid=20',
+        '2000-10-05',
+        " <field_job_type>263</field_job_type>\n",
+      ],
+      [
+        'https://www.aplitrak.com?adid=23',
+        $year . '-10-05',
+        '',
+      ],
+      $this->getTestXml4()
+    );
+  }
+
 }
