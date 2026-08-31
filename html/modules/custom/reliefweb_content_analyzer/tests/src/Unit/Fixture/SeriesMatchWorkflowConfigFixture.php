@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_content_analyzer\Unit\Fixture;
 
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
+
 /**
  * Default report_series_matching.workflow config for unit tests.
  */
@@ -23,6 +25,7 @@ final class SeriesMatchWorkflowConfigFixture {
       'minimum_tagging_confidence' => 0.40,
       'series_confidence_tiers' => ['high' => 0.80, 'medium' => 0.60],
       'tagging_confidence_tiers' => ['high' => 0.80, 'medium' => 0.60],
+      'confidence_scoring' => SeriesMatchConfidenceScoringSettings::defaultConfig(),
       'moderation_by_outcome_tier' => [
         'low' => 'pending',
         'medium' => 'to-review',

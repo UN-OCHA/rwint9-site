@@ -61,6 +61,8 @@ final readonly class SeriesMatchWorkflowSettings {
    *   Per-field policy actions keyed by field machine name.
    * @param GlobalOutcomeRules $globalOutcomeRules
    *   Global outcome rule configuration.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings $confidenceScoring
+   *   Weights used to compute series and tagging confidence scores.
    */
   public function __construct(
     public bool $automationEnabledFormCreated,
@@ -74,6 +76,7 @@ final readonly class SeriesMatchWorkflowSettings {
     public array $restrictivenessOrder,
     public array $fieldOutcomePolicies,
     public array $globalOutcomeRules,
+    public SeriesMatchConfidenceScoringSettings $confidenceScoring,
   ) {}
 
   /**
@@ -101,6 +104,9 @@ final readonly class SeriesMatchWorkflowSettings {
       restrictivenessOrder: self::requireStringList($config, 'restrictiveness_order'),
       fieldOutcomePolicies: self::requireFieldOutcomePolicies($config, 'field_outcome_policies'),
       globalOutcomeRules: self::requireGlobalOutcomeRules($config, 'global_outcome_rules'),
+      confidenceScoring: SeriesMatchConfidenceScoringSettings::fromConfigArray(
+        self::requireConfidenceScoring($config, 'confidence_scoring'),
+      ),
     );
   }
 
@@ -174,6 +180,27 @@ final readonly class SeriesMatchWorkflowSettings {
         'action' => 'skip_match',
       ],
     ];
+  }
+
+  /**
+   * Reads confidence scoring config from workflow config.
+   *
+   * @param array<string, mixed> $config
+   *   Raw workflow config.
+   * @param string $key
+   *   Config key.
+   *
+   * @return array<string, mixed>
+   *   Confidence scoring config array.
+   */
+  private static function requireConfidenceScoring(array $config, string $key): array {
+    if (!array_key_exists($key, $config)) {
+      throw new \InvalidArgumentException("Workflow config missing required key: {$key}.");
+    }
+    if (!is_array($config[$key])) {
+      throw new \InvalidArgumentException("Workflow config key {$key} must be an array.");
+    }
+    return $config[$key];
   }
 
   /**

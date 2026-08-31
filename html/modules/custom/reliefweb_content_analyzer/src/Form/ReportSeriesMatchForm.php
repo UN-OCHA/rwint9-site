@@ -258,6 +258,12 @@ final class ReportSeriesMatchForm extends FormBase {
       ? number_format($duration_seconds, 2)
       : NULL;
 
+    $workflow = SeriesMatchWorkflowSettings::fromConfigArray(
+      $this->config('reliefweb_content_analyzer.settings')
+        ->get('report_series_matching.workflow'),
+    );
+    $confidence_scoring = $workflow->confidenceScoring;
+
     if ($outcome !== NULL) {
       $policy_messages = $outcome->policyReasonMessages();
       return [
@@ -327,8 +333,8 @@ final class ReportSeriesMatchForm extends FormBase {
       ];
     }
 
-    $series_confidence = $result->calculateSeriesConfidence();
-    $tagging_confidence = $result->calculateTaggingConfidence();
+    $series_confidence = $result->calculateSeriesConfidence($confidence_scoring);
+    $tagging_confidence = $result->calculateTaggingConfidence($confidence_scoring);
 
     return [
       '#type' => 'inline_template',

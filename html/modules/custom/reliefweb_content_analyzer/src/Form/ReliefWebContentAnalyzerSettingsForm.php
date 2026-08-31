@@ -13,6 +13,7 @@ use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
 use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
 use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\EmbeddingSourceSettings;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
 use Drupal\reliefweb_moderation\Services\ReportModeration;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -439,6 +440,106 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       '#step' => 0.01,
       '#required' => TRUE,
     ];
+
+    $confidence_scoring = $workflow['confidence_scoring']
+      ?? SeriesMatchConfidenceScoringSettings::defaultConfig();
+
+    $form['confidence']['confidence_scoring'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Confidence scoring weights'),
+      '#description' => $this->t('Weights used to compute series and tagging confidence scores from match evidence. These are separate from the tier cutoffs above.'),
+      '#tree' => TRUE,
+    ];
+
+    $form['confidence']['confidence_scoring']['series'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Series confidence formula'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'cluster_share_weight' => $this->t('Cluster share weight'),
+      'cluster_score_weight' => $this->t('Cluster score weight'),
+      'dual_signal_ratio_weight' => $this->t('Dual title+URL signal weight'),
+      'cluster_share_dominance_weight' => $this->t('Cluster share dominance weight'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['series'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['series'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['confidence']['confidence_scoring']['tagging'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Tagging confidence formula'),
+      '#tree' => TRUE,
+    ];
+    $form['confidence']['confidence_scoring']['tagging']['field_blend_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Field provenance blend weight'),
+      '#default_value' => $confidence_scoring['tagging']['field_blend_weight'] ?? 0.70,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['confidence']['confidence_scoring']['tagging']['title_blend_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Title source blend weight'),
+      '#default_value' => $confidence_scoring['tagging']['title_blend_weight'] ?? 0.30,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['confidence_scoring']['tagging']['field_provenance_weights'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Field provenance scores'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'all_candidates' => $this->t('All candidates'),
+      'merged' => $this->t('Merged'),
+      'most_recent' => $this->t('Most recent'),
+      'skipped' => $this->t('Skipped'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['tagging']['field_provenance_weights'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['tagging']['field_provenance_weights'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['confidence']['confidence_scoring']['tagging']['title_source_scores'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Title source scores'),
+      '#description' => $this->t('The AI generated score should usually match the matcher “AI title match minimum confidence” setting.'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'kept_original_pattern_match' => $this->t('Kept original pattern match'),
+      'ai_generated' => $this->t('AI generated'),
+      'other' => $this->t('Other / failed'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['tagging']['title_source_scores'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['tagging']['title_source_scores'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
 
     $form['moderation'] = [
       '#type' => 'details',
@@ -937,6 +1038,56 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       $this->t('Tagging confidence high tier must be greater than medium tier.'),
     );
 
+    $confidence_scoring = $form_state->getValue(['confidence', 'confidence_scoring']) ?? [];
+    $tagging_blend_sum = (float) ($confidence_scoring['tagging']['field_blend_weight'] ?? 0)
+      + (float) ($confidence_scoring['tagging']['title_blend_weight'] ?? 0);
+    if (abs($tagging_blend_sum - 1.0) > self::WEIGHT_SUM_TOLERANCE) {
+      $form_state->setErrorByName(
+        'confidence][confidence_scoring][tagging][field_blend_weight',
+        $this->t('Tagging field and title blend weights must sum to 1.'),
+      );
+    }
+
+    $provenance = $confidence_scoring['tagging']['field_provenance_weights'] ?? [];
+    $provenance_keys = ['all_candidates', 'merged', 'most_recent', 'skipped'];
+    for ($i = 1; $i < count($provenance_keys); $i++) {
+      $prev = (float) ($provenance[$provenance_keys[$i - 1]] ?? 0);
+      $current = (float) ($provenance[$provenance_keys[$i]] ?? 0);
+      if ($current > $prev + self::WEIGHT_SUM_TOLERANCE) {
+        $form_state->setErrorByName(
+          'confidence][confidence_scoring][tagging][field_provenance_weights][' . $provenance_keys[$i],
+          $this->t('Field provenance scores must be non-increasing from all candidates to skipped.'),
+        );
+        break;
+      }
+    }
+
+    $confidence_interval_paths = [
+      ['confidence', 'confidence_scoring', 'series', 'cluster_share_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'cluster_score_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'dual_signal_ratio_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'cluster_share_dominance_weight'],
+      ['confidence', 'confidence_scoring', 'tagging', 'field_blend_weight'],
+      ['confidence', 'confidence_scoring', 'tagging', 'title_blend_weight'],
+    ];
+    foreach ($provenance_keys as $key) {
+      $confidence_interval_paths[] = [
+        'confidence', 'confidence_scoring', 'tagging', 'field_provenance_weights', $key,
+      ];
+    }
+    foreach (['kept_original_pattern_match', 'ai_generated', 'other'] as $key) {
+      $confidence_interval_paths[] = [
+        'confidence', 'confidence_scoring', 'tagging', 'title_source_scores', $key,
+      ];
+    }
+    foreach ($confidence_interval_paths as $parents) {
+      $this->validateUnitInterval(
+        $form_state,
+        $parents,
+        $this->t('Confidence scoring weights must be between 0 and 1.'),
+      );
+    }
+
     $tagging_weight = (float) $form_state->getValue(['matcher', 'candidate_clustering_tagging_weight']);
     $title_weight = (float) $form_state->getValue(['matcher', 'candidate_clustering_title_weight']);
     if (abs(($tagging_weight + $title_weight) - 1.0) > self::WEIGHT_SUM_TOLERANCE) {
@@ -1287,6 +1438,31 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $config->set('report_series_matching.workflow.tagging_confidence_tiers', [
       'high' => (float) $form_state->getValue(['confidence', 'tagging_confidence_tiers', 'high']),
       'medium' => (float) $form_state->getValue(['confidence', 'tagging_confidence_tiers', 'medium']),
+    ]);
+
+    $confidence_scoring = $form_state->getValue(['confidence', 'confidence_scoring']) ?? [];
+    $config->set('report_series_matching.workflow.confidence_scoring', [
+      'series' => [
+        'cluster_share_weight' => (float) ($confidence_scoring['series']['cluster_share_weight'] ?? 0),
+        'cluster_score_weight' => (float) ($confidence_scoring['series']['cluster_score_weight'] ?? 0),
+        'dual_signal_ratio_weight' => (float) ($confidence_scoring['series']['dual_signal_ratio_weight'] ?? 0),
+        'cluster_share_dominance_weight' => (float) ($confidence_scoring['series']['cluster_share_dominance_weight'] ?? 0),
+      ],
+      'tagging' => [
+        'field_blend_weight' => (float) ($confidence_scoring['tagging']['field_blend_weight'] ?? 0),
+        'title_blend_weight' => (float) ($confidence_scoring['tagging']['title_blend_weight'] ?? 0),
+        'field_provenance_weights' => [
+          'all_candidates' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['all_candidates'] ?? 0),
+          'merged' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['merged'] ?? 0),
+          'most_recent' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['most_recent'] ?? 0),
+          'skipped' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['skipped'] ?? 0),
+        ],
+        'title_source_scores' => [
+          'kept_original_pattern_match' => (float) ($confidence_scoring['tagging']['title_source_scores']['kept_original_pattern_match'] ?? 0),
+          'ai_generated' => (float) ($confidence_scoring['tagging']['title_source_scores']['ai_generated'] ?? 0),
+          'other' => (float) ($confidence_scoring['tagging']['title_source_scores']['other'] ?? 0),
+        ],
+      ],
     ]);
 
     $config->set(

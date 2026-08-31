@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
 use Drupal\reliefweb_content_analyzer\Services\EmbeddingsStorageInterface;
 
 /**
@@ -415,4 +416,26 @@ function reliefweb_content_analyzer_update_10010(): void {
 
   $config->set('report_duplicate_matching', $current);
   $config->save();
+}
+
+/**
+ * Add confidence formula weights to report series matching workflow settings.
+ */
+function reliefweb_content_analyzer_update_10011(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matching = $config->get('report_series_matching') ?? [];
+  if (!is_array($matching)) {
+    $matching = [];
+  }
+  $workflow = $matching['workflow'] ?? [];
+  if (!is_array($workflow)) {
+    $workflow = [];
+  }
+
+  if (empty($workflow['confidence_scoring'])) {
+    $workflow['confidence_scoring'] = SeriesMatchConfidenceScoringSettings::defaultConfig();
+    $matching['workflow'] = $workflow;
+    $config->set('report_series_matching', $matching);
+    $config->save();
+  }
 }

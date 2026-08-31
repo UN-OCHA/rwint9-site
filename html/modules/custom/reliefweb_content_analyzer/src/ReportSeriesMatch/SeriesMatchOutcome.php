@@ -91,8 +91,8 @@ final readonly class SeriesMatchOutcome {
     SeriesMatchWorkflowSettings $settings,
     SeriesMatchOutcomePolicyContext $context = new SeriesMatchOutcomePolicyContext(),
   ): ?self {
-    $series_confidence = $result->calculateSeriesConfidence();
-    $tagging_confidence = $result->calculateTaggingConfidence();
+    $series_confidence = $result->calculateSeriesConfidence($settings->confidenceScoring);
+    $tagging_confidence = $result->calculateTaggingConfidence($settings->confidenceScoring);
 
     if ($series_confidence === NULL || $tagging_confidence === NULL) {
       return NULL;

@@ -27,6 +27,8 @@ class SeriesMatchWorkflowSettingsTest extends UnitTestCase {
 
     $this->assertTrue($settings->automationEnabledFormCreated);
     $this->assertSame(0.65, $settings->minimumSeriesConfidence);
+    $this->assertSame(0.40, $settings->confidenceScoring->clusterShareWeight);
+    $this->assertSame(0.65, $settings->confidenceScoring->titleSourceScores['ai_generated']);
     $this->assertSame(['high' => 0.80, 'medium' => 0.60], $settings->seriesConfidenceTiers);
     $this->assertSame('published', $settings->moderationByOutcomeTier['high']);
     $this->assertSame(['refused', 'duplicate'], $settings->skipSeriesMatchModerationStatuses);

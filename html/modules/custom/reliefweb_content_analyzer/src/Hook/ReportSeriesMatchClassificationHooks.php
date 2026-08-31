@@ -146,8 +146,8 @@ final class ReportSeriesMatchClassificationHooks {
       return;
     }
 
-    if ($result->calculateSeriesConfidence() === NULL
-      || $result->calculateTaggingConfidence() === NULL) {
+    if ($result->calculateSeriesConfidence($this->workflowSettings()->confidenceScoring) === NULL
+      || $result->calculateTaggingConfidence($this->workflowSettings()->confidenceScoring) === NULL) {
       return;
     }
 
@@ -463,7 +463,7 @@ final class ReportSeriesMatchClassificationHooks {
       return FALSE;
     }
 
-    $series_confidence = $result->calculateSeriesConfidence();
+    $series_confidence = $result->calculateSeriesConfidence($this->workflowSettings()->confidenceScoring);
     if ($series_confidence === NULL) {
       return FALSE;
     }
