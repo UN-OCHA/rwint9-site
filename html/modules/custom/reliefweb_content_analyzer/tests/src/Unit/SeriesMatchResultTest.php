@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\Tests\reliefweb_content_analyzer\Unit;
 
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
@@ -24,13 +25,22 @@ use PHPUnit\Framework\Attributes\Group;
 class SeriesMatchResultTest extends UnitTestCase {
 
   /**
+   * Default confidence scoring settings for tests.
+   */
+  private function defaultScoring(): SeriesMatchConfidenceScoringSettings {
+    return SeriesMatchConfidenceScoringSettings::fromConfigArray(
+      SeriesMatchConfidenceScoringSettings::defaultConfig(),
+    );
+  }
+
+  /**
    * Returns NULL when passedMinimum is FALSE.
    */
   public function testSeriesConfidenceNullWhenNotPassedMinimum(): void {
     $result = SeriesMatchResult::stopped(
       SeriesMatchReason::BelowMinimumCluster,
     );
-    $this->assertNull($result->calculateSeriesConfidence());
+    $this->assertNull($result->calculateSeriesConfidence($this->defaultScoring()));
   }
 
   /**
@@ -47,7 +57,7 @@ class SeriesMatchResultTest extends UnitTestCase {
         clusterCount: 1,
       ),
     );
-    $this->assertNull($result->calculateSeriesConfidence());
+    $this->assertNull($result->calculateSeriesConfidence($this->defaultScoring()));
   }
 
   /**
@@ -63,7 +73,8 @@ class SeriesMatchResultTest extends UnitTestCase {
       bothSignalsCount: 0,
       mergedAfterLimitCount: 17,
     );
-    $this->assertEqualsWithDelta(0.80, $result->calculateSeriesConfidence(), 0.0001);
+    $scoring = $this->defaultScoring();
+    $this->assertEqualsWithDelta(0.80, $result->calculateSeriesConfidence($scoring), 0.0001);
   }
 
   /**
@@ -79,7 +90,8 @@ class SeriesMatchResultTest extends UnitTestCase {
       bothSignalsCount: 17,
       mergedAfterLimitCount: 17,
     );
-    $this->assertEqualsWithDelta(1.0, $result->calculateSeriesConfidence(), 0.0001);
+    $scoring = $this->defaultScoring();
+    $this->assertEqualsWithDelta(1.0, $result->calculateSeriesConfidence($scoring), 0.0001);
   }
 
   /**
@@ -95,9 +107,10 @@ class SeriesMatchResultTest extends UnitTestCase {
       bothSignalsCount: 0,
       mergedAfterLimitCount: 30,
     );
+    $scoring = $this->defaultScoring();
     $expected = round(0.55 * 0.967 + 0.25 * 0.985, 4);
-    $this->assertEqualsWithDelta($expected, $result->calculateSeriesConfidence(), 0.0001);
-    $this->assertGreaterThanOrEqual(0.65, $result->calculateSeriesConfidence());
+    $this->assertEqualsWithDelta($expected, $result->calculateSeriesConfidence($scoring), 0.0001);
+    $this->assertGreaterThanOrEqual(0.65, $result->calculateSeriesConfidence($scoring));
   }
 
   /**
@@ -113,8 +126,9 @@ class SeriesMatchResultTest extends UnitTestCase {
       bothSignalsCount: 0,
       mergedAfterLimitCount: 24,
     );
-    $this->assertEqualsWithDelta(0.525, $result->calculateSeriesConfidence(), 0.0001);
-    $this->assertLessThan(0.65, $result->calculateSeriesConfidence());
+    $scoring = $this->defaultScoring();
+    $this->assertEqualsWithDelta(0.525, $result->calculateSeriesConfidence($scoring), 0.0001);
+    $this->assertLessThan(0.65, $result->calculateSeriesConfidence($scoring));
   }
 
   /**
@@ -126,7 +140,7 @@ class SeriesMatchResultTest extends UnitTestCase {
       new SeriesMatchProposal(),
       new SeriesMatchEvidence(candidateIds: [1]),
     );
-    $this->assertNull($result->calculateTaggingConfidence());
+    $this->assertNull($result->calculateTaggingConfidence($this->defaultScoring()));
   }
 
   /**
@@ -140,7 +154,8 @@ class SeriesMatchResultTest extends UnitTestCase {
       ),
       titleSource: SeriesMatchTitleSource::KeptOriginalPatternMatch,
     );
-    $this->assertEqualsWithDelta(1.0, $result->calculateTaggingConfidence(), 0.0001);
+    $scoring = $this->defaultScoring();
+    $this->assertEqualsWithDelta(1.0, $result->calculateTaggingConfidence($scoring), 0.0001);
   }
 
   /**
@@ -164,11 +179,12 @@ class SeriesMatchResultTest extends UnitTestCase {
       titleSource: SeriesMatchTitleSource::AiGenerated,
     );
 
+    $scoring = $this->defaultScoring();
     $field_score = (5 * 1.0 + 1 * 0.75 + 1 * 0.50) / 7;
     $title_score = 0.65;
     $expected = round(0.70 * $field_score + 0.30 * $title_score, 4);
 
-    $this->assertEqualsWithDelta($expected, $result->calculateTaggingConfidence(), 0.0001);
+    $this->assertEqualsWithDelta($expected, $result->calculateTaggingConfidence($scoring), 0.0001);
   }
 
   /**
@@ -180,9 +196,10 @@ class SeriesMatchResultTest extends UnitTestCase {
       fieldSources: ['field_a' => SeriesMatchFieldUpdateSource::AllCandidates],
       titleSource: $source,
     );
+    $scoring = $this->defaultScoring();
     // field_score = 1.0, title_score = 0.25.
     $expected = round(0.70 * 1.0 + 0.30 * 0.25, 4);
-    $this->assertEqualsWithDelta($expected, $result->calculateTaggingConfidence(), 0.0001);
+    $this->assertEqualsWithDelta($expected, $result->calculateTaggingConfidence($scoring), 0.0001);
   }
 
   /**
@@ -204,6 +221,33 @@ class SeriesMatchResultTest extends UnitTestCase {
       'ungrounded markers'    => [SeriesMatchTitleSource::FailedUngroundedTitleMarkers],
       'series pattern mismatch' => [SeriesMatchTitleSource::FailedSeriesPatternMismatch],
     ];
+  }
+
+  /**
+   * Changing a configured weight changes the computed series confidence.
+   */
+  public function testSeriesConfidenceUsesConfiguredWeights(): void {
+    $result = $this->buildResultWithEvidence(
+      bestClusterShare: 1.0,
+      clusterScore: 1.0,
+      clusterCount: 1,
+      bothSignalsCount: 0,
+      mergedAfterLimitCount: 17,
+    );
+
+    $default = $this->defaultScoring();
+    $custom = SeriesMatchConfidenceScoringSettings::fromConfigArray([
+      'series' => [
+        'cluster_share_weight' => 0.50,
+        'cluster_score_weight' => 0.50,
+        'dual_signal_ratio_weight' => 0.0,
+        'cluster_share_dominance_weight' => 0.0,
+      ],
+      'tagging' => SeriesMatchConfidenceScoringSettings::defaultConfig()['tagging'],
+    ]);
+
+    $this->assertEqualsWithDelta(0.80, $result->calculateSeriesConfidence($default), 0.0001);
+    $this->assertEqualsWithDelta(1.0, $result->calculateSeriesConfidence($custom), 0.0001);
   }
 
   /**

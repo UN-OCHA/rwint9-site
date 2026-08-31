@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_content_analyzer\ReportSeriesMatch;
 
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchDebugTrace;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
-use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchReason;
-use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
 
 /**
  * Aggregate result of report series candidate lookup.
@@ -45,19 +44,21 @@ final readonly class SeriesMatchResult {
    * Measures how reliably we found the right series, independent of tagging
    * quality.
    *
-   * Weights (sum = 1.0 when all signals present):
-   * - 0.40 cluster share (pattern-score-weighted fraction of retrieval in the
+   * Weights are configured via confidence_scoring settings (sum = 1.0 when all
+   * signals present):
+   * - cluster share (pattern-score-weighted fraction of retrieval in the
    *   selected cluster)
-   * - 0.25 cluster composite score
-   * - 0.20 dual title+URL retrieval ratio
-   * - 0.15 dominance bonus (0.15 × bestClusterShare)
+   * - cluster composite score
+   * - dual title+URL retrieval ratio
+   * - dominance bonus (cluster_share_dominance_weight × bestClusterShare)
    *
-   * Equivalent to 0.55 × share + 0.25 × cluster_score + 0.20 × both_ratio.
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings $scoring
+   *   Confidence formula weights from workflow config.
    *
    * @return float|null
    *   A score between 0.0 and 1.0, or NULL when the match is not scorable.
    */
-  public function calculateSeriesConfidence(): ?float {
+  public function calculateSeriesConfidence(SeriesMatchConfidenceScoringSettings $scoring): ?float {
     if (!$this->status->passedMinimum || $this->evidence->candidateIds === []) {
       return NULL;
     }
@@ -65,15 +66,15 @@ final readonly class SeriesMatchResult {
     $share = min(1.0, max(0.0, $this->evidence->bestClusterShare));
     $score = 0.0;
 
-    $score += 0.40 * $share;
-    $score += 0.25 * min(1.0, $this->evidence->clusterScore);
+    $score += $scoring->clusterShareWeight * $share;
+    $score += $scoring->clusterScoreWeight * min(1.0, $this->evidence->clusterScore);
 
     if ($this->evidence->mergedAfterLimitCount > 0) {
       $both_ratio = $this->evidence->bothSignalsCount / $this->evidence->mergedAfterLimitCount;
-      $score += 0.20 * min(1.0, $both_ratio);
+      $score += $scoring->dualSignalRatioWeight * min(1.0, $both_ratio);
     }
 
-    $score += 0.15 * $share;
+    $score += $scoring->clusterShareDominanceWeight * $share;
 
     return round(min(1.0, max(0.0, $score)), 4);
   }
@@ -85,40 +86,30 @@ final readonly class SeriesMatchResult {
    * independent of how coherent the series cluster is.
    *
    * The score is a weighted combination of:
-   * - Field provenance (70%): average weight per field based on source type.
-   *   AllCandidates=1.0, Merged=0.75, MostRecent=0.50, Skipped=0.0.
-   * - Title band (30%): KeptOriginalPatternMatch=1.0, AiGenerated=0.65,
-   *   other title outcomes=0.25.
+   * - Field provenance: average weight per field based on source type.
+   * - Title band: score per title source outcome from config.
+   *
+   * @param \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings $scoring
+   *   Confidence formula weights from workflow config.
    *
    * @return float|null
    *   A score between 0.0 and 1.0, or NULL when the proposal is not scorable.
    */
-  public function calculateTaggingConfidence(): ?float {
+  public function calculateTaggingConfidence(SeriesMatchConfidenceScoringSettings $scoring): ?float {
     $sources = array_values($this->proposal->updatedFieldSources);
     if ($sources === []) {
       return NULL;
     }
 
-    $field_weights = [
-      SeriesMatchFieldUpdateSource::AllCandidates->value => 1.00,
-      SeriesMatchFieldUpdateSource::Merged->value => 0.75,
-      SeriesMatchFieldUpdateSource::MostRecent->value => 0.50,
-      SeriesMatchFieldUpdateSource::Skipped->value => 0.00,
-    ];
-
     $field_score = 0.0;
     foreach ($sources as $source) {
-      $field_score += $field_weights[$source->value] ?? 0.0;
+      $field_score += $scoring->fieldProvenanceWeight($source);
     }
     $field_score /= count($sources);
 
-    $title_score = match ($this->proposal->titleSource) {
-      SeriesMatchTitleSource::KeptOriginalPatternMatch => 1.00,
-      SeriesMatchTitleSource::AiGenerated => 0.65,
-      default => 0.25,
-    };
+    $title_score = $scoring->titleSourceScore($this->proposal->titleSource);
 
-    $score = (0.70 * $field_score) + (0.30 * $title_score);
+    $score = ($scoring->fieldBlendWeight * $field_score) + ($scoring->titleBlendWeight * $title_score);
 
     return round(min(1.0, max(0.0, $score)), 4);
   }

@@ -42,6 +42,65 @@ reliefweb_content_analyzer.settings:
                 medium:
                   type: float
                   label: 'Medium tier lower bound'
+            confidence_scoring:
+              type: mapping
+              label: 'Confidence formula weights'
+              mapping:
+                series:
+                  type: mapping
+                  label: 'Series confidence formula weights'
+                  mapping:
+                    cluster_share_weight:
+                      type: float
+                      label: 'Weight for pattern-score-weighted cluster share'
+                    cluster_score_weight:
+                      type: float
+                      label: 'Weight for winning cluster composite score'
+                    dual_signal_ratio_weight:
+                      type: float
+                      label: 'Weight for dual title and URL retrieval ratio'
+                    cluster_share_dominance_weight:
+                      type: float
+                      label: 'Additional cluster share dominance weight'
+                tagging:
+                  type: mapping
+                  label: 'Tagging confidence formula weights'
+                  mapping:
+                    field_blend_weight:
+                      type: float
+                      label: 'Weight for average field provenance score'
+                    title_blend_weight:
+                      type: float
+                      label: 'Weight for title source band score'
+                    field_provenance_weights:
+                      type: mapping
+                      label: 'Score per field update source type'
+                      mapping:
+                        all_candidates:
+                          type: float
+                          label: 'All candidates source score'
+                        merged:
+                          type: float
+                          label: 'Merged source score'
+                        most_recent:
+                          type: float
+                          label: 'Most recent source score'
+                        skipped:
+                          type: float
+                          label: 'Skipped source score'
+                    title_source_scores:
+                      type: mapping
+                      label: 'Score per title source outcome'
+                      mapping:
+                        kept_original_pattern_match:
+                          type: float
+                          label: 'Kept original pattern match score'
+                        ai_generated:
+                          type: float
+                          label: 'AI generated title score'
+                        other:
+                          type: float
+                          label: 'Other title outcome score'
             moderation_by_outcome_tier:
               type: mapping
               label: 'Moderation state per outcome tier'

@@ -418,18 +418,30 @@ class SeriesMatchOutcomeTest extends UnitTestCase {
    *   Result with evidence and proposal tuned to the requested scores.
    */
   private function buildResult(float $series, float $tagging): SeriesMatchResult {
+    $scoring = self::defaultSettings()->confidenceScoring;
+    $share_weight = $scoring->clusterShareWeight + $scoring->clusterShareDominanceWeight;
+    $cluster_weight = $scoring->clusterScoreWeight;
+
     // Evidence values yielding the requested series score.
-    // series = 0.40*share + 0.25*clusterScore + 0.20*both + 0.15*share.
-    // No URL: 0.55*share + 0.25 → share = (series - 0.25) / 0.55.
-    // For series tier: >= 0.80 high, >= 0.60 medium, else low.
-    // clusterScore=1.0, both=0 → 0.55*share + 0.25.
-    $share = $series >= 0.25 ? ($series - 0.25) / 0.55 : 0.0;
+    // No dual signal: share_weight*share + cluster_weight*clusterScore.
+    // If clusterScore=1.0 and both=0 then the share is computed as
+    // (series - cluster_weight) / share_weight.
+    $share = $series >= $cluster_weight ? ($series - $cluster_weight) / $share_weight : 0.0;
     $share = min(1.0, max(0.0, $share));
-    // Tagging: 0.70*field_score + 0.30*title_score.
+
+    $field_weight = $scoring->fieldProvenanceWeights['all_candidates'];
+    $skipped_weight = $scoring->fieldProvenanceWeights['skipped'];
+    $title_score = $scoring->titleSourceScores['ai_generated'];
+    $field_blend = $scoring->fieldBlendWeight;
+    $title_blend = $scoring->titleBlendWeight;
+
+    // Tagging: field_blend*field_score + title_blend*title_score.
     // Strategy: 10 fields, N AllCandidates, (10-N) Skipped.
-    // AI title (0.65): tagging = 0.07*N + 0.195.
-    // N = (tagging - 0.195) / 0.07.
-    $n_all = (int) round(($tagging - 0.195) / 0.07);
+    $per_field_delta = ($field_weight - $skipped_weight) / 10;
+    $base_tagging = $field_blend * $skipped_weight + $title_blend * $title_score;
+    $n_all = $per_field_delta > 0
+      ? (int) round(($tagging - $base_tagging) / ($field_blend * $per_field_delta))
+      : 0;
     $n_all = min(10, max(0, $n_all));
     $fieldSources = [];
     for ($i = 0; $i < 10; $i++) {
