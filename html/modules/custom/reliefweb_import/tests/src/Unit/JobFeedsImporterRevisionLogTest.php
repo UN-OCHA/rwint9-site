@@ -7,6 +7,7 @@ namespace Drupal\Tests\reliefweb_import\Unit;
 use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\reliefweb_entities\Entity\Job;
+use Drupal\reliefweb_import\JobImport\JobImportStateStore;
 use Drupal\reliefweb_import\Service\JobFeedsImporter;
 use PHPUnit\Framework\Attributes\CoversClass;
 
@@ -38,7 +39,7 @@ class JobFeedsImporterRevisionLogTest extends JobFeedsImporterTestBase {
    * Tests editorial formatting of import errors for the revision log.
    */
   public function testFormatImportErrorsForRevisionLog(): void {
-    $job = $this->createJobStubWithImportErrors([
+    $job = $this->createJobStubWithImportState([
       'field_job_type' => [
         'label' => 'Job type',
         'error' => 'This value should not be null.',
@@ -57,15 +58,31 @@ class JobFeedsImporterRevisionLogTest extends JobFeedsImporterTestBase {
   }
 
   /**
-   * Create a job stub with `_import_errors` and labeled fields.
+   * Tests revision log formatting includes import notes.
+   */
+  public function testFormatImportMessagesForRevisionLogIncludesNotes(): void {
+    $job = $this->createJobStubWithImportState([], [
+      'Experience set to 5-9 years (consultancy default).',
+    ]);
+
+    $messages = $this->invokeProtectedMethod('formatImportMessagesForRevisionLog', [$job]);
+    $this->assertSame([
+      'Experience set to 5-9 years (consultancy default).',
+    ], $messages);
+  }
+
+  /**
+   * Create a job stub with import state in JobImportStateStore.
    *
    * @param array $fields
    *   Map of field name to label and error message.
+   * @param string[] $notes
+   *   Import notes.
    *
    * @return \Drupal\reliefweb_entities\Entity\Job
    *   Job stub.
    */
-  protected function createJobStubWithImportErrors(array $fields): Job {
+  protected function createJobStubWithImportState(array $fields, array $notes = []): Job {
     $field_lists = [];
     foreach ($fields as $field_name => $info) {
       $definition = $this->prophesize(FieldDefinitionInterface::class);
@@ -76,18 +93,7 @@ class JobFeedsImporterRevisionLogTest extends JobFeedsImporterTestBase {
       $field_lists[$field_name] = $item_list->reveal();
     }
 
-    $errors = array_map(static fn(array $info): string => $info['error'], $fields);
-
-    return new class($field_lists, $errors) extends Job {
-
-      /**
-       * Import errors keyed by field name.
-       *
-       * Exposed as `_import_errors` via __get()/__isset() to match production.
-       *
-       * @var array<string, string>
-       */
-      private array $importErrors = [];
+    $job = new class($field_lists) extends Job {
 
       /**
        * Field item lists keyed by field name.
@@ -99,21 +105,14 @@ class JobFeedsImporterRevisionLogTest extends JobFeedsImporterTestBase {
       /**
        * {@inheritdoc}
        */
-      public function __construct(array $field_lists, array $errors) {
-        // Avoid ContentEntityBase construction; this stub only supports the
-        // property access used by formatImportErrorsForRevisionLog().
+      public function __construct(array $field_lists) {
         $this->fieldLists = $field_lists;
-        $this->importErrors = $errors;
       }
 
       /**
        * {@inheritdoc}
        */
       public function &__get($name) {
-        if ($name === '_import_errors') {
-          $value = $this->importErrors;
-          return $value;
-        }
         $value = $this->fieldLists[$name] ?? NULL;
         return $value;
       }
@@ -122,13 +121,20 @@ class JobFeedsImporterRevisionLogTest extends JobFeedsImporterTestBase {
        * {@inheritdoc}
        */
       public function __isset($name) {
-        if ($name === '_import_errors') {
-          return TRUE;
-        }
         return isset($this->fieldLists[$name]);
       }
 
     };
+
+    JobImportStateStore::markImporting($job);
+    foreach ($fields as $field_name => $info) {
+      JobImportStateStore::setError($job, $field_name, $info['error']);
+    }
+    foreach ($notes as $note) {
+      JobImportStateStore::addNote($job, $note);
+    }
+
+    return $job;
   }
 
 }

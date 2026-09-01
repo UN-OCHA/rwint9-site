@@ -21,6 +21,12 @@ Imported jobs are checked and sanitized before being created.
 drush reliefweb_import:jobs --verbose
 ```
 
+## Workday job importer
+
+The [WorkDayJobImporter](src/Service/WorkDayJobImporter.php) imports jobs from the Workday Recruiting API. Tenant settings live in `reliefweb_import.workday.*` config entities (for example `config/reliefweb_import.workday.habitat1.yml`).
+
+Mapped fields include title, body, closing date (`endDate`), country (`primaryLocation.country.alpha3Code`), job type, experience (regex with type/title fallbacks), and how to apply (built from the application URL). Career categories and themes are left empty and filled asynchronously by the automated classification when `classification.enabled` is true.
+
 ## ECHO Flash updates
 
 Imports ECHO Flash updates from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/EchoFlash/GetPagedItems)
