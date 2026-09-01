@@ -284,6 +284,11 @@ final class WorkDayJobDocumentMapper {
    *   Parsed years or NULL.
    */
   private function extractYearsFromMatch(array $match): ?int {
+    if (!empty($match[1][0]) && !empty($match[2][0])
+      && is_numeric($match[1][0]) && is_numeric($match[2][0])
+      && strpbrk($match[0][0], '-–') !== FALSE) {
+      return min((int) $match[1][0], (int) $match[2][0]);
+    }
     if (!empty($match[2][0]) && is_numeric($match[2][0])) {
       return (int) $match[2][0];
     }

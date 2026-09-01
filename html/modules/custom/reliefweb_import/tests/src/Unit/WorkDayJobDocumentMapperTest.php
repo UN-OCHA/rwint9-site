@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Drupal\Tests\reliefweb_import\Unit;
 
 use Drupal\reliefweb_import\Service\WorkDayJobDocumentMapper;
+use Drupal\Tests\reliefweb_import\Traits\WorkdayApiTestDataTrait;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -17,6 +18,8 @@ use PHPUnit\Framework\Attributes\Group;
 #[Group('reliefweb_import')]
 class WorkDayJobDocumentMapperTest extends UnitTestCase {
 
+  use WorkdayApiTestDataTrait;
+
   /**
    * The mapper under test.
    *
@@ -25,21 +28,11 @@ class WorkDayJobDocumentMapperTest extends UnitTestCase {
   private WorkDayJobDocumentMapper $mapper;
 
   /**
-   * Workday API fixture jobs.
-   *
-   * @var array<int, array<string, mixed>>
-   */
-  private array $fixtureJobs;
-
-  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
     $this->mapper = new WorkDayJobDocumentMapper();
-    $fixture_path = dirname(__DIR__, 7) . '/data/RW-1531/workday.json';
-    $fixture = json_decode((string) file_get_contents($fixture_path), TRUE, flags: JSON_THROW_ON_ERROR);
-    $this->fixtureJobs = $fixture['data'];
   }
 
   /**
@@ -75,23 +68,28 @@ class WorkDayJobDocumentMapperTest extends UnitTestCase {
   }
 
   /**
-   * Tests regex parsing on known Workday samples.
+   * Tests regex parsing on synthetic description snippets.
    */
-  public function testParseMinimumYearsFromBodyOnFixtureSamples(): void {
-    $job = $this->findFixtureJob('Materials and Labor Specialist');
-    $years = $this->mapper->parseMinimumYearsFromBody((string) $job['jobDescription']);
-    $this->assertSame(5, $years);
-
-    $job = $this->findFixtureJob('HR Officer');
-    $years = $this->mapper->parseMinimumYearsFromBody((string) $job['jobDescription']);
-    $this->assertSame(2, $years);
+  public function testParseMinimumYearsFromBody(): void {
+    $this->assertSame(5, $this->mapper->parseMinimumYearsFromBody(
+      '<p>Required experience: 5+ years of experience in project planning.</p>',
+    ));
+    $this->assertSame(2, $this->mapper->parseMinimumYearsFromBody(
+      '<p>At least 2 years of experience in HR is required.</p>',
+    ));
+    $this->assertSame(5, $this->mapper->parseMinimumYearsFromBody(
+      '<p>Minimum five (5) years’ experience in construction.</p>',
+    ));
+    $this->assertSame(5, $this->mapper->parseMinimumYearsFromBody(
+      '<p>Minimum of 5–7 years of experience in structural design.</p>',
+    ));
   }
 
   /**
    * Tests full mapApiJob output for a regular job.
    */
   public function testMapApiJobMapsCoreFields(): void {
-    $job = $this->findFixtureJob('Materials and Labor Specialist');
+    $job = $this->regularJobWithFivePlusYearsApiItem();
     $mapped = $this->mapper->mapApiJob($job);
 
     $this->assertSame($job['title'], $mapped->title);
@@ -108,16 +106,16 @@ class WorkDayJobDocumentMapperTest extends UnitTestCase {
    * Tests intern and consultancy experience fallbacks.
    */
   public function testExperienceFallbacks(): void {
-    $intern = $this->mapper->mapApiJob($this->findFixtureJob('Internship: Data and Knowledge Management Analyst'));
+    $intern = $this->mapper->mapApiJob($this->internJobApiItem());
     $this->assertSame([WorkDayJobDocumentMapper::EXPERIENCE_0_2], $intern->field_job_experience);
     $this->assertContains('Experience set to 0-2 years (internship job type).', $intern->import_notes);
 
-    $consultancy = $this->mapper->mapApiJob($this->findFixtureJob('Gender Equity Applied Learning & Reflective Practice (GECC) Consultant'));
+    $consultancy = $this->mapper->mapApiJob($this->consultancyJobWithoutYearsApiItem());
     $this->assertSame([WorkDayJobDocumentMapper::EXPERIENCE_5_9], $consultancy->field_job_experience);
     $this->assertContains('Experience set to 5-9 years (consultancy default).', $consultancy->import_notes);
 
     $senior_job = $this->mapper->inferJobExperience(
-      'Senior Development Officer, Individual Giving',
+      'Senior Development Officer',
       'No years listed here.',
       WorkDayJobDocumentMapper::JOB_TYPE_JOB,
     );
@@ -125,7 +123,7 @@ class WorkDayJobDocumentMapperTest extends UnitTestCase {
     $this->assertSame('Experience set to 5-9 years (job title fallback).', $senior_job[1]);
 
     $regular_job = $this->mapper->inferJobExperience(
-      'Spec- Affiliate Support Center',
+      'Example Support Specialist',
       'No years listed here.',
       WorkDayJobDocumentMapper::JOB_TYPE_JOB,
     );
@@ -145,24 +143,6 @@ class WorkDayJobDocumentMapperTest extends UnitTestCase {
     );
     $this->assertSame(WorkDayJobDocumentMapper::EXPERIENCE_3_4, $tid);
     $this->assertSame('Experience set to 3-4 years (job title fallback).', $note);
-  }
-
-  /**
-   * Finds a fixture job by title substring.
-   *
-   * @param string $title_fragment
-   *   Title fragment.
-   *
-   * @return array<string, mixed>
-   *   Fixture job.
-   */
-  private function findFixtureJob(string $title_fragment): array {
-    foreach ($this->fixtureJobs as $job) {
-      if (str_contains((string) $job['title'], $title_fragment)) {
-        return $job;
-      }
-    }
-    $this->fail('Fixture job not found: ' . $title_fragment);
   }
 
 }
