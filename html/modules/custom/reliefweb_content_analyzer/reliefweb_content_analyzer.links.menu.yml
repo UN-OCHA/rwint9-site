@@ -1,0 +1,13 @@
+reliefweb_content_analyzer.settings:
+  title: 'ReliefWeb content analyzer'
+  description: 'Configure report series matching automation and matcher settings.'
+  route_name: reliefweb_content_analyzer.settings
+  parent: system.admin_config_content
+  weight: 50
+
+reliefweb_content_analyzer.report_series_match_log:
+  title: 'Report series match log'
+  description: 'Overview of applied report series matches for editorial log review.'
+  route_name: reliefweb_content_analyzer.report_series_match_log
+  parent: system.admin_reports
+  weight: 50

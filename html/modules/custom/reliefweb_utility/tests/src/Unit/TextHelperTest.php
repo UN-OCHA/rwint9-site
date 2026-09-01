@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\reliefweb_utility\Unit;
 
+use Drupal\reliefweb_utility\Helpers\FuzzyTextHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -291,51 +292,47 @@ class TextHelperTest extends UnitTestCase {
   }
 
   /**
-   * Test calculate Unicode Levenshtein distance.
+   * Test Unicode-aware Levenshtein distance.
    */
   public function testCalculateUnicodeLevenshteinDistance() {
-    // Use reflection to access the protected method.
-    $reflection = new \ReflectionClass(TextHelper::class);
-    $method = $reflection->getMethod('calculateUnicodeLevenshteinDistance');
-
     // Test identical strings.
-    $this->assertEquals(0, $method->invoke(NULL, 'hello', 'hello'));
+    $this->assertEquals(0, FuzzyTextHelper::levenshteinDistance('hello', 'hello'));
 
     // Test empty strings.
-    $this->assertEquals(0, $method->invoke(NULL, '', ''));
-    $this->assertEquals(5, $method->invoke(NULL, 'hello', ''));
-    $this->assertEquals(5, $method->invoke(NULL, '', 'hello'));
+    $this->assertEquals(0, FuzzyTextHelper::levenshteinDistance('', ''));
+    $this->assertEquals(5, FuzzyTextHelper::levenshteinDistance('hello', ''));
+    $this->assertEquals(5, FuzzyTextHelper::levenshteinDistance('', 'hello'));
 
     // Test single character difference.
-    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hallo'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('hello', 'hallo'));
 
     // Test insertion.
-    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'helloo'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('hello', 'helloo'));
 
     // Test deletion.
-    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hell'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('hello', 'hell'));
 
     // Test substitution.
-    $this->assertEquals(1, $method->invoke(NULL, 'hello', 'hxllo'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('hello', 'hxllo'));
 
     // Test Unicode characters.
-    $this->assertEquals(0, $method->invoke(NULL, 'café', 'café'));
-    $this->assertEquals(1, $method->invoke(NULL, 'café', 'cafe'));
+    $this->assertEquals(0, FuzzyTextHelper::levenshteinDistance('café', 'café'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('café', 'cafe'));
 
     // Test complex Unicode.
-    $this->assertEquals(1, $method->invoke(NULL, '自然環境', '自然環保'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('自然環境', '自然環保'));
 
     // Test multiple operations.
-    $this->assertEquals(3, $method->invoke(NULL, 'kitten', 'sitting'));
+    $this->assertEquals(3, FuzzyTextHelper::levenshteinDistance('kitten', 'sitting'));
 
     // Test completely different strings.
-    $this->assertEquals(3, $method->invoke(NULL, 'abc', 'xyz'));
+    $this->assertEquals(3, FuzzyTextHelper::levenshteinDistance('abc', 'xyz'));
 
     // Test case sensitivity (method should be case sensitive).
-    $this->assertEquals(1, $method->invoke(NULL, 'Hello', 'hello'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('Hello', 'hello'));
 
     // Test with special Unicode characters (`​` between test and space).
-    $this->assertEquals(1, $method->invoke(NULL, 'test​space', 'testspace'));
+    $this->assertEquals(1, FuzzyTextHelper::levenshteinDistance('test​space', 'testspace'));
   }
 
 }

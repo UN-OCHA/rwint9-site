@@ -29,6 +29,27 @@ reliefweb_api.settings:
     elasticsearch:
       type: string
       label: 'URL of the elasticsearch instance for indexing.'
+    elasticsearch_auth_type:
+      type: string
+      label: 'Elasticsearch authentication type (none, basic or apikey).'
+    elasticsearch_username:
+      type: string
+      label: 'Elasticsearch basic authentication username.'
+    elasticsearch_password:
+      type: string
+      label: 'Elasticsearch basic authentication password.'
+    elasticsearch_api_key:
+      type: string
+      label: 'Elasticsearch API key authentication credentials.'
+    elasticsearch_verify_tls:
+      type: boolean
+      label: 'Verify TLS certificates when connecting to Elasticsearch.'
+    elasticsearch_ca_file:
+      type: string
+      label: 'Path to a custom CA certificate file for Elasticsearch TLS verification.'
+    elasticsearch_retry:
+      type: integer
+      label: 'Retries after the first Elasticsearch request on HTTP 429 (square backoff).'
     base_index_name:
       type: string
       label: 'Base index name in elasticsearch.'

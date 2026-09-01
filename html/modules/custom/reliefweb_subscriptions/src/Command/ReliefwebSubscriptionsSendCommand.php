@@ -2,9 +2,6 @@
 
 namespace Drupal\reliefweb_subscriptions\Command;
 
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Component\Serialization\Json;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Site\Settings;
@@ -15,11 +12,7 @@ use GuzzleHttp\ClientInterface;
 /**
  * ReliefWeb Subscriptions Drush commandfile.
  */
-class ReliefwebSubscriptionsSendCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
-
-  // Drush traits.
-  use ProcessManagerAwareTrait;
-  use SiteAliasManagerAwareTrait;
+class ReliefwebSubscriptionsSendCommand extends DrushCommands {
 
   /**
    * The database connection.
