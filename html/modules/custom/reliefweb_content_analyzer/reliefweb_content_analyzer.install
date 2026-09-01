@@ -1,0 +1,441 @@
+<?php
+
+/**
+ * @file
+ * Install file for the reliefweb_content_analyzer module.
+ */
+
+declare(strict_types=1);
+
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
+use Drupal\reliefweb_content_analyzer\Services\EmbeddingsStorageInterface;
+
+/**
+ * Implements hook_install().
+ */
+function reliefweb_content_analyzer_install(): void {
+  try {
+    $storage = \Drupal::service('reliefweb_content_analyzer.embeddings_storage');
+    assert($storage instanceof EmbeddingsStorageInterface);
+    if ($storage->isAvailable()) {
+      $settings = ContentEmbeddingsSettings::fromConfigArray(
+        \Drupal::config('reliefweb_content_analyzer.settings')->get('content_embeddings'),
+      );
+      $storage->ensureReady($settings->dimensions);
+    }
+    else {
+      \Drupal::logger('reliefweb_content_analyzer')->notice(
+        'Skipped preparing embeddings storage on install: storage is not available.',
+      );
+    }
+  }
+  catch (\Throwable $exception) {
+    \Drupal::logger('reliefweb_content_analyzer')->warning(
+      'Could not prepare embeddings storage on install: @message',
+      ['@message' => $exception->getMessage()],
+    );
+  }
+}
+
+/**
+ * Implements hook_schema().
+ *
+ * Defines the reliefweb_report_series_match table for fresh installs.
+ */
+function reliefweb_content_analyzer_schema(): array {
+  $schema['reliefweb_report_series_match'] = [
+    'description' => 'Records successful report series matching on entity creation.',
+    'fields' => [
+      'id' => [
+        'type' => 'serial',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'entity_type_id' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'bundle' => [
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'default' => '',
+      ],
+      'entity_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'revision_id' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+      ],
+      'series_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'tagging_confidence' => [
+        'type' => 'numeric',
+        'precision' => 5,
+        'scale' => 4,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'created' => [
+        'type' => 'int',
+        'not null' => TRUE,
+      ],
+      'uid' => [
+        'type' => 'int',
+        'unsigned' => TRUE,
+        'not null' => TRUE,
+        'default' => 0,
+      ],
+      'data' => [
+        'type' => 'text',
+        'size' => 'big',
+        'not null' => TRUE,
+      ],
+    ],
+    'primary key' => ['id'],
+    'unique keys' => [
+      'entity' => ['entity_type_id', 'entity_id'],
+    ],
+    'indexes' => [
+      'created' => ['created'],
+      'series_confidence' => ['series_confidence'],
+      'tagging_confidence' => ['tagging_confidence'],
+    ],
+  ];
+
+  return $schema;
+}
+
+/**
+ * Add default field and global outcome policies to existing settings.
+ */
+function reliefweb_content_analyzer_update_10001(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $workflow = $config->get('report_series_matching.workflow') ?? [];
+
+  if (empty($workflow['field_outcome_policies'])) {
+    $workflow['field_outcome_policies'] = [
+      'field_primary_country' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_medium',
+        'skipped' => 'max_low',
+      ],
+      'field_content_format' => [
+        'most_recent' => 'max_low',
+        'merged' => 'max_low',
+        'skipped' => 'max_low',
+      ],
+      'field_country' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_language' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'max_medium',
+      ],
+      'field_theme' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+      'field_disaster' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'max_medium',
+        'skipped' => 'none',
+      ],
+      'field_disaster_type' => [
+        'most_recent' => 'max_medium',
+        'merged' => 'none',
+        'skipped' => 'none',
+      ],
+    ];
+  }
+
+  if (empty($workflow['global_outcome_rules'])) {
+    $workflow['global_outcome_rules'] = [
+      'empty_body_when_series_has_body' => [
+        'enabled' => TRUE,
+        'series_body_threshold' => 0.5,
+        'action' => 'max_medium',
+      ],
+      'title_ai_failed_or_skipped' => [
+        'enabled' => TRUE,
+        'action' => 'max_medium',
+      ],
+      'low_series_confidence_with_mismatch' => [
+        'enabled' => TRUE,
+        'max_best_cluster_share' => 0.5,
+        'min_cluster_count' => 2,
+        'action' => 'skip_match',
+      ],
+    ];
+  }
+
+  $config->set('report_series_matching.workflow', $workflow)->save();
+}
+
+/**
+ * Add report near-duplicate detection settings and series skip status.
+ */
+function reliefweb_content_analyzer_update_10002(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+
+  if ($config->get('report_duplicate_matching') === NULL) {
+    $config->set(
+      'report_duplicate_matching',
+      DuplicateMatchSettings::defaultConfig(),
+    );
+  }
+
+  $skip = $config->get('report_series_matching.workflow.skip_series_match_moderation_statuses') ?? [];
+  if (!in_array('duplicate', $skip, TRUE)) {
+    $skip[] = 'duplicate';
+    $config->set('report_series_matching.workflow.skip_series_match_moderation_statuses', $skip);
+  }
+
+  $order = $config->get('report_series_matching.workflow.restrictiveness_order') ?? [];
+  if (!in_array('duplicate', $order, TRUE)) {
+    $refused_index = array_search('refused', $order, TRUE);
+    if ($refused_index === FALSE) {
+      array_unshift($order, 'duplicate');
+    }
+    else {
+      array_splice($order, (int) $refused_index + 1, 0, ['duplicate']);
+    }
+    $config->set('report_series_matching.workflow.restrictiveness_order', $order);
+  }
+
+  $config->save();
+}
+
+/**
+ * Add TF-IDF soft gate settings and reduce default lookback to 7 days.
+ */
+function reliefweb_content_analyzer_update_10003(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  $current = $config->get('report_duplicate_matching') ?? [];
+
+  foreach ([
+    'tfidf_similarity_threshold',
+    'embedding_endpoint',
+    'embedding_similarity_threshold',
+    'target_status',
+  ] as $key) {
+    if (!array_key_exists($key, $current) && array_key_exists($key, $defaults)) {
+      $current[$key] = $defaults[$key];
+    }
+  }
+
+  // Sites that still have the previous default lookback of 60 move to 7.
+  if (!isset($current['lookback_days']) || (int) $current['lookback_days'] === 60) {
+    $current['lookback_days'] = $defaults['lookback_days'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}
+
+/**
+ * Ensure embeddings storage and content_embeddings config defaults.
+ */
+function reliefweb_content_analyzer_update_10004(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = ContentEmbeddingsSettings::defaultConfig();
+  $current = $config->get('content_embeddings');
+  if (!is_array($current) || $current === []) {
+    $config->set('content_embeddings', $defaults);
+  }
+  else {
+    $merged = ContentEmbeddingsSettings::fromConfigArray($current)->toConfigArray();
+    $config->set('content_embeddings', $merged);
+  }
+  $config->save();
+
+  try {
+    $storage = \Drupal::service('reliefweb_content_analyzer.embeddings_storage');
+    assert($storage instanceof EmbeddingsStorageInterface);
+    if ($storage->isAvailable()) {
+      $settings = ContentEmbeddingsSettings::fromConfigArray($config->get('content_embeddings'));
+      $storage->ensureReady($settings->dimensions);
+    }
+    else {
+      \Drupal::logger('reliefweb_content_analyzer')->notice(
+        'Skipped preparing embeddings storage in update 10004: storage is not available.',
+      );
+    }
+  }
+  catch (\Throwable $exception) {
+    \Drupal::logger('reliefweb_content_analyzer')->warning(
+      'Could not prepare embeddings storage in update 10004: @message',
+      ['@message' => $exception->getMessage()],
+    );
+  }
+}
+
+/**
+ * Update embedding retrieval settings and threshold.
+ */
+function reliefweb_content_analyzer_update_10005(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  unset($current['embedding_endpoint']);
+
+  foreach (['embedding_topk', 'embedding_lookback_days'] as $key) {
+    if (!array_key_exists($key, $current)) {
+      $current[$key] = $defaults[$key];
+    }
+  }
+
+  // Raise soft/retrieval threshold to the new default when still at 0.85.
+  if (!isset($current['embedding_similarity_threshold'])
+    || (float) $current['embedding_similarity_threshold'] === 0.85) {
+    $current['embedding_similarity_threshold'] = $defaults['embedding_similarity_threshold'];
+  }
+
+  $merged = DuplicateMatchSettings::fromConfigArray($current);
+  $config->set('report_duplicate_matching', [
+    'automation_enabled_form_created' => $merged->automationEnabledFormCreated,
+    'automation_enabled_imported' => $merged->automationEnabledImported,
+    'skip_with_attachments' => $merged->skipWithAttachments,
+    'filter_by_source' => $merged->filterBySource,
+    'lookback_days' => $merged->lookbackDays,
+    'lookforward_days' => $merged->lookforwardDays,
+    'candidate_limit' => $merged->candidateLimit,
+    'minimum_body_length' => $merged->minimumBodyLength,
+    'minimum_length_ratio' => $merged->minimumLengthRatio,
+    'similarity_threshold' => $merged->similarityThreshold,
+    'tfidf_similarity_threshold' => $merged->tfidfSimilarityThreshold,
+    'embedding_similarity_threshold' => $merged->embeddingSimilarityThreshold,
+    'embedding_topk' => $merged->embeddingTopk,
+    'embedding_lookback_days' => $merged->embeddingLookbackDays,
+    'target_status' => $merged->targetStatus,
+    'candidate_moderation_statuses' => $merged->candidateModerationStatuses,
+    'skip_moderation_statuses' => $merged->skipModerationStatuses,
+  ]);
+  $config->save();
+}
+
+/**
+ * Add layout-aware series title match settings.
+ */
+function reliefweb_content_analyzer_update_10006(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matcher = $config->get('report_series_matching.matcher') ?? [];
+
+  if (!isset($matcher['ai_title_match_endpoint'])) {
+    $matcher['ai_title_match_endpoint'] = 'http://ocha-ai-helper/text/match/series-title';
+  }
+  if (!isset($matcher['ai_title_match_min_confidence'])) {
+    $matcher['ai_title_match_min_confidence'] = 0.65;
+  }
+  if (!isset($matcher['ai_title_extract_page_count'])) {
+    $matcher['ai_title_extract_page_count'] = 2;
+  }
+
+  $config->set('report_series_matching.matcher', $matcher)->save();
+}
+
+/**
+ * Add title pattern similarity threshold for series matching.
+ */
+function reliefweb_content_analyzer_update_10007(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matcher = $config->get('report_series_matching.matcher') ?? [];
+
+  if (!isset($matcher['title_pattern_similarity_threshold'])) {
+    $matcher['title_pattern_similarity_threshold'] = 0.90;
+  }
+
+  $config->set('report_series_matching.matcher', $matcher)->save();
+}
+
+/**
+ * Remove obsolete series title match HTTP endpoint setting.
+ */
+function reliefweb_content_analyzer_update_10008(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matcher = $config->get('report_series_matching.matcher') ?? [];
+  unset($matcher['ai_title_match_endpoint']);
+  $config->set('report_series_matching.matcher', $matcher)->save();
+}
+
+/**
+ * Use a single target moderation status for all near-duplicate matches.
+ */
+function reliefweb_content_analyzer_update_10009(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  unset($current['jaccard_target_status'], $current['tfidf_target_status']);
+  if (!isset($current['target_status']) || $current['target_status'] === '') {
+    $current['target_status'] = DuplicateMatchSettings::defaultConfig()['target_status'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}
+
+/**
+ * Add embedding lookforward days for nearest-neighbor nid range.
+ */
+function reliefweb_content_analyzer_update_10010(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  if (!array_key_exists('embedding_lookforward_days', $current)) {
+    $current['embedding_lookforward_days'] = $defaults['embedding_lookforward_days'];
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}
+
+/**
+ * Add confidence formula weights to report series matching workflow settings.
+ */
+function reliefweb_content_analyzer_update_10011(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $matching = $config->get('report_series_matching') ?? [];
+  if (!is_array($matching)) {
+    $matching = [];
+  }
+  $workflow = $matching['workflow'] ?? [];
+  if (!is_array($workflow)) {
+    $workflow = [];
+  }
+
+  if (empty($workflow['confidence_scoring'])) {
+    $workflow['confidence_scoring'] = SeriesMatchConfidenceScoringSettings::defaultConfig();
+    $matching['workflow'] = $workflow;
+    $config->set('report_series_matching', $matching);
+    $config->save();
+  }
+}

@@ -23,7 +23,8 @@ reliefweb_subscriptions.unsubscribe:
     _controller: '\Drupal\reliefweb_subscriptions\Controller\UnsubscribeController::unsubscribe'
     _title: 'Unsubscribe'
   requirements:
-    # Access is validated in the controller via timestamp and signature.
+    # Public unsubscribe link: request validity is enforced by controller
+    # checks.
     _access: 'TRUE'
     user: \d+
 reliefweb_subscriptions.unsubscribe_one_click:
@@ -35,7 +36,8 @@ reliefweb_subscriptions.unsubscribe_one_click:
   options:
     no_cache: 'TRUE'
   requirements:
-    # Access is validated in the controller via the opaque unsubscribe token.
+    # Public one-click unsubscribe route validated by opaque token/signature
+    # logic.
     _access: 'TRUE'
     user: \d+
 reliefweb_subscriptions.unsubscription_form:

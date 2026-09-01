@@ -17,7 +17,6 @@ use Drupal\reliefweb_moderation\EntityWithPostingRightsTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -30,13 +29,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
   use EntityRevisionedTrait;
   use EntityWithPostingRightsTrait;
   use StringTranslationTrait;
-
-  /**
-   * Store the emails for the publication notifications.
-   *
-   * @var ?array<string>
-   */
-  protected ?array $publicationNotificationEmails = NULL;
 
   /**
    * {@inheritdoc}
@@ -271,9 +263,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       $this->setRevisionLogMessage($log);
     }
 
-    // Prepare notifications.
-    $this->preparePublicationNotification();
-
     // Update the entity status based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();
 
@@ -288,128 +277,6 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
 
     // Make the sources active.
     $this->updateSourceModerationStatus();
-
-    $this->sendPublicationNotification();
-  }
-
-  /**
-   * Prepare the list of recipients to notify of the publication.
-   */
-  protected function preparePublicationNotification() {
-    // Only send the notifications when the report is published.
-    $status = $this->getModerationStatus();
-    if ($status !== 'to-review' && $status !== 'published') {
-      return;
-    }
-
-    // Extract the emails.
-    $emails = $this->field_notify->value ?? '';
-    $emails = preg_split('/([,;]|\s)+/', trim($emails));
-    $emails = array_filter(filter_var_array($emails, FILTER_VALIDATE_EMAIL));
-    $emails = array_unique($emails);
-
-    // Empty the field.
-    $this->field_notify->setValue([]);
-
-    // Skip if there is no recipients.
-    if (empty($emails)) {
-      return;
-    }
-
-    // Store the emails to notify after the node is saved.
-    $this->setPublicationNotificationEmails($emails);
-
-    // Update the log message with the list of emails to notify.
-    $log_field = $this->getEntityType()
-      ->getRevisionMetadataKey('revision_log_message');
-
-    // Not using `t()` because this is an internal editorial message.
-    $log = strtr('Publication notification sent to @to', [
-      '@to' => implode(', ', $emails),
-    ]);
-    if (!empty($this->{$log_field}->value)) {
-      $this->{$log_field}->value .= ' - ' . $log;
-    }
-    else {
-      $this->{$log_field}->value = $log;
-    }
-  }
-
-  /**
-   * Notify of the publication.
-   */
-  protected function sendPublicationNotification() {
-    if (!$this->hasPublicationNotificationEmails()) {
-      return;
-    }
-    $emails = $this->getPublicationNotificationEmails();
-    $this->resetPublicationNotificationEmails();
-
-    // Recipients and sender.
-    $to = implode(', ', $emails);
-    $from = ReliefWebStateHelper::getSubmitEmail();
-    if (empty($from)) {
-      return;
-    }
-
-    $message = ReliefWebStateHelper::getReportPublicationEmailMessage();
-    if (empty($message)) {
-      return;
-    }
-
-    // Subject and content.
-    $parameters = [];
-    $parameters['subject'] = 'ReliefWeb: Your submission has been published';
-    $parameters['content'] = strtr($message, [
-      '@title' => $this->label(),
-      '@url' => $this->toUrl('canonical', [
-        'absolute' => TRUE,
-        'path_processing' => FALSE,
-      ])->toString(FALSE),
-    ]);
-
-    $langcode = \Drupal::languageManager()->getCurrentLanguage()->getId();
-
-    // Send the email.
-    \Drupal::service('plugin.manager.mail')
-      ->mail('reliefweb_entities', 'report_publication_notification', $to, $langcode, $parameters, $from, TRUE);
-  }
-
-  /**
-   * Temporarily store the email address to notify after publication.
-   *
-   * @param array $emails
-   *   Emails to notify.
-   */
-  protected function setPublicationNotificationEmails(array $emails): void {
-    $this->publicationNotificationEmails = $emails;
-  }
-
-  /**
-   * Get the email address to notify after publication.
-   *
-   * @return array
-   *   Emails to notify.
-   */
-  protected function getPublicationNotificationEmails(): array {
-    return $this->publicationNotificationEmails ?? [];
-  }
-
-  /**
-   * Check if there are email address to notify after publication.
-   *
-   * @return bool
-   *   TRUE if there are emails to noify.
-   */
-  protected function hasPublicationNotificationEmails(): bool {
-    return !empty($this->publicationNotificationEmails);
-  }
-
-  /**
-   * Remove set publication notification emails.
-   */
-  protected function resetPublicationNotificationEmails(): void {
-    $this->publicationNotificationEmails = NULL;
   }
 
 }

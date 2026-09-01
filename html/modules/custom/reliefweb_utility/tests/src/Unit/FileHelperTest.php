@@ -507,4 +507,110 @@ class FileHelperTest extends UnitTestCase {
     $this->assertIsString($result);
   }
 
+  /**
+   * Parses mutool stext XML lines into helper-ready spans.
+   */
+  public function testParseStextXmlSpans(): void {
+    $xml = <<<'XML'
+<?xml version="1.0"?>
+<document filename="fixture.pdf">
+<page id="page1" width="300" height="144">
+<block bbox="50 26.504 156.68001 44.552003">
+<line bbox="50 26.504 156.68001 44.552003" wmode="0" dir="1 0" text="Hello Title">
+<font name="Helvetica" size="24">
+<char c="H" quad="50 26.504 67.328 26.504 50 44 67.328 44" x="50" y="44"/>
+</font>
+</line>
+</block>
+<block bbox="50 60 200 78">
+<line bbox="50 60 200 78" text="Subtitle Line">
+<font name="Helvetica" size="12">
+</font>
+</line>
+</block>
+</page>
+</document>
+XML;
+
+    $spans = FileHelper::parseStextXmlSpans($xml);
+
+    $this->assertCount(2, $spans);
+    $this->assertSame('Hello Title', $spans[0]['text']);
+    $this->assertSame(50.0, $spans[0]['x']);
+    $this->assertEqualsWithDelta(26.504, $spans[0]['y'], 0.001);
+    $this->assertEqualsWithDelta(106.68001, $spans[0]['w'], 0.001);
+    $this->assertEqualsWithDelta(18.048, $spans[0]['h'], 0.001);
+    $this->assertSame(24.0, $spans[0]['size']);
+    $this->assertSame('Subtitle Line', $spans[1]['text']);
+    $this->assertSame(12.0, $spans[1]['size']);
+  }
+
+  /**
+   * Groups mutool stext lines by page for the series-title pages payload.
+   */
+  public function testParseStextXmlPages(): void {
+    $xml = <<<'XML'
+<?xml version="1.0"?>
+<document filename="fixture.pdf">
+<page id="page1" width="300" height="144">
+<line bbox="50 26.504 156.68001 44.552003" text="Page One Title">
+<font name="Helvetica" size="24">
+</font>
+</line>
+</page>
+<page id="page2" width="300" height="144">
+<line bbox="40 30 180 48" text="Page Two Title">
+<font name="Helvetica" size="18">
+</font>
+</line>
+<line bbox="40 60 120 72" text="Page Two Sub">
+<font name="Helvetica" size="12">
+</font>
+</line>
+</page>
+</document>
+XML;
+
+    $pages = FileHelper::parseStextXmlPages($xml);
+
+    $this->assertCount(2, $pages);
+    $this->assertCount(1, $pages[0]);
+    $this->assertSame('Page One Title', $pages[0][0]['text']);
+    $this->assertSame(24.0, $pages[0][0]['size']);
+    $this->assertCount(2, $pages[1]);
+    $this->assertSame('Page Two Title', $pages[1][0]['text']);
+    $this->assertSame('Page Two Sub', $pages[1][1]['text']);
+    $this->assertSame(
+      ['Page One Title', 'Page Two Title', 'Page Two Sub'],
+      array_column(FileHelper::parseStextXmlSpans($xml), 'text'),
+    );
+  }
+
+  /**
+   * Empty or invalid stext XML yields no spans.
+   */
+  public function testParseStextXmlSpansEmptyOrInvalid(): void {
+    $this->assertSame([], FileHelper::parseStextXmlSpans(''));
+    $this->assertSame([], FileHelper::parseStextXmlSpans('not-xml'));
+    $this->assertSame([], FileHelper::parseStextXmlPages(''));
+    $this->assertSame([], FileHelper::parseStextXmlPages('not-xml'));
+  }
+
+  /**
+   * Invalid page ranges return no spans without invoking mutool.
+   */
+  public function testExtractStructuredTextSpansInvalidPageRange(): void {
+    $file = $this->prophesize(File::class);
+    $file->getMimeType()->willReturn('application/pdf');
+
+    $this->assertSame(
+      [],
+      FileHelper::extractStructuredTextSpans($file->reveal(), 0),
+    );
+    $this->assertSame(
+      [],
+      FileHelper::extractStructuredTextSpans($file->reveal(), 2, 1),
+    );
+  }
+
 }

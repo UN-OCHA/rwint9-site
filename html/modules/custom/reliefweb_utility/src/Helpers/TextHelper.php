@@ -234,64 +234,13 @@ class TextHelper {
     $max_length = max($length1, $length2);
 
     // Calculate Levenshtein distance for Unicode strings.
-    $levenshtein_distance = static::calculateUnicodeLevenshteinDistance($text1, $text2);
+    $levenshtein_distance = FuzzyTextHelper::levenshteinDistance($text1, $text2);
 
     // Calculate similarity percentage.
     $similarity = (1 - ($levenshtein_distance / $max_length)) * 100;
 
     // Ensure the result is between 0 and 100.
     return max(0.0, min(100.0, $similarity));
-  }
-
-  /**
-   * Calculate Levenshtein distance for Unicode strings.
-   *
-   * This is a Unicode-safe implementation of the Levenshtein distance
-   * algorithm that works with multibyte characters.
-   *
-   * @param string $string1
-   *   First string.
-   * @param string $string2
-   *   Second string.
-   *
-   * @return int
-   *   The Levenshtein distance between the two strings.
-   */
-  protected static function calculateUnicodeLevenshteinDistance(string $string1, string $string2): int {
-    // Convert strings to arrays of Unicode characters.
-    $chars1 = preg_split('//u', $string1, -1, PREG_SPLIT_NO_EMPTY);
-    $chars2 = preg_split('//u', $string2, -1, PREG_SPLIT_NO_EMPTY);
-
-    $length1 = count($chars1);
-    $length2 = count($chars2);
-
-    // Create a matrix to store distances.
-    $matrix = [];
-
-    // Initialize first row and column.
-    for ($i = 0; $i <= $length1; $i++) {
-      $matrix[$i][0] = $i;
-    }
-    for ($j = 0; $j <= $length2; $j++) {
-      $matrix[0][$j] = $j;
-    }
-
-    // Fill the matrix.
-    for ($i = 1; $i <= $length1; $i++) {
-      for ($j = 1; $j <= $length2; $j++) {
-        $cost = ($chars1[$i - 1] === $chars2[$j - 1]) ? 0 : 1;
-        $matrix[$i][$j] = min(
-          // Deletion.
-          $matrix[$i - 1][$j] + 1,
-          // Insertion.
-          $matrix[$i][$j - 1] + 1,
-          // Substitution.
-          $matrix[$i - 1][$j - 1] + $cost
-        );
-      }
-    }
-
-    return $matrix[$length1][$length2];
   }
 
 }

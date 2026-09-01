@@ -1,0 +1,3333 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\reliefweb_content_analyzer\Services;
+
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchMatcherSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchDebugTrace;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchStatus;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchReason;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchTitleSource;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\SeriesMatchResult;
+use Drupal\Component\Datetime\TimeInterface;
+use Drupal\Component\Utility\UrlHelper;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Database\Query\SelectInterface;
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
+use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
+use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_utility\Helpers\SeriesTitleMatchHelper;
+use Drupal\reliefweb_utility\Helpers\TitlePatternHelper;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
+
+/**
+ * Matches reports to a document series using pattern search and clustering.
+ *
+ * @phpstan-type CandidateMetadata array<string, string|int|string[]|int[]>
+ * @phpstan-type CandidateMetadataSet array<int, CandidateMetadata>
+ *
+ * @phpstan-type FieldDefinition array{
+ *   type: string,
+ *   column: string,
+ *   multiple: bool,
+ * }
+ * @phpstan-type FieldDefinitions array<string, FieldDefinition|null>
+ *
+ * @phpstan-type InferenceSettings array{
+ *   plugin_id: string,
+ *   temperature: float,
+ *   top_p: float,
+ *   max_tokens: int,
+ *   thinking_mode: string,
+ *   system_prompt: string,
+ * }
+ *
+ * @phpstan-type FieldCopyResult array{
+ *   values: array<string, null|string|string[]|int[]>,
+ *   sources: array<string, SeriesMatchFieldUpdateSource>,
+ * }
+ *
+ * @phpstan-type TitleGenerationResult array{
+ *   title: ?string,
+ *   source: SeriesMatchTitleSource,
+ *   aiDurationSeconds: ?float,
+ * }
+ */
+class ReportSeriesMatcher implements ReportSeriesMatcherInterface {
+
+  /**
+   * Complex Emergency disaster type term ID.
+   *
+   * Excluded from report tagging, matching ReportFormAlter.
+   */
+  public const int COMPLEX_EMERGENCY_DISASTER_TYPE_ID = 41764;
+
+  /**
+   * Lazily loaded matcher settings from config.
+   */
+  private ?SeriesMatchMatcherSettings $matcherSettings = NULL;
+
+  /**
+   * Constructor.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
+   *   The config factory service.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
+   *   The logger factory service.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   The entity field manager service.
+   * @param \Drupal\Component\Datetime\TimeInterface $time
+   *   The time service.
+   * @param \Drupal\Core\Database\Connection $database
+   *   The database connection.
+   * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completionPluginManager
+   *   The OCHA AI completion plugin manager.
+   */
+  public function __construct(
+    protected readonly ConfigFactoryInterface $configFactory,
+    protected readonly LoggerChannelFactoryInterface $loggerFactory,
+    protected readonly EntityFieldManagerInterface $entityFieldManager,
+    protected readonly TimeInterface $time,
+    protected readonly Connection $database,
+    #[Autowire(service: 'plugin.manager.ocha_ai.completion')]
+    protected readonly CompletionPluginManagerInterface $completionPluginManager,
+  ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public function findSeriesCandidates(EntityInterface $entity, bool $includeDebug = FALSE): SeriesMatchResult {
+    if (!$this->canApplySeriesMatching($entity)) {
+      return SeriesMatchResult::notApplicable();
+    }
+
+    $source_ids = $this->getEntitySourceIds($entity);
+    if ($source_ids === []) {
+      return SeriesMatchResult::stopped(SeriesMatchReason::NoSource);
+    }
+
+    $anchor = $this->resolveSeriesAnchorTimestamp($entity);
+
+    $months = $this->getSeriesCandidateDateRangeMonths();
+    $window_start = (int) strtotime("-{$months} months", $anchor);
+
+    $limit = $this->getSeriesCandidateLimit();
+    if ($limit === 0) {
+      return SeriesMatchResult::stopped(SeriesMatchReason::LimitZero);
+    }
+
+    // Unsaved nodes have no ID; 0 means nothing to exclude from candidate SQL.
+    $entity_id = (int) $entity->id();
+    $original_title = $this->resolveOriginalTitle($entity);
+    $origin_url = $this->getOriginUrl($entity);
+    $title_patterns = $original_title !== '' ? $this->titleToLikePatterns($original_title) : [];
+    $url_patterns = $origin_url !== '' ? $this->urlToLikePatterns($origin_url) : [];
+    $minimum_series_count = $this->getMinimumSeriesReportCount();
+
+    $debug = $includeDebug ? $this->buildDebugTrace(
+      entityId: $entity_id,
+      lookbackMonths: $months,
+      anchor: $anchor,
+      windowStart: $window_start,
+      candidateLimit: $limit,
+      originalTitle: $original_title,
+      originUrl: $origin_url,
+      titlePatternCount: count($title_patterns),
+      urlPatternCount: count($url_patterns),
+      sourceTermIds: $source_ids,
+      minimumSeriesCount: $minimum_series_count,
+    ) : NULL;
+
+    if ($title_patterns === [] && $url_patterns === []) {
+      return SeriesMatchResult::stopped(
+        SeriesMatchReason::NoPatterns,
+        debug: $debug,
+      );
+    }
+
+    $title_scored_candidates = [];
+    if ($title_patterns !== []) {
+      $title_scored_candidates = $this->getSeriesCandidateIdsByPatterns(
+        $entity_id,
+        'title',
+        $title_patterns,
+        $window_start,
+        $anchor,
+        $source_ids,
+        $limit,
+      );
+    }
+
+    $url_scored_candidates = [];
+    if ($url_patterns !== []) {
+      $url_scored_candidates = $this->getSeriesCandidateIdsByPatterns(
+        $entity_id,
+        'url',
+        $url_patterns,
+        $window_start,
+        $anchor,
+        $source_ids,
+        $limit,
+      );
+    }
+
+    $title_match_count = count($title_scored_candidates);
+    $url_match_count = count($url_scored_candidates);
+    $both_signals_count = count(array_intersect(
+      array_keys($title_scored_candidates),
+      array_keys($url_scored_candidates),
+    ));
+
+    $merged_scored_candidates = [];
+    foreach ($title_scored_candidates as $nid => $score) {
+      $merged_scored_candidates[$nid] = ($merged_scored_candidates[$nid] ?? 0) + $score;
+    }
+    foreach ($url_scored_candidates as $nid => $score) {
+      $merged_scored_candidates[$nid] = ($merged_scored_candidates[$nid] ?? 0) + $score;
+    }
+
+    $merged_count = count($merged_scored_candidates);
+    $evidence = new SeriesMatchEvidence(
+      lookbackMonths: $months,
+      titleMatchCount: $title_match_count,
+      urlMatchCount: $url_match_count,
+      bothSignalsCount: $both_signals_count,
+      mergedCount: $merged_count,
+    );
+
+    if ($merged_scored_candidates === []) {
+      return SeriesMatchResult::stopped(
+        SeriesMatchReason::NoPatternMatches,
+        $evidence,
+        $debug,
+      );
+    }
+
+    arsort($merged_scored_candidates, \SORT_NUMERIC);
+    $merged_scored_candidates = array_slice($merged_scored_candidates, 0, $limit, TRUE);
+    $merged_after_limit_count = count($merged_scored_candidates);
+    // Keep the full post-limit retrieval set for editor display (selected +
+    // discarded). Tagging still uses only the selected cluster IDs below.
+    $retrieved_scored_candidates = $merged_scored_candidates;
+
+    $metadata = $this->getCandidateMetadata(array_keys($merged_scored_candidates));
+    $boost = $this->boostPatternScoresWithTitleSimilarity(
+      $original_title,
+      $merged_scored_candidates,
+      $metadata,
+    );
+    $merged_scored_candidates = $boost['scores'];
+    $candidate_title_similarities = $boost['similarities'];
+    $retrieved_scored_candidates = $merged_scored_candidates;
+    $selection = $this->selectSeriesCandidatesFromCoreAndSupport(
+      $merged_scored_candidates,
+      $metadata,
+    );
+
+    $core_clusters = $selection['core_clusters'];
+    $cluster_sizes = array_map('count', $core_clusters);
+    $best_cluster_size = count($selection['cluster']);
+    $best_cluster_share = $this->computeBestClusterShare(
+      $retrieved_scored_candidates,
+      $selection['cluster'],
+    );
+
+    $candidate_evidence = $this->buildCandidateEvidenceFromSelection(
+      $retrieved_scored_candidates,
+      $selection['cluster'],
+    );
+    $candidate_ids = $candidate_evidence['candidateIds'];
+    $display_lookback_months = $this->computeBestClusterLookbackMonths(
+      $anchor,
+      $selection['cluster'],
+      $metadata,
+    );
+    $evidence = $evidence->with([
+      'mergedAfterLimitCount' => $merged_after_limit_count,
+      'clusterCount' => count($core_clusters),
+      'clusterSizes' => $cluster_sizes,
+      'bestClusterSize' => $best_cluster_size,
+      'bestClusterShare' => $best_cluster_share,
+      'clusterScore' => $selection['cluster_score'],
+      'clusterScoreSize' => $selection['size_score'],
+      'clusterScorePattern' => $selection['pattern_score'],
+      'clusterScoreTagging' => $selection['tagging_consistency'],
+      'candidateIds' => $candidate_ids,
+      'candidatePatternScores' => $candidate_evidence['candidatePatternScores'],
+      'candidateTitleSimilarities' => $candidate_title_similarities,
+      'lookbackMonths' => $display_lookback_months,
+    ]);
+
+    if ($best_cluster_size < $minimum_series_count) {
+      return SeriesMatchResult::stopped(
+        SeriesMatchReason::BelowMinimumCluster,
+        $evidence,
+        $debug,
+        SeriesMatchReason::BelowMinimumCluster,
+      );
+    }
+
+    $evidence = $evidence->with([
+      'seriesBodyRatio' => $this->computeSeriesBodyRatio($candidate_ids),
+    ]);
+
+    $proposal = $this->buildSeriesMatchProposal(
+      $entity,
+      $original_title,
+      $candidate_ids,
+      $metadata,
+    );
+
+    return new SeriesMatchResult(
+      new SeriesMatchStatus(passedMinimum: TRUE),
+      $proposal,
+      $evidence,
+      $debug,
+    );
+  }
+
+  /**
+   * Builds optional form diagnostics from run parameters and config.
+   *
+   * @param int $entityId
+   *   Analyzed entity node ID.
+   * @param int $lookbackMonths
+   *   Candidate lookup window in months.
+   * @param int $anchor
+   *   Series anchor timestamp (publication date, created, or request time).
+   * @param int $windowStart
+   *   Lower bound of candidate created filter (anchor minus lookback months).
+   * @param int $candidateLimit
+   *   Maximum number of candidate nodes considered.
+   * @param string $originalTitle
+   *   Entity original title (first revision when saved, else entity title).
+   * @param string $originUrl
+   *   Parsed origin URL used for pattern extraction.
+   * @param int $titlePatternCount
+   *   Number of generated title LIKE patterns.
+   * @param int $urlPatternCount
+   *   Number of generated URL LIKE patterns.
+   * @param int[] $sourceTermIds
+   *   Source term IDs attached to the analyzed entity.
+   * @param int $minimumSeriesCount
+   *   Minimum reports required to consider a valid series.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchDebugTrace
+   *   Debug trace including config snapshot values from the matcher.
+   */
+  protected function buildDebugTrace(
+    int $entityId = 0,
+    int $lookbackMonths = 0,
+    int $anchor = 0,
+    int $windowStart = 0,
+    int $candidateLimit = 0,
+    string $originalTitle = '',
+    string $originUrl = '',
+    int $titlePatternCount = 0,
+    int $urlPatternCount = 0,
+    array $sourceTermIds = [],
+    int $minimumSeriesCount = 0,
+  ): SeriesMatchDebugTrace {
+    return new SeriesMatchDebugTrace(
+      entityId: $entityId,
+      lookbackMonths: $lookbackMonths,
+      anchor: $anchor,
+      windowStart: $windowStart,
+      candidateLimit: $candidateLimit,
+      originalTitle: $originalTitle,
+      originUrl: $originUrl,
+      titlePatternCount: $titlePatternCount,
+      urlPatternCount: $urlPatternCount,
+      sourceTermIds: $sourceTermIds,
+      similarityThreshold: $this->getCandidateClusteringSimilarityThreshold(),
+      pairwiseTaggingWeight: $this->getCandidateClusteringTaggingWeight(),
+      pairwiseTitleWeight: $this->getCandidateClusteringTitleWeight(),
+      clusterWeightSize: $this->getClusterScoringSizeWeight(),
+      clusterWeightPattern: $this->getClusterScoringPatternScoreWeight(),
+      clusterWeightTagging: $this->getClusterScoringTaggingConsistencyWeight(),
+      minimumSeriesCount: $minimumSeriesCount,
+    );
+  }
+
+  /**
+   * Builds proposed field updates for a successful match.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity to apply series tagging to.
+   * @param string $original_title
+   *   Original title of the report (first revision when saved, else entity).
+   * @param int[] $candidate_ids
+   *   Final candidate node IDs in the winning cluster.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate field metadata used to copy values and generate the title.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchProposal
+   *   Proposed field values and provenance, or empty when there are no
+   *   candidates.
+   */
+  protected function buildSeriesMatchProposal(
+    EntityInterface $entity,
+    string $original_title,
+    array $candidate_ids,
+    array $metadata,
+  ): SeriesMatchProposal {
+    if ($candidate_ids === []) {
+      return new SeriesMatchProposal();
+    }
+
+    $sorted_candidate_ids = $this->sortCandidateIdsByRecency($candidate_ids, $metadata);
+    $most_recent_candidate_id = $sorted_candidate_ids[0] ?? max($candidate_ids);
+
+    $field_copy = $this->getFieldValuesToCopy(
+      $candidate_ids,
+      $metadata,
+      $most_recent_candidate_id,
+    );
+    $title_result = $this->generateReportTitle(
+      $entity,
+      $original_title,
+      $sorted_candidate_ids,
+      $metadata,
+    );
+
+    $updated_fields = $field_copy['values'];
+    $updated_fields['title'] = $title_result['title'];
+
+    return new SeriesMatchProposal(
+      updatedFields: $updated_fields,
+      updatedFieldSources: $field_copy['sources'],
+      titleSource: $title_result['source'],
+      titleAiDurationSeconds: $title_result['aiDurationSeconds'],
+      mostRecentCandidateId: $most_recent_candidate_id,
+    );
+  }
+
+  /**
+   * Check if series matching can apply to the given entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to check.
+   *
+   * @return bool
+   *   TRUE if series matching can apply to the entity, FALSE otherwise.
+   */
+  protected function canApplySeriesMatching(EntityInterface $entity): bool {
+    return $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report';
+  }
+
+  /**
+   * Returns typed matcher settings loaded from config.
+   *
+   * @return \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchMatcherSettings
+   *   Matcher settings from reliefweb_content_analyzer.settings.
+   */
+  protected function matcherSettings(): SeriesMatchMatcherSettings {
+    return $this->matcherSettings ??= SeriesMatchMatcherSettings::fromConfigArray(
+      $this->configFactory
+        ->get('reliefweb_content_analyzer.settings')
+        ->get('report_series_matching.matcher'),
+    );
+  }
+
+  /**
+   * Get the minimum number of reports required for a confident series match.
+   *
+   * Used for confidence tiering, not candidate retrieval.
+   *
+   * @return int
+   *   The minimum number of reports to consider a series.
+   */
+  protected function getMinimumSeriesReportCount(): int {
+    return $this->matcherSettings()->minimumSeriesReportCount;
+  }
+
+  /**
+   * Get the lookback window in months for series candidate lookup.
+   *
+   * @return int
+   *   How many months before the entity creation date to search (e.g. 3).
+   */
+  protected function getSeriesCandidateDateRangeMonths(): int {
+    return $this->matcherSettings()->seriesCandidateDateRangeMonths;
+  }
+
+  /**
+   * Get the maximum number of series candidates to return.
+   *
+   * @return int
+   *   The maximum number of series candidates to return.
+   */
+  protected function getSeriesCandidateLimit(): int {
+    return $this->matcherSettings()->seriesCandidateLimit;
+  }
+
+  /**
+   * Get the maximum source text length for title AI generation.
+   *
+   * @return int
+   *   Maximum character length of extracted file text passed to the AI.
+   */
+  protected function getAiTitleSourceLengthLimit(): int {
+    return $this->matcherSettings()->aiTitleSourceLengthLimit;
+  }
+
+  /**
+   * Get the number of example titles to include in title AI generation.
+   *
+   * @return int
+   *   Maximum number of candidate titles passed as style examples.
+   */
+  protected function getAiTitleExampleLineCount(): int {
+    return $this->matcherSettings()->aiTitleExampleLineCount;
+  }
+
+  /**
+   * Minimum titles sharing one stem required before AI title generation.
+   *
+   * @return int
+   *   Configured minimum consistent example count.
+   */
+  protected function getAiTitleMinConsistentExamples(): int {
+    return $this->matcherSettings()->aiTitleMinConsistentExamples;
+  }
+
+  /**
+   * Number of PDF pages to extract for series title matching.
+   *
+   * @return int
+   *   Page count starting from page 1 (at least 1).
+   */
+  protected function getAiTitleExtractPageCount(): int {
+    return max(1, $this->matcherSettings()->aiTitleExtractPageCount);
+  }
+
+  /**
+   * Minimum helper confidence required before calling the title LLM.
+   *
+   * @return float
+   *   Confidence threshold in 0–1.
+   */
+  protected function getAiTitleMatchMinConfidence(): float {
+    return $this->matcherSettings()->aiTitleMatchMinConfidence;
+  }
+
+  /**
+   * Minimum title-pattern similarity for title matching.
+   *
+   * @return float
+   *   Threshold in [0, 1].
+   */
+  protected function getTitlePatternSimilarityThreshold(): float {
+    return $this->matcherSettings()->titlePatternSimilarityThreshold;
+  }
+
+  /**
+   * Get the template for the structured output title field description.
+   *
+   * @return string
+   *   Description template; @examples is replaced with numbered example titles.
+   */
+  protected function getAiTitleDescriptionTemplate(): string {
+    return $this->matcherSettings()->aiTitleDescriptionTemplate;
+  }
+
+  /**
+   * Get the number of tokens to include in the pattern.
+   *
+   * @return int[]
+   *   The number of tokens to include in the pattern.
+   */
+  protected function getPatternTokenCounts(): array {
+    return $this->matcherSettings()->patternTokenCounts;
+  }
+
+  /**
+   * Get the weight of tagging similarity in candidate pairwise clustering.
+   *
+   * @return float
+   *   Weight in the range 0–1. Must sum to 1 with the title weight.
+   */
+  protected function getCandidateClusteringTaggingWeight(): float {
+    return $this->matcherSettings()->candidateClusteringTaggingWeight;
+  }
+
+  /**
+   * Get the weight of edited-title similarity in candidate pairwise clustering.
+   *
+   * @return float
+   *   Weight in the range 0–1. Must sum to 1 with the tagging weight.
+   */
+  protected function getCandidateClusteringTitleWeight(): float {
+    return $this->matcherSettings()->candidateClusteringTitleWeight;
+  }
+
+  /**
+   * Get the combined similarity threshold for candidate clustering edges.
+   *
+   * @return float
+   *   Minimum combined pairwise similarity (0–1) to connect two candidates.
+   */
+  protected function getCandidateClusteringSimilarityThreshold(): float {
+    return $this->matcherSettings()->candidateClusteringSimilarityThreshold;
+  }
+
+  /**
+   * Get the weight of cluster size in best-cluster selection.
+   *
+   * @return float
+   *   Weight for the normalised cluster size signal.
+   */
+  protected function getClusterScoringSizeWeight(): float {
+    return $this->matcherSettings()->clusterScoringSizeWeight;
+  }
+
+  /**
+   * Get the weight of average pattern score in best-cluster selection.
+   *
+   * @return float
+   *   Weight for the normalised average pattern score signal.
+   */
+  protected function getClusterScoringPatternScoreWeight(): float {
+    return $this->matcherSettings()->clusterScoringPatternScoreWeight;
+  }
+
+  /**
+   * Get the weight of tagging consistency in best-cluster selection.
+   *
+   * @return float
+   *   Weight for the tagging consistency signal.
+   */
+  protected function getClusterScoringTaggingConsistencyWeight(): float {
+    return $this->matcherSettings()->clusterScoringTaggingConsistencyWeight;
+  }
+
+  /**
+   * Get the field names to get the metadata from.
+   *
+   * @return string[]
+   *   The field names.
+   */
+  protected function getMetadataFieldNames(): array {
+    return array_unique(array_merge(
+      [
+        'title',
+        'created',
+        $this->getRecencyFieldName(),
+      ],
+      $this->getReportEntityFieldNamesToCopy(),
+      $this->getClusterComparisonFieldNames(),
+    ));
+  }
+
+  /**
+   * Get the field names to compare for cluster comparison.
+   *
+   * @return string[]
+   *   The field names.
+   */
+  protected function getClusterComparisonFieldNames(): array {
+    return $this->matcherSettings()->clusterComparisonFieldNames;
+  }
+
+  /**
+   * Get date field to determine recency.
+   *
+   * @return string
+   *   The field name.
+   */
+  protected function getRecencyFieldName(): string {
+    return $this->matcherSettings()->recencyFieldName;
+  }
+
+  /**
+   * Get the field names to copy to the report entity.
+   *
+   * @return string[]
+   *   The field names.
+   */
+  protected function getReportEntityFieldNamesToCopy(): array {
+    return $this->matcherSettings()->reportEntityFieldNamesToCopy;
+  }
+
+  /**
+   * Inference settings for report title AI generation.
+   *
+   * @return InferenceSettings
+   *   Inference settings from reliefweb_content_analyzer.settings.
+   */
+  protected function getReportTitleAiInferenceSettings(): array {
+    return $this->matcherSettings()->aiTitleInference->toInferenceArray();
+  }
+
+  /**
+   * Get the field definitions for the metadata fields.
+   *
+   * @param string[] $field_names
+   *   The field names.
+   *
+   * @return FieldDefinitions
+   *   The field definitions keyed by field name.
+   */
+  protected function getMetadataFieldDefinitions(array $field_names): array {
+    $entity_type_id = 'node';
+    $bundle = 'report';
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions($entity_type_id, $bundle);
+
+    $definitions = [];
+    foreach ($field_names as $field_name) {
+      $field_storage_definition = $field_definitions[$field_name]?->getFieldStorageDefinition();
+      if ($field_storage_definition === NULL) {
+        $definitions[$field_name] = NULL;
+        continue;
+      }
+
+      $type = match (TRUE) {
+        $field_storage_definition->isBaseField() => 'property',
+        $field_storage_definition->getType() === 'entity_reference' => 'reference',
+        default => 'value',
+      };
+
+      $definitions[$field_name] = [
+        'type' => $type,
+        'column' => $field_storage_definition->getMainPropertyName(),
+        'multiple' => $field_storage_definition->getCardinality() !== 1,
+      ];
+    }
+    return $definitions;
+  }
+
+  /**
+   * Get source term IDs from a report entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity.
+   *
+   * @return int[]
+   *   Source taxonomy term IDs.
+   */
+  protected function getEntitySourceIds(EntityInterface $entity): array {
+    if (!$entity->hasField('field_source') || $entity->get('field_source')->isEmpty()) {
+      return [];
+    }
+
+    return array_map(
+      'intval',
+      array_column($entity->get('field_source')->getValue(), 'target_id'),
+    );
+  }
+
+  /**
+   * Fetch lightweight metadata for candidate report nodes.
+   *
+   * @param int[] $nids
+   *   Candidate node IDs.
+   * @param string[] $field_names
+   *   The field names to get the metadata from.
+   *
+   * @return CandidateMetadataSet
+   *   Metadata keyed by node ID.
+   */
+  protected function getCandidateMetadata(
+    array $nids,
+    array $field_names = [],
+  ): array {
+    if (empty($nids)) {
+      return [];
+    }
+
+    $field_names = $field_names ?: $this->getMetadataFieldNames();
+    if (empty($field_names)) {
+      return [];
+    }
+
+    $field_definitions = $this->getMetadataFieldDefinitions($field_names);
+
+    $values = [];
+    $defaults = [];
+    foreach ($field_names as $field_name) {
+      $field_definition = $field_definitions[$field_name];
+      if ($field_definition === NULL) {
+        $defaults[$field_name] = [];
+        $values[$field_name] = [];
+        continue;
+      }
+
+      $type = $field_definition['type'];
+      $column = $field_definition['column'];
+
+      $values[$field_name] = match ($type) {
+        'property' => $this->fetchPropertyValuesGrouped($field_name, $nids),
+        'value' => $this->fetchFieldValuesGrouped($field_name, $nids, $column),
+        'reference' => $this->fetchReferenceTargetIdsGrouped($field_name, $column, $nids),
+      };
+
+      $defaults[$field_name] = match ($type) {
+        'property' => '',
+        default =>  [],
+      };
+
+      foreach ($nids as $nid) {
+        $metadata[$nid][$field_name] = $values[$field_name][$nid] ?? $defaults[$field_name];
+      }
+    }
+    return $metadata;
+  }
+
+  /**
+   * Fetch string entity property values grouped by entity ID.
+   *
+   * @param string $property
+   *   Property name.
+   * @param int[] $entity_ids
+   *   Entity IDs.
+   *
+   * @return array<int, string>
+   *   The property values keyed by entity ID.
+   */
+  protected function fetchPropertyValuesGrouped(string $property, array $entity_ids): array {
+    $query = $this->database->select('node_field_data', 'nfd');
+    $query->fields('nfd', ['nid', $property]);
+    $query->condition('nfd.nid', $entity_ids, 'IN');
+    $results = $query->execute()->fetchAllKeyed();
+
+    $values = [];
+    foreach ($entity_ids as $entity_id) {
+      $values[$entity_id] = $results[$entity_id] ?? '';
+    }
+    return $values;
+  }
+
+  /**
+   * Fetch field values grouped by entity ID.
+   *
+   * @param string $field_name
+   *   Field name.
+   * @param int[] $entity_ids
+   *   Entity IDs.
+   * @param string $column
+   *   The column to fetch.
+   *
+   * @return array<int, string[]>
+   *   The field values keyed by entity ID.
+   */
+  protected function fetchFieldValuesGrouped(
+    string $field_name,
+    array $entity_ids,
+    string $column = 'value',
+  ): array {
+    if ($entity_ids === []) {
+      return [];
+    }
+
+    $query = $this->database->select('node__' . $field_name, 'f');
+    $query->fields('f', ['entity_id', $field_name . '_' . $column]);
+    $query->condition('f.entity_id', $entity_ids, 'IN');
+    $query->condition('f.deleted', 0);
+    $query->orderBy('f.entity_id', 'ASC');
+    $query->orderBy('f.delta', 'ASC');
+
+    $results = [];
+    foreach ($query->execute() as $row) {
+      $results[(int) $row->entity_id][] = $row->{$field_name . '_' . $column};
+    }
+
+    $values = [];
+    foreach ($entity_ids as $entity_id) {
+      $values[$entity_id] = $results[$entity_id] ?? [];
+    }
+    return $values;
+  }
+
+  /**
+   * Load sorted unique reference target IDs per entity from a field table.
+   *
+   * @param string $table
+   *   Field data table (e.g. field_primary_country).
+   * @param string $target_column
+   *   Target ID column on that table.
+   * @param int[] $entity_ids
+   *   Entity IDs to load.
+   *
+   * @return array<int, int[]>
+   *   Entity ID keyed map of sorted unique target IDs.
+   */
+  protected function fetchReferenceTargetIdsGrouped(
+    string $table,
+    string $target_column,
+    array $entity_ids,
+  ): array {
+    if ($entity_ids === []) {
+      return [];
+    }
+
+    $values = $this->fetchFieldValuesGrouped($table, $entity_ids, $target_column);
+    foreach ($values as $entity_id => $field_values) {
+      $target_ids = array_unique(array_map('intval', $field_values));
+      sort($target_ids, \SORT_NUMERIC);
+      $values[$entity_id] = $target_ids;
+    }
+    return $values;
+  }
+
+  /**
+   * Pattern-score-weighted share of the selected cluster over retrieval.
+   *
+   * @param array<int, int|float> $retrieved_scored
+   *   Pattern scores for all candidates after the retrieval limit.
+   * @param int[] $selected_ids
+   *   Node IDs in the selected series cluster.
+   *
+   * @return float
+   *   Selected score sum / total retrieved score sum, in [0, 1].
+   */
+  protected function computeBestClusterShare(
+    array $retrieved_scored,
+    array $selected_ids,
+  ): float {
+    $total = array_sum($retrieved_scored);
+    if ($total <= 0) {
+      return 0.0;
+    }
+
+    $selected_sum = 0;
+    foreach ($selected_ids as $id) {
+      $selected_sum += $retrieved_scored[$id] ?? 0;
+    }
+
+    return min(1.0, max(0.0, $selected_sum / $total));
+  }
+
+  /**
+   * Builds selected candidate IDs and full retrieval pattern-score map.
+   *
+   * @param array<int, int|float> $retrieved_scored
+   *   Pattern scores for all candidates after the retrieval limit.
+   * @param int[] $selected_cluster
+   *   Node IDs kept in the selected series cluster.
+   *
+   * @return array{
+   *   candidateIds: int[],
+   *   candidatePatternScores: array<int, int|float>,
+   *   }
+   *   Selected IDs (score order) and the full retrieved score map.
+   */
+  protected function buildCandidateEvidenceFromSelection(
+    array $retrieved_scored,
+    array $selected_cluster,
+  ): array {
+    arsort($retrieved_scored, \SORT_NUMERIC);
+    $selected_scored = array_intersect_key(
+      $retrieved_scored,
+      array_flip($selected_cluster),
+    );
+    arsort($selected_scored, \SORT_NUMERIC);
+
+    return [
+      'candidateIds' => array_keys($selected_scored),
+      'candidatePatternScores' => $retrieved_scored,
+    ];
+  }
+
+  /**
+   * Select series candidates from a high-score core plus similar support.
+   *
+   * Builds the core from candidates at the maximum pattern score (best
+   * connected component within that tier). Then admits lower-score candidates
+   * when they are similar enough to at least one core member. Recency/NID only
+   * ranks consideration order and never admits by themselves.
+   *
+   * @param array<int, int|float> $scored_candidates
+   *   Merged pattern scores keyed by node ID (SQL score plus optional
+   *   title-similarity boost).
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata from getCandidateMetadata().
+   *
+   * @return array{
+   *   cluster: int[],
+   *   cluster_score: float,
+   *   size_score: float,
+   *   pattern_score: float,
+   *   tagging_consistency: float,
+   *   core_clusters: array<int, int[]>,
+   *   }
+   *   Final candidate set, score breakdown, and max-score-tier components.
+   */
+  protected function selectSeriesCandidatesFromCoreAndSupport(
+    array $scored_candidates,
+    array $metadata,
+  ): array {
+    $empty = [
+      'cluster' => [],
+      'cluster_score' => 0.0,
+      'size_score' => 0.0,
+      'pattern_score' => 0.0,
+      'tagging_consistency' => 0.0,
+      'core_clusters' => [],
+    ];
+
+    if ($scored_candidates === []) {
+      return $empty;
+    }
+
+    // Core tier uses the integer SQL score component (floor). Fractional
+    // title-similarity boosts reorder within a tier without shrinking the core
+    // to a single unique max float.
+    $max_tier = (int) floor((float) max($scored_candidates));
+    $core_scored = array_filter(
+      $scored_candidates,
+      static fn(int|float $score): bool => (int) floor((float) $score) === $max_tier,
+    );
+
+    $core_clusters = $this->clusterCandidates($core_scored, $metadata);
+    $core_selection = $this->selectBestCluster($core_clusters, $core_scored, $metadata);
+    $core = $core_selection['cluster'];
+    if ($core === []) {
+      $empty['core_clusters'] = $core_clusters;
+      return $empty;
+    }
+
+    $selected = $core;
+
+    $support_ids = array_values(array_diff(
+      array_keys($scored_candidates),
+      $core,
+    ));
+    $ranked_support = $this->rankSupportCandidatesByProximityToCore(
+      $support_ids,
+      $core,
+      $metadata,
+    );
+    $threshold = $this->getCandidateClusteringSimilarityThreshold();
+
+    foreach ($ranked_support as $support_nid) {
+      if ($this->maxSimilarityToCore($support_nid, $core, $metadata) >= $threshold) {
+        $selected[] = $support_nid;
+      }
+    }
+
+    $breakdown = $this->selectBestCluster([$selected], $scored_candidates, $metadata);
+
+    return [
+      'cluster' => $selected,
+      'cluster_score' => $breakdown['cluster_score'],
+      'size_score' => $breakdown['size_score'],
+      'pattern_score' => $breakdown['pattern_score'],
+      'tagging_consistency' => $breakdown['tagging_consistency'],
+      'core_clusters' => $core_clusters,
+    ];
+  }
+
+  /**
+   * Rank lower-score candidates by proximity to the core timeline.
+   *
+   * Candidates whose order key falls inside the core span are considered
+   * first, then those nearest outside the span. NID is the final tie-break.
+   *
+   * @param int[] $support_ids
+   *   Lower-score candidate node IDs.
+   * @param int[] $core
+   *   Core candidate node IDs.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return int[]
+   *   Support IDs in consideration order.
+   */
+  protected function rankSupportCandidatesByProximityToCore(
+    array $support_ids,
+    array $core,
+    array $metadata,
+  ): array {
+    if ($support_ids === [] || $core === []) {
+      return $support_ids;
+    }
+
+    $core_keys = [];
+    foreach ($core as $nid) {
+      $core_keys[] = $this->resolveCandidateOrderKey($nid, $metadata);
+    }
+    $core_min = min($core_keys);
+    $core_max = max($core_keys);
+
+    $ranked = [];
+    foreach ($support_ids as $nid) {
+      $key = $this->resolveCandidateOrderKey($nid, $metadata);
+      if ($key >= $core_min && $key <= $core_max) {
+        $outside = 0;
+        $distance = 0;
+      }
+      else {
+        $outside = 1;
+        $distance = min(abs($key - $core_min), abs($key - $core_max));
+      }
+      $ranked[] = [
+        'nid' => $nid,
+        'outside' => $outside,
+        'distance' => $distance,
+      ];
+    }
+
+    usort(
+      $ranked,
+      static function (array $a, array $b): int {
+        return $a['outside'] <=> $b['outside']
+          ?: $a['distance'] <=> $b['distance']
+          ?: $a['nid'] <=> $b['nid'];
+      },
+    );
+
+    return array_column($ranked, 'nid');
+  }
+
+  /**
+   * Resolve a stable chronological order key for a candidate.
+   *
+   * Prefers the configured recency field, then created, then the node ID.
+   *
+   * @param int $nid
+   *   Candidate node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return int
+   *   Order key (higher = later when used as a timestamp).
+   */
+  protected function resolveCandidateOrderKey(int $nid, array $metadata): int {
+    $recency_field = $this->getRecencyFieldName();
+    if (isset($metadata[$nid][$recency_field])) {
+      $timestamp = $this->parseRecencyValueToTimestamp($metadata[$nid][$recency_field]);
+      if ($timestamp !== NULL) {
+        return $timestamp;
+      }
+    }
+
+    if (isset($metadata[$nid]['created'])) {
+      $timestamp = $this->parseRecencyValueToTimestamp($metadata[$nid]['created']);
+      if ($timestamp !== NULL) {
+        return $timestamp;
+      }
+    }
+
+    return $nid;
+  }
+
+  /**
+   * Maximum pairwise similarity between a candidate and any core member.
+   *
+   * @param int $nid
+   *   Candidate node ID.
+   * @param int[] $core
+   *   Core candidate node IDs.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata.
+   *
+   * @return float
+   *   Similarity in the range 0–1.
+   */
+  protected function maxSimilarityToCore(int $nid, array $core, array $metadata): float {
+    $max = 0.0;
+    $candidate_meta = $metadata[$nid] ?? [];
+    foreach ($core as $core_nid) {
+      $max = max(
+        $max,
+        $this->computePairwiseCandidateSimilarity(
+          $candidate_meta,
+          $metadata[$core_nid] ?? [],
+        ),
+      );
+    }
+    return $max;
+  }
+
+  /**
+   * Cluster candidates by tagging overlap and edited-title similarity.
+   *
+   * @param array<int, int> $scored_candidates
+   *   Merged pattern scores keyed by node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata from getCandidateMetadata().
+   *
+   * @return array<int, int[]>
+   *   Connected components (clusters) of node IDs, largest first.
+   */
+  protected function clusterCandidates(array $scored_candidates, array $metadata): array {
+    $nids = array_keys($scored_candidates);
+    if (count($nids) <= 1) {
+      return $nids === [] ? [] : [$nids];
+    }
+
+    $threshold = $this->getCandidateClusteringSimilarityThreshold();
+    $adjacency = array_fill_keys($nids, []);
+
+    $count = count($nids);
+    for ($i = 0; $i < $count; $i++) {
+      for ($j = $i + 1; $j < $count; $j++) {
+        $nid_i = $nids[$i];
+        $nid_j = $nids[$j];
+        if ($this->computePairwiseCandidateSimilarity(
+          $metadata[$nid_i] ?? [],
+          $metadata[$nid_j] ?? [],
+        ) >= $threshold) {
+          $adjacency[$nid_i][] = $nid_j;
+          $adjacency[$nid_j][] = $nid_i;
+        }
+      }
+    }
+
+    $clusters = $this->findConnectedClusters($adjacency);
+    usort($clusters, static fn(array $a, array $b): int => count($b) <=> count($a));
+
+    return $clusters;
+  }
+
+  /**
+   * Select the most likely series cluster from a list of candidate clusters.
+   *
+   * @param array<int, int[]> $clusters
+   *   Clusters of node IDs from clusterCandidates().
+   * @param array<int, int|float> $scored_candidates
+   *   Merged pattern scores keyed by node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata from getCandidateMetadata().
+   *
+   * @return array{cluster: int[], cluster_score: float, size_score: float, pattern_score: float, tagging_consistency: float}
+   *   Best cluster and its score breakdown.
+   */
+  protected function selectBestCluster(
+    array $clusters,
+    array $scored_candidates,
+    array $metadata,
+  ): array {
+    $empty = [
+      'cluster' => [],
+      'cluster_score' => 0.0,
+      'size_score' => 0.0,
+      'pattern_score' => 0.0,
+      'tagging_consistency' => 0.0,
+    ];
+
+    if ($clusters === []) {
+      return $empty;
+    }
+
+    $total_candidates = count($scored_candidates);
+    $max_pattern_score = max($scored_candidates) ?: 1;
+
+    $size_weight = $this->getClusterScoringSizeWeight();
+    $pattern_weight = $this->getClusterScoringPatternScoreWeight();
+    $tagging_weight = $this->getClusterScoringTaggingConsistencyWeight();
+
+    $best_cluster = [];
+    $best_score = -1.0;
+    $best_size_score = 0.0;
+    $best_pattern_score = 0.0;
+    $best_tagging_score = 0.0;
+
+    foreach ($clusters as $cluster) {
+      $cluster_size = count($cluster);
+      $size_score = $cluster_size / $total_candidates;
+
+      $pattern_sum = 0;
+      foreach ($cluster as $nid) {
+        $pattern_sum += $scored_candidates[$nid] ?? 0;
+      }
+      $pattern_score = ($pattern_sum / $cluster_size) / $max_pattern_score;
+
+      $tagging_score = $this->computeClusterTaggingConsistency($cluster, $metadata);
+
+      $cluster_score = ($size_weight * $size_score)
+        + ($pattern_weight * $pattern_score)
+        + ($tagging_weight * $tagging_score);
+
+      if ($cluster_score > $best_score) {
+        $best_score = $cluster_score;
+        $best_cluster = $cluster;
+        $best_size_score = $size_score;
+        $best_pattern_score = $pattern_score;
+        $best_tagging_score = $tagging_score;
+      }
+    }
+
+    return [
+      'cluster' => $best_cluster,
+      'cluster_score' => $best_score,
+      'size_score' => $best_size_score,
+      'pattern_score' => $best_pattern_score,
+      'tagging_consistency' => $best_tagging_score,
+    ];
+  }
+
+  /**
+   * Compute combined pairwise similarity between two candidates.
+   *
+   * @param CandidateMetadata $a
+   *   First candidate metadata.
+   * @param CandidateMetadata $b
+   *   Second candidate metadata.
+   *
+   * @return float
+   *   Combined similarity in the range 0–1.
+   */
+  protected function computePairwiseCandidateSimilarity(array $a, array $b): float {
+    $tagging_fields = $this->getClusterComparisonFieldNames();
+
+    $field_scores = [];
+    foreach ($tagging_fields as $field) {
+      $field_scores[] = $this->computePairwiseTaggingFieldSimilarity(
+        $a[$field] ?? [],
+        $b[$field] ?? [],
+      );
+    }
+    $tagging_score = array_sum($field_scores) / count($tagging_fields);
+
+    $title_a = $a['title'] ?? '';
+    $title_b = $b['title'] ?? '';
+    $title_score = 0.0;
+    if ($title_a !== '' && $title_b !== '') {
+      similar_text($title_a, $title_b, $percent);
+      $title_score = $percent / 100.0;
+    }
+
+    return ($this->getCandidateClusteringTaggingWeight() * $tagging_score)
+      + ($this->getCandidateClusteringTitleWeight() * $title_score);
+  }
+
+  /**
+   * Compute pairwise similarity for one multi-valued tagging dimension.
+   *
+   * Empty-empty counts as agreement. Empty vs non-empty counts as mismatch.
+   * Otherwise uses Jaccard similarity on sorted unique term ID sets.
+   *
+   * @param int[] $set_a
+   *   Sorted unique term IDs for the field on candidate A.
+   * @param int[] $set_b
+   *   Sorted unique term IDs for the field on candidate B.
+   *
+   * @return float
+   *   Score in the range 0–1.
+   */
+  protected function computePairwiseTaggingFieldSimilarity(array $set_a, array $set_b): float {
+    if ($set_a === [] && $set_b === []) {
+      return 1.0;
+    }
+    if ($set_a === [] || $set_b === []) {
+      return 0.0;
+    }
+
+    $intersection = count(array_intersect($set_a, $set_b));
+    if ($intersection === 0) {
+      return 0.0;
+    }
+
+    $union = count(array_unique(array_merge($set_a, $set_b)));
+
+    return $union > 0 ? $intersection / $union : 0.0;
+  }
+
+  /**
+   * Compute how consistently a cluster shares tagging field values.
+   *
+   * @param int[] $cluster
+   *   Node IDs in the cluster.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata keyed by node ID.
+   *
+   * @return float
+   *   Average fraction of members sharing the most common value per field.
+   */
+  protected function computeClusterTaggingConsistency(array $cluster, array $metadata): float {
+    if ($cluster === []) {
+      return 0.0;
+    }
+
+    $tagging_fields = $this->getClusterComparisonFieldNames();
+
+    $field_scores = [];
+    foreach ($tagging_fields as $field) {
+      // Count members that include each term ID; mode = term appearing on most
+      // members.
+      $members_per_term = [];
+      foreach ($cluster as $nid) {
+        $ids = $metadata[$nid][$field] ?? [];
+        foreach ($ids as $tid) {
+          $members_per_term[$tid] = ($members_per_term[$tid] ?? 0) + 1;
+        }
+      }
+      if ($members_per_term === []) {
+        // Everyone empty on this field — treat as fully aligned for
+        // consistency.
+        $field_scores[] = 1.0;
+      }
+      else {
+        $field_scores[] = max($members_per_term) / count($cluster);
+      }
+    }
+
+    return array_sum($field_scores) / count($field_scores);
+  }
+
+  /**
+   * Find connected components from an adjacency list using BFS flood-fill.
+   *
+   * @param array<int|string, int[]|string[]> $adjacency
+   *   Adjacency list mapping each node to its connected neighbours.
+   *
+   * @return array<int, int[]|string[]>
+   *   Connected components, each an array of node keys.
+   */
+  protected function findConnectedClusters(array $adjacency): array {
+    $keys = array_keys($adjacency);
+    $visited = [];
+    $clusters = [];
+
+    foreach ($keys as $key) {
+      if (isset($visited[$key])) {
+        continue;
+      }
+      $cluster = [];
+      $queue = [$key];
+      while ($queue !== []) {
+        $current = array_shift($queue);
+        if (isset($visited[$current])) {
+          continue;
+        }
+        $visited[$current] = TRUE;
+        $cluster[] = $current;
+        foreach ($adjacency[$current] ?? [] as $neighbour) {
+          if (!isset($visited[$neighbour])) {
+            $queue[] = $neighbour;
+          }
+        }
+      }
+      $clusters[] = $cluster;
+    }
+
+    return $clusters;
+  }
+
+  /**
+   * Run a multi-pattern candidate query and return scored entity IDs.
+   *
+   * Score tiers are processed cumulatively from highest to lowest. Candidates
+   * from lower tiers are added to the accumulated set without discarding higher
+   * tier matches. Each candidate keeps the score of the highest tier it
+   * matched.
+   *
+   * @param int $entity_id
+   *   The entity ID to exclude from the results.
+   * @param string $field
+   *   The field to search in (title or url).
+   * @param array<int, string> $patterns
+   *   Scored LIKE patterns keyed by specificity score.
+   * @param int $window_start
+   *   Lower bound for candidate node_field_data.created.
+   * @param int $window_end
+   *   Upper bound for candidate node_field_data.created.
+   * @param int[] $source_ids
+   *   The source IDs to search for.
+   * @param int|null $limit
+   *   The maximum number of results to return.
+   *
+   * @return array<int, int>
+   *   Returns an array of candidate report IDs as keys, each mapped to their
+   *   matching score tier. Higher scores mean more specific matches.
+   */
+  protected function getSeriesCandidateIdsByPatterns(
+    int $entity_id,
+    string $field,
+    array $patterns,
+    int $window_start,
+    int $window_end,
+    array $source_ids,
+    ?int $limit = NULL,
+  ): array {
+    if ($patterns === []) {
+      return [];
+    }
+
+    $limit = $limit ?? $this->getSeriesCandidateLimit();
+    $query = $this->getSeriesCandidateQueryMultiPattern(
+      $entity_id,
+      $field,
+      $patterns,
+      $window_start,
+      $window_end,
+      $source_ids,
+      $limit,
+    );
+
+    $rows = $query->execute()->fetchAll();
+
+    if ($rows === []) {
+      return [];
+    }
+
+    $tiers = [];
+    foreach ($rows as $row) {
+      $score = (int) $row->pattern_score;
+      if ($score === 0) {
+        continue;
+      }
+      $tiers[$score][] = $row;
+    }
+
+    if ($tiers === []) {
+      return [];
+    }
+
+    krsort($tiers, \SORT_NUMERIC);
+
+    $candidates = [];
+    foreach ($tiers as $score => $tier_rows) {
+      foreach ($tier_rows as $row) {
+        $nid = (int) $row->nid;
+        if (!isset($candidates[$nid])) {
+          $candidates[$nid] = $score;
+        }
+      }
+    }
+
+    if ($candidates === []) {
+      return [];
+    }
+
+    return array_slice($candidates, 0, $limit, TRUE);
+  }
+
+  /**
+   * Get the SQL query to find the series candidates using multiple patterns.
+   *
+   * @param int $entity_id
+   *   The entity ID to exclude from the results.
+   * @param string $field
+   *   The field to search in (title or url).
+   * @param array<int, string> $patterns
+   *   Scored LIKE patterns keyed by specificity score.
+   * @param int $window_start
+   *   Lower bound for candidate node_field_data.created.
+   * @param int $window_end
+   *   Upper bound for candidate node_field_data.created.
+   * @param int[] $source_ids
+   *   The source IDs to search for.
+   * @param int $limit
+   *   The maximum number of results to return.
+   *
+   * @return \Drupal\Core\Database\Query\SelectInterface
+   *   The SQL query to find the series candidates.
+   */
+  protected function getSeriesCandidateQueryMultiPattern(
+    int $entity_id,
+    string $field,
+    array $patterns,
+    int $window_start,
+    int $window_end,
+    array $source_ids,
+    int $limit = 100,
+  ): SelectInterface {
+    // Subquery to limit to the first revisions.
+    $first_revision_subquery = $this->database->select('node_field_revision', 'nfr_inner');
+    $first_revision_subquery->fields('nfr_inner', ['nid']);
+    $first_revision_subquery->addExpression('MIN(nfr_inner.vid)', 'first_vid');
+    $first_revision_subquery->groupBy('nfr_inner.nid');
+
+    // Main query.
+    $query = $this->database->select('node_field_data', 'nfd');
+    $query->fields('nfd', ['nid', 'created']);
+
+    // Join to only the first revision.
+    $query->innerJoin(
+      $first_revision_subquery,
+      'first_revision',
+      'first_revision.nid = nfd.nid',
+    );
+
+    // Limit to report nodes.
+    $query->condition('nfd.type', 'report');
+
+    // Exclude the entity itself.
+    $query->condition('nfd.nid', $entity_id, '<>');
+
+    // Filter by candidate created date range.
+    $query->condition('nfd.created', $window_start, '>=');
+    $query->condition('nfd.created', $window_end, '<=');
+
+    // Filter by source IDs.
+    // Candidates must have, at least, every source on the entity.
+    foreach ($source_ids as $index => $source_id) {
+      $alias = 'fs' . $index;
+      $query->innerJoin(
+        'node__field_source',
+        $alias,
+        "{$alias}.entity_id = nfd.nid AND {$alias}.deleted = 0 AND {$alias}.field_source_target_id = :source_{$index}",
+        [":source_{$index}" => $source_id],
+      );
+    }
+
+    // Get the field to match on.
+    if ($field === 'title') {
+      $match_field = 'nfr.title';
+      $query->innerJoin(
+        'node_field_revision',
+        'nfr',
+        'nfr.nid = first_revision.nid AND nfr.vid = first_revision.first_vid',
+      );
+    }
+    elseif ($field === 'url') {
+      $match_field = 'fon.field_origin_notes_value';
+      $query->innerJoin(
+        'node__field_origin_notes',
+        'fon',
+        'fon.entity_id = nfd.nid AND fon.deleted = 0',
+      );
+    }
+    else {
+      throw new \InvalidArgumentException("Unsupported pattern field: {$field}");
+    }
+
+    // Build the condition group for the patterns and the case expression.
+    $or_group = $query->orConditionGroup();
+    $case_parts = ['CASE'];
+    $case_arguments = [];
+    $score = count($patterns);
+
+    foreach ($patterns as $index => $pattern) {
+      $or_group->condition($match_field, $pattern, 'LIKE');
+      $case_parts[] = "WHEN {$match_field} LIKE :pattern_{$index} THEN :score_{$index}";
+      $case_arguments[":pattern_{$index}"] = $pattern;
+      $case_arguments[":score_{$index}"] = $score--;
+    }
+    $case_parts[] = 'ELSE 0 END';
+
+    $query->condition($or_group);
+    $query->addExpression(implode(' ', $case_parts), 'pattern_score', $case_arguments);
+
+    // Order by score and created date.
+    // @todo evaluate if we should order by created date first.
+    $query->orderBy('pattern_score', 'DESC');
+    $query->orderBy('nfd.created', 'DESC');
+
+    // Limit the number of results.
+    $query->range(0, $limit);
+
+    return $query;
+  }
+
+  /**
+   * Convert a title to scored SQL LIKE prefix patterns.
+   *
+   * @param string $title
+   *   The title to convert.
+   *
+   * @return array<int, string>
+   *   Scored LIKE patterns keyed by specificity score (higher = more specific).
+   */
+  protected function titleToLikePatterns(string $title): array {
+    return TitlePatternHelper::titleToLikePatterns(
+      $title,
+      $this->getPatternTokenCounts(),
+    );
+  }
+
+  /**
+   * Convert an origin URL to scored SQL LIKE prefix patterns.
+   *
+   * @param string $url
+   *   The origin URL to convert.
+   *
+   * @return array<int, string>
+   *   Scored LIKE patterns keyed by specificity score (higher = more specific).
+   */
+  protected function urlToLikePatterns(string $url): array {
+    // Split the URL into protocol/domain and path.
+    $parts = parse_url($url);
+    if ($parts === FALSE || empty($parts['host']) || empty($parts['path'])) {
+      return [];
+    }
+    $prefix = ($parts['scheme'] ?? 'https') . '://' . $parts['host'] . '/';
+    $path = trim($parts['path'] ?? '', '/');
+
+    // Skip if the URL ends with a numeric ID. It's likely a generic documnent
+    // URL like https://example.test/document/123456 that is not specific
+    // enough to be used as a series identifier.
+    $last_path_component = array_last(explode('/', $path));
+    if (is_numeric($last_path_component)) {
+      return [];
+    }
+
+    // Generate the patterns.
+    return TitlePatternHelper::generatePatternList(
+      $path,
+      $this->getPatternTokenCounts(),
+      $prefix,
+    );
+  }
+
+  /**
+   * Get the validated origin URL for a report entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity.
+   *
+   * @return string
+   *   The origin URL, or an empty string if missing or invalid.
+   */
+  protected function getOriginUrl(EntityInterface $entity): string {
+    if (!$entity->hasField('field_origin_notes') || $entity->get('field_origin_notes')->isEmpty()) {
+      return '';
+    }
+
+    $url = (string) $entity->get('field_origin_notes')->value;
+    if (!UrlHelper::isValid($url, TRUE)) {
+      return '';
+    }
+
+    return $url;
+  }
+
+  /**
+   * Resolve the original title used for pattern matching on the subject report.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity being analyzed.
+   *
+   * @return string
+   *   First-revision title when the entity is saved, otherwise the entity
+   *   label.
+   */
+  protected function resolveOriginalTitle(EntityInterface $entity): string {
+    $entity_id = $entity->id();
+    if ($entity_id !== NULL) {
+      $from_revision = $this->getOriginalTitles([(int) $entity_id])[(int) $entity_id] ?? '';
+      if ($from_revision !== '') {
+        return $from_revision;
+      }
+    }
+
+    return trim((string) $entity->label());
+  }
+
+  /**
+   * Gets the original publication date as a Unix timestamp from the entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity.
+   *
+   * @return int|null
+   *   Start-of-day UTC timestamp, or NULL when the field is empty.
+   */
+  protected function getEntityOriginalPublicationTimestamp(EntityInterface $entity): ?int {
+    if (!$entity->hasField('field_original_publication_date')
+      || $entity->get('field_original_publication_date')->isEmpty()) {
+      return NULL;
+    }
+
+    return $this->parseRecencyValueToTimestamp(
+      $entity->get('field_original_publication_date')->value,
+    );
+  }
+
+  /**
+   * Parses a recency field value from metadata or an entity to a UTC timestamp.
+   *
+   * Supports Unix seconds (e.g. node created) and ISO/datetime strings (e.g.
+   * original publication date). Format is inferred from the value.
+   *
+   * @param string|int|array<int, string>|null $value
+   *   Recency value from candidate metadata or an entity field.
+   *
+   * @return int|null
+   *   Unix timestamp, or NULL when empty or invalid.
+   */
+  protected function parseRecencyValueToTimestamp(string|int|array|null $value): ?int {
+    if (is_array($value)) {
+      $value = array_first($value);
+    }
+
+    if (empty($value)) {
+      return NULL;
+    }
+
+    if (is_int($value)) {
+      return $value > 0 ? $value : NULL;
+    }
+
+    if (!is_string($value)) {
+      return NULL;
+    }
+
+    if (is_numeric($value)) {
+      $value = (int) $value;
+      return $value > 0 ? $value : NULL;
+    }
+
+    try {
+      return new \DateTimeImmutable($value, new \DateTimeZone('UTC'))->getTimestamp();
+    }
+    catch (\Exception) {
+      return NULL;
+    }
+  }
+
+  /**
+   * Months spanned by the best cluster for revision-log display.
+   *
+   * Uses the oldest cluster member's recency date (publication or created)
+   * through the series anchor. Falls back to the configured candidate search
+   * window when dates are missing.
+   *
+   * @param int $anchor
+   *   Series anchor timestamp (publication date, created, or request time).
+   * @param int[] $cluster_ids
+   *   Node IDs in the winning cluster.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata including the recency field.
+   *
+   * @return int
+   *   Whole months (ceiling) for "over N months" messaging, at least 1.
+   */
+  protected function computeBestClusterLookbackMonths(
+    int $anchor,
+    array $cluster_ids,
+    array $metadata,
+  ): int {
+    $config_months = $this->getSeriesCandidateDateRangeMonths();
+    if ($cluster_ids === []) {
+      return $config_months;
+    }
+
+    $recency_field = $this->getRecencyFieldName();
+    $oldest_timestamp = NULL;
+    foreach ($cluster_ids as $candidate_id) {
+      if (!isset($metadata[$candidate_id][$recency_field])) {
+        return $config_months;
+      }
+      $recency_value = $metadata[$candidate_id][$recency_field];
+      $recency_timestamp = $this->parseRecencyValueToTimestamp($recency_value);
+      if ($recency_timestamp === NULL) {
+        return $config_months;
+      }
+      if ($oldest_timestamp === NULL || $recency_timestamp < $oldest_timestamp) {
+        $oldest_timestamp = $recency_timestamp;
+      }
+    }
+
+    if ($oldest_timestamp === NULL) {
+      return $config_months;
+    }
+
+    try {
+      $timezone = new \DateTimeZone('UTC');
+      $anchor_datetime = new \DateTimeImmutable('@' . $anchor, $timezone);
+      $oldest_datetime = new \DateTimeImmutable('@' . $oldest_timestamp, $timezone);
+    }
+    catch (\Exception) {
+      return $config_months;
+    }
+
+    if ($oldest_datetime > $anchor_datetime) {
+      return $config_months;
+    }
+
+    $interval = $oldest_datetime->diff($anchor_datetime);
+    $months = $interval->y * 12 + $interval->m;
+    if ($interval->d > 0 || $interval->h > 0 || $interval->i > 0 || $interval->s > 0) {
+      $months++;
+    }
+
+    return max(1, $months);
+  }
+
+  /**
+   * Resolves the timestamp that anchors the candidate lookback window.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity being analyzed.
+   *
+   * @return int
+   *   Publication date when set, else created when set, else request time.
+   */
+  protected function resolveSeriesAnchorTimestamp(EntityInterface $entity): int {
+    $publication = $this->getEntityOriginalPublicationTimestamp($entity);
+    if ($publication !== NULL) {
+      return $publication;
+    }
+
+    $created = (int) $entity->get('created')->value;
+    if ($created !== 0) {
+      return $created;
+    }
+
+    return $this->time->getRequestTime();
+  }
+
+  /**
+   * Boosts SQL pattern scores with title-pattern similarity to the document.
+   *
+   * @param string $original_title
+   *   Document original title.
+   * @param array<int, int|float> $scored_candidates
+   *   SQL merged pattern scores keyed by node ID.
+   * @param CandidateMetadataSet $metadata
+   *   Candidate metadata including current titles.
+   *
+   * @return array{
+   *   scores: array<int, float>,
+   *   similarities: array<int, float>,
+   *   }
+   *   Boosted scores (sql + similarity) and per-candidate similarities.
+   */
+  protected function boostPatternScoresWithTitleSimilarity(
+    string $original_title,
+    array $scored_candidates,
+    array $metadata,
+  ): array {
+    $similarities = [];
+    $scores = [];
+    if ($scored_candidates === []) {
+      return ['scores' => [], 'similarities' => []];
+    }
+
+    $original_titles = $this->getOriginalTitles(array_keys($scored_candidates));
+    foreach ($scored_candidates as $nid => $sql_score) {
+      $sim = 0.0;
+      if ($original_title !== '') {
+        $candidate_original = $original_titles[$nid] ?? '';
+        $candidate_current = '';
+        $current = $metadata[$nid]['title'] ?? '';
+        if (is_string($current)) {
+          $candidate_current = $current;
+        }
+        $scores_for_nid = [];
+        if ($candidate_original !== '') {
+          $scores_for_nid[] = TitlePatternHelper::scoreTitleSimilarity(
+            $original_title,
+            $candidate_original,
+          );
+        }
+        if ($candidate_current !== '') {
+          $scores_for_nid[] = TitlePatternHelper::scoreTitleSimilarity(
+            $original_title,
+            $candidate_current,
+          );
+        }
+        if ($scores_for_nid !== []) {
+          $sim = max($scores_for_nid);
+        }
+      }
+      $similarities[$nid] = $sim;
+      $scores[$nid] = (float) $sql_score + $sim;
+    }
+
+    arsort($scores, \SORT_NUMERIC);
+    return [
+      'scores' => $scores,
+      'similarities' => $similarities,
+    ];
+  }
+
+  /**
+   * Get the original titles of entities from their first revision.
+   *
+   * @param int[] $ids
+   *   The entity IDs to get the original titles from.
+   *
+   * @return array<int, string>
+   *   The original titles keyed by entity ID.
+   */
+  protected function getOriginalTitles(array $ids): array {
+    if (empty($ids)) {
+      return [];
+    }
+
+    // Get the minimum revision ID for each entity.
+    $subquery = $this->database->select('node_field_revision', 'nfr2');
+    $subquery->addExpression('MIN(vid)', 'min_vid');
+    $subquery->fields('nfr2', ['nid']);
+    $subquery->condition('nid', $ids, 'IN');
+    $subquery->groupBy('nfr2.nid');
+
+    // Get the title for each entity.
+    $query = $this->database->select('node_field_revision', 'nfr');
+    $query->fields('nfr', ['nid', 'title']);
+    $query->join($subquery, 'min_vids', 'nfr.nid = min_vids.nid AND nfr.vid = min_vids.min_vid');
+
+    $titles = [];
+    foreach ($query->execute() as $record) {
+      $titles[(int) $record->nid] = $record->title;
+    }
+    return $titles;
+  }
+
+  /**
+   * Retrieve the first file of the entity if it exists.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The entity to retrieve the file from.
+   *
+   * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
+   *   The first file field item or NULL if no file exists.
+   */
+  protected function getFirstFile(EntityInterface $entity): ?ReliefWebFile {
+    if (!$entity->hasField('field_file')) {
+      return NULL;
+    }
+    $field = $entity->get('field_file');
+    if ($field->isEmpty()) {
+      return NULL;
+    }
+    $item = $field->first();
+    return $item instanceof ReliefWebFile ? $item : NULL;
+  }
+
+  /**
+   * Get the values to copy to the report entity.
+   *
+   * @param int[] $candidate_ids
+   *   The candidate IDs to get the values to copy from.
+   * @param CandidateMetadataSet $metadata
+   *   The metadata to get the values to copy from.
+   * @param int $most_recent_candidate_id
+   *   The most recent candidate node ID in the cluster.
+   *
+   * @return FieldCopyResult
+   *   Values and per-field provenance.
+   */
+  protected function getFieldValuesToCopy(
+    array $candidate_ids,
+    array $metadata,
+    int $most_recent_candidate_id,
+  ): array {
+    // Get the report fields to copy.
+    $fields = $this->getReportEntityFieldNamesToCopy();
+
+    // Get the values to copy that are present in all the candidates.
+    $all_present_values = $this->getFieldValuesToCopyPresentInAllCandidates($candidate_ids, $metadata, $fields);
+
+    // Get the values to copy from the most recent candidate.
+    $most_recent_values = $this->getFieldValuesToCopyFromMostRecentCandidate(
+      $most_recent_candidate_id,
+      $metadata,
+      $fields,
+    );
+
+    // Merge the values.
+    $values = [];
+    $sources = [];
+    foreach ($fields as $field_name) {
+      /** @var null|string|string[]|int[] $value */
+      $value = NULL;
+      $source = SeriesMatchFieldUpdateSource::Skipped;
+      $all_present_value = $all_present_values[$field_name] ?? NULL;
+      $most_recent_value = $most_recent_values[$field_name] ?? NULL;
+
+      // If both values are present, merge them.
+      if ($all_present_value !== NULL && $most_recent_value !== NULL) {
+        // Guard against mismatching types. This should never happen.
+        if (gettype($all_present_value) !== gettype($most_recent_value)) {
+          $value = NULL;
+          $source = SeriesMatchFieldUpdateSource::Skipped;
+        }
+        // For arrays, we merge the values and sort them.
+        elseif (is_array($all_present_value)) {
+          $value = array_values(array_unique(array_merge($all_present_value, $most_recent_value)));
+          $source = match (TRUE) {
+            $this->arraysHaveSameValues($all_present_value, $most_recent_value) => SeriesMatchFieldUpdateSource::AllCandidates,
+            $all_present_value === [] => SeriesMatchFieldUpdateSource::MostRecent,
+            $most_recent_value === [] => SeriesMatchFieldUpdateSource::AllCandidates,
+            default => SeriesMatchFieldUpdateSource::Merged,
+          };
+
+          // Sort the value's elements if not empty.
+          if ($value !== []) {
+            if (is_int(array_first($value))) {
+              sort($value, \SORT_NUMERIC);
+            }
+            else {
+              sort($value, \SORT_STRING);
+            }
+          }
+        }
+        // Otherwise, the most recent value takes precedence (normally they
+        // are the same values for single values).
+        else {
+          $value = $most_recent_value;
+          $source = $all_present_value === $most_recent_value
+            ? SeriesMatchFieldUpdateSource::AllCandidates
+            : SeriesMatchFieldUpdateSource::MostRecent;
+        }
+      }
+      elseif ($most_recent_value !== NULL) {
+        $value = $most_recent_value;
+        $source = SeriesMatchFieldUpdateSource::MostRecent;
+      }
+      elseif ($all_present_value !== NULL) {
+        $value = $all_present_value;
+        $source = SeriesMatchFieldUpdateSource::AllCandidates;
+      }
+
+      $values[$field_name] = $value;
+      $sources[$field_name] = $source;
+    }
+
+    return $this->applyDisasterTypeDerivation($values, $sources);
+  }
+
+  /**
+   * When disasters are proposed, derive disaster types from those terms.
+   *
+   * Matches report-form behaviour: types come from tagged disasters. Series
+   * field_disaster_type is used only when no disasters are proposed.
+   *
+   * @param array<string, null|string|string[]|int[]> $values
+   *   Proposed field values.
+   * @param array<string, \Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Enum\SeriesMatchFieldUpdateSource> $sources
+   *   Per-field provenance.
+   *
+   * @return FieldCopyResult
+   *   Values and sources after disaster-type derivation.
+   */
+  protected function applyDisasterTypeDerivation(array $values, array $sources): array {
+    $disasters = $values['field_disaster'] ?? NULL;
+    if (!is_array($disasters) || $disasters === []) {
+      return [
+        'values' => $values,
+        'sources' => $sources,
+      ];
+    }
+
+    $disaster_ids = array_values(array_unique(array_map('intval', $disasters)));
+    $values['field_disaster_type'] = $this->deriveDisasterTypeIdsFromDisasters($disaster_ids);
+    $sources['field_disaster_type'] = $sources['field_disaster']
+      ?? SeriesMatchFieldUpdateSource::Skipped;
+
+    return [
+      'values' => $values,
+      'sources' => $sources,
+    ];
+  }
+
+  /**
+   * Derive sorted unique disaster type IDs from disaster term IDs.
+   *
+   * @param int[] $disaster_ids
+   *   Disaster taxonomy term IDs.
+   *
+   * @return int[]
+   *   Disaster type term IDs (Complex Emergency excluded).
+   */
+  protected function deriveDisasterTypeIdsFromDisasters(array $disaster_ids): array {
+    if ($disaster_ids === []) {
+      return [];
+    }
+
+    $grouped = $this->fetchDisasterTypeIdsByDisasterIds($disaster_ids);
+    $type_ids = [];
+    foreach ($grouped as $ids) {
+      foreach ($ids as $type_id) {
+        $type_ids[] = (int) $type_id;
+      }
+    }
+
+    return $this->normalizeDisasterTypeIds($type_ids);
+  }
+
+  /**
+   * Load disaster type term IDs keyed by disaster term ID.
+   *
+   * @param int[] $disaster_ids
+   *   Disaster taxonomy term IDs.
+   *
+   * @return array<int, int[]>
+   *   Sorted unique type IDs per disaster.
+   */
+  protected function fetchDisasterTypeIdsByDisasterIds(array $disaster_ids): array {
+    if ($disaster_ids === []) {
+      return [];
+    }
+
+    $query = $this->database->select('taxonomy_term__field_disaster_type', 'f');
+    $query->fields('f', ['entity_id', 'field_disaster_type_target_id']);
+    $query->condition('f.entity_id', $disaster_ids, 'IN');
+    $query->condition('f.deleted', 0);
+    $query->orderBy('f.entity_id', 'ASC');
+    $query->orderBy('f.delta', 'ASC');
+
+    $results = [];
+    foreach ($query->execute() as $row) {
+      $results[(int) $row->entity_id][] = (int) $row->field_disaster_type_target_id;
+    }
+
+    $values = [];
+    foreach ($disaster_ids as $disaster_id) {
+      $type_ids = array_values(array_unique($results[$disaster_id] ?? []));
+      sort($type_ids, \SORT_NUMERIC);
+      $values[$disaster_id] = $type_ids;
+    }
+    return $values;
+  }
+
+  /**
+   * Deduplicate, exclude Complex Emergency, and sort disaster type IDs.
+   *
+   * @param int[] $type_ids
+   *   Raw disaster type term IDs.
+   *
+   * @return int[]
+   *   Normalized type IDs.
+   */
+  protected function normalizeDisasterTypeIds(array $type_ids): array {
+    $type_ids = array_values(array_unique(array_map('intval', $type_ids)));
+    $type_ids = array_values(array_filter(
+      $type_ids,
+      static fn(int $id): bool => $id !== self::COMPLEX_EMERGENCY_DISASTER_TYPE_ID,
+    ));
+    sort($type_ids, \SORT_NUMERIC);
+    return $type_ids;
+  }
+
+  /**
+   * Get the values to copy that are present in all the candidates.
+   *
+   * @param int[] $candidate_ids
+   *   The candidate IDs to get the values to copy from.
+   * @param CandidateMetadataSet $metadata
+   *   The metadata to get the values to copy from.
+   * @param string[] $fields
+   *   The fields to get the values to copy from.
+   *
+   * @return array<string, null|string|string[]|int[]>
+   *   The values to copy that are present in all the candidates.
+   */
+  protected function getFieldValuesToCopyPresentInAllCandidates(
+    array $candidate_ids,
+    array $metadata,
+    array $fields,
+  ): array {
+    if (empty($fields) || empty($candidate_ids) || empty($metadata)) {
+      return [];
+    }
+
+    $values = [];
+    foreach ($fields as $field_name) {
+      // Get the values for the field keyed by candidate ID.
+      $field_values = [];
+      foreach ($candidate_ids as $candidate_id) {
+        if (!isset($metadata[$candidate_id][$field_name])) {
+          break;
+        }
+        $field_values[] = $metadata[$candidate_id][$field_name];
+      }
+
+      // Skip if we don't have values for all the candidates.
+      if (count($field_values) !== count($candidate_ids)) {
+        $values[$field_name] = NULL;
+        continue;
+      }
+
+      // List of arrays.
+      if (array_all($field_values, fn(mixed $value): bool => is_array($value))) {
+        // All values are empty arrays, that means the field is consistently
+        // empty for all the candidates, we store an empty array as value for
+        // the field to override any existing value on the entity to update.
+        if (array_all($field_values, fn(array $value): bool => $value === [])) {
+          $values[$field_name] = [];
+        }
+        else {
+          // We take the intersection of the values to get the most common ones.
+          $intersection = array_values(array_unique(array_intersect(...$field_values)));
+          // If any candidate has no values, then the intersection is empty.
+          // That means we don't have a common value for the field, we store
+          // NULL to ignore that field.
+          $values[$field_name] = $intersection !== [] ? $intersection : NULL;
+        }
+      }
+      elseif (array_all($field_values, 'is_string')) {
+        if (array_all($field_values, fn(string $value): bool => $value === '')) {
+          $values[$field_name] = '';
+        }
+        else {
+          // Here, we have only strings, so a common value means they are all
+          // the same, we store the first value if there is only one, otherwise
+          // we store NULL to ignore that field.
+          $unique = array_unique($field_values);
+          $values[$field_name] = count($unique) === 1 ? array_first($unique) : NULL;
+        }
+      }
+    }
+    return $values;
+  }
+
+  /**
+   * Sort candidate IDs from most recent to oldest.
+   *
+   * @param int[] $candidate_ids
+   *   The candidate IDs to sort.
+   * @param CandidateMetadataSet $metadata
+   *   The candidate metadata.
+   *
+   * @return int[]
+   *   Candidate IDs ordered from most recent to oldest.
+   */
+  protected function sortCandidateIdsByRecency(array $candidate_ids, array $metadata): array {
+    if ($candidate_ids === []) {
+      return [];
+    }
+
+    $recency_field = $this->getRecencyFieldName();
+
+    $recency_timestamps = [];
+    foreach ($candidate_ids as $candidate_id) {
+      if (!isset($metadata[$candidate_id][$recency_field])) {
+        break;
+      }
+      $recency_timestamp = $this->parseRecencyValueToTimestamp(
+        $metadata[$candidate_id][$recency_field],
+      );
+      if ($recency_timestamp === NULL) {
+        break;
+      }
+      $recency_timestamps[$candidate_id] = $recency_timestamp;
+    }
+
+    if (count($recency_timestamps) === count($candidate_ids)) {
+      arsort($recency_timestamps, \SORT_NUMERIC);
+      return array_keys($recency_timestamps);
+    }
+
+    rsort($candidate_ids, \SORT_NUMERIC);
+    return $candidate_ids;
+  }
+
+  /**
+   * Get the field values to copy from the most recent candidate.
+   *
+   * @param int $most_recent_candidate_id
+   *   The most recent candidate node ID in the cluster.
+   * @param CandidateMetadataSet $metadata
+   *   The metadata to get the values to copy from.
+   * @param string[] $fields
+   *   The fields to get the values to copy from.
+   *
+   * @return array<string, null|string|string[]|int[]>
+   *   The values to copy from the most recent candidate, keyed by field name.
+   */
+  protected function getFieldValuesToCopyFromMostRecentCandidate(
+    int $most_recent_candidate_id,
+    array $metadata,
+    array $fields,
+  ): array {
+    if ($fields === [] || $most_recent_candidate_id === 0 || $metadata === []) {
+      return [];
+    }
+
+    $values = [];
+    foreach ($fields as $field_name) {
+      if (!isset($metadata[$most_recent_candidate_id][$field_name])) {
+        $values[$field_name] = NULL;
+      }
+      else {
+        $values[$field_name] = $metadata[$most_recent_candidate_id][$field_name];
+      }
+    }
+    return $values;
+  }
+
+  /**
+   * Generate a title for a report entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity to generate the title for.
+   * @param string $original_title
+   *   The original title of the report.
+   * @param int[] $candidate_ids
+   *   Candidate node IDs ordered from most recent to oldest.
+   * @param CandidateMetadataSet $metadata
+   *   The metadata to use as examples.
+   *
+   * @return TitleGenerationResult
+   *   Generated title, provenance, and optional AI duration.
+   */
+  protected function generateReportTitle(
+    EntityInterface $entity,
+    string $original_title,
+    array $candidate_ids,
+    array $metadata,
+  ): array {
+    $candidate_titles = $this->getCandidateTitles($candidate_ids, $metadata);
+    if (empty($candidate_titles)) {
+      $this->getLogger()->warning('Report title unchanged: no candidate titles.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedNoCandidateTitles,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    // Keep the import title when it already matches the dominant series stem
+    // (exact or soft title-pattern similarity).
+    $example_titles = $this->selectConsistentExampleTitles($candidate_titles);
+    if ($example_titles !== NULL) {
+      $example_title = $example_titles[0];
+      if (TitlePatternHelper::seriesTitlesCompatible(
+        $original_title,
+        $example_title,
+        $this->getTitlePatternSimilarityThreshold(),
+      )) {
+        return [
+          'title' => $original_title,
+          'source' => SeriesMatchTitleSource::KeptOriginalPatternMatch,
+          'aiDurationSeconds' => NULL,
+        ];
+      }
+    }
+
+    if (!$this->matcherSettings()->aiTitleGenerationEnabled) {
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedAiDisabled,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    // Helper matching selects extract-aligned examples; do not require a
+    // dominant LIKE stem before calling the layout-aware matcher.
+    return $this->generateReportTitleWithAi($entity, $original_title, $candidate_titles);
+  }
+
+  /**
+   * Gets non-empty candidate titles from metadata.
+   *
+   * @param int[] $candidate_ids
+   *   Candidate node IDs in the order titles should be returned (e.g. most
+   *   recent first).
+   * @param CandidateMetadataSet $metadata
+   *   The metadata to get the titles from.
+   *
+   * @return string[]
+   *   Candidate titles in the same order as $candidate_ids.
+   */
+  protected function getCandidateTitles(
+    array $candidate_ids,
+    array $metadata,
+  ): array {
+    $titles = [];
+    foreach ($candidate_ids as $candidate_id) {
+      $title = $metadata[$candidate_id]['title'] ?? '';
+      if (is_string($title) && $title !== '') {
+        $titles[] = $title;
+      }
+    }
+    return $titles;
+  }
+
+  /**
+   * Selects recency-ordered example titles from the dominant LIKE stem group.
+   *
+   * Groups candidate titles by TitlePatternHelper::stringToLikePattern(). Picks
+   * the largest group; ties go to the group whose first member appears earliest
+   * in the recency-ordered input. Returns NULL when the winning group is below
+   * the configured minimum (or below the candidate count when fewer titles
+   * exist than the minimum).
+   *
+   * @param string[] $candidate_titles
+   *   Non-empty candidate titles in recency order (most recent first).
+   *
+   * @return string[]|null
+   *   Up to ai_title_example_line_count titles from the winning stem, or NULL
+   *   when examples are too inconsistent for AI title generation.
+   */
+  protected function selectConsistentExampleTitles(array $candidate_titles): ?array {
+    if ($candidate_titles === []) {
+      return NULL;
+    }
+
+    /** @var array<string, list<string>> $groups */
+    $groups = [];
+    /** @var array<string, int> $stem_first_index */
+    $stem_first_index = [];
+    foreach ($candidate_titles as $index => $title) {
+      $stem = TitlePatternHelper::stringToLikePattern($title);
+      if (!isset($groups[$stem])) {
+        $groups[$stem] = [];
+        $stem_first_index[$stem] = $index;
+      }
+      $groups[$stem][] = $title;
+    }
+
+    $best_stem = NULL;
+    $best_size = -1;
+    $best_first_index = PHP_INT_MAX;
+    foreach ($groups as $stem => $titles) {
+      $size = count($titles);
+      $first_index = $stem_first_index[$stem];
+      if ($size > $best_size
+        || ($size === $best_size && $first_index < $best_first_index)) {
+        $best_stem = $stem;
+        $best_size = $size;
+        $best_first_index = $first_index;
+      }
+    }
+
+    if ($best_stem === NULL) {
+      return NULL;
+    }
+
+    $required = min(
+      $this->getAiTitleMinConsistentExamples(),
+      count($candidate_titles),
+    );
+    if ($best_size < $required) {
+      return NULL;
+    }
+
+    return array_slice($groups[$best_stem], 0, $this->getAiTitleExampleLineCount());
+  }
+
+  /**
+   * Generate a title for a report entity using AI.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The report entity to generate the title for.
+   * @param string $original_title
+   *   The original title of the report.
+   * @param string[] $candidate_titles
+   *   Recency-ordered series candidate titles for helper matching.
+   *
+   * @return TitleGenerationResult
+   *   Generated title, provenance, and optional AI duration.
+   */
+  protected function generateReportTitleWithAi(
+    EntityInterface $entity,
+    string $original_title,
+    array $candidate_titles,
+  ): array {
+    if ($candidate_titles === []) {
+      $this->getLogger()->warning('Report title unchanged: no candidate titles.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedNoCandidateTitles,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $file = $this->getFirstFile($entity);
+    $page_count = $this->getAiTitleExtractPageCount();
+    $pages = $file !== NULL ? $file->extractStructuredTextSpans(1, $page_count) : [];
+    if ($pages === [] || array_filter($pages) === []) {
+      $this->getLogger()->warning('Report title unchanged: no attachment text.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedNoAttachmentText,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $match = $this->matchSeriesTitleRegion($pages, $candidate_titles);
+    if ($match === NULL) {
+      $this->getLogger()->warning('Report title unchanged: low title match confidence.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $matched_titles = array_values(array_filter(
+      $match['matched_titles'] ?? [],
+      static fn ($title): bool => is_string($title) && $title !== '',
+    ));
+    $candidates = $this->normalizeSeriesTitleCandidates($match);
+    $best = $candidates[0] ?? NULL;
+    $confidence = (float) ($best['confidence'] ?? 0.0);
+
+    if (
+      $best === NULL
+      || $matched_titles === []
+      || $confidence < $this->getAiTitleMatchMinConfidence()
+    ) {
+      $this->getLogger()->warning('Report title unchanged: low title match confidence.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedLowTitleMatchConfidence,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $series_reference_titles = $matched_titles !== []
+      ? $matched_titles
+      : $candidate_titles;
+    $candidates = $this->prepareAiTitleCandidates(
+      $candidates,
+      $original_title,
+      $series_reference_titles,
+    );
+    if ($candidates === []) {
+      $this->getLogger()->warning('Report title unchanged: insufficient title markers for generation.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::SkippedInsufficientTitleMarkers,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    $source = $this->buildAiTitlePromptSource($candidates);
+    $grounding_source = $this->buildAiTitleGroundingSource($candidates);
+
+    // Truncate the source to reduce the number of tokens passed to the AI.
+    $max_source_length = $this->getAiTitleSourceLengthLimit();
+    if (mb_strlen($source) > $max_source_length) {
+      $source = mb_substr($source, 0, $max_source_length);
+    }
+
+    $example_lines = [];
+    foreach ($matched_titles as $index => $title) {
+      $example_lines[] = ($index + 1) . '. ' . $title;
+    }
+
+    $title_description = strtr($this->getAiTitleDescriptionTemplate(), [
+      '@examples' => implode("\n", $example_lines),
+    ]);
+
+    $json_schema = [
+      'type' => 'object',
+      'additionalProperties' => FALSE,
+      'properties' => [
+        'title' => [
+          'type' => 'string',
+          'description' => $title_description,
+        ],
+      ],
+      'required' => ['title'],
+    ];
+
+    $settings = $this->getReportTitleAiInferenceSettings();
+
+    $prompt = $source;
+    $system_prompt = $settings['system_prompt'];
+    $parameters = [
+      'temperature' => $settings['temperature'],
+      'top_p' => $settings['top_p'],
+      'max_tokens' => $settings['max_tokens'],
+      'thinking_mode' => $settings['thinking_mode'],
+    ];
+
+    try {
+      $plugin = $this->completionPluginManager->getPlugin($settings['plugin_id']);
+      if (!$plugin->hasCapability(CompletionCapability::StructuredOutput)) {
+        $this->getLogger()->error('Report title unchanged: unsupported AI plugin (@plugin).', [
+          '@plugin' => $settings['plugin_id'],
+        ]);
+        return [
+          'title' => $original_title,
+          'source' => SeriesMatchTitleSource::FailedUnsupportedAiPlugin,
+          'aiDurationSeconds' => NULL,
+        ];
+      }
+
+      $start = microtime(TRUE);
+      $output = $plugin->queryStructured(
+        $prompt,
+        $json_schema,
+        $system_prompt,
+        $parameters,
+      );
+      $ai_duration = microtime(TRUE) - $start;
+    }
+    catch (\Exception $exception) {
+      $this->getLogger()->error('Report title unchanged: AI call error (@message).', [
+        '@message' => $exception->getMessage(),
+      ]);
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedAiCallError,
+        'aiDurationSeconds' => NULL,
+      ];
+    }
+
+    if ($output === NULL || empty($output['title']) || !is_string($output['title'])) {
+      $this->getLogger()->warning('Report title unchanged: empty AI output.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedEmptyAiOutput,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
+    $title = trim($output['title']);
+    if ($title === '') {
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedEmptyAiOutput,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
+    if (!$this->generatedTitleMarkersAreGrounded($title, $grounding_source)) {
+      $this->getLogger()->warning('Report title unchanged: AI title has ungrounded date or series marker.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedUngroundedTitleMarkers,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
+    if (!$this->generatedTitleMatchesSeriesPattern($title, $matched_titles)) {
+      $this->getLogger()->warning('Report title unchanged: AI title does not match series pattern.');
+      return [
+        'title' => $original_title,
+        'source' => SeriesMatchTitleSource::FailedSeriesPatternMismatch,
+        'aiDurationSeconds' => $ai_duration ?? NULL,
+      ];
+    }
+
+    return [
+      'title' => $title,
+      'source' => SeriesMatchTitleSource::AiGenerated,
+      'aiDurationSeconds' => $ai_duration ?? NULL,
+    ];
+  }
+
+  /**
+   * Matches series titles against PDF page spans locally.
+   *
+   * @param list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>> $pages
+   *   Per-page structured PDF spans from the configured extract range.
+   * @param string[] $candidate_titles
+   *   Recency-ordered series member titles.
+   *
+   * @return array<string, mixed>|null
+   *   Local match result, or NULL when no matches.
+   */
+  protected function matchSeriesTitleRegion(array $pages, array $candidate_titles): ?array {
+    if ($pages === [] || array_filter($pages) === [] || $candidate_titles === []) {
+      return NULL;
+    }
+
+    $result = SeriesTitleMatchHelper::matchPages(
+      array_values($pages),
+      array_values($candidate_titles),
+      $this->getAiTitleExampleLineCount(),
+    );
+    if (($result['matched_titles'] ?? []) === [] && ($result['candidates'] ?? []) === []) {
+      return NULL;
+    }
+    return $result;
+  }
+
+  /**
+   * Merges, re-ranks, and marker-gates AI title candidates.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper PDF candidates.
+   * @param string $original_title
+   *   Document original title.
+   * @param string[] $series_reference_titles
+   *   Series example titles used for similarity and required-marker detection.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Ranked candidates ready for the LLM, or empty when AI should be skipped.
+   */
+  protected function prepareAiTitleCandidates(
+    array $candidates,
+    string $original_title,
+    array $series_reference_titles,
+  ): array {
+    $import = $this->buildImportTitleCandidate($original_title, $series_reference_titles);
+    if ($import !== NULL) {
+      $candidates[] = $import;
+    }
+
+    $ranked = $this->rankAiTitleCandidatesBySeriesSimilarity(
+      $candidates,
+      $series_reference_titles,
+    );
+    if ($ranked === []) {
+      return [];
+    }
+
+    if (!$this->aiTitleCandidatesCoverRequiredMarkers($ranked, $series_reference_titles)) {
+      return [];
+    }
+
+    return $ranked;
+  }
+
+  /**
+   * Builds a peer AI title candidate from the import title when similar enough.
+   *
+   * @param string $original_title
+   *   Document original title.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}|null
+   *   Synthetic candidate, or NULL when the import title is not similar enough.
+   */
+  protected function buildImportTitleCandidate(
+    string $original_title,
+    array $series_reference_titles,
+  ): ?array {
+    $original_title = trim($original_title);
+    if ($original_title === '' || $series_reference_titles === []) {
+      return NULL;
+    }
+
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    $best_sim = 0.0;
+    foreach ($series_reference_titles as $reference) {
+      if (!is_string($reference) || $reference === '') {
+        continue;
+      }
+      $best_sim = max(
+        $best_sim,
+        TitlePatternHelper::scoreTitleSimilarity($original_title, $reference),
+      );
+    }
+    if ($best_sim < $threshold) {
+      return NULL;
+    }
+
+    $markers = TitlePatternHelper::extractSeriesMarkers($original_title);
+    $nearby_issue = NULL;
+    if (($markers['issues'][0] ?? NULL) !== NULL) {
+      $nearby_issue = '#' . (int) $markers['issues'][0];
+    }
+    $nearby_week = NULL;
+    if (($markers['weeks'][0] ?? NULL) !== NULL) {
+      $nearby_week = 'Week ' . (int) $markers['weeks'][0];
+    }
+
+    return [
+      'page' => 0,
+      'title_region_text' => $original_title,
+      'nearby_date' => $this->extractPrimaryDateMarkerFromTitle($original_title),
+      'nearby_issue' => $nearby_issue,
+      'nearby_week' => $nearby_week,
+      'confidence' => 1.0,
+    ];
+  }
+
+  /**
+   * Drops low-similarity AI candidates and sorts by series similarity.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Candidates including optional import peer.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Filtered and similarity-sorted candidates.
+   */
+  protected function rankAiTitleCandidatesBySeriesSimilarity(
+    array $candidates,
+    array $series_reference_titles,
+  ): array {
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    $scored = [];
+    foreach ($candidates as $index => $candidate) {
+      $region = $candidate['title_region_text'] ?? '';
+      if (!is_string($region) || $region === '') {
+        continue;
+      }
+      $sim = $this->maxTitleSimilarityAgainstReferences($region, $series_reference_titles);
+      if ($sim < $threshold) {
+        continue;
+      }
+      $scored[] = [
+        'similarity' => $sim,
+        'index' => $index,
+        'candidate' => $candidate,
+      ];
+    }
+
+    usort(
+      $scored,
+      static function (array $a, array $b): int {
+        $cmp = $b['similarity'] <=> $a['similarity'];
+        return $cmp !== 0 ? $cmp : ($a['index'] <=> $b['index']);
+      },
+    );
+
+    return array_map(
+      static fn(array $row): array => $row['candidate'],
+      $scored,
+    );
+  }
+
+  /**
+   * Whether ranked AI candidates cover marker kinds used by series examples.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Final ranked candidates.
+   * @param string[] $series_reference_titles
+   *   Series example titles.
+   *
+   * @return bool
+   *   TRUE when every required marker kind is present in at least one
+   *   candidate.
+   */
+  protected function aiTitleCandidatesCoverRequiredMarkers(
+    array $candidates,
+    array $series_reference_titles,
+  ): bool {
+    $required = $this->detectRequiredTitleMarkerKinds($series_reference_titles);
+    if ($required === []) {
+      return TRUE;
+    }
+
+    $available = $this->collectAvailableTitleMarkerKinds($candidates);
+    foreach ($required as $kind) {
+      if (!isset($available[$kind])) {
+        return FALSE;
+      }
+    }
+    return TRUE;
+  }
+
+  /**
+   * Detects issue/week/date marker kinds used by series example titles.
+   *
+   * @param string[] $titles
+   *   Series example titles.
+   *
+   * @return list<string>
+   *   Marker kinds among "issue", "week", "date".
+   */
+  protected function detectRequiredTitleMarkerKinds(array $titles): array {
+    $required = [];
+    foreach ($titles as $title) {
+      if (!is_string($title) || $title === '') {
+        continue;
+      }
+      $markers = TitlePatternHelper::extractSeriesMarkers($title);
+      if ($markers['issues'] !== []) {
+        $required['issue'] = TRUE;
+      }
+      if ($markers['weeks'] !== []) {
+        $required['week'] = TRUE;
+      }
+      if ($markers['periods'] !== []) {
+        $required['date'] = TRUE;
+      }
+    }
+    return array_keys($required);
+  }
+
+  /**
+   * Collects marker kinds available across AI title candidates.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Ranked candidates.
+   *
+   * @return array<string, true>
+   *   Present kinds keyed by "issue", "week", or "date".
+   */
+  protected function collectAvailableTitleMarkerKinds(array $candidates): array {
+    $available = [];
+    foreach ($candidates as $candidate) {
+      if (!empty($candidate['nearby_issue'])) {
+        $available['issue'] = TRUE;
+      }
+      if (!empty($candidate['nearby_week'])) {
+        $available['week'] = TRUE;
+      }
+      if (!empty($candidate['nearby_date'])) {
+        $available['date'] = TRUE;
+      }
+
+      $region = $candidate['title_region_text'] ?? '';
+      if (!is_string($region) || $region === '') {
+        continue;
+      }
+      $markers = TitlePatternHelper::extractSeriesMarkers($region);
+      if ($markers['issues'] !== []) {
+        $available['issue'] = TRUE;
+      }
+      if ($markers['weeks'] !== []) {
+        $available['week'] = TRUE;
+      }
+      if ($markers['periods'] !== []) {
+        $available['date'] = TRUE;
+      }
+    }
+    return $available;
+  }
+
+  /**
+   * Max title-pattern similarity of text against a list of references.
+   *
+   * @param string $text
+   *   Candidate or region text.
+   * @param string[] $references
+   *   Reference titles.
+   *
+   * @return float
+   *   Best similarity in [0, 1].
+   */
+  protected function maxTitleSimilarityAgainstReferences(string $text, array $references): float {
+    $best = 0.0;
+    foreach ($references as $reference) {
+      if (!is_string($reference) || $reference === '') {
+        continue;
+      }
+      $best = max($best, TitlePatternHelper::scoreTitleSimilarity($text, $reference));
+    }
+    return $best;
+  }
+
+  /**
+   * Extracts the primary human-readable date marker from a title.
+   *
+   * @param string $title
+   *   Title text.
+   *
+   * @return string|null
+   *   Date marker substring, or NULL when none found.
+   */
+  protected function extractPrimaryDateMarkerFromTitle(string $title): ?string {
+    $markers = $this->extractTitleMarkerSubstrings($title);
+    $best = NULL;
+    $best_length = 0;
+    foreach ($markers as $marker) {
+      if (!preg_match('/\d{4}/', $marker)) {
+        continue;
+      }
+      if (preg_match('/^#\d+/', $marker) || preg_match('/\bweeks?\s+\d+\b/iu', $marker)) {
+        continue;
+      }
+      $length = mb_strlen($marker);
+      if ($length > $best_length) {
+        $best = $marker;
+        $best_length = $length;
+      }
+    }
+    return $best;
+  }
+
+  /**
+   * Normalizes helper series-title candidates for the LLM prompt and grounding.
+   *
+   * @param array<string, mixed> $match
+   *   Decoded helper response with candidates.
+   *
+   * @return list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}>
+   *   Ranked candidates with non-empty title regions.
+   */
+  protected function normalizeSeriesTitleCandidates(array $match): array {
+    $candidates = [];
+    $raw_candidates = $match['candidates'] ?? NULL;
+    if (!is_array($raw_candidates)) {
+      return [];
+    }
+
+    foreach ($raw_candidates as $raw) {
+      if (!is_array($raw)) {
+        continue;
+      }
+      $region = trim((string) ($raw['title_region_text'] ?? ''));
+      if ($region === '') {
+        continue;
+      }
+      $candidates[] = [
+        'page' => max(1, (int) ($raw['page'] ?? 1)),
+        'title_region_text' => $region,
+        'nearby_date' => $this->nullableMatchString($raw['nearby_date'] ?? NULL),
+        'nearby_issue' => $this->nullableMatchString($raw['nearby_issue'] ?? NULL),
+        'nearby_week' => $this->nullableMatchString($raw['nearby_week'] ?? NULL),
+        'confidence' => (float) ($raw['confidence'] ?? 0.0),
+      ];
+    }
+
+    return $candidates;
+  }
+
+  /**
+   * Builds LLM prompt JSON from ranked series-title candidates.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper candidates.
+   *
+   * @return string
+   *   Compact JSON string for the completion plugin user prompt.
+   */
+  protected function buildAiTitlePromptSource(array $candidates): string {
+    $payload = [];
+    foreach ($candidates as $candidate) {
+      $payload[] = [
+        'page' => $candidate['page'],
+        'title_region_text' => $candidate['title_region_text'],
+        'nearby_date' => $candidate['nearby_date'],
+        'nearby_issue' => $candidate['nearby_issue'],
+        'nearby_week' => $candidate['nearby_week'],
+      ];
+    }
+    return json_encode(
+      ['candidates' => $payload],
+      JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+    ) ?: '{"candidates":[]}';
+  }
+
+  /**
+   * Builds the grounding corpus for post-AI marker checks.
+   *
+   * @param list<array{page: int, title_region_text: string, nearby_date: ?string, nearby_issue: ?string, nearby_week: ?string, confidence: float}> $candidates
+   *   Normalized helper candidates.
+   *
+   * @return string
+   *   Text that may legitimately ground date/issue/week markers.
+   */
+  protected function buildAiTitleGroundingSource(array $candidates): string {
+    $parts = [];
+    foreach ($candidates as $candidate) {
+      $parts[] = $candidate['title_region_text'];
+      foreach (['nearby_date', 'nearby_issue', 'nearby_week'] as $key) {
+        $marker = $candidate[$key] ?? NULL;
+        if (is_string($marker) && $marker !== '') {
+          $parts[] = $marker;
+        }
+      }
+    }
+    return implode("\n", $parts);
+  }
+
+  /**
+   * Whether an AI title matches the series naming pattern of matched titles.
+   *
+   * @param string $title
+   *   AI-generated title.
+   * @param string[] $matched_titles
+   *   Series member titles used as style examples.
+   *
+   * @return bool
+   *   TRUE when TitlePatternHelper::seriesTitlesCompatible() holds for at
+   *   least one matched title at the configured similarity threshold.
+   */
+  protected function generatedTitleMatchesSeriesPattern(string $title, array $matched_titles): bool {
+    if ($title === '') {
+      return FALSE;
+    }
+    $threshold = $this->getTitlePatternSimilarityThreshold();
+    foreach ($matched_titles as $matched_title) {
+      if (!is_string($matched_title) || $matched_title === '') {
+        continue;
+      }
+      if (TitlePatternHelper::seriesTitlesCompatible($title, $matched_title, $threshold)) {
+        return TRUE;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Normalizes a nullable helper string field.
+   *
+   * @param mixed $value
+   *   Raw response value.
+   *
+   * @return string|null
+   *   Trimmed non-empty string, or NULL.
+   */
+  protected function nullableMatchString(mixed $value): ?string {
+    if (!is_string($value)) {
+      return NULL;
+    }
+    $trimmed = trim($value);
+    return $trimmed !== '' ? $trimmed : NULL;
+  }
+
+  /**
+   * Whether date/issue/week markers in a generated title appear in the source.
+   *
+   * @param string $title
+   *   AI-generated title.
+   * @param string $source
+   *   Attachment source text passed to the model.
+   *
+   * @return bool
+   *   TRUE when every extracted marker is grounded in the source, or when the
+   *   title has no markers to check.
+   */
+  protected function generatedTitleMarkersAreGrounded(string $title, string $source): bool {
+    $markers = $this->extractTitleMarkerSubstrings($title);
+    if ($markers === []) {
+      return TRUE;
+    }
+
+    foreach ($markers as $marker) {
+      if (!$this->markerIsGroundedInSource($marker, $source)) {
+        return FALSE;
+      }
+    }
+
+    return TRUE;
+  }
+
+  /**
+   * Extracts date, issue, and week marker substrings from a title.
+   *
+   * @param string $title
+   *   Title to scan.
+   *
+   * @return string[]
+   *   Distinct marker substrings as they appear in the title.
+   */
+  protected function extractTitleMarkerSubstrings(string $title): array {
+    $markers = [];
+    $patterns = [
+      // Parenthetical segments that include a 4-digit year.
+      '/\(\s*(?:au\s+)?[^)]*\d{4}[^)]*\)/iu',
+      // Issue / No. markers.
+      '/\b(?:issues?|n[o°]\.?|num(?:bero?|éro)?\.?)\s*[#:]?\s*\d+\b/iu',
+      // Week N.
+      '/\bweeks?\s+\d+\b/iu',
+      // Hash-prefixed numbers often used as issue IDs.
+      '/#\d+\w*/u',
+      // ISO dates.
+      '/\b\d{4}-\d{2}-\d{2}\b/u',
+      // Day + month name + year outside parentheses.
+      '/\b(?:le\s+)?(?:1er|1ère|1e|\d{1,2})\s+(?:de\s+)?(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\s+(?:de\s+)?\d{4}\b/iu',
+      // Month name + year.
+      '/\b(?:January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\s+(?:de\s+)?\d{4}\b/iu',
+    ];
+
+    foreach ($patterns as $pattern) {
+      if (preg_match_all($pattern, $title, $matches) !== FALSE) {
+        foreach ($matches[0] as $match) {
+          $markers[] = $match;
+        }
+      }
+    }
+
+    return array_values(array_unique($markers));
+  }
+
+  /**
+   * Checks whether a marker substring is supported by the source text.
+   *
+   * @param string $marker
+   *   Marker as extracted from the title.
+   * @param string $source
+   *   Attachment source text.
+   *
+   * @return bool
+   *   TRUE when the marker or its essential date parts appear in the source.
+   */
+  protected function markerIsGroundedInSource(string $marker, string $source): bool {
+    if ($source === '') {
+      return FALSE;
+    }
+
+    if (mb_stripos($source, $marker) !== FALSE) {
+      return TRUE;
+    }
+
+    $trimmed = trim($marker, " \t()[]");
+    $trimmed = preg_replace('/^(?:au|le)\s+/iu', '', $trimmed) ?? $trimmed;
+    $trimmed = trim($trimmed);
+    if ($trimmed !== '' && mb_stripos($source, $trimmed) !== FALSE) {
+      return TRUE;
+    }
+
+    if (!preg_match('/\d{4}/', $marker, $year_match)) {
+      // Non-date markers (issue/week) must match as a full substring.
+      return FALSE;
+    }
+
+    $year = $year_match[0];
+    if (mb_stripos($source, $year) === FALSE) {
+      return FALSE;
+    }
+
+    $month_tokens = $this->extractMonthTokensFromMarker($marker);
+    if ($month_tokens === []) {
+      if (preg_match('/\d{4}-\d{2}-\d{2}/', $marker, $iso_match)) {
+        return mb_stripos($source, $iso_match[0]) !== FALSE;
+      }
+      return FALSE;
+    }
+
+    foreach ($month_tokens as $token) {
+      if (mb_stripos($source, $token) !== FALSE) {
+        return TRUE;
+      }
+    }
+
+    return FALSE;
+  }
+
+  /**
+   * Extracts English/French month name tokens from a marker string.
+   *
+   * @param string $marker
+   *   Marker substring.
+   *
+   * @return string[]
+   *   Month tokens found in the marker (original casing).
+   */
+  protected function extractMonthTokensFromMarker(string $marker): array {
+    $pattern = '/\b(January|February|March|April|May|June|July|August|September|October|November|December|Jan\.?|Feb\.?|Mar\.?|Apr\.?|Jun\.?|Jul\.?|Aug\.?|Sep(?:t)?\.?|Oct\.?|Nov\.?|Dec\.?|janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|janv\.|févr\.|avr\.|juil\.|sept\.|oct\.|nov\.|déc\.)\b/iu';
+    if (preg_match_all($pattern, $marker, $matches) === FALSE) {
+      return [];
+    }
+    return array_values(array_unique($matches[1]));
+  }
+
+  /**
+   * Fraction of candidates with non-empty body text.
+   *
+   * @param int[] $nids
+   *   Winning-cluster candidate node IDs.
+   *
+   * @return float|null
+   *   Ratio in 0–1, or NULL when there are no candidates.
+   */
+  protected function computeSeriesBodyRatio(array $nids): ?float {
+    if ($nids === []) {
+      return NULL;
+    }
+
+    $query = $this->database->select('node__body', 'b');
+    $query->addExpression('COUNT(DISTINCT b.entity_id)', 'with_body');
+    $query->condition('b.entity_id', $nids, 'IN');
+    $query->condition('b.deleted', 0);
+    $query->where("TRIM(b.body_value) <> ''");
+    $with_body = (int) $query->execute()->fetchField();
+
+    return $with_body / count(array_unique($nids));
+  }
+
+  /**
+   * Check if two arrays have the same values, ignoring order and duplicates.
+   *
+   * @param array $a
+   *   The first array to check.
+   * @param array $b
+   *   The second array to check.
+   *
+   * @return bool
+   *   TRUE if the arrays have the same values.
+   */
+  protected function arraysHaveSameValues(array $a, array $b): bool {
+    return !array_diff($a, $b) && !array_diff($b, $a);
+  }
+
+  /**
+   * Get the logger.
+   *
+   * @return \Psr\Log\LoggerInterface
+   *   The logger.
+   */
+  protected function getLogger(): LoggerInterface {
+    return $this->loggerFactory->get('reliefweb_report_series_matcher');
+  }
+
+}
