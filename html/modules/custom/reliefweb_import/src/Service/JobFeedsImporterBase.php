@@ -620,7 +620,7 @@ class JobFeedsImporterBase {
       throw new ReliefwebImportExceptionSoftViolation(strtr('Validation errors for job @guid imported from @url: @errors', [
         '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
-        '@errors' => ' ' . implode(' ', $formatted_errors),
+        '@errors' => implode(' ', $formatted_errors),
       ]));
     }
   }

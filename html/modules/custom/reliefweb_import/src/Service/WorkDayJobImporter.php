@@ -193,7 +193,7 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    *   List of mapped import documents.
    */
   public function getDocuments(int $limit = 50): array {
-    $this->getLogger()->info('Retrieving documents from the WorkDay.');
+    $this->getLogger()->info('Retrieving documents from the WorkDay API.');
 
     $documents = [];
 
@@ -222,7 +222,7 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
       $jobs = json_decode($response->getBody()->getContents(), TRUE);
 
       if (!isset($jobs['data']) || !is_array($jobs['data'])) {
-        throw new \Exception('Invalid response structure from WorkDay API.');
+        throw new \Exception('Invalid response structure from the WorkDay API.');
       }
 
       $count = 0;
