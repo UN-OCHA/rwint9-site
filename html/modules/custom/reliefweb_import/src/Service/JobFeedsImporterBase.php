@@ -12,6 +12,7 @@ use Drupal\Core\Session\AccountSwitcherInterface;
 use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_entities\Entity\Job;
 use Drupal\reliefweb_entities\Plugin\Validation\Constraint\DateNotInPastConstraint;
+use Drupal\reliefweb_import\JobImport\JobImportStateStore;
 use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
@@ -145,6 +146,63 @@ class JobFeedsImporterBase {
    *   XML data for the job.
    */
   protected function updateJob(Job $job, \SimpleXMLElement $data): void {
+    $this->updateJobFromImportData(
+      $job,
+      $this->normalizeXmlImportData($data),
+      $this->getImportFieldDefinitions(include_city: TRUE),
+      $this->getFeedHashFields(),
+      ['source' => 'feed'],
+    );
+  }
+
+  /**
+   * Normalizes XML feed data to a plain object for import.
+   *
+   * @param \SimpleXMLElement $data
+   *   XML feed item.
+   *
+   * @return object
+   *   Import data object.
+   */
+  protected function normalizeXmlImportData(\SimpleXMLElement $data): object {
+    $normalized = new \stdClass();
+    foreach ($this->getImportFieldDefinitions(include_city: TRUE) as $info) {
+      $property = $info['property'];
+      if (isset($data->{$property})) {
+        $value = $data->{$property};
+        if ($value instanceof \SimpleXMLElement && in_array($info['callback'], [
+          'setJobType',
+          'setJobExperience',
+          'setJobCareerCategories',
+          'setJobThemes',
+          'setJobCountry',
+        ], TRUE)) {
+          $normalized->{$property} = (array) $value;
+        }
+        elseif ($value instanceof \SimpleXMLElement && $info['callback'] === 'setJobBody') {
+          $normalized->{$property} = $value->asXML();
+        }
+        elseif ($value instanceof \SimpleXMLElement && $info['callback'] === 'setJobHowToApply') {
+          $normalized->{$property} = $value->asXML();
+        }
+        else {
+          $normalized->{$property} = (string) $value;
+        }
+      }
+    }
+    return $normalized;
+  }
+
+  /**
+   * Returns field setter definitions for job imports.
+   *
+   * @param bool $include_city
+   *   Whether to include the deprecated city field.
+   *
+   * @return array<string, array{callback: string, property: string}>
+   *   Field definitions keyed by field name.
+   */
+  protected function getImportFieldDefinitions(bool $include_city = FALSE): array {
     $fields = [
       'title' => [
         'callback' => 'setJobTitle',
@@ -182,16 +240,67 @@ class JobFeedsImporterBase {
         'callback' => 'setJobCountry',
         'property' => 'field_country',
       ],
-      'field_city' => [
-        'callback' => 'setJobCity',
-        'property' => 'field_city',
-      ],
     ];
 
-    $data_for_hash = [
-      'field_source' => $job->field_source->getValue(),
-      'field_import_guid' => $job->field_import_guid->getValue(),
+    if ($include_city) {
+      $fields['field_city'] = [
+        'callback' => 'setJobCity',
+        'property' => 'field_city',
+      ];
+    }
+
+    return $fields;
+  }
+
+  /**
+   * Returns feed-sourced fields used for import hash calculation.
+   *
+   * @return string[]
+   *   Field machine names.
+   */
+  protected function getFeedHashFields(): array {
+    return [
+      'title',
+      'body',
+      'field_how_to_apply',
+      'field_job_closing_date',
+      'field_job_type',
+      'field_job_experience',
+      'field_country',
     ];
+  }
+
+  /**
+   * Updates a job from mapped import data and saves when the hash changes.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job to update.
+   * @param object $data
+   *   Mapped import data.
+   * @param array<string, array{callback: string, property: string}> $fields
+   *   Field setter definitions.
+   * @param string[] $hash_fields
+   *   Properties included in the change-detection hash.
+   * @param array<string, mixed> $import_context
+   *   Import context passed to JobImportStateStore.
+   */
+  protected function updateJobFromImportData(
+    Job $job,
+    object $data,
+    array $fields,
+    array $hash_fields,
+    array $import_context = [],
+  ): void {
+    JobImportStateStore::markImporting($job, $import_context);
+
+    if (!empty($data->import_notes) && is_array($data->import_notes)) {
+      foreach ($data->import_notes as $note) {
+        if (is_string($note) && $note !== '') {
+          JobImportStateStore::addNote($job, $note);
+        }
+      }
+    }
+
     foreach ($fields as $field => $info) {
       try {
         if (isset($data->{$info['property']})) {
@@ -199,23 +308,64 @@ class JobFeedsImporterBase {
         }
       }
       catch (ReliefwebImportException $exception) {
-        // Empty the field if invalid and store the error.
-        $job->{$field} = [];
-        $job->_import_errors[$field] = $exception->getMessage();
+        if (!$this->shouldDeferImportError($job, $field)) {
+          $job->{$field} = [];
+          JobImportStateStore::setError($job, $field, $exception->getMessage());
+        }
       }
-      $data_for_hash[$field] = $job->{$field}->getValue();
     }
 
-    $hash = hash('sha256', serialize($data_for_hash));
+    $hash = hash('sha256', serialize($this->buildImportHashData($data, $hash_fields)));
     if ($job->field_import_hash->value === $hash) {
+      JobImportStateStore::clear($job);
       $this->getLogger()->notice(strtr('No changes detected for job @guid, skipping.', [
         '@guid' => $job->field_import_guid->value,
       ]));
+      return;
     }
-    else {
-      $job->field_import_hash->value = $hash;
-      $this->validateAndSaveJob($job);
+
+    $job->field_import_hash->value = $hash;
+    $this->validateAndSaveJob($job);
+  }
+
+  /**
+   * Builds hash input from mapped feed data.
+   *
+   * @param object $data
+   *   Mapped import data.
+   * @param string[] $hash_fields
+   *   Property names to include.
+   *
+   * @return array<string, mixed>
+   *   Hash payload.
+   */
+  protected function buildImportHashData(object $data, array $hash_fields): array {
+    $hash_data = [];
+    foreach ($hash_fields as $property) {
+      if (isset($data->{$property})) {
+        $hash_data[$property] = $data->{$property};
+      }
     }
+    return $hash_data;
+  }
+
+  /**
+   * Whether a field validation error should be deferred during import.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job being imported.
+   * @param string $field
+   *   Field machine name.
+   *
+   * @return bool
+   *   TRUE when the error should not be recorded.
+   */
+  protected function shouldDeferImportError(Job $job, string $field): bool {
+    $context = JobImportStateStore::getContext($job);
+    if ($context === NULL || !$context->classificationEnabled) {
+      return FALSE;
+    }
+    return in_array($field, $context->deferredFields, TRUE);
   }
 
   /**
@@ -432,25 +582,28 @@ class JobFeedsImporterBase {
         continue;
       }
       $field = preg_replace('#^([a-z0-9_-]+).*#', '$1', $violation->getPropertyPath());
+      if ($this->shouldDeferImportError($job, $field)) {
+        continue;
+      }
       // No need to add another validation message if there was already one for
       // the field.
-      if (!isset($job->_import_errors[$field])) {
-        $job->_import_errors[$field] = $violation->getMessage()->__toString();
+      $errors = JobImportStateStore::getErrors($job);
+      if (!isset($errors[$field])) {
+        JobImportStateStore::setError($job, $field, $violation->getMessage()->__toString());
       }
     }
 
     // Update the revision log message with the list of validation errors to
-    // help identify what was wrong.
-    if (!empty($job->_import_errors)) {
-      $job->setRevisionLogMessage(implode("\n", array_merge([$log], $job->_import_errors)));
+    // help identify what was wrong. Join with spaces so history rendering
+    // (Markdown inlines) still reads clearly when newlines collapse.
+    $formatted_errors = $this->formatImportErrorsForRevisionLog($job);
+    $formatted_messages = $this->formatImportMessagesForRevisionLog($job);
+    if (!empty($formatted_messages)) {
+      $job->setRevisionLogMessage(implode(' ', array_merge([$log], $formatted_messages)));
     }
     else {
       $job->setRevisionLogMessage($log);
     }
-
-    // Flag the job as being imported so that the status can be updated
-    // in reliefweb_import_node_presave() based on the validation errors.
-    $job->_is_importing = TRUE;
 
     // Ensure notifications are disabled.
     $job->notifications_content_disable = TRUE;
@@ -462,20 +615,85 @@ class JobFeedsImporterBase {
     $this->getLogger()->info($log);
 
     // If there were validation errors, throw a soft violation exception with
-    // the cancatenated error messages.
-    if (!empty($job->_import_errors)) {
-      $message = '';
-      foreach ($job->_import_errors as $field => $error) {
-        $field_label = $job->{$field}->getFieldDefinition()->getLabel();
-        $message .= "\n--- {$field_label}: {$error}";
-      }
-
+    // the concatenated error messages.
+    if (!empty($formatted_errors)) {
       throw new ReliefwebImportExceptionSoftViolation(strtr('Validation errors for job @guid imported from @url: @errors', [
         '@guid' => $job->field_import_guid->value,
         '@url' => $this->url,
-        '@errors' => $message,
+        '@errors' => implode(' ', $formatted_errors),
       ]));
     }
+  }
+
+  /**
+   * Format import validation errors and notes for revision log messages.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job with import state in JobImportStateStore.
+   *
+   * @return string[]
+   *   Editorial messages including field labels and import notes.
+   */
+  protected function formatImportMessagesForRevisionLog(Job $job): array {
+    $messages = $this->formatImportErrorsForRevisionLog($job);
+    foreach (JobImportStateStore::getNotes($job) as $note) {
+      $note = trim($note);
+      if ($note !== '') {
+        $messages[] = $note;
+      }
+    }
+    return $messages;
+  }
+
+  /**
+   * Format import validation errors for editorial revision log messages.
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Job $job
+   *   Job with import errors in JobImportStateStore.
+   *
+   * @return string[]
+   *   Editorial error messages including field labels.
+   */
+  protected function formatImportErrorsForRevisionLog(Job $job): array {
+    $import_errors = JobImportStateStore::getErrors($job);
+    if ($import_errors === []) {
+      return [];
+    }
+
+    $messages = [];
+    foreach ($import_errors as $field => $error) {
+      if (!isset($job->{$field})) {
+        continue;
+      }
+      $label = (string) $job->{$field}->getFieldDefinition()->getLabel();
+      $error = trim((string) $error);
+      if ($this->isMissingRequiredValueMessage($error)) {
+        $messages[] = strtr('@field is missing.', [
+          '@field' => $label,
+        ]);
+      }
+      else {
+        $messages[] = strtr('@field: @error', [
+          '@field' => $label,
+          '@error' => $error,
+        ]);
+      }
+    }
+
+    return $messages;
+  }
+
+  /**
+   * Check whether a validation message is the default required/empty message.
+   *
+   * @param string $message
+   *   Raw validation or import error message.
+   *
+   * @return bool
+   *   TRUE if the message is Drupal/Symfony's default NotNull message.
+   */
+  protected function isMissingRequiredValueMessage(string $message): bool {
+    return strcasecmp(rtrim($message, '.'), 'This value should not be null') === 0;
   }
 
   /**

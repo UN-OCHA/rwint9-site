@@ -55,6 +55,13 @@ reliefweb_import.workday.*:
     uid:
       type: integer
       label: 'The user ID to assign as owner of imported jobs.'
+    classification:
+      type: mapping
+      label: 'Automated classification settings'
+      mapping:
+        enabled:
+          type: boolean
+          label: 'Enable automated content classification for imported jobs.'
 
 # Importer plugin base settings.
 reliefweb_import.plugin.importer:

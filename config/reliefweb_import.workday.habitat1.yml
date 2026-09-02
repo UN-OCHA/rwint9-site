@@ -8,3 +8,5 @@ refresh_token: token
 timeout: 10
 source_id: 757
 uid: 2867792
+classification:
+  enabled: true
