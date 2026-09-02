@@ -2,7 +2,7 @@ _core:
   default_config_hash: iLOA7Aahd4c5bWT_oyGSdj7qOQsjanxAfo0J3k2mAF8
 report_series_matching:
   workflow:
-    automation_enabled_form_created: true
+    automation_enabled_form_created: false
     automation_enabled_imported: true
     minimum_series_confidence: 0.65
     minimum_tagging_confidence: 0.4
@@ -133,11 +133,11 @@ report_series_matching:
       - field_disaster
       - field_disaster_type
   testing:
-    download_missing_attachment: true
+    download_missing_attachment: false
     download_missing_attachment_source_url: 'https://reliefweb.int'
 report_duplicate_matching:
-  automation_enabled_form_created: true
-  automation_enabled_imported: true
+  automation_enabled_form_created: false
+  automation_enabled_imported: false
   skip_with_attachments: false
   filter_by_source: true
   lookback_days: 7
