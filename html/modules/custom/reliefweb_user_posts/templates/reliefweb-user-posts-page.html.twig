@@ -1,0 +1,41 @@
+{#
+
+/**
+ * @file
+ * Template for a My posts content type list page.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes.
+ * - tabs: navigation tabs.
+ * - intro: links for creating available post types.
+ * - filters: filter form.
+ * - filters_attributes: attributes for the filters section.
+ * - list: results table.
+ * - list_attributes: attributes for the list section.
+ */
+
+#}
+{{ attach_library('reliefweb_moderation/moderation') }}
+{% set attributes = attributes|default(create_attribute()) %}
+<div{{ attributes.addClass('rw-user-posts', 'rw-user-posts-page') }}>
+  {% if intro %}
+    <section class="rw-user-posts-intro">
+      <h2 class="visually-hidden">{{ 'Create'|t }}</h2>
+      {{ intro }}
+    </section>
+  {% endif %}
+
+  {% if tabs %}
+    {{ tabs }}
+  {% endif %}
+
+  <section{{ filters_attributes|default(create_attribute()).addClass('rw-moderation-filters', 'rw-moderation-filters--user-posts') }}>
+    <h2 class="visually-hidden">{{ 'Filters'|t }}</h2>
+    {{ filters }}
+  </section>
+
+  <section{{ list_attributes|default(create_attribute()).addClass('rw-moderation-list', 'rw-moderation-list--user-posts') }}>
+    <h2 class="visually-hidden">{{ 'List'|t }}</h2>
+    {{ list }}
+  </section>
+</div>

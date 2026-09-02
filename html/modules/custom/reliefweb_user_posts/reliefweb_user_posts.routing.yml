@@ -1,20 +1,32 @@
 reliefweb_user_posts.content:
   path: '/user/{user}/posts'
   defaults:
-    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getContent'
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getOverview'
     _title_callback: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getTitle'
-    service: 'user_posts'
   options:
-    _admin_route: TRUE
     parameters:
       user:
         type: entity:user
-      service:
-        type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
     _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkUserPostsPageAccess'
     user: \d+
+
+reliefweb_user_posts.content.bundle:
+  path: '/user/{user}/posts/{bundle}'
+  defaults:
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getContent'
+    _title_callback: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getTitle'
+  options:
+    parameters:
+      user:
+        type: entity:user
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkUserPostsPageAccess'
+    user: \d+
+    bundle: 'report|job|training'
+
 reliefweb_user_posts.content.current_user:
   path: '/user/posts'
   defaults:
@@ -23,21 +35,28 @@ reliefweb_user_posts.content.current_user:
   requirements:
     _user_is_logged_in: 'TRUE'
     _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkCurrentUserPostsPageAccess'
-reliefweb_user_posts.autocomplete:
-  path: '/user/{user}/posts/autocomplete/{filter}'
+
+reliefweb_user_posts.content.current_user.bundle:
+  path: '/user/posts/{bundle}'
   defaults:
-    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::autocomplete'
-    _title_callback: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::getPageTitle'
-    service: 'user_posts'
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::currentUserPostsBundlePage'
+    _title: 'My posts'
+  requirements:
+    _user_is_logged_in: 'TRUE'
+    _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkCurrentUserPostsPageAccess'
+    bundle: 'report|job|training'
+
+reliefweb_user_posts.autocomplete:
+  path: '/user/{user}/posts/{bundle}/autocomplete/{filter}'
+  defaults:
+    _controller: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::autocompleteFilter'
   options:
-    _admin_route: TRUE
     parameters:
       user:
         type: entity:user
-      service:
-        type: reliefweb_moderation_service
   requirements:
     _user_is_logged_in: 'TRUE'
     _custom_access: '\Drupal\reliefweb_user_posts\Controller\UserPostsPage::checkUserPostsPageAccess'
     user: \d+
+    bundle: 'report|job|training'
     filter: "[a-z0-9_]+"
