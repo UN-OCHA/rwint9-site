@@ -249,6 +249,7 @@ class ReportModeration extends ModerationServiceBase {
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
       'refused' => $this->t('Refused'),
+      'duplicate' => $this->t('Duplicate'),
       'embargoed' => $this->t('Embargoed'),
       'reference' => $this->t('Reference'),
       'archive' => $this->t('Archived'),
@@ -329,6 +330,13 @@ class ReportModeration extends ModerationServiceBase {
     if (($api_submitted || $status === 'refused') && $account->hasPermission('edit refused content')) {
       $buttons['refused'] = [
         '#value' => $this->t('Refused'),
+      ];
+    }
+
+    // Allow editors with permission to mark reports as duplicates.
+    if ($account->hasPermission('edit duplicate content')) {
+      $buttons['duplicate'] = [
+        '#value' => $this->t('Duplicate'),
       ];
     }
 
@@ -445,6 +453,7 @@ class ReportModeration extends ModerationServiceBase {
     return match ($status) {
       'archive' => $account->hasPermission('edit archived content'),
       'refused' => $account->hasPermission('edit refused content'),
+      'duplicate' => $account->hasPermission('edit duplicate content'),
       default => TRUE,
     };
   }
@@ -521,6 +530,28 @@ class ReportModeration extends ModerationServiceBase {
       // No specific widget as the join is enough.
       'widget' => 'none',
       'join_callback' => 'joinEmbargoDate',
+    ];
+
+    // Add filters to restrict to content with or without a file.
+    $definitions['has_file'] = [
+      'type' => 'field',
+      'label' => $this->t('Has file'),
+      'field' => 'field_file',
+      'column' => 'file_uuid',
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinHasFile',
+    ];
+    $definitions['has_no_file'] = [
+      'type' => 'field',
+      'label' => $this->t('Has no file'),
+      'field' => 'field_file',
+      'column' => 'file_uuid',
+      'form' => 'other',
+      // No specific widget as the join is enough.
+      'widget' => 'none',
+      'join_callback' => 'joinHasNoFile',
     ];
 
     // Add a filter to restrict to content posted by a Contributor.
@@ -632,6 +663,35 @@ class ReportModeration extends ModerationServiceBase {
     $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field} AND %alias.{$field_name} IS NOT NULL");
 
     // No field to return as the inner join is enough.
+    return '';
+  }
+
+  /**
+   * Has file join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinHasFile(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Join the file field and restrict to content with a file.
+    $table = $this->getFieldTableName('node', 'field_file');
+    $query->innerJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+
+    // No field to return as the inner join is enough.
+    return '';
+  }
+
+  /**
+   * Has no file join callback.
+   *
+   * @see ::joinField()
+   */
+  protected function joinHasNoFile(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
+    // Left join the file field and restrict to content without a file.
+    $table = $this->getFieldTableName('node', 'field_file');
+    $alias = $query->leftJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+    $query->isNull($alias . '.entity_id');
+
+    // No field to return as the join and condition are enough.
     return '';
   }
 

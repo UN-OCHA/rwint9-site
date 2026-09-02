@@ -2,9 +2,6 @@
 
 namespace Drupal\reliefweb_import\Drush\Commands;
 
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Core\Config\ConfigFactory;
 use Drupal\reliefweb_import\Plugin\ReliefwebImporterPluginManagerInterface;
 use Drupal\reliefweb_import\Service\JobFeedsImporterInterface;
@@ -14,11 +11,7 @@ use Drush\Commands\DrushCommands;
 /**
  * ReliefWeb Import Drush commandfile.
  */
-class ReliefwebImport extends DrushCommands implements SiteAliasManagerAwareInterface {
-
-  // Drush traits.
-  use ProcessManagerAwareTrait;
-  use SiteAliasManagerAwareTrait;
+class ReliefwebImport extends DrushCommands {
 
   /**
    * {@inheritdoc}

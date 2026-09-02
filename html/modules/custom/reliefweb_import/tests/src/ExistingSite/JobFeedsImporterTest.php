@@ -106,6 +106,7 @@ class JobFeedsImporterTest extends ExistingSiteBase {
       new Response(200, [], $this->getTestXml5()),
       new Response(200, [], $this->getTestXml6()),
       new Response(200, [], $this->getTestXml7()),
+      new Response(200, [], $this->getTestXml8()),
       new ClientException('Client exception', new Request('GET', ''), new Response(400)),
       new RequestException('Request exception', new Request('GET', '')),
       new \Exception('General exception'),
@@ -264,6 +265,18 @@ class JobFeedsImporterTest extends ExistingSiteBase {
     $this->assertFalse($this->jobImporter->getLogger()->hasMessages('error'));
     $this->assertTrue($this->jobImporter->getLogger()->hasMessages('warning'));
     $this->assertStringContainsStringIgnoringCase('Invalid field size for field_how_to_apply, 13 characters found, has to be between 100 and 10000', $this->jobImporter->getLogger()->getMessages('warning'));
+    $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=22');
+    $this->assertStringContainsString('How to apply:', $job->getRevisionLogMessage());
+    $this->assertStringNotContainsString('This value should not be null', $job->getRevisionLogMessage());
+
+    // Import job with missing required job type.
+    // Data from getTestXml8().
+    $this->jobImporter->getLogger()->resetMessages();
+    $this->jobImporter->fetchJobs($source);
+    $this->assertTrue($this->jobImporter->getLogger()->hasMessages('warning'));
+    $job = $this->getJobFromImportUrl('https://www.aplitrak.com?adid=23');
+    $this->assertStringContainsString('Job type is missing.', $job->getRevisionLogMessage());
+    $this->assertStringNotContainsString('This value should not be null', $job->getRevisionLogMessage());
 
     // Client exception.
     $this->jobImporter->getLogger()->resetMessages();

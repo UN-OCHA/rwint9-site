@@ -4,10 +4,15 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_import\Service;
 
+use Drupal\Core\Database\Connection;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Session\AccountSwitcherInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\reliefweb_entities\Entity\Job;
-use Drupal\reliefweb_import\Exception\ReliefwebImportException;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionSoftViolation;
 use Drupal\reliefweb_import\Exception\ReliefwebImportExceptionViolation;
+use GuzzleHttp\ClientInterface;
 
 /**
  * Service to interact with the WorkDay API.
@@ -20,6 +25,43 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    * @var array
    */
   protected array $settings;
+
+  /**
+   * Constructs a WorkDayJobImporter.
+   *
+   * @param \Drupal\Core\Database\Connection $database
+   *   Database connection.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
+   *   Entity type manager.
+   * @param \Drupal\Core\Session\AccountSwitcherInterface $account_switcher
+   *   Account switcher.
+   * @param \GuzzleHttp\ClientInterface $http_client
+   *   HTTP client.
+   * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
+   *   Logger factory.
+   * @param \Drupal\Core\State\StateInterface $state
+   *   State service.
+   * @param \Drupal\reliefweb_import\Service\WorkDayJobDocumentMapper $documentMapper
+   *   Workday document mapper.
+   */
+  public function __construct(
+    Connection $database,
+    EntityTypeManagerInterface $entity_type_manager,
+    AccountSwitcherInterface $account_switcher,
+    ClientInterface $http_client,
+    LoggerChannelFactoryInterface $logger_factory,
+    StateInterface $state,
+    protected WorkDayJobDocumentMapper $documentMapper,
+  ) {
+    parent::__construct(
+      $database,
+      $entity_type_manager,
+      $account_switcher,
+      $http_client,
+      $logger_factory,
+      $state,
+    );
+  }
 
   /**
    * Set the settings for the WorkDay service.
@@ -148,10 +190,10 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
    *   Number of documents to fetch.
    *
    * @return array
-   *   List of documents keyed by IDs.
+   *   List of mapped import documents.
    */
   public function getDocuments(int $limit = 50): array {
-    $this->getLogger()->info('Retrieving documents from the WorkDay.');
+    $this->getLogger()->info('Retrieving documents from the WorkDay API.');
 
     $documents = [];
 
@@ -178,11 +220,17 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
       }
 
       $jobs = json_decode($response->getBody()->getContents(), TRUE);
+
       if (!isset($jobs['data']) || !is_array($jobs['data'])) {
-        throw new \Exception('Invalid response structure from WorkDay API.');
+        throw new \Exception('Invalid response structure from the WorkDay API.');
       }
 
+      $count = 0;
       foreach ($jobs['data'] as $job) {
+        if ($limit > 0 && $count >= $limit) {
+          break;
+        }
+
         // Skip jobs without title or URL.
         if (empty($job['title']) || empty($job['url'])) {
           continue;
@@ -193,23 +241,8 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
           continue;
         }
 
-        $field_country = [];
-        if (!empty($job['primaryLocation']['country']['descriptor'])) {
-          $field_country[] = $job['primaryLocation']['country']['descriptor'];
-        }
-
-        $documents[] = [
-          'id' => $job['id'],
-          'field_job_closing_date' => $job['startDate'] ?? '',
-          'job_type' => $job['jobType']['descriptor'] ?? '',
-          'company' => $job['company']['descriptor'] ?? '',
-          'time_type' => $job['timeType']['descriptor'] ?? '',
-          'field_city' => $job['primaryLocation']['descriptor'] ?? '',
-          'field_country' => $field_country,
-          'url' => $job['url'] ?? '',
-          'title' => $job['title'],
-          'body' => $job['jobDescription'] ?? '',
-        ];
+        $documents[] = $this->documentMapper->mapApiJob($job);
+        $count++;
       }
 
       return $documents;
@@ -234,9 +267,9 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
     $warnings = [];
 
     foreach ($documents as $item) {
-      $name = $item['title'] ?? 'unknown';
+      $name = $item->title ?? 'unknown';
       try {
-        $guid = trim($item['url'] ?? '');
+        $guid = trim($item->url ?? '');
         $this->url = $guid;
 
         // Check if job already exist.
@@ -252,13 +285,13 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
             ]));
           }
 
-          $this->updateJob((object) $job, $item);
+          $this->updateWorkdayJob($job, $item);
         }
         else {
           $this->getLogger()->notice(strtr('Creating new job @guid', [
             '@guid' => $guid,
           ]));
-          $this->createJob($guid, (object) $item, $uid, $source_id);
+          $this->createWorkdayJob($guid, $item, $uid, $source_id);
         }
       }
       catch (ReliefwebImportExceptionViolation $exception) {
@@ -284,18 +317,18 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
   }
 
   /**
-   * Create a new job.
+   * Creates a new Workday job.
    *
    * @param string $guid
    *   Feed item unique ID.
-   * @param object|array $data
-   *   Data for the job.
+   * @param object $data
+   *   Mapped import data.
    * @param int $uid
    *   ID of the job owner.
    * @param int $source_id
    *   Source ID.
    */
-  protected function createJob(string $guid, object|array $data, int $uid, int $source_id): void {
+  protected function createWorkdayJob(string $guid, object $data, int $uid, int $source_id): void {
     $values = [
       'type' => 'job',
       'uid' => $uid,
@@ -303,90 +336,57 @@ class WorkDayJobImporter extends JobFeedsImporterBase implements JobFeedsImporte
       'field_import_guid' => $guid,
     ];
     $job = $this->entityTypeManager->getStorage('node')->create($values);
-    $this->updateJob($job, $data);
+    $this->updateWorkdayJob($job, $data);
   }
 
   /**
-   * Update an existing job.
+   * Updates a Workday job from mapped import data.
    *
    * @param \Drupal\reliefweb_entities\Entity\Job $job
    *   Job to update.
-   * @param object|array $data
-   *   Data for the job.
+   * @param object $data
+   *   Mapped import data.
    */
-  protected function updateJob(Job $job, object|array $data): void {
-    $fields = [
-      'title' => [
-        'callback' => 'setJobTitle',
-        'property' => 'title',
-      ],
-      'body' => [
-        'callback' => 'setJobBody',
-        'property' => 'body',
-      ],
-      'field_how_to_apply' => [
-        'callback' => 'setJobHowToApply',
-        'property' => 'field_how_to_apply',
-      ],
-      'field_job_closing_date' => [
-        'callback' => 'setJobClosingDate',
-        'property' => 'field_job_closing_date',
-      ],
-      'field_job_type' => [
-        'callback' => 'setJobType',
-        'property' => 'field_job_type',
-      ],
-      'field_job_experience' => [
-        'callback' => 'setJobExperience',
-        'property' => 'field_job_experience',
-      ],
-      'field_career_categories' => [
-        'callback' => 'setJobCareerCategories',
-        'property' => 'field_career_categories',
-      ],
-      'field_theme' => [
-        'callback' => 'setJobThemes',
-        'property' => 'field_theme',
-      ],
-      'field_country' => [
-        'callback' => 'setJobCountry',
-        'property' => 'field_country',
-      ],
-      'field_city' => [
-        'callback' => 'setJobCity',
-        'property' => 'field_city',
-      ],
+  protected function updateWorkdayJob(Job $job, object $data): void {
+    $this->updateJobFromImportData(
+      $job,
+      $data,
+      $this->getWorkdayImportFieldDefinitions(),
+      $this->getFeedHashFields(),
+      $this->getWorkdayImportContext(),
+    );
+  }
+
+  /**
+   * Returns field definitions for Workday imports.
+   *
+   * @return array<string, array{callback: string, property: string}>
+   *   Field definitions.
+   */
+  protected function getWorkdayImportFieldDefinitions(): array {
+    return $this->getImportFieldDefinitions(include_city: FALSE);
+  }
+
+  /**
+   * Returns import context for Workday job imports.
+   *
+   * @return array<string, mixed>
+   *   Import context options.
+   */
+  protected function getWorkdayImportContext(): array {
+    $context = [
+      'source' => 'workday',
     ];
 
-    $data_for_hash = [
-      'field_source' => $job->field_source->getValue(),
-      'field_import_guid' => $job->field_import_guid->getValue(),
-    ];
-    foreach ($fields as $field => $info) {
-      try {
-        if (isset($data->{$info['property']})) {
-          $this->{$info['callback']}($job, $data->{$info['property']});
-        }
-      }
-      catch (ReliefwebImportException $exception) {
-        // Empty the field if invalid and store the error.
-        $job->{$field} = [];
-        $job->_import_errors[$field] = $exception->getMessage();
-      }
-      $data_for_hash[$field] = $job->{$field}->getValue();
+    if (!empty($this->settings['classification']['enabled'])) {
+      $context['classification_enabled'] = TRUE;
+      $context['deferred_fields'] = [
+        'field_career_categories',
+        'field_theme',
+      ];
     }
 
-    $hash = hash('sha256', serialize($data_for_hash));
-    if ($job->field_import_hash->value === $hash) {
-      $this->getLogger()->notice(strtr('No changes detected for job @guid (@nid), skipping.', [
-        '@guid' => $job->field_import_guid->value,
-        '@nid' => $job->id(),
-      ]));
-    }
-    else {
-      $job->field_import_hash->value = $hash;
-      $this->validateAndSaveJob($job);
-    }
+    return $context;
   }
 
 }

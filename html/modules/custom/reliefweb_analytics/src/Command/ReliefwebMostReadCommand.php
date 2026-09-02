@@ -2,9 +2,6 @@
 
 namespace Drupal\reliefweb_analytics\Command;
 
-use Consolidation\SiteAlias\SiteAliasManagerAwareInterface;
-use Consolidation\SiteAlias\SiteAliasManagerAwareTrait;
-use Consolidation\SiteProcess\ProcessManagerAwareTrait;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -29,11 +26,7 @@ use Google\ApiCore\ApiException;
 /**
  * ReliefWeb Most Read Drush commandfile.
  */
-class ReliefwebMostReadCommand extends DrushCommands implements SiteAliasManagerAwareInterface {
-
-  // Drush traits.
-  use ProcessManagerAwareTrait;
-  use SiteAliasManagerAwareTrait;
+class ReliefwebMostReadCommand extends DrushCommands {
 
   /**
    * The entity type manager.

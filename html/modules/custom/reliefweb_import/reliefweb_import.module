@@ -14,17 +14,18 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
 use Drupal\ocha_content_classification\Plugin\ClassifierPluginInterface;
 use Drupal\reliefweb_entities\Entity\Job;
+use Drupal\reliefweb_import\JobImport\JobImportStateStore;
 use Drupal\reliefweb_import\Plugin\ReliefWebImporterPluginInterface;
 
 /**
  * Implements hook_ENTITY_TYPE_presave() for node.
  */
 function reliefweb_import_node_presave(EntityInterface $entity): void {
-  if ($entity instanceof Job && !empty($entity->_is_importing)) {
+  if ($entity instanceof Job && JobImportStateStore::isImporting($entity)) {
     $status = $entity->getModerationStatus();
 
     // Set the status to draft/on-hold if there were validation errors.
-    if ($status !== 'refused' && !empty($entity->_import_errors)) {
+    if ($status !== 'refused' && JobImportStateStore::hasBlockingErrors($entity)) {
       $status = \Drupal::state()->get('reliefweb_import_status_when_errors', 'draft');
       $entity->setModerationStatus($status);
     }
