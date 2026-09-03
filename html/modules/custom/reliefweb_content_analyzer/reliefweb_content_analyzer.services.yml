@@ -1,0 +1,39 @@
+services:
+  logger.channel.reliefweb_content_analyzer:
+    parent: logger.channel_base
+    arguments: ['reliefweb_content_analyzer']
+
+  reliefweb_content_analyzer.report_series_matcher:
+    class: Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcher
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\ReportSeriesMatcherInterface:
+    '@reliefweb_content_analyzer.report_series_matcher'
+
+  reliefweb_content_analyzer.report_duplicate_matcher:
+    class: Drupal\reliefweb_content_analyzer\Services\ReportDuplicateMatcher
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\ReportDuplicateMatcherInterface:
+    '@reliefweb_content_analyzer.report_duplicate_matcher'
+
+  reliefweb_content_analyzer.embeddings_storage:
+    class: Drupal\reliefweb_content_analyzer\Services\MariaDbEmbeddingsStorage
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\EmbeddingsStorageInterface:
+    '@reliefweb_content_analyzer.embeddings_storage'
+
+  reliefweb_content_analyzer.embedding_text_builder:
+    class: Drupal\reliefweb_content_analyzer\Services\EmbeddingTextBuilder
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\EmbeddingTextBuilder:
+    '@reliefweb_content_analyzer.embedding_text_builder'
+
+  reliefweb_content_analyzer.embedding_generator:
+    class: Drupal\reliefweb_content_analyzer\Services\EmbeddingGenerator
+    autowire: true
+
+  Drupal\reliefweb_content_analyzer\Services\EmbeddingGenerator:
+    '@reliefweb_content_analyzer.embedding_generator'

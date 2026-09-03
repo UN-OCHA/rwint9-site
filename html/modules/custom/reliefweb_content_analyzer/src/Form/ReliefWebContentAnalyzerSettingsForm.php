@@ -1,0 +1,1687 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Drupal\reliefweb_content_analyzer\Form;
+
+use Drupal\Core\Entity\EntityFieldManagerInterface;
+use Drupal\Core\Form\ConfigFormBase;
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
+use Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface;
+use Drupal\ocha_ai\Plugin\ocha_ai\Completion\CompletionCapability;
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\ContentEmbeddingsSettings;
+use Drupal\reliefweb_content_analyzer\ContentEmbeddings\Dto\EmbeddingSourceSettings;
+use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchConfidenceScoringSettings;
+use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchWorkflowSettings;
+use Drupal\reliefweb_moderation\Services\ReportModeration;
+use Symfony\Component\DependencyInjection\ContainerInterface;
+
+/**
+ * Configuration form for ReliefWeb content analyzer settings.
+ */
+class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
+
+  private const WEIGHT_SUM_TOLERANCE = 0.001;
+
+  /**
+   * Constructs the settings form.
+   *
+   * @param \Drupal\reliefweb_moderation\Services\ReportModeration $reportModeration
+   *   Report moderation service for status select options.
+   * @param \Drupal\Core\Entity\EntityFieldManagerInterface $entityFieldManager
+   *   Entity field manager for field name validation.
+   * @param \Drupal\ocha_ai\Plugin\CompletionPluginManagerInterface $completionPluginManager
+   *   OCHA AI completion plugin manager.
+   */
+  public function __construct(
+    protected readonly ReportModeration $reportModeration,
+    protected readonly EntityFieldManagerInterface $entityFieldManager,
+    protected readonly CompletionPluginManagerInterface $completionPluginManager,
+  ) {}
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container): static {
+    return new static(
+      $container->get('reliefweb_moderation.report.moderation'),
+      $container->get('entity_field.manager'),
+      $container->get('plugin.manager.ocha_ai.completion'),
+    );
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function getEditableConfigNames(): array {
+    return ['reliefweb_content_analyzer.settings'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFormId(): string {
+    return 'reliefweb_content_analyzer_settings_form';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildForm(array $form, FormStateInterface $form_state): array {
+    $config = $this->config('reliefweb_content_analyzer.settings');
+    $matching = $config->get('report_series_matching');
+    $workflow = $matching['workflow'];
+    $matcher = $matching['matcher'];
+    $testing = $matching['testing'] ?? [
+      'download_missing_attachment' => TRUE,
+      'download_missing_attachment_source_url' => 'https://reliefweb.int',
+    ];
+    $report_duplicate_matching = (array) ($config->get('report_duplicate_matching') ?? [])
+      + DuplicateMatchSettings::defaultConfig();
+    $content_embeddings = ContentEmbeddingsSettings::fromConfigArray(
+      $config->get('content_embeddings'),
+    );
+    $report_source = $content_embeddings->getSource('node', 'report')
+      ?? EmbeddingSourceSettings::fromConfigArray([], ContentEmbeddingsSettings::defaultConfig()['sources']['node']['report']);
+    $moderation_options = $this->reportModeration->getStatuses();
+
+    $form['report_duplicate_matching_tabs'] = [
+      '#type' => 'vertical_tabs',
+      '#title' => $this->t('Report near-duplicate detection'),
+    ];
+
+    $form['report_duplicate_matching'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Report duplication'),
+      '#group' => 'report_duplicate_matching_tabs',
+      '#tree' => TRUE,
+      '#description' => $this->t('Detects near-duplicate reports on create. Candidates come from the date/source window unioned with embedding nearest neighbors. Hard matches use word 3-gram Jaccard; soft matches require TF-IDF then local embedding cosine (stored vectors or /embed). Series siblings are discarded. Any match applies the target moderation status (demotion-only via the series restrictiveness order). Series matching is skipped when the result is duplicate.'),
+    ];
+
+    $form['report_duplicate_matching']['automation_enabled_form_created'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports created via the editorial form'),
+      '#description' => $this->t('Requires the “Apply report duplication automation on form create” permission.'),
+      '#default_value' => $report_duplicate_matching['automation_enabled_form_created'],
+    ];
+
+    $form['report_duplicate_matching']['automation_enabled_imported'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports submitted via Post API or import'),
+      '#default_value' => $report_duplicate_matching['automation_enabled_imported'],
+    ];
+
+    $form['report_duplicate_matching']['skip_with_attachments'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Skip reports that have file attachments'),
+      '#description' => $this->t('When enabled, detection is skipped for the source report if it has attachments, and candidate reports with attachments are excluded. Body text is always required. Leave unchecked to compare body text even when attachments are present (file near-duplicates still use the MinHash pipeline separately).'),
+      '#default_value' => $report_duplicate_matching['skip_with_attachments'],
+    ];
+
+    $form['report_duplicate_matching']['filter_by_source'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Filter candidates by shared source'),
+      '#description' => $this->t('When enabled (default), only reports that share at least one source with the report being checked are candidates. Disable to search all sources in the created-date window (broader recall, higher cost and more noise).'),
+      '#default_value' => $report_duplicate_matching['filter_by_source'],
+    ];
+
+    $form['report_duplicate_matching']['lookback_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Lookback days'),
+      '#description' => $this->t('Search candidates created up to this many days before the report’s created date.'),
+      '#default_value' => $report_duplicate_matching['lookback_days'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['lookforward_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Lookforward days'),
+      '#description' => $this->t('Search candidates created up to this many days after the report’s created date (clamped to now).'),
+      '#default_value' => $report_duplicate_matching['lookforward_days'],
+      '#min' => 0,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['candidate_limit'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate limit'),
+      '#description' => $this->t('Maximum candidates after ranking. With source filtering on: shared-source count (desc), then created date (desc). With source filtering off: created date (desc) only.'),
+      '#default_value' => $report_duplicate_matching['candidate_limit'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['minimum_body_length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum normalized body length'),
+      '#default_value' => $report_duplicate_matching['minimum_body_length'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['minimum_length_ratio'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum length ratio (Jaccard)'),
+      '#description' => $this->t('Shorter/longer normalized body length ratio required before Jaccard scoring (0–1). Soft TF-IDF scoring skips this gate.'),
+      '#default_value' => $report_duplicate_matching['minimum_length_ratio'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Jaccard similarity threshold'),
+      '#description' => $this->t('Minimum word 3-gram Jaccard score (0–1) for a hard near-duplicate.'),
+      '#default_value' => $report_duplicate_matching['similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['tfidf_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('TF-IDF similarity threshold'),
+      '#description' => $this->t('Minimum pairwise TF-IDF cosine (0–1) to send a candidate for embedding confirmation when Jaccard does not pass.'),
+      '#default_value' => $report_duplicate_matching['tfidf_similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding similarity threshold'),
+      '#description' => $this->t('Minimum embedding cosine (0–1) for nearest-neighbor retrieval and soft near-duplicates after TF-IDF filtering. Uses stored vectors or the Content embeddings embed endpoint.'),
+      '#default_value' => $report_duplicate_matching['embedding_similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_topk'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding nearest-neighbor limit'),
+      '#description' => $this->t('Maximum candidates retrieved from embedding storage (unioned with the window/source set).'),
+      '#default_value' => $report_duplicate_matching['embedding_topk'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_lookback_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding lookback days'),
+      '#description' => $this->t('Days before the report first revision for embedding nearest-neighbor search (no source filter). Converted to an nid range. Default 1095 (~3 years).'),
+      '#default_value' => $report_duplicate_matching['embedding_lookback_days'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_lookforward_days'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding lookforward days'),
+      '#description' => $this->t('Days after the report first revision for embedding nearest-neighbor search. Converted to an nid range. Default 2.'),
+      '#default_value' => $report_duplicate_matching['embedding_lookforward_days'] ?? 2,
+      '#min' => 0,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['target_status'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Target moderation status'),
+      '#description' => $this->t('Applied when any near-duplicate match exists (hard Jaccard or embedding-confirmed soft). Demotion-only via restrictiveness order.'),
+      '#options' => $moderation_options,
+      '#default_value' => $report_duplicate_matching['target_status'],
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['candidate_moderation_statuses'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Candidate moderation statuses'),
+      '#description' => $this->t('One status machine name per line.'),
+      '#default_value' => $this->sequenceToLines($report_duplicate_matching['candidate_moderation_statuses'] ?? []),
+      '#rows' => 3,
+    ];
+
+    $form['report_duplicate_matching']['skip_moderation_statuses'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Skip moderation statuses'),
+      '#description' => $this->t('Detection is skipped when the new report already has one of these statuses. One per line.'),
+      '#default_value' => $this->sequenceToLines($report_duplicate_matching['skip_moderation_statuses'] ?? []),
+      '#rows' => 3,
+    ];
+
+    $form['content_embeddings'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Content embeddings'),
+      '#group' => 'report_duplicate_matching_tabs',
+      '#tree' => TRUE,
+      '#description' => $this->t('Stores Model2Vec embeddings for near-duplicate search (default backend: MariaDB VECTOR). Generate with <code>drush rwca:embed</code>. The duplicate matcher uses this embed endpoint for probe/candidate vectors when not already stored.'),
+    ];
+
+    $form['content_embeddings']['embed_endpoint'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Embed endpoint'),
+      '#description' => $this->t('AI helper URL for POST /text/deduplicate/embed.'),
+      '#default_value' => $content_embeddings->embedEndpoint,
+      '#maxlength' => 512,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['dimensions'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Vector dimensions'),
+      '#description' => $this->t('Must match the helper model (default 256). Changing this requires recreating the embeddings table.'),
+      '#default_value' => $content_embeddings->dimensions,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['default_timeout'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Default HTTP timeout (seconds)'),
+      '#default_value' => $content_embeddings->defaultTimeout,
+      '#min' => 1,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Report (node)'),
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report'] = [
+      '#type' => 'container',
+      '#tree' => TRUE,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable embedding generation for reports'),
+      '#default_value' => $report_source->enabled,
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['fields'] = [
+      '#type' => 'checkboxes',
+      '#title' => $this->t('Fields to embed'),
+      '#description' => $this->t('Concatenated in order with blank lines between. File extraction failures are ignored.'),
+      '#options' => [
+        'title' => $this->t('Title'),
+        'body' => $this->t('Body'),
+        'field_file' => $this->t('Attachments (field_file text)'),
+      ],
+      '#default_value' => array_combine($report_source->fields, $report_source->fields),
+    ];
+
+    $form['content_embeddings']['sources']['node']['report']['min_text_length'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum text length'),
+      '#default_value' => $report_source->minTextLength,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_series_matching'] = [
+      '#type' => 'vertical_tabs',
+      '#title' => $this->t('Report series matching'),
+    ];
+
+    $form['automation'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Automation'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+    ];
+
+    $form['automation']['automation_enabled_form_created'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports created via the editorial form'),
+      '#description' => $this->t('When enabled, automated series matching runs on new report saves from the editorial form only for users with the “Apply report series matching automation on form create” permission.'),
+      '#default_value' => $workflow['automation_enabled_form_created'],
+    ];
+
+    $form['automation']['automation_enabled_imported'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable for reports submitted via Post API or import'),
+      '#default_value' => $workflow['automation_enabled_imported'],
+    ];
+
+    $form['confidence'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Confidence thresholds'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+    ];
+
+    $form['confidence']['minimum_series_confidence'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum series confidence'),
+      '#description' => $this->t('Minimum series confidence required to apply a match.'),
+      '#default_value' => $workflow['minimum_series_confidence'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['minimum_tagging_confidence'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum tagging confidence floor'),
+      '#description' => $this->t('Tagging scores below this value are forced to the low tier.'),
+      '#default_value' => $workflow['minimum_tagging_confidence'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['series_confidence_tiers'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Series confidence tiers'),
+      '#tree' => TRUE,
+    ];
+
+    $form['confidence']['series_confidence_tiers']['high'] = [
+      '#type' => 'number',
+      '#title' => $this->t('High tier lower bound'),
+      '#default_value' => $workflow['series_confidence_tiers']['high'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['series_confidence_tiers']['medium'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Medium tier lower bound'),
+      '#default_value' => $workflow['series_confidence_tiers']['medium'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['tagging_confidence_tiers'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Tagging confidence tiers'),
+      '#tree' => TRUE,
+    ];
+
+    $form['confidence']['tagging_confidence_tiers']['high'] = [
+      '#type' => 'number',
+      '#title' => $this->t('High tier lower bound'),
+      '#default_value' => $workflow['tagging_confidence_tiers']['high'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['tagging_confidence_tiers']['medium'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Medium tier lower bound'),
+      '#default_value' => $workflow['tagging_confidence_tiers']['medium'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $confidence_scoring = $workflow['confidence_scoring']
+      ?? SeriesMatchConfidenceScoringSettings::defaultConfig();
+
+    $form['confidence']['confidence_scoring'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Confidence scoring weights'),
+      '#description' => $this->t('Weights used to compute series and tagging confidence scores from match evidence. These are separate from the tier cutoffs above.'),
+      '#tree' => TRUE,
+    ];
+
+    $form['confidence']['confidence_scoring']['series'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Series confidence formula'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'cluster_share_weight' => $this->t('Cluster share weight'),
+      'cluster_score_weight' => $this->t('Cluster score weight'),
+      'dual_signal_ratio_weight' => $this->t('Dual title+URL signal weight'),
+      'cluster_share_dominance_weight' => $this->t('Cluster share dominance weight'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['series'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['series'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['confidence']['confidence_scoring']['tagging'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Tagging confidence formula'),
+      '#tree' => TRUE,
+    ];
+    $form['confidence']['confidence_scoring']['tagging']['field_blend_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Field provenance blend weight'),
+      '#default_value' => $confidence_scoring['tagging']['field_blend_weight'] ?? 0.70,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['confidence']['confidence_scoring']['tagging']['title_blend_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Title source blend weight'),
+      '#default_value' => $confidence_scoring['tagging']['title_blend_weight'] ?? 0.30,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['confidence']['confidence_scoring']['tagging']['field_provenance_weights'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Field provenance scores'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'all_candidates' => $this->t('All candidates'),
+      'merged' => $this->t('Merged'),
+      'most_recent' => $this->t('Most recent'),
+      'skipped' => $this->t('Skipped'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['tagging']['field_provenance_weights'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['tagging']['field_provenance_weights'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['confidence']['confidence_scoring']['tagging']['title_source_scores'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Title source scores'),
+      '#description' => $this->t('The AI generated score should usually match the matcher “AI title match minimum confidence” setting.'),
+      '#tree' => TRUE,
+    ];
+    foreach ([
+      'kept_original_pattern_match' => $this->t('Kept original pattern match'),
+      'ai_generated' => $this->t('AI generated'),
+      'other' => $this->t('Other / failed'),
+    ] as $key => $label) {
+      $form['confidence']['confidence_scoring']['tagging']['title_source_scores'][$key] = [
+        '#type' => 'number',
+        '#title' => $label,
+        '#default_value' => $confidence_scoring['tagging']['title_source_scores'][$key] ?? 0,
+        '#min' => 0,
+        '#max' => 1,
+        '#step' => 0.01,
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['moderation'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Moderation'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+    ];
+
+    $form['moderation']['moderation_by_outcome_tier'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Moderation state per outcome tier'),
+      '#tree' => TRUE,
+    ];
+
+    foreach (['low', 'medium', 'high'] as $tier) {
+      $form['moderation']['moderation_by_outcome_tier'][$tier] = [
+        '#type' => 'select',
+        '#title' => $this->t('@tier outcome tier', ['@tier' => ucfirst($tier)]),
+        '#options' => $moderation_options,
+        '#default_value' => $workflow['moderation_by_outcome_tier'][$tier],
+        '#required' => TRUE,
+      ];
+    }
+
+    $form['moderation']['skip_series_match_moderation_statuses'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Skip series match moderation statuses'),
+      '#description' => $this->t('One moderation state machine name per line. Series matching is skipped at detect presave when the entity has one of these statuses.'),
+      '#default_value' => $this->sequenceToLines($workflow['skip_series_match_moderation_statuses']),
+      '#rows' => 4,
+      '#required' => TRUE,
+    ];
+
+    $form['moderation']['restrictiveness_order'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Restrictiveness order'),
+      '#description' => $this->t('One moderation state machine name per line, most restrictive first.'),
+      '#default_value' => $this->sequenceToLines($workflow['restrictiveness_order']),
+      '#rows' => 8,
+      '#required' => TRUE,
+    ];
+
+    $action_options = [
+      'none' => $this->t('None'),
+      'max_medium' => $this->t('Ceiling to medium (to-review)'),
+      'max_low' => $this->t('Ceiling to low (pending)'),
+      'skip_match' => $this->t('Skip match'),
+    ];
+
+    $form['outcome_policies'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Outcome policies'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+      '#description' => $this->t('Ceil or skip series-match application based on field provenance and global rules. The strictest triggered action wins.'),
+    ];
+
+    $field_policies = $workflow['field_outcome_policies']
+      ?? SeriesMatchWorkflowSettings::defaultFieldOutcomePolicies();
+    $form['outcome_policies']['field_outcome_policies'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Per-field policies'),
+      '#tree' => TRUE,
+    ];
+    foreach ($field_policies as $field_name => $policy) {
+      $form['outcome_policies']['field_outcome_policies'][$field_name] = [
+        '#type' => 'fieldset',
+        '#title' => $field_name,
+        '#tree' => TRUE,
+      ];
+      foreach (['most_recent', 'merged', 'skipped'] as $provenance) {
+        $form['outcome_policies']['field_outcome_policies'][$field_name][$provenance] = [
+          '#type' => 'select',
+          '#title' => $this->t('@provenance', [
+            '@provenance' => str_replace('_', ' ', ucfirst($provenance)),
+          ]),
+          '#options' => $action_options,
+          '#default_value' => $policy[$provenance] ?? 'none',
+          '#required' => TRUE,
+        ];
+      }
+    }
+
+    $global_rules = $workflow['global_outcome_rules']
+      ?? SeriesMatchWorkflowSettings::defaultGlobalOutcomeRules();
+
+    $form['outcome_policies']['global_outcome_rules'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Global rules'),
+      '#tree' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Empty body when series has body'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['series_body_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Series body threshold'),
+      '#description' => $this->t('Minimum fraction of series candidates with body text (0–1).'),
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['series_body_threshold'] ?? 0.5,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['empty_body_when_series_has_body']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['empty_body_when_series_has_body']['action'] ?? 'max_medium',
+      '#required' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Title AI failed or skipped'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['title_ai_failed_or_skipped']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['title_ai_failed_or_skipped']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['title_ai_failed_or_skipped']['action'] ?? 'max_medium',
+      '#required' => TRUE,
+    ];
+
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Low series confidence with mismatch'),
+      '#tree' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enabled'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['enabled'] ?? TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['max_best_cluster_share'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max best-cluster share'),
+      '#description' => $this->t('Rule fires when best-cluster share is at or below this value (0–1).'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] ?? 0.5,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['min_cluster_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum cluster count'),
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] ?? 2,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+    $form['outcome_policies']['global_outcome_rules']['low_series_confidence_with_mismatch']['action'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Action'),
+      '#options' => $action_options,
+      '#default_value' => $global_rules['low_series_confidence_with_mismatch']['action'] ?? 'skip_match',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Matcher algorithm'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+    ];
+
+    $form['matcher']['minimum_series_report_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum reports per series cluster'),
+      '#default_value' => $matcher['minimum_series_report_count'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['series_candidate_date_range_months'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate lookback window (months)'),
+      '#default_value' => $matcher['series_candidate_date_range_months'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['series_candidate_limit'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Maximum series candidates'),
+      '#default_value' => $matcher['series_candidate_limit'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_generation_enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable AI title generation'),
+      '#description' => $this->t('When disabled, import titles that do not already match the series pattern are left unchanged.'),
+      '#default_value' => $matcher['ai_title_generation_enabled'] ?? TRUE,
+    ];
+
+    $form['matcher']['ai_title_source_length_limit'] = [
+      '#type' => 'number',
+      '#title' => $this->t('AI title source text length limit'),
+      '#default_value' => $matcher['ai_title_source_length_limit'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_example_line_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('AI title example count'),
+      '#description' => $this->t('Maximum matched series titles returned by the helper and passed as style examples to the LLM.'),
+      '#default_value' => $matcher['ai_title_example_line_count'],
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_min_consistent_examples'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum consistent AI title examples'),
+      '#description' => $this->t('Minimum candidate titles sharing one date-stripped stem used to decide when the import title already matches the series pattern.'),
+      '#default_value' => $matcher['ai_title_min_consistent_examples'] ?? 3,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_extract_page_count'] = [
+      '#type' => 'number',
+      '#title' => $this->t('AI title PDF page extract count'),
+      '#description' => $this->t('Number of pages (starting from page 1) to extract as structured spans for series title matching.'),
+      '#default_value' => $matcher['ai_title_extract_page_count'] ?? 2,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_match_min_confidence'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Minimum title match confidence'),
+      '#description' => $this->t('Skip AI title generation when the helper confidence is below this threshold (0–1).'),
+      '#default_value' => $matcher['ai_title_match_min_confidence'] ?? 0.65,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['title_pattern_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Title pattern similarity threshold'),
+      '#description' => $this->t('Minimum similarity (0–1) between patternized titles for keeping the original title, boosting candidate scores, admitting the import title as an AI candidate, filtering PDF title regions, and validating AI output.'),
+      '#default_value' => $matcher['title_pattern_similarity_threshold'] ?? 0.90,
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['ai_title_description_template'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('AI title description template'),
+      '#description' => $this->t('Use @examples as a placeholder for numbered example titles.'),
+      '#default_value' => $matcher['ai_title_description_template'],
+      '#rows' => 3,
+      '#required' => TRUE,
+    ];
+
+    $inference = $matcher['ai_title_inference'];
+    $completion_plugin_options = $this->structuredOutputPluginOptions();
+    $stored_plugin_id = (string) $inference['plugin_id'];
+    if ($stored_plugin_id !== '' && !isset($completion_plugin_options[$stored_plugin_id])) {
+      $completion_plugin_options[$stored_plugin_id] = $stored_plugin_id . ' (' . $this->t('not available') . ')';
+    }
+    $form['matcher']['ai_title_inference'] = [
+      '#type' => 'details',
+      '#title' => $this->t('AI title inference'),
+      '#open' => FALSE,
+      '#tree' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['plugin_id'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Inference plugin'),
+      '#options' => $completion_plugin_options,
+      '#default_value' => $inference['plugin_id'],
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['temperature'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Temperature'),
+      '#description' => $this->t('Controls randomness in the AI response. Lower values make output more focused and deterministic.'),
+      '#default_value' => $inference['temperature'],
+      '#min' => 0,
+      '#max' => 2,
+      '#step' => 0.1,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['top_p'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Nucleus sampling (top_p)'),
+      '#description' => $this->t('Controls diversity via nucleus sampling. Lower values focus on more probable tokens.'),
+      '#default_value' => $inference['top_p'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['max_tokens'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Max tokens'),
+      '#description' => $this->t('Maximum number of tokens to generate in the response.'),
+      '#default_value' => $inference['max_tokens'],
+      '#min' => 1,
+      '#max' => 4096,
+      '#step' => 1,
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['thinking_mode'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Thinking mode'),
+      '#default_value' => $inference['thinking_mode'],
+      '#options' => [
+        'none' => $this->t('None'),
+        'low' => $this->t('Low'),
+        'medium' => $this->t('Medium'),
+        'high' => $this->t('High'),
+      ],
+      '#required' => TRUE,
+    ];
+    $form['matcher']['ai_title_inference']['system_prompt'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('System prompt'),
+      '#description' => $this->t('The system prompt that defines the AI behavior for title generation.'),
+      '#default_value' => $inference['system_prompt'],
+      '#rows' => 4,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['pattern_token_counts'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Pattern token counts'),
+      '#description' => $this->t('Comma-separated positive integers, e.g. 10, 8, 6, 4.'),
+      '#default_value' => implode(', ', $matcher['pattern_token_counts']),
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['candidate_clustering_tagging_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate clustering tagging weight'),
+      '#default_value' => $matcher['candidate_clustering_tagging_weight'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 'any',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['candidate_clustering_title_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate clustering title weight'),
+      '#default_value' => $matcher['candidate_clustering_title_weight'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 'any',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['candidate_clustering_similarity_threshold'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Candidate clustering similarity threshold'),
+      '#default_value' => $matcher['candidate_clustering_similarity_threshold'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 0.01,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['cluster_scoring_size_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Cluster scoring size weight'),
+      '#default_value' => $matcher['cluster_scoring_size_weight'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 'any',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['cluster_scoring_pattern_score_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Cluster scoring pattern score weight'),
+      '#default_value' => $matcher['cluster_scoring_pattern_score_weight'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 'any',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['cluster_scoring_tagging_consistency_weight'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Cluster scoring tagging consistency weight'),
+      '#default_value' => $matcher['cluster_scoring_tagging_consistency_weight'],
+      '#min' => 0,
+      '#max' => 1,
+      '#step' => 'any',
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['cluster_comparison_field_names'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Cluster comparison fields'),
+      '#description' => $this->t('One field machine name per line.'),
+      '#default_value' => $this->sequenceToLines($matcher['cluster_comparison_field_names']),
+      '#rows' => 4,
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['recency_field_name'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Recency field'),
+      '#default_value' => $matcher['recency_field_name'],
+      '#required' => TRUE,
+    ];
+
+    $form['matcher']['report_entity_field_names_to_copy'] = [
+      '#type' => 'textarea',
+      '#title' => $this->t('Fields to copy to the report'),
+      '#description' => $this->t('One field machine name per line.'),
+      '#default_value' => $this->sequenceToLines($matcher['report_entity_field_names_to_copy']),
+      '#rows' => 6,
+      '#required' => TRUE,
+    ];
+
+    $form['testing'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Series match testing'),
+      '#group' => 'report_series_matching',
+      '#tree' => TRUE,
+      '#description' => $this->t('Options used only by the series match test form. Downloads are skipped when the source URL host matches the current site host.'),
+    ];
+
+    $form['testing']['download_missing_attachment'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Download missing attachment before running match'),
+      '#description' => $this->t('When enabled, the series match test form downloads the report’s first attachment from the source URL if it is missing locally (needed for AI title generation).'),
+      '#default_value' => $testing['download_missing_attachment'] ?? TRUE,
+    ];
+
+    $form['testing']['download_missing_attachment_source_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('Attachment download source URL'),
+      '#default_value' => $testing['download_missing_attachment_source_url'] ?? 'https://reliefweb.int',
+      '#description' => $this->t('Base URL used to fetch missing attachments (e.g. https://reliefweb.int).'),
+      '#states' => [
+        'required' => [
+          ':input[name="testing[download_missing_attachment]"]' => ['checked' => TRUE],
+        ],
+      ],
+    ];
+
+    return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state): void {
+    parent::validateForm($form, $form_state);
+
+    $this->validateUnitInterval(
+      $form_state,
+      ['confidence', 'minimum_series_confidence'],
+      $this->t('Minimum series confidence must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['confidence', 'minimum_tagging_confidence'],
+      $this->t('Minimum tagging confidence must be between 0 and 1.'),
+    );
+
+    $this->validateTierPair(
+      $form_state,
+      ['confidence', 'series_confidence_tiers'],
+      $this->t('Series confidence high tier must be greater than medium tier.'),
+    );
+    $this->validateTierPair(
+      $form_state,
+      ['confidence', 'tagging_confidence_tiers'],
+      $this->t('Tagging confidence high tier must be greater than medium tier.'),
+    );
+
+    $confidence_scoring = $form_state->getValue(['confidence', 'confidence_scoring']) ?? [];
+    $tagging_blend_sum = (float) ($confidence_scoring['tagging']['field_blend_weight'] ?? 0)
+      + (float) ($confidence_scoring['tagging']['title_blend_weight'] ?? 0);
+    if (abs($tagging_blend_sum - 1.0) > self::WEIGHT_SUM_TOLERANCE) {
+      $form_state->setErrorByName(
+        'confidence][confidence_scoring][tagging][field_blend_weight',
+        $this->t('Tagging field and title blend weights must sum to 1.'),
+      );
+    }
+
+    $provenance = $confidence_scoring['tagging']['field_provenance_weights'] ?? [];
+    $provenance_keys = ['all_candidates', 'merged', 'most_recent', 'skipped'];
+    for ($i = 1; $i < count($provenance_keys); $i++) {
+      $prev = (float) ($provenance[$provenance_keys[$i - 1]] ?? 0);
+      $current = (float) ($provenance[$provenance_keys[$i]] ?? 0);
+      if ($current > $prev + self::WEIGHT_SUM_TOLERANCE) {
+        $form_state->setErrorByName(
+          'confidence][confidence_scoring][tagging][field_provenance_weights][' . $provenance_keys[$i],
+          $this->t('Field provenance scores must be non-increasing from all candidates to skipped.'),
+        );
+        break;
+      }
+    }
+
+    $confidence_interval_paths = [
+      ['confidence', 'confidence_scoring', 'series', 'cluster_share_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'cluster_score_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'dual_signal_ratio_weight'],
+      ['confidence', 'confidence_scoring', 'series', 'cluster_share_dominance_weight'],
+      ['confidence', 'confidence_scoring', 'tagging', 'field_blend_weight'],
+      ['confidence', 'confidence_scoring', 'tagging', 'title_blend_weight'],
+    ];
+    foreach ($provenance_keys as $key) {
+      $confidence_interval_paths[] = [
+        'confidence', 'confidence_scoring', 'tagging', 'field_provenance_weights', $key,
+      ];
+    }
+    foreach (['kept_original_pattern_match', 'ai_generated', 'other'] as $key) {
+      $confidence_interval_paths[] = [
+        'confidence', 'confidence_scoring', 'tagging', 'title_source_scores', $key,
+      ];
+    }
+    foreach ($confidence_interval_paths as $parents) {
+      $this->validateUnitInterval(
+        $form_state,
+        $parents,
+        $this->t('Confidence scoring weights must be between 0 and 1.'),
+      );
+    }
+
+    $tagging_weight = (float) $form_state->getValue(['matcher', 'candidate_clustering_tagging_weight']);
+    $title_weight = (float) $form_state->getValue(['matcher', 'candidate_clustering_title_weight']);
+    if (abs(($tagging_weight + $title_weight) - 1.0) > self::WEIGHT_SUM_TOLERANCE) {
+      $form_state->setErrorByName(
+        'matcher][candidate_clustering_tagging_weight',
+        $this->t('Candidate clustering tagging and title weights must sum to 1.'),
+      );
+    }
+
+    $scoring_sum = (float) $form_state->getValue(['matcher', 'cluster_scoring_size_weight'])
+      + (float) $form_state->getValue(['matcher', 'cluster_scoring_pattern_score_weight'])
+      + (float) $form_state->getValue(['matcher', 'cluster_scoring_tagging_consistency_weight']);
+    if (abs($scoring_sum - 1.0) > self::WEIGHT_SUM_TOLERANCE) {
+      $form_state->setErrorByName(
+        'matcher][cluster_scoring_size_weight',
+        $this->t('Cluster scoring weights must sum to 1.'),
+      );
+    }
+
+    $pattern_counts = $this->parsePatternTokenCounts(
+      (string) $form_state->getValue(['matcher', 'pattern_token_counts']),
+    );
+    if ($pattern_counts === NULL) {
+      $form_state->setErrorByName(
+        'matcher][pattern_token_counts',
+        $this->t('Pattern token counts must be comma-separated positive integers.'),
+      );
+    }
+    else {
+      $form_state->setValue(['matcher', 'pattern_token_counts_parsed'], $pattern_counts);
+    }
+
+    $field_lists = [
+      'cluster_comparison_field_names' => $this->t('Cluster comparison fields'),
+      'report_entity_field_names_to_copy' => $this->t('Fields to copy to the report'),
+    ];
+    foreach ($field_lists as $key => $label) {
+      $fields = $this->linesToSequence((string) $form_state->getValue(['matcher', $key]));
+      $unknown = $this->unknownReportFields($fields);
+      if ($unknown !== []) {
+        $form_state->setErrorByName(
+          'matcher][' . $key,
+          $this->t('@label: unknown field(s): @fields', [
+            '@label' => $label,
+            '@fields' => implode(', ', $unknown),
+          ]),
+        );
+      }
+    }
+
+    $recency_field = trim((string) $form_state->getValue(['matcher', 'recency_field_name']));
+    $unknown_recency = $this->unknownReportFields([$recency_field]);
+    if ($unknown_recency !== []) {
+      $form_state->setErrorByName(
+        'matcher][recency_field_name',
+        $this->t('Recency field is not defined on report nodes: @field', [
+          '@field' => $recency_field,
+        ]),
+      );
+    }
+
+    $temperature = (float) $form_state->getValue(['matcher', 'ai_title_inference', 'temperature']);
+    if ($temperature < 0 || $temperature > 2) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][temperature',
+        $this->t('Temperature must be between 0 and 2.'),
+      );
+    }
+
+    $top_p = (float) $form_state->getValue(['matcher', 'ai_title_inference', 'top_p']);
+    if ($top_p < 0 || $top_p > 1) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][top_p',
+        $this->t('Top_p must be between 0 and 1.'),
+      );
+    }
+
+    $title_match_confidence = (float) $form_state->getValue(['matcher', 'ai_title_match_min_confidence']);
+    if ($title_match_confidence < 0 || $title_match_confidence > 1) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_match_min_confidence',
+        $this->t('Minimum title match confidence must be between 0 and 1.'),
+      );
+    }
+
+    $title_pattern_similarity = (float) $form_state->getValue(['matcher', 'title_pattern_similarity_threshold']);
+    if ($title_pattern_similarity < 0 || $title_pattern_similarity > 1) {
+      $form_state->setErrorByName(
+        'matcher][title_pattern_similarity_threshold',
+        $this->t('Title pattern similarity threshold must be between 0 and 1.'),
+      );
+    }
+
+    $max_tokens = (int) $form_state->getValue(['matcher', 'ai_title_inference', 'max_tokens']);
+    if ($max_tokens < 1 || $max_tokens > 4096) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][max_tokens',
+        $this->t('Max tokens must be between 1 and 4096.'),
+      );
+    }
+
+    $completion_plugin_options = $this->structuredOutputPluginOptions();
+    if ($completion_plugin_options === []) {
+      $form_state->setErrorByName(
+        'matcher][ai_title_inference][plugin_id',
+        $this->t('No completion plugins with structured output support are available.'),
+      );
+    }
+    else {
+      $plugin_id = (string) $form_state->getValue(['matcher', 'ai_title_inference', 'plugin_id']);
+      if (!isset($completion_plugin_options[$plugin_id])) {
+        $form_state->setErrorByName(
+          'matcher][ai_title_inference][plugin_id',
+          $this->t('The inference plugin must support structured output.'),
+        );
+      }
+    }
+
+    $download_enabled = (bool) $form_state->getValue(['testing', 'download_missing_attachment']);
+    $source_url = trim((string) $form_state->getValue(['testing', 'download_missing_attachment_source_url']));
+    if ($download_enabled && ($source_url === '' || parse_url($source_url, PHP_URL_HOST) === NULL)) {
+      $form_state->setErrorByName(
+        'testing][download_missing_attachment_source_url',
+        $this->t('A valid attachment download source URL is required when download is enabled.'),
+      );
+    }
+
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'minimum_length_ratio'],
+      $this->t('Minimum length ratio must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'similarity_threshold'],
+      $this->t('Jaccard similarity threshold must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'tfidf_similarity_threshold'],
+      $this->t('TF-IDF similarity threshold must be between 0 and 1.'),
+    );
+    $this->validateUnitInterval(
+      $form_state,
+      ['report_duplicate_matching', 'embedding_similarity_threshold'],
+      $this->t('Embedding similarity threshold must be between 0 and 1.'),
+    );
+
+    $lookback_days = (int) $form_state->getValue(['report_duplicate_matching', 'lookback_days']);
+    if ($lookback_days < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][lookback_days',
+        $this->t('Lookback days must be at least 1.'),
+      );
+    }
+
+    $lookforward_days = (int) $form_state->getValue(['report_duplicate_matching', 'lookforward_days']);
+    if ($lookforward_days < 0) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][lookforward_days',
+        $this->t('Lookforward days must be 0 or greater.'),
+      );
+    }
+
+    $candidate_limit = (int) $form_state->getValue(['report_duplicate_matching', 'candidate_limit']);
+    if ($candidate_limit < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][candidate_limit',
+        $this->t('Candidate limit must be at least 1.'),
+      );
+    }
+    $embedding_topk = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_topk']);
+    if ($embedding_topk < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_topk',
+        $this->t('Embedding nearest-neighbor limit must be at least 1.'),
+      );
+    }
+    $embedding_lookback = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_lookback_days']);
+    if ($embedding_lookback < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_lookback_days',
+        $this->t('Embedding lookback days must be at least 1.'),
+      );
+    }
+    $embedding_lookforward = (int) $form_state->getValue(['report_duplicate_matching', 'embedding_lookforward_days']);
+    if ($embedding_lookforward < 0) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_lookforward_days',
+        $this->t('Embedding lookforward days must be at least 0.'),
+      );
+    }
+
+    $minimum_body_length = (int) $form_state->getValue(['report_duplicate_matching', 'minimum_body_length']);
+    if ($minimum_body_length < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][minimum_body_length',
+        $this->t('Minimum body length must be at least 1.'),
+      );
+    }
+
+    $valid_statuses = array_keys($this->reportModeration->getStatuses());
+    foreach ([
+      'candidate_moderation_statuses' => $this->t('Candidate moderation statuses'),
+      'skip_moderation_statuses' => $this->t('Skip moderation statuses'),
+    ] as $key => $label) {
+      $statuses = $this->linesToSequence((string) $form_state->getValue(['report_duplicate_matching', $key]));
+      $unknown = array_values(array_diff($statuses, $valid_statuses));
+      if ($unknown !== []) {
+        $form_state->setErrorByName(
+          'report_duplicate_matching][' . $key,
+          $this->t('@label: unknown status(es): @statuses', [
+            '@label' => $label,
+            '@statuses' => implode(', ', $unknown),
+          ]),
+        );
+      }
+    }
+
+    $target_status = (string) $form_state->getValue(['report_duplicate_matching', 'target_status']);
+    if ($target_status === '' || !in_array($target_status, $valid_statuses, TRUE)) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][target_status',
+        $this->t('Target moderation status must be a valid report moderation status.'),
+      );
+    }
+
+    $embedding_fields = array_keys(array_filter(
+      (array) $form_state->getValue(['content_embeddings', 'sources', 'node', 'report', 'fields'], []),
+    ));
+    foreach ($embedding_fields as $field) {
+      if (!in_array($field, EmbeddingSourceSettings::ALLOWED_FIELDS, TRUE)) {
+        $form_state->setErrorByName(
+          'content_embeddings][sources][node][report][fields',
+          $this->t('Invalid embedding field: @field', ['@field' => $field]),
+        );
+      }
+      elseif ($field !== 'title') {
+        $definitions = $this->entityFieldManager->getFieldDefinitions('node', 'report');
+        if (!isset($definitions[$field])) {
+          $form_state->setErrorByName(
+            'content_embeddings][sources][node][report][fields',
+            $this->t('Report does not have field @field.', ['@field' => $field]),
+          );
+        }
+      }
+    }
+    if ($embedding_fields === [] && (bool) $form_state->getValue([
+      'content_embeddings',
+      'sources',
+      'node',
+      'report',
+      'enabled',
+    ])) {
+      $form_state->setErrorByName(
+        'content_embeddings][sources][node][report][fields',
+        $this->t('Select at least one field when report embeddings are enabled.'),
+      );
+    }
+
+    $dimensions = (int) $form_state->getValue(['content_embeddings', 'dimensions']);
+    if ($dimensions < 1) {
+      $form_state->setErrorByName(
+        'content_embeddings][dimensions',
+        $this->t('Vector dimensions must be at least 1.'),
+      );
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function submitForm(array &$form, FormStateInterface $form_state): void {
+    $config = $this->config('reliefweb_content_analyzer.settings');
+
+    $report_values = $form_state->getValue('report_duplicate_matching') ?? [];
+    $defaults = DuplicateMatchSettings::defaultConfig();
+    $config->set('report_duplicate_matching', [
+      'automation_enabled_form_created' => (bool) ($report_values['automation_enabled_form_created'] ?? FALSE),
+      'automation_enabled_imported' => (bool) ($report_values['automation_enabled_imported'] ?? FALSE),
+      'skip_with_attachments' => (bool) ($report_values['skip_with_attachments'] ?? FALSE),
+      'filter_by_source' => (bool) ($report_values['filter_by_source'] ?? FALSE),
+      'lookback_days' => (int) ($report_values['lookback_days'] ?? $defaults['lookback_days']),
+      'lookforward_days' => (int) ($report_values['lookforward_days'] ?? $defaults['lookforward_days']),
+      'candidate_limit' => (int) ($report_values['candidate_limit'] ?? $defaults['candidate_limit']),
+      'minimum_body_length' => (int) ($report_values['minimum_body_length'] ?? $defaults['minimum_body_length']),
+      'minimum_length_ratio' => (float) ($report_values['minimum_length_ratio'] ?? $defaults['minimum_length_ratio']),
+      'similarity_threshold' => (float) ($report_values['similarity_threshold'] ?? $defaults['similarity_threshold']),
+      'tfidf_similarity_threshold' => (float) ($report_values['tfidf_similarity_threshold'] ?? $defaults['tfidf_similarity_threshold']),
+      'embedding_similarity_threshold' => (float) ($report_values['embedding_similarity_threshold'] ?? $defaults['embedding_similarity_threshold']),
+      'embedding_topk' => (int) ($report_values['embedding_topk'] ?? $defaults['embedding_topk']),
+      'embedding_lookback_days' => (int) ($report_values['embedding_lookback_days'] ?? $defaults['embedding_lookback_days']),
+      'embedding_lookforward_days' => (int) ($report_values['embedding_lookforward_days'] ?? $defaults['embedding_lookforward_days']),
+      'target_status' => (string) ($report_values['target_status'] ?? $defaults['target_status']),
+      'candidate_moderation_statuses' => $this->linesToSequence((string) ($report_values['candidate_moderation_statuses'] ?? '')),
+      'skip_moderation_statuses' => $this->linesToSequence((string) ($report_values['skip_moderation_statuses'] ?? '')),
+    ]);
+
+    $embedding_values = $form_state->getValue('content_embeddings') ?? [];
+    $report_source_values = $embedding_values['sources']['node']['report'] ?? [];
+    $selected_fields = array_values(array_keys(array_filter((array) ($report_source_values['fields'] ?? []))));
+    if ($selected_fields === []) {
+      $selected_fields = ['body'];
+    }
+    // Preserve UI order: title, body, field_file.
+    $ordered_fields = [];
+    foreach (EmbeddingSourceSettings::ALLOWED_FIELDS as $field) {
+      if (in_array($field, $selected_fields, TRUE)) {
+        $ordered_fields[] = $field;
+      }
+    }
+    $config->set('content_embeddings', [
+      'embed_endpoint' => trim((string) ($embedding_values['embed_endpoint'] ?? '')),
+      'dimensions' => max(1, (int) ($embedding_values['dimensions'] ?? 256)),
+      'default_timeout' => max(1.0, (float) ($embedding_values['default_timeout'] ?? 60)),
+      'sources' => [
+        'node' => [
+          'report' => [
+            'enabled' => (bool) ($report_source_values['enabled'] ?? FALSE),
+            'fields' => $ordered_fields,
+            'min_text_length' => max(1, (int) ($report_source_values['min_text_length'] ?? 200)),
+          ],
+        ],
+      ],
+    ]);
+
+    $config->set(
+      'report_series_matching.workflow.automation_enabled_form_created',
+      (bool) $form_state->getValue(['automation', 'automation_enabled_form_created']),
+    );
+    $config->set(
+      'report_series_matching.workflow.automation_enabled_imported',
+      (bool) $form_state->getValue(['automation', 'automation_enabled_imported']),
+    );
+
+    $config->set(
+      'report_series_matching.workflow.minimum_series_confidence',
+      (float) $form_state->getValue(['confidence', 'minimum_series_confidence']),
+    );
+    $config->set(
+      'report_series_matching.workflow.minimum_tagging_confidence',
+      (float) $form_state->getValue(['confidence', 'minimum_tagging_confidence']),
+    );
+    $config->set('report_series_matching.workflow.series_confidence_tiers', [
+      'high' => (float) $form_state->getValue(['confidence', 'series_confidence_tiers', 'high']),
+      'medium' => (float) $form_state->getValue(['confidence', 'series_confidence_tiers', 'medium']),
+    ]);
+    $config->set('report_series_matching.workflow.tagging_confidence_tiers', [
+      'high' => (float) $form_state->getValue(['confidence', 'tagging_confidence_tiers', 'high']),
+      'medium' => (float) $form_state->getValue(['confidence', 'tagging_confidence_tiers', 'medium']),
+    ]);
+
+    $confidence_scoring = $form_state->getValue(['confidence', 'confidence_scoring']) ?? [];
+    $config->set('report_series_matching.workflow.confidence_scoring', [
+      'series' => [
+        'cluster_share_weight' => (float) ($confidence_scoring['series']['cluster_share_weight'] ?? 0),
+        'cluster_score_weight' => (float) ($confidence_scoring['series']['cluster_score_weight'] ?? 0),
+        'dual_signal_ratio_weight' => (float) ($confidence_scoring['series']['dual_signal_ratio_weight'] ?? 0),
+        'cluster_share_dominance_weight' => (float) ($confidence_scoring['series']['cluster_share_dominance_weight'] ?? 0),
+      ],
+      'tagging' => [
+        'field_blend_weight' => (float) ($confidence_scoring['tagging']['field_blend_weight'] ?? 0),
+        'title_blend_weight' => (float) ($confidence_scoring['tagging']['title_blend_weight'] ?? 0),
+        'field_provenance_weights' => [
+          'all_candidates' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['all_candidates'] ?? 0),
+          'merged' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['merged'] ?? 0),
+          'most_recent' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['most_recent'] ?? 0),
+          'skipped' => (float) ($confidence_scoring['tagging']['field_provenance_weights']['skipped'] ?? 0),
+        ],
+        'title_source_scores' => [
+          'kept_original_pattern_match' => (float) ($confidence_scoring['tagging']['title_source_scores']['kept_original_pattern_match'] ?? 0),
+          'ai_generated' => (float) ($confidence_scoring['tagging']['title_source_scores']['ai_generated'] ?? 0),
+          'other' => (float) ($confidence_scoring['tagging']['title_source_scores']['other'] ?? 0),
+        ],
+      ],
+    ]);
+
+    $config->set(
+      'report_series_matching.workflow.moderation_by_outcome_tier',
+      $form_state->getValue(['moderation', 'moderation_by_outcome_tier']),
+    );
+    $config->set(
+      'report_series_matching.workflow.skip_series_match_moderation_statuses',
+      $this->linesToSequence((string) $form_state->getValue(['moderation', 'skip_series_match_moderation_statuses'])),
+    );
+    $config->set(
+      'report_series_matching.workflow.restrictiveness_order',
+      $this->linesToSequence((string) $form_state->getValue(['moderation', 'restrictiveness_order'])),
+    );
+
+    $outcome_policies = $form_state->getValue('outcome_policies') ?? [];
+    $config->set(
+      'report_series_matching.workflow.field_outcome_policies',
+      $outcome_policies['field_outcome_policies'] ?? SeriesMatchWorkflowSettings::defaultFieldOutcomePolicies(),
+    );
+    $global_rules = $outcome_policies['global_outcome_rules'] ?? SeriesMatchWorkflowSettings::defaultGlobalOutcomeRules();
+    $global_rules['empty_body_when_series_has_body']['enabled'] = (bool) ($global_rules['empty_body_when_series_has_body']['enabled'] ?? FALSE);
+    $global_rules['empty_body_when_series_has_body']['series_body_threshold'] = (float) ($global_rules['empty_body_when_series_has_body']['series_body_threshold'] ?? 0.5);
+    $global_rules['title_ai_failed_or_skipped']['enabled'] = (bool) ($global_rules['title_ai_failed_or_skipped']['enabled'] ?? FALSE);
+    $global_rules['low_series_confidence_with_mismatch']['enabled'] = (bool) ($global_rules['low_series_confidence_with_mismatch']['enabled'] ?? FALSE);
+    $global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] = (float) ($global_rules['low_series_confidence_with_mismatch']['max_best_cluster_share'] ?? 0.5);
+    $global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] = (int) ($global_rules['low_series_confidence_with_mismatch']['min_cluster_count'] ?? 2);
+    $config->set('report_series_matching.workflow.global_outcome_rules', $global_rules);
+
+    $matcher_values = $form_state->getValue('matcher');
+    $config->set('report_series_matching.matcher', [
+      'minimum_series_report_count' => (int) $matcher_values['minimum_series_report_count'],
+      'series_candidate_date_range_months' => (int) $matcher_values['series_candidate_date_range_months'],
+      'series_candidate_limit' => (int) $matcher_values['series_candidate_limit'],
+      'ai_title_generation_enabled' => (bool) $matcher_values['ai_title_generation_enabled'],
+      'ai_title_source_length_limit' => (int) $matcher_values['ai_title_source_length_limit'],
+      'ai_title_example_line_count' => (int) $matcher_values['ai_title_example_line_count'],
+      'ai_title_min_consistent_examples' => (int) $matcher_values['ai_title_min_consistent_examples'],
+      'ai_title_extract_page_count' => (int) $matcher_values['ai_title_extract_page_count'],
+      'ai_title_match_min_confidence' => (float) $matcher_values['ai_title_match_min_confidence'],
+      'title_pattern_similarity_threshold' => (float) $matcher_values['title_pattern_similarity_threshold'],
+      'ai_title_description_template' => (string) $matcher_values['ai_title_description_template'],
+      'ai_title_inference' => [
+        'plugin_id' => trim((string) $matcher_values['ai_title_inference']['plugin_id']),
+        'temperature' => (float) $matcher_values['ai_title_inference']['temperature'],
+        'top_p' => (float) $matcher_values['ai_title_inference']['top_p'],
+        'max_tokens' => (int) $matcher_values['ai_title_inference']['max_tokens'],
+        'thinking_mode' => (string) $matcher_values['ai_title_inference']['thinking_mode'],
+        'system_prompt' => (string) $matcher_values['ai_title_inference']['system_prompt'],
+      ],
+      'pattern_token_counts' => $form_state->getValue(['matcher', 'pattern_token_counts_parsed']),
+      'candidate_clustering_tagging_weight' => (float) $matcher_values['candidate_clustering_tagging_weight'],
+      'candidate_clustering_title_weight' => (float) $matcher_values['candidate_clustering_title_weight'],
+      'candidate_clustering_similarity_threshold' => (float) $matcher_values['candidate_clustering_similarity_threshold'],
+      'cluster_scoring_size_weight' => (float) $matcher_values['cluster_scoring_size_weight'],
+      'cluster_scoring_pattern_score_weight' => (float) $matcher_values['cluster_scoring_pattern_score_weight'],
+      'cluster_scoring_tagging_consistency_weight' => (float) $matcher_values['cluster_scoring_tagging_consistency_weight'],
+      'cluster_comparison_field_names' => $this->linesToSequence((string) $matcher_values['cluster_comparison_field_names']),
+      'recency_field_name' => trim((string) $matcher_values['recency_field_name']),
+      'report_entity_field_names_to_copy' => $this->linesToSequence((string) $matcher_values['report_entity_field_names_to_copy']),
+    ]);
+
+    $testing_values = $form_state->getValue('testing') ?? [];
+    $source_url = rtrim(trim((string) ($testing_values['download_missing_attachment_source_url'] ?? '')), '/');
+    if ($source_url === '') {
+      $source_url = 'https://reliefweb.int';
+    }
+    $config->set('report_series_matching.testing', [
+      'download_missing_attachment' => (bool) ($testing_values['download_missing_attachment'] ?? FALSE),
+      'download_missing_attachment_source_url' => $source_url,
+    ]);
+
+    $config->save();
+    parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Validates a value is within the unit interval.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param string[] $parents
+   *   Form value parents for the element being validated.
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
+   *   Error message when the value is out of range.
+   */
+  private function validateUnitInterval(
+    FormStateInterface $form_state,
+    array $parents,
+    string|TranslatableMarkup $message,
+  ): void {
+    $value = (float) $form_state->getValue($parents);
+    if ($value < 0 || $value > 1) {
+      $form_state->setErrorByName(implode('][', $parents), $message);
+    }
+  }
+
+  /**
+   * Validates high tier threshold is greater than medium.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
+   * @param string[] $parents
+   *   Form value parents for the tier mapping.
+   * @param string|\Drupal\Core\StringTranslation\TranslatableMarkup $message
+   *   Error message when high tier is not greater than medium.
+   */
+  private function validateTierPair(
+    FormStateInterface $form_state,
+    array $parents,
+    string|TranslatableMarkup $message,
+  ): void {
+    $range_message = $this->t('Tier thresholds must be between 0 and 1.');
+    foreach (['high', 'medium'] as $tier) {
+      $this->validateUnitInterval(
+        $form_state,
+        array_merge($parents, [$tier]),
+        $range_message,
+      );
+    }
+    $high = (float) $form_state->getValue(array_merge($parents, ['high']));
+    $medium = (float) $form_state->getValue(array_merge($parents, ['medium']));
+    if ($high <= $medium) {
+      $form_state->setErrorByName(implode('][', array_merge($parents, ['high'])), $message);
+    }
+  }
+
+  /**
+   * Parses comma-separated pattern token counts.
+   *
+   * @param string $raw
+   *   Comma-separated token count string from the form.
+   *
+   * @return int[]|null
+   *   Parsed counts, or NULL when invalid.
+   */
+  private function parsePatternTokenCounts(string $raw): ?array {
+    $parts = array_map('trim', explode(',', $raw));
+    if ($parts === ['']) {
+      return NULL;
+    }
+    $counts = [];
+    foreach ($parts as $part) {
+      if ($part === '' || !ctype_digit($part) || (int) $part < 1) {
+        return NULL;
+      }
+      $counts[] = (int) $part;
+    }
+    return $counts;
+  }
+
+  /**
+   * Converts a config sequence to newline-separated lines for textareas.
+   *
+   * @param string[] $sequence
+   *   Config sequence values.
+   *
+   * @return string
+   *   Newline-separated lines for textarea display.
+   */
+  private function sequenceToLines(array $sequence): string {
+    return implode("\n", $sequence);
+  }
+
+  /**
+   * Converts textarea lines to a trimmed config sequence.
+   *
+   * @param string $raw
+   *   Raw textarea value from the form.
+   *
+   * @return string[]
+   *   Non-empty trimmed lines.
+   */
+  private function linesToSequence(string $raw): array {
+    $lines = preg_split('/\R/', $raw) ?: [];
+    $sequence = [];
+    foreach ($lines as $line) {
+      $line = trim($line);
+      if ($line !== '') {
+        $sequence[] = $line;
+      }
+    }
+    return $sequence;
+  }
+
+  /**
+   * Completion plugins that support structured output.
+   *
+   * @return array<string, string>
+   *   Plugin ID => label options for select elements.
+   */
+  private function structuredOutputPluginOptions(): array {
+    $options = [];
+    foreach ($this->completionPluginManager->getAvailablePlugins() as $plugin) {
+      if ($plugin->hasCapability(CompletionCapability::StructuredOutput)) {
+        $options[$plugin->getPluginId()] = $plugin->getPluginLabel();
+      }
+    }
+    return $options;
+  }
+
+  /**
+   * Returns report field names that are not defined on the report bundle.
+   *
+   * @param string[] $field_names
+   *   Field machine names to check.
+   *
+   * @return string[]
+   *   Unknown field names.
+   */
+  private function unknownReportFields(array $field_names): array {
+    $definitions = $this->entityFieldManager->getFieldDefinitions('node', 'report');
+    $unknown = [];
+    foreach ($field_names as $field_name) {
+      if (!isset($definitions[$field_name])) {
+        $unknown[] = $field_name;
+      }
+    }
+    return $unknown;
+  }
+
+}

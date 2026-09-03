@@ -1,0 +1,177 @@
+report_series_matching:
+  workflow:
+    automation_enabled_form_created: true
+    automation_enabled_imported: true
+    minimum_series_confidence: 0.65
+    minimum_tagging_confidence: 0.40
+    series_confidence_tiers:
+      high: 0.80
+      medium: 0.60
+    tagging_confidence_tiers:
+      high: 0.80
+      medium: 0.60
+    confidence_scoring:
+      series:
+        cluster_share_weight: 0.40
+        cluster_score_weight: 0.25
+        dual_signal_ratio_weight: 0.20
+        cluster_share_dominance_weight: 0.15
+      tagging:
+        field_blend_weight: 0.70
+        title_blend_weight: 0.30
+        field_provenance_weights:
+          all_candidates: 1.0
+          merged: 0.75
+          most_recent: 0.50
+          skipped: 0.0
+        title_source_scores:
+          kept_original_pattern_match: 1.0
+          ai_generated: 0.65
+          other: 0.25
+    moderation_by_outcome_tier:
+      low: pending
+      medium: to-review
+      high: published
+    skip_series_match_moderation_statuses:
+      - refused
+      - duplicate
+    restrictiveness_order:
+      - refused
+      - duplicate
+      - draft
+      - on-hold
+      - pending
+      - to-review
+      - embargoed
+      - reference
+      - published
+    field_outcome_policies:
+      field_primary_country:
+        most_recent: max_low
+        merged: max_medium
+        skipped: max_low
+      field_content_format:
+        most_recent: max_low
+        merged: max_low
+        skipped: max_low
+      field_country:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: none
+      field_language:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: max_medium
+      field_theme:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+      field_disaster:
+        most_recent: max_medium
+        merged: max_medium
+        skipped: none
+      field_disaster_type:
+        most_recent: max_medium
+        merged: none
+        skipped: none
+    global_outcome_rules:
+      empty_body_when_series_has_body:
+        enabled: true
+        series_body_threshold: 0.5
+        action: max_medium
+      title_ai_failed_or_skipped:
+        enabled: true
+        action: max_medium
+      low_series_confidence_with_mismatch:
+        enabled: true
+        max_best_cluster_share: 0.5
+        min_cluster_count: 2
+        action: skip_match
+  matcher:
+    minimum_series_report_count: 3
+    series_candidate_date_range_months: 18
+    series_candidate_limit: 30
+    ai_title_generation_enabled: true
+    ai_title_source_length_limit: 2000
+    ai_title_example_line_count: 5
+    ai_title_min_consistent_examples: 3
+    ai_title_extract_page_count: 2
+    ai_title_match_min_confidence: 0.65
+    title_pattern_similarity_threshold: 0.90
+    ai_title_description_template: "Generate a title based on the provided raw title candidates using the same pattern as the following examples:\n@examples\nDo not invent dates, issue numbers, or week numbers."
+    ai_title_inference:
+      plugin_id: aws_bedrock_nova_lite_v1
+      temperature: 0.0
+      top_p: 0.9
+      max_tokens: 512
+      thinking_mode: none
+      system_prompt: 'Generate a humanitarian report title using the `structured_output` tool.'
+    pattern_token_counts:
+      - 10
+      - 8
+      - 6
+      - 4
+    candidate_clustering_tagging_weight: 0.5
+    candidate_clustering_title_weight: 0.5
+    candidate_clustering_similarity_threshold: 0.6
+    cluster_scoring_size_weight: 0.3333333333
+    cluster_scoring_pattern_score_weight: 0.3333333333
+    cluster_scoring_tagging_consistency_weight: 0.3333333333
+    cluster_comparison_field_names:
+      - field_primary_country
+      - field_content_format
+      - field_language
+    recency_field_name: field_original_publication_date
+    report_entity_field_names_to_copy:
+      - field_primary_country
+      - field_country
+      - field_language
+      - field_content_format
+      - field_theme
+      - field_disaster
+      - field_disaster_type
+  testing:
+    download_missing_attachment: true
+    download_missing_attachment_source_url: 'https://reliefweb.int'
+report_duplicate_matching:
+  automation_enabled_form_created: true
+  automation_enabled_imported: true
+  skip_with_attachments: false
+  filter_by_source: true
+  lookback_days: 7
+  lookforward_days: 2
+  candidate_limit: 50
+  minimum_body_length: 200
+  minimum_length_ratio: 0.85
+  similarity_threshold: 0.92
+  tfidf_similarity_threshold: 0.70
+  embedding_similarity_threshold: 0.90
+  embedding_topk: 50
+  embedding_lookback_days: 1095
+  embedding_lookforward_days: 2
+  target_status: duplicate
+  candidate_moderation_statuses:
+    - draft
+    - pending
+    - on-hold
+    - to-review
+    - published
+    - refused
+    - duplicate
+    - embargoed
+    - reference
+    - archive
+  skip_moderation_statuses:
+    - refused
+    - duplicate
+content_embeddings:
+  embed_endpoint: 'http://ocha-ai-helper/text/deduplicate/embed'
+  dimensions: 256
+  default_timeout: 60
+  sources:
+    node:
+      report:
+        enabled: true
+        fields:
+          - body
+        min_text_length: 200

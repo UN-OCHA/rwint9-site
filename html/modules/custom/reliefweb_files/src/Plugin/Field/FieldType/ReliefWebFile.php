@@ -906,7 +906,26 @@ class ReliefWebFile extends FieldItemBase {
    *   TRUE if the extraction was successful.
    */
   protected function extractPreview($source_uri, $destination_uri, $page, $rotation) {
-    $file_system = $this->getFileSystem();
+    return static::extractPreviewToUri($source_uri, $destination_uri, $page, $rotation);
+  }
+
+  /**
+   * Extract a preview image from a PDF file to a destination URI.
+   *
+   * @param string $source_uri
+   *   URI of the file from which to extract the preview.
+   * @param string $destination_uri
+   *   URI of the file preview file.
+   * @param int $page
+   *   Page to use for the preview.
+   * @param int $rotation
+   *   Rotation of the preview page.
+   *
+   * @return bool
+   *   TRUE if the extraction was successful.
+   */
+  public static function extractPreviewToUri($source_uri, $destination_uri, $page, $rotation) {
+    $file_system = \Drupal::service('file_system');
 
     // Create the previews directory to store the file.
     if (!static::prepareDirectory($destination_uri)) {
@@ -951,6 +970,22 @@ class ReliefWebFile extends FieldItemBase {
   public function extractText(?int $page = NULL): string {
     $file = $this->loadFile();
     return isset($file) ? FileHelper::extractText($file, $page) : '';
+  }
+
+  /**
+   * Extract structured text spans from the given PDF page or page range.
+   *
+   * @param int $page
+   *   Start page number (1-based, default: 1).
+   * @param ?int $end_page
+   *   Inclusive end page number (1-based), or NULL for a single page.
+   *
+   * @return list<list<array{text: string, x: float, y: float, w: float, h: float, size: float}>>
+   *   Per-page span lists, or an empty list on failure.
+   */
+  public function extractStructuredTextSpans(int $page = 1, ?int $end_page = NULL): array {
+    $file = $this->loadFile();
+    return isset($file) ? FileHelper::extractStructuredTextSpans($file, $page, $end_page) : [];
   }
 
   /**
