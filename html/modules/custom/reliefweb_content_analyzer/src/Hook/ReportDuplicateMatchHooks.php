@@ -20,6 +20,9 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationMessage;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
+use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_api\Indexing\ReliefWebApiIndexingSkipStore;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatch;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings;
@@ -51,6 +54,10 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * The result is:
  * - Rev 1: original submission snapshot (draft; revertable).
  * - Rev 2: original fields and final duplicate moderation status.
+ *
+ * After rev 2, a terminal OCHA classification progress record is written so
+ * later editorial saves do not re-queue classification just because the skip
+ * left no progress row.
  */
 final class ReportDuplicateMatchHooks {
 
@@ -79,6 +86,8 @@ final class ReportDuplicateMatchHooks {
    *   Messenger service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $loggerFactory
    *   The logger factory.
+   * @param \Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface $contentEntityClassifier
+   *   The OCHA content entity classifier.
    */
   public function __construct(
     ConfigFactoryInterface $config_factory,
@@ -87,6 +96,8 @@ final class ReportDuplicateMatchHooks {
     protected readonly AccountInterface $currentUser,
     protected readonly MessengerInterface $messenger,
     protected readonly LoggerChannelFactoryInterface $loggerFactory,
+    #[Autowire(service: 'ocha_content_classification.content_entity_classifier')]
+    protected readonly ContentEntityClassifierInterface $contentEntityClassifier,
   ) {
     $this->config = $config_factory->get('reliefweb_content_analyzer.settings');
   }
@@ -202,6 +213,9 @@ final class ReportDuplicateMatchHooks {
     if ($context->isFormCreate && $context->result->hasMatches()) {
       $this->messenger->addWarning($this->buildMessengerMessage($context->result));
     }
+
+    // Persist a terminal OCHA progress record so later saves do not re-queue.
+    $this->markOchaClassificationSkippedAsCompleted($entity);
 
     DuplicateMatchApplyContext::detach($entity);
   }
@@ -495,6 +509,35 @@ final class ReportDuplicateMatchHooks {
     }
 
     $this->appendToRevisionLog($entity, $message);
+  }
+
+  /**
+   * Record classification as completed after duplicate matching skipped it.
+   *
+   * Duplicate skip only throws ClassificationSkippedException and does not
+   * write ocha_content_classification_progress. Without a terminal row, a
+   * later editorial save can re-queue classification. A Completed progress
+   * row prevents that while still allowing attachment-change requeue.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The saved report (rev 2).
+   */
+  protected function markOchaClassificationSkippedAsCompleted(EntityInterface $entity): void {
+    if (!$entity instanceof ContentEntityInterface || $entity->id() === NULL) {
+      return;
+    }
+
+    $workflow = $this->contentEntityClassifier->getWorkflowForEntity($entity);
+    if ($workflow === NULL) {
+      return;
+    }
+
+    $workflow->updateClassificationProgress(
+      $entity,
+      ClassificationMessage::FieldsAlreadySpecified,
+      ClassificationStatus::Completed,
+      TRUE,
+    );
   }
 
   /**

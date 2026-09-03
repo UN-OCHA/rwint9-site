@@ -13,6 +13,9 @@ use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationMessage;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_content_analyzer\Hook\ReportSeriesMatchClassificationHooks;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatch;
@@ -371,6 +374,58 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     $entity->expects($this->never())->method('save');
 
     $hooks->entityAfterSave($entity);
+  }
+
+  /**
+   * Writes a Completed progress record after series matching skipped it.
+   */
+  public function testMarkOchaClassificationSkippedAsCompletedWritesProgress(): void {
+    $workflow = $this->createMock(ClassificationWorkflowInterface::class);
+    $workflow->expects($this->once())
+      ->method('updateClassificationProgress')
+      ->with(
+        $this->isInstanceOf(SeriesMatchTestEntityInterface::class),
+        ClassificationMessage::FieldsAlreadySpecified,
+        ClassificationStatus::Completed,
+        TRUE,
+      );
+
+    $classifier = $this->createMock(ContentEntityClassifierInterface::class);
+    $classifier->expects($this->once())
+      ->method('getWorkflowForEntity')
+      ->willReturn($workflow);
+
+    $hooks = $this->buildHooks(self::hooksConfig(), NULL, $classifier);
+
+    $entity = $this->buildEntityMock();
+    $entity->method('id')->willReturn(42);
+
+    $method = new \ReflectionMethod(
+      ReportSeriesMatchClassificationHooks::class,
+      'markOchaClassificationSkippedAsCompleted',
+    );
+    $method->invoke($hooks, $entity);
+  }
+
+  /**
+   * Noops when no OCHA workflow exists for the entity.
+   */
+  public function testMarkOchaClassificationSkippedAsCompletedNoopsWithoutWorkflow(): void {
+    $classifier = $this->createMock(ContentEntityClassifierInterface::class);
+    $classifier->expects($this->once())
+      ->method('getWorkflowForEntity')
+      ->willReturn(NULL);
+
+    $hooks = $this->buildHooks(self::hooksConfig(), NULL, $classifier);
+
+    $entity = $this->buildEntityMock();
+    $entity->method('id')->willReturn(42);
+
+    $method = new \ReflectionMethod(
+      ReportSeriesMatchClassificationHooks::class,
+      'markOchaClassificationSkippedAsCompleted',
+    );
+    $method->invoke($hooks, $entity);
   }
 
   /**

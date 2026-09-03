@@ -11,6 +11,9 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Messenger\MessengerInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationMessage;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
+use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_api\Indexing\ReliefWebApiIndexingSkipStore;
 use Drupal\reliefweb_content_analyzer\Hook\ReportDuplicateMatchHooks;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatch;
@@ -40,6 +43,8 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
    *   Optional matcher stub.
    * @param \Drupal\Core\Session\AccountInterface|null $account
    *   Optional current user stub.
+   * @param \Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface|null $classifier
+   *   Optional classifier stub.
    *
    * @return \Drupal\reliefweb_content_analyzer\Hook\ReportDuplicateMatchHooks
    *   Hook instance ready for testing.
@@ -48,6 +53,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     array $config_values = [],
     ?ReportDuplicateMatcherInterface $matcher = NULL,
     ?AccountInterface $account = NULL,
+    ?ContentEntityClassifierInterface $classifier = NULL,
   ): ReportDuplicateMatchHooks {
     $logger_factory = $this->createStub(LoggerChannelFactoryInterface::class);
     $logger_factory->method('get')->willReturn($this->createStub(LoggerInterface::class));
@@ -58,6 +64,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
       $account ?? $this->buildAccountWithFormAutomationPermission(),
       $this->createStub(MessengerInterface::class),
       $logger_factory,
+      $classifier ?? $this->createStub(ContentEntityClassifierInterface::class),
     );
   }
 
@@ -437,6 +444,50 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $this->assertNull(DuplicateMatchApplyContext::fromEntity($entity));
     $this->assertStringStartsWith('Import log.', $currentLog);
     $this->assertStringContainsString('Near-duplicate of: Matched report (nid 42, jaccard 95%)', $currentLog);
+  }
+
+  /**
+   * After a successful apply save, marks classification progress completed.
+   */
+  public function testEntityAfterSaveMarksOchaClassificationCompleted(): void {
+    $workflow = $this->createMock(ClassificationWorkflowInterface::class);
+    $workflow->expects($this->once())
+      ->method('updateClassificationProgress')
+      ->with(
+        $this->isInstanceOf(SeriesMatchTestEntityInterface::class),
+        ClassificationMessage::FieldsAlreadySpecified,
+        ClassificationStatus::Completed,
+        TRUE,
+      );
+
+    $classifier = $this->createMock(ContentEntityClassifierInterface::class);
+    $classifier->expects($this->once())
+      ->method('getWorkflowForEntity')
+      ->willReturn($workflow);
+
+    $hooks = $this->buildHooks([], NULL, NULL, $classifier);
+
+    $entity = $this->buildEntityMock();
+    $entity->method('getEntityTypeId')->willReturn('node');
+    $entity->method('bundle')->willReturn('report');
+    $entity->method('id')->willReturn(99);
+    $entity->method('getRevisionLogMessage')->willReturn('');
+    $entity->method('setRevisionLogMessage');
+    $entity->expects($this->once())->method('setNewRevision')->with(TRUE);
+    $entity->expects($this->once())->method('save');
+
+    DuplicateMatchApplyContext::attach(
+      $entity,
+      DuplicateMatchApplyContext::createForDetectPass(
+        $this->buildMatchResult(),
+        FALSE,
+        'Import log.',
+        'published',
+        'duplicate',
+      ),
+    );
+
+    $hooks->entityAfterSave($entity);
   }
 
   /**

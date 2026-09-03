@@ -20,6 +20,8 @@ use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Hook\Order\OrderBefore;
 use Drupal\ocha_content_classification\Entity\ClassificationWorkflowInterface;
+use Drupal\ocha_content_classification\Enum\ClassificationMessage;
+use Drupal\ocha_content_classification\Enum\ClassificationStatus;
 use Drupal\ocha_content_classification\Service\ContentEntityClassifierInterface;
 use Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\DuplicateMatchApplyContext;
 use Drupal\reliefweb_content_analyzer\ReportSeriesMatch\Dto\SeriesMatchEvidence;
@@ -54,6 +56,10 @@ use Symfony\Component\DependencyInjection\Attribute\Autowire;
  * The result is:
  * - Rev 1: original submission snapshot (draft; revertable).
  * - Rev 2: series-applied fields and final moderation status.
+ *
+ * After rev 2, a terminal OCHA classification progress record is written so
+ * later editorial saves do not re-queue classification (and demote publication
+ * via importer prevent_publication) just because the skip left no progress row.
  */
 final class ReportSeriesMatchClassificationHooks {
 
@@ -264,6 +270,10 @@ final class ReportSeriesMatchClassificationHooks {
     // Insert the tracking row pointing at rev 2.
     $minimum_series = $this->workflowSettings()->minimumSeriesConfidence;
     $this->insertMatchRecord($entity, $context, $minimum_series);
+
+    // Persist a terminal OCHA progress record so later saves do not re-queue.
+    $this->markOchaClassificationSkippedAsCompleted($entity);
+
     SeriesMatchApplyContext::detach($entity);
   }
 
@@ -899,6 +909,36 @@ final class ReportSeriesMatchClassificationHooks {
     }
 
     $this->appendToRevisionLog($entity, $message);
+  }
+
+  /**
+   * Record classification as completed after series matching skipped it.
+   *
+   * Series skip only throws ClassificationSkippedException and does not write
+   * ocha_content_classification_progress. Imported reports often have
+   * check_user_permissions disabled, so a later editorial publish would
+   * re-queue classification and demote Published → pending. A Completed
+   * progress row prevents that while still allowing attachment-change requeue.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   The saved report (rev 2).
+   */
+  protected function markOchaClassificationSkippedAsCompleted(EntityInterface $entity): void {
+    if (!$entity instanceof ContentEntityInterface || $entity->id() === NULL) {
+      return;
+    }
+
+    $workflow = $this->contentEntityClassifier->getWorkflowForEntity($entity);
+    if ($workflow === NULL) {
+      return;
+    }
+
+    $workflow->updateClassificationProgress(
+      $entity,
+      ClassificationMessage::FieldsAlreadySpecified,
+      ClassificationStatus::Completed,
+      TRUE,
+    );
   }
 
   /**
