@@ -29,6 +29,7 @@ module:
   geofield: 0
   gtm_barebones: 0
   honeypot: 0
+  igbinary: 0
   image: 0
   imageapi_optimize: 0
   imageapi_optimize_binaries: 0
@@ -69,6 +70,7 @@ module:
   path: 0
   path_alias: 0
   redirect: 0
+  redis: 0
   reliefweb_ai: 0
   reliefweb_analytics: 0
   reliefweb_anti_spam: 0
