@@ -1,5 +1,5 @@
 {
-    "_hash": "ea2d71707f5505a0bdfd87c9ec7ddce233ce761de2117a2d5f6a68462113d66e",
+    "_hash": "4f0031acb565caefd7e6dcbf76c21643f14ea4ead65f41f461b160566a17152e",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -151,6 +151,18 @@
                 "description": "Failed to get authentication tokens for Windows Azure AD",
                 "url": "PATCHES/openid_connect_windows_aad-3346603-5.patch",
                 "sha256": "58e490a3bc1eaf6449ae204b3cdb0dd3e589b1209c124f4cac929da2d448472f",
+                "depth": 1,
+                "extra": {
+                    "provenance": "patches-file:composer.patches.json"
+                }
+            }
+        ],
+        "drupal/redis": [
+            {
+                "package": "drupal/redis",
+                "description": "Status report page errors with Valkey (serverless)",
+                "url": "https://git.drupalcode.org/project/redis/-/merge_requests/104.diff",
+                "sha256": "6780d178b7b1dec4c6d2b846525a7ea2f7ba15b078a84c495e5aac88813785fb",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

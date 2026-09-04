@@ -30,6 +30,9 @@
         "drupal/openid_connect_windows_aad": {
             "Failed to get authentication tokens for Windows Azure AD": "PATCHES/openid_connect_windows_aad-3346603-5.patch"
         },
+        "drupal/redis": {
+          "Status report page errors with Valkey (serverless)": "https://git.drupalcode.org/project/redis/-/merge_requests/104.diff"
+        },
         "drupal/social_api": {
           "https://www.drupal.org/project/social_api/issues/3492428": "PATCHES/social_api-3492428-mr13.patch"
         },

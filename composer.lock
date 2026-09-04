@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ec38ceac5a22b1d2f0e15e7357824567",
+    "content-hash": "243924fcc6bc3656bf51c6ce5186ebc9",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -2555,6 +2555,58 @@
             }
         },
         {
+            "name": "drupal/igbinary",
+            "version": "dev-2.0.x",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/igbinary.git",
+                "reference": "80547c890fa30190cc01b4a210652d79b46c8159"
+            },
+            "require": {
+                "drupal/core": "^10.3 || ^11.0 || ^12",
+                "ext-igbinary": "*",
+                "ext-zlib": "*"
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.0.x": "2.0.x-dev"
+                },
+                "drupal": {
+                    "version": "2.0.0-alpha2+3-dev",
+                    "datestamp": "1784280807",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Dev releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Drupal\\igbinary\\": "src"
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "grimreaper",
+                    "homepage": "https://www.drupal.org/user/2388214"
+                },
+                {
+                    "name": "mkalkbrenner",
+                    "homepage": "https://www.drupal.org/user/124705"
+                }
+            ],
+            "description": "Offers igbinary based serialization service.",
+            "homepage": "https://www.drupal.org/project/igbinary",
+            "support": {
+                "source": "https://git.drupalcode.org/project/igbinary"
+            }
+        },
+        {
             "name": "drupal/imageapi_optimize",
             "version": "4.2.0",
             "source": {
@@ -3859,6 +3911,69 @@
             "homepage": "https://www.drupal.org/project/redirect",
             "support": {
                 "source": "https://git.drupalcode.org/project/redirect"
+            }
+        },
+        {
+            "name": "drupal/redis",
+            "version": "dev-2.x",
+            "source": {
+                "type": "git",
+                "url": "https://git.drupalcode.org/project/redis.git",
+                "reference": "5c018a837a9c05f57545815412c289b035fdbcdf"
+            },
+            "require": {
+                "drupal/core": "^10.3 || ^11 || ^12"
+            },
+            "suggest": {
+                "ext-redis": "Required to use the PhpRedis as redis driver (^4.0|^5.0).",
+                "ext-relay": "Required to use the Relay as Redis driver (^0.5|^1.0).",
+                "predis/predis": "Required to use the Predis as redis driver (^1.1|^2.0)."
+            },
+            "type": "drupal-module",
+            "extra": {
+                "branch-alias": {
+                    "dev-2.x": "2.x-dev"
+                },
+                "drupal": {
+                    "version": "2.0.0-alpha2+7-dev",
+                    "datestamp": "1786783828",
+                    "security-coverage": {
+                        "status": "not-covered",
+                        "message": "Dev releases are not covered by Drupal security advisories."
+                    }
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Drupal\\redis\\": "src"
+                }
+            },
+            "notification-url": "https://packages.drupal.org/8/downloads",
+            "license": [
+                "GPL-2.0-or-later"
+            ],
+            "authors": [
+                {
+                    "name": "berdir",
+                    "homepage": "https://www.drupal.org/user/214652"
+                },
+                {
+                    "name": "greg.1.anderson",
+                    "homepage": "https://www.drupal.org/user/438598"
+                },
+                {
+                    "name": "kporras07",
+                    "homepage": "https://www.drupal.org/user/1349780"
+                },
+                {
+                    "name": "pounard",
+                    "homepage": "https://www.drupal.org/user/240164"
+                }
+            ],
+            "description": "Integration of Drupal with the Redis key-value store.",
+            "homepage": "https://www.drupal.org/project/redis",
+            "support": {
+                "source": "https://git.drupalcode.org/project/redis"
             }
         },
         {
@@ -20393,8 +20508,10 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "drupal/aws": 20,
+        "drupal/igbinary": 20,
         "drupal/imageapi_optimize_binaries": 10,
         "drupal/openid_connect_windows_aad": 10,
+        "drupal/redis": 20,
         "drupal/webhooks": 15,
         "phpcompatibility/php-compatibility": 15
     },
