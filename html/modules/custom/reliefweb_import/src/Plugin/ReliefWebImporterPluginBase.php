@@ -12,6 +12,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Statement\FetchAs;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityRepositoryInterface;
@@ -483,8 +484,8 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
     }
 
     // Get the current moderation status of the entity.
-    $status = $entity->getModerationStatus();
-    $reimport_type = $reimport_type_rules[$status] ?? $reimport_type_rules['*'] ?? 'none';
+    $from_status = $entity->getModerationStatus();
+    $reimport_type = $reimport_type_rules[$from_status] ?? $reimport_type_rules['*'] ?? 'none';
 
     // Skip if reimport is disabled for the moderation status.
     if ($reimport_type === 'none') {
@@ -514,31 +515,351 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
       }
     }
 
+    $diff = $this->describeReimportFieldDiff($data, $filtered_data, $entity);
+
     // Nothing to reimport.
     if (empty($filtered_data)) {
+      if (!empty($diff['skipped'])) {
+        $this->getLogger()->notice(strtr('Skipping partial reimport of @type @id (@status): no allowed fields to apply; skipped=[@skipped].', [
+          '@type' => $entity->getEntityTypeId(),
+          '@id' => $entity->id(),
+          '@status' => $from_status,
+          '@skipped' => implode(', ', $diff['skipped']),
+        ]));
+      }
       return [];
     }
 
     // Update the moderation status of the current version for the entity.
     $status_mapping_setting = $this->getPluginSetting('reimport.statuses', '', FALSE);
     $status_mapping = $this->parseReimportStatusMapping($status_mapping_setting);
+    $to_status = NULL;
     if (!empty($status_mapping)) {
       // Update the moderation status.
-      $status = match (TRUE) {
-        !empty($status_mapping[$status]) => $status_mapping[$status],
+      $to_status = match (TRUE) {
+        !empty($status_mapping[$from_status]) => $status_mapping[$from_status],
         !empty($status_mapping['*']) => $status_mapping['*'],
         // No status override, let the content processor decide what to use.
         default => NULL,
       };
-      if (isset($status)) {
-        $filtered_data['status'] = $status;
+      if (isset($to_status)) {
+        $filtered_data['status'] = $to_status;
       }
     }
 
     // Set the partial reimport flag.
     $filtered_data['partial'] = TRUE;
 
+    $status_transition = $to_status ?? $from_status;
+    $this->getLogger()->notice(strtr('Partial reimport of @type @id (@from → @to): applied=[@applied]; skipped=[@skipped].', [
+      '@type' => $entity->getEntityTypeId(),
+      '@id' => $entity->id(),
+      '@from' => $from_status,
+      '@to' => $status_transition,
+      '@applied' => !empty($diff['applied']) ? implode(', ', $diff['applied']) : 'none',
+      '@skipped' => !empty($diff['skipped']) ? implode(', ', $diff['skipped']) : 'none',
+    ]));
+
+    $filtered_data['log_message'] = $this->buildPartialReimportLogMessage(
+      $diff,
+      $this->resolvePartialReimportOriginUrl($data, $entity),
+    );
+
     return $filtered_data;
+  }
+
+  /**
+   * Compare incoming import data with the existing entity for reimport logging.
+   *
+   * Only fields whose normalized incoming value differs from the entity are
+   * reported. Those present in $filtered_data are "applied"; the rest are
+   * "skipped" by reimport field rules.
+   *
+   * @param array $data
+   *   Full processed import data.
+   * @param array $filtered_data
+   *   Data kept after applying reimport field rules.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity.
+   *
+   * @return array
+   *   Associative array with "applied" and "skipped" lists of field names.
+   */
+  protected function describeReimportFieldDiff(array $data, array $filtered_data, EntityInterface $entity): array {
+    $applied = [];
+    $skipped = [];
+
+    foreach (array_keys($this->getReimportComparableFieldMap()) as $field) {
+      if (!array_key_exists($field, $data)) {
+        continue;
+      }
+
+      $incoming = $this->normalizeImportFieldValue($field, $data[$field], $entity);
+      $current = $this->normalizeEntityImportValue($entity, $field);
+      if ($incoming === $current) {
+        continue;
+      }
+
+      if (array_key_exists($field, $filtered_data)) {
+        $applied[] = $field;
+      }
+      else {
+        $skipped[] = $field;
+      }
+    }
+
+    return [
+      'applied' => $applied,
+      'skipped' => $skipped,
+    ];
+  }
+
+  /**
+   * Build the revision log message for a partial reimport.
+   *
+   * @param array $diff
+   *   Diff from describeReimportFieldDiff().
+   * @param string $origin_url
+   *   Optional origin URL to link for review.
+   *
+   * @return string
+   *   Revision log message.
+   */
+  protected function buildPartialReimportLogMessage(array $diff, string $origin_url = ''): string {
+    $parts = ['Automatic partial update from Post API.'];
+    if (!empty($diff['applied'])) {
+      $parts[] = 'Applied: ' . implode(', ', $diff['applied']) . '.';
+    }
+    if (!empty($diff['skipped'])) {
+      $parts[] = 'Skipped by reimport rules: ' . implode(', ', $diff['skipped']) . '.';
+    }
+    if ($origin_url !== '') {
+      $parts[] = 'Please review [original document](' . $origin_url . ').';
+    }
+    return implode(' ', $parts);
+  }
+
+  /**
+   * Resolve an origin URL for the partial reimport revision log.
+   *
+   * Prefers the incoming import origin, then falls back to the entity's
+   * field_origin_notes when it looks like an http(s) URL.
+   *
+   * @param array $data
+   *   Full processed import data.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity.
+   *
+   * @return string
+   *   Origin URL, or an empty string when none is available.
+   */
+  protected function resolvePartialReimportOriginUrl(array $data, EntityInterface $entity): string {
+    $candidates = [];
+    if (!empty($data['origin']) && is_string($data['origin'])) {
+      $candidates[] = trim($data['origin']);
+    }
+    if ($entity instanceof ContentEntityInterface && $entity->hasField('field_origin_notes')) {
+      $notes = trim((string) ($entity->get('field_origin_notes')->value ?? ''));
+      if ($notes !== '') {
+        $candidates[] = $notes;
+      }
+    }
+
+    foreach ($candidates as $candidate) {
+      if (preg_match('#^https?://#i', $candidate)) {
+        return $candidate;
+      }
+    }
+
+    return '';
+  }
+
+  /**
+   * Map of import data keys to entity field names for reimport comparison.
+   *
+   * @return array<string, string>
+   *   Import field name keyed map of entity field names.
+   */
+  protected function getReimportComparableFieldMap(): array {
+    return [
+      'title' => 'title',
+      'body' => 'body',
+      'published' => 'field_original_publication_date',
+      'format' => 'field_content_format',
+      'language' => 'field_language',
+      'source' => 'field_source',
+      'country' => 'field_country',
+      'origin' => 'field_origin_notes',
+      'theme' => 'field_theme',
+      'disaster' => 'field_disaster',
+      'disaster_type' => 'field_disaster_type',
+      'embargoed' => 'field_embargo_date',
+      'file' => 'field_file',
+      'image' => 'field_image',
+    ];
+  }
+
+  /**
+   * Normalize an incoming import field value for comparison.
+   *
+   * @param string $field
+   *   Import data field name.
+   * @param mixed $value
+   *   Incoming value.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity (used for image UUID derivation).
+   *
+   * @return mixed
+   *   Normalized comparable value.
+   */
+  protected function normalizeImportFieldValue(string $field, mixed $value, EntityInterface $entity): mixed {
+    return match ($field) {
+      'title', 'body', 'origin' => is_string($value) ? trim($value) : '',
+      'published', 'embargoed' => $this->normalizeComparableDate($value),
+      'format', 'language', 'source', 'country', 'theme', 'disaster', 'disaster_type' => $this->normalizeComparableTermIds($value),
+      'file' => $this->normalizeComparableFileChecksums($value),
+      'image' => $this->normalizeComparableImageValue($value, $entity),
+      default => $value,
+    };
+  }
+
+  /**
+   * Normalize an entity field value for comparison with import data.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity.
+   * @param string $field
+   *   Import data field name.
+   *
+   * @return mixed
+   *   Normalized comparable value, or NULL if the entity field is unavailable.
+   */
+  protected function normalizeEntityImportValue(EntityInterface $entity, string $field): mixed {
+    if (!$entity instanceof ContentEntityInterface) {
+      return NULL;
+    }
+
+    $map = $this->getReimportComparableFieldMap();
+    $entity_field = $map[$field] ?? NULL;
+    if ($entity_field === NULL || !$entity->hasField($entity_field)) {
+      return NULL;
+    }
+
+    return match ($field) {
+      'title' => trim((string) $entity->label()),
+      'body' => trim((string) ($entity->get($entity_field)->value ?? '')),
+      'origin' => trim((string) ($entity->get($entity_field)->value ?? '')),
+      'published', 'embargoed' => $this->normalizeComparableDate($entity->get($entity_field)->value ?? ''),
+      'format', 'language', 'source', 'country', 'theme', 'disaster', 'disaster_type' => $this->normalizeComparableTermIds(array_column($entity->get($entity_field)->getValue(), 'target_id')),
+      'file' => $this->normalizeComparableEntityFileChecksums($entity, $entity_field),
+      'image' => $entity->get($entity_field)->entity?->uuid() ?? '',
+      default => NULL,
+    };
+  }
+
+  /**
+   * Normalize a date value to Y-m-d for comparison.
+   *
+   * @param mixed $value
+   *   Date string or empty.
+   *
+   * @return string
+   *   Date in Y-m-d form, or empty string.
+   */
+  protected function normalizeComparableDate(mixed $value): string {
+    if (empty($value) || !is_string($value)) {
+      return '';
+    }
+    // Import data may be ISO-8601; entity date fields are typically Y-m-d.
+    return substr($value, 0, 10);
+  }
+
+  /**
+   * Normalize term IDs to a sorted list of integers.
+   *
+   * @param mixed $value
+   *   Term ID or list of term IDs.
+   *
+   * @return list<int>
+   *   Sorted term IDs.
+   */
+  protected function normalizeComparableTermIds(mixed $value): array {
+    if (!is_array($value)) {
+      $value = ($value === NULL || $value === '') ? [] : [$value];
+    }
+    $ids = array_values(array_filter(array_map('intval', $value), fn(int $id) => $id > 0));
+    sort($ids);
+    return $ids;
+  }
+
+  /**
+   * Normalize import file payloads to sorted checksums.
+   *
+   * @param mixed $value
+   *   File list from import data.
+   *
+   * @return list<string>
+   *   Sorted checksums.
+   */
+  protected function normalizeComparableFileChecksums(mixed $value): array {
+    if (!is_array($value)) {
+      return [];
+    }
+    $checksums = [];
+    foreach ($value as $file) {
+      if (is_array($file) && !empty($file['checksum'])) {
+        $checksums[] = (string) $file['checksum'];
+      }
+    }
+    sort($checksums);
+    return array_values($checksums);
+  }
+
+  /**
+   * Normalize entity file field items to sorted checksums.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Entity.
+   * @param string $field_name
+   *   File field name.
+   *
+   * @return list<string>
+   *   Sorted checksums.
+   */
+  protected function normalizeComparableEntityFileChecksums(ContentEntityInterface $entity, string $field_name): array {
+    $checksums = [];
+    foreach ($entity->get($field_name) as $item) {
+      if (!is_object($item) || !method_exists($item, 'getUuid') || empty($item->getUuid())) {
+        continue;
+      }
+      if (!method_exists($item, 'getFileHash')) {
+        continue;
+      }
+      $hash = $item->getFileHash();
+      if (!empty($hash)) {
+        $checksums[] = (string) $hash;
+      }
+    }
+    sort($checksums);
+    return array_values($checksums);
+  }
+
+  /**
+   * Normalize an import image payload to the expected media UUID.
+   *
+   * @param mixed $value
+   *   Image data from import.
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Existing entity.
+   *
+   * @return string
+   *   Expected media UUID, or empty string.
+   */
+  protected function normalizeComparableImageValue(mixed $value, EntityInterface $entity): string {
+    if (!is_array($value) || empty($value['url']) || empty($value['checksum'])) {
+      return '';
+    }
+    return $this->generateUuid($value['checksum'] . $value['url'], $entity->uuid());
   }
 
   /**
