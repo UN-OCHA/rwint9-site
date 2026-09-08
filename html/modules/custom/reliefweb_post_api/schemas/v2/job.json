@@ -5,15 +5,21 @@
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the job posting. Use the original canonical url if available.",
+            "description": "An immutable, unique identifier in URL format under your organization's domain (e.g., https://myorganization.org/job/12345). Used as the seed to derive the job posting's UUID v5 and link subsequent updates. Must never change after initial submission. It does not need to resolve to a live web page.",
             "type": "string",
             "format": "iri",
-            "maxLength": 2048
+            "maxLength": 2048,
+            "examples": [
+                "https://myorganization.org/job/12345"
+            ]
         },
         "uuid": {
-            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "description": "The job posting's UUID (version 5, RFC 4122). Compute it as uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', url), where url is the exact string in this job posting's 'url' property above. Submissions are rejected if the value does not match what the server computes. Example: uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', 'https://myorganization.org/job/12345') = 'efa7a5ff-a00c-500e-bc5d-d181874dc072'.",
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "examples": [
+                "efa7a5ff-a00c-500e-bc5d-d181874dc072"
+            ]
         },
         "title": {
             "description": "Job title. The best job titles are brief and specific. Please refrain from indicating location, salary and other details in the title, if possible.",
@@ -27,7 +33,7 @@
                 },
                 {
                     "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                 }
             ],
             "not": {
@@ -36,18 +42,25 @@
             }
         },
         "source": {
-            "description": "Job source as a single ID from https://api.reliefweb.int/v1/sources.",
+            "description": "Job source as an array containing a single ID from https://api.reliefweb.int/v2/sources.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [1503]
+            ]
         },
         "closing_date": {
-            "description": "Closing date (ISO 8601) of the job. Please make sure it matches the closing date on your ad and/or job application portal, if applicable.",
+            "description": "Closing date-time (ISO 8601) of the job. Please make sure it matches the closing date on your ad and/or job application portal, if applicable.",
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "examples": [
+                "2029-06-06T01:00:00+00:00"
+            ]
         },
         "body": {
             "description": "Job description in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). The description should be long enough and sufficient in order to attract qualified candidates.",
@@ -60,7 +73,7 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
                     "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
@@ -80,7 +93,7 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
                     "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
@@ -90,68 +103,65 @@
             }
         },
         "country": {
-            "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Leave blank for remote location, roster/roving or location to be determined.",
+            "description": "Job country(ies) as a list of IDs from https://api.reliefweb.int/v2/countries. Omit this property for remote location, roster/roving or location to be determined.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 10
-        },
-        "city": {
-            "description": "City. Optional and only relevant when a country is also set.",
-            "type": "string",
-            "minLength": 0,
-            "maxLength": 255,
-            "allOf": [
-                {
-                    "description": "Must contain letters (any language).",
-                    "pattern": "\\p{L}+"
-                },
-                {
-                    "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
-                }
-            ],
-            "not": {
-                "description": "No leading, trailing or consecutive spaces.",
-                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
-            }
+            "maxItems": 10,
+            "examples": [
+                [13, 14]
+            ]
         },
         "job_type": {
-            "description": "Job type as a single ID from https://api.reliefweb.int/v1/references/job-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Job type as an array containing a single ID from https://api.reliefweb.int/v2/references/job-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [263]
+            ]
         },
         "job_experience": {
-            "description": "Job experience as a single ID from https://api.reliefweb.int/v1/references/job-experience. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Job experience as an array containing a single ID from https://api.reliefweb.int/v2/references/job-experience. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [260]
+            ]
         },
         "career_category": {
-            "description": "Job career category as a single ID from https://api.reliefweb.int/v1/references/career-categories. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Job career category as an array containing a single ID from https://api.reliefweb.int/v2/references/career-categories. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [36601]
+            ]
         },
         "theme": {
-            "description": "Job theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Job theme as an array containing a single ID from https://api.reliefweb.int/v2/references/themes. Only select the most relevant theme. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 3
+            "maxItems": 1,
+            "examples": [
+                [4587]
+            ]
         }
-    },
-    "dependentRequired": {
-        "city": ["country"]
     },
     "required": [
         "url",
