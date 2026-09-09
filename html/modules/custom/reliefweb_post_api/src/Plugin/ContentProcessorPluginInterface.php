@@ -544,6 +544,19 @@ interface ContentProcessorPluginInterface {
   public function getDefaultLangcode(): string;
 
   /**
+   * Resolve a file attachment language code against known taxonomy languages.
+   *
+   * Unknown codes fall back to ot (other). Empty codes and ot are unchanged.
+   *
+   * @param string $code
+   *   Submitted ISO 639-1 language code, or ot.
+   *
+   * @return string
+   *   Resolved language code to store on the file field.
+   */
+  public function resolveFileLanguageCode(string $code): string;
+
+  /**
    * Set a setting for the plugin.
    *
    * @param string $name

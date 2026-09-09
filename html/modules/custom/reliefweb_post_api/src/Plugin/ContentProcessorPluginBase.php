@@ -741,7 +741,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
         // Update the file description and language.
         $item->get('description')->setValue($file['description'] ?? '');
-        $item->get('language')->setValue($file['language'] ?? '');
+        $item->get('language')->setValue($this->resolveFileLanguageCode($file['language'] ?? ''));
 
         $values[] = $item->getValue();
       }
@@ -1160,6 +1160,39 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function getDefaultLangcode(): string {
     return $this->languageManager->getDefaultLanguage()->getId();
+  }
+
+  /**
+   * Resolve a file attachment language code against known taxonomy languages.
+   *
+   * Unknown codes (for example zh when no Chinese language term exists) fall
+   * back to ot (other). Empty codes and ot are left unchanged.
+   *
+   * @param string $code
+   *   Submitted ISO 639-1 language code, or ot.
+   *
+   * @return string
+   *   Resolved language code to store on the file field.
+   */
+  public function resolveFileLanguageCode(string $code): string {
+    if ($code === '' || $code === 'ot') {
+      return $code;
+    }
+
+    $languages = $this->getFileLanguages();
+    return isset($languages[$code]) ? $code : 'ot';
+  }
+
+  /**
+   * Get the list of languages supported for file attachments.
+   *
+   * @return array
+   *   Languages keyed by ISO 639-1 code (or ot).
+   */
+  protected function getFileLanguages(): array {
+    return function_exists('reliefweb_files_get_languages')
+      ? reliefweb_files_get_languages()
+      : [];
   }
 
   /**
