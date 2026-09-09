@@ -5,15 +5,21 @@
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the document. Use the original canonical of the document if available.",
+            "description": "An immutable, unique identifier in URL format under your organization's domain (e.g., https://myorganization.org/report/12345). Used as the seed to derive the document's UUID v5 and link subsequent updates. Must never change after initial submission. It does not need to resolve to a live web page.",
             "type": "string",
             "format": "iri",
-            "maxLength": 2048
+            "maxLength": 2048,
+            "examples": [
+                "https://myorganization.org/report/12345"
+            ]
         },
         "uuid": {
-            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "description": "The document's UUID (version 5, RFC 4122). Compute it as uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', url), where url is the exact string in this document's 'url' property above. Submissions are rejected if the value does not match what the server computes. Example: uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', 'https://myorganization.org/report/12345') = 'c27c51bd-e6b6-5c09-91fd-ef122afdde8e'.",
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "examples": [
+                "c27c51bd-e6b6-5c09-91fd-ef122afdde8e"
+            ]
         },
         "title": {
             "description": "Document title. Use the original title of the article or file. If the title is from a series, add the date and other information as appropriate.",
@@ -27,7 +33,7 @@
                 },
                 {
                     "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                 }
             ],
             "not": {
@@ -36,45 +42,64 @@
             }
         },
         "source": {
-            "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "description": "Document source(s) as a list of IDs from https://api.reliefweb.int/v2/sources.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 30
+            "maxItems": 30,
+            "examples": [
+                [1503]
+            ]
         },
         "country": {
-             "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document. Otherwise, enter them alphabetically. Only tag the most relevant countries as over-tagging often results in reduced discoverability.",
+            "description": "Document country(ies) as a list of IDs from https://api.reliefweb.int/v2/countries. The first country in the list is considered the primary country, meaning the most relevant to the content of the document. Otherwise, enter them alphabetically. Only tag the most relevant countries as over-tagging often results in reduced discoverability.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 300
+            "maxItems": 300,
+            "examples": [
+                [13, 14]
+            ]
         },
         "format": {
-            "description": "Document format as a single ID from https://api.reliefweb.int/v1/references/content-formats. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Document format as an array containing a single ID from https://api.reliefweb.int/v2/references/content-formats. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [10]
+            ]
         },
         "language": {
-            "description": "Document language(s) as a list of IDs from https://api.reliefweb.int/v1/references/languages. If an attachment is not in one of the official UN languages, mention that in the description of the attachment.",
+            "description": "Document language(s) as a list of IDs from https://api.reliefweb.int/v2/references/languages. If an attachment is not in one of the official UN languages, mention that in the description of the attachment.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 10
+            "maxItems": 10,
+            "examples": [
+                [267, 268]
+            ]
         },
         "published": {
-            "description": "Original publication date (ISO 8601) of the document.",
+            "description": "Original publication date-time (ISO 8601) of the document.",
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "examples": [
+                "2024-06-06T01:00:00+00:00"
+            ]
         },
         "body": {
             "description": "Document content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). For a textual article, put the entire content. For attachments, use an executive summary, overview or key points of the core document. Use the file field for the attachment.",
@@ -87,7 +112,7 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
                     "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
@@ -97,35 +122,44 @@
             }
         },
         "embargoed": {
-            "description": "Date (ISO 8601) until when the document is embargoed. It will be automatically published on that date. It must be a UTC/GMT date.",
+            "description": "Date-time (ISO 8601) until when the document is embargoed. It will be automatically published on that date. It must be a UTC/GMT date.",
             "type": "string",
-            "format": "date-time"
+            "format": "date-time",
+            "examples": [
+                "2024-06-06T07:00:00+00:00"
+            ]
         },
         "origin": {
-            "description": "Original canonical URL of the document if available, in which case it should be the same as the 'url' property.",
+            "description": "Public URL where the document can actually be viewed, if one exists. Unlike 'url' above, this must be a real, accessible link rather than just a unique identifier.",
             "type": "string",
             "format": "iri",
             "maxLength": 2048
         },
         "file": {
-            "description": "List of PDF attachments with a URL from which to download them. Maximum 20MB.",
+            "description": "List of PDF attachments with a valid public URL from which to download them. Maximum 20MB per file.",
             "type": "array",
             "items": {
                 "type": "object",
                 "properties": {
                     "url": {
-                        "description": "URL to a PDF file.",
+                        "description": "Valid public URL to a PDF file that can be downloaded during import (must end in .pdf without query parameters).",
                         "type": "string",
                         "format": "iri",
-                        "pattern": "\\.pdf$"
+                        "pattern": "\\.pdf$",
+                        "examples": [
+                            "https://myorganization.org/report/12345/attachment.pdf"
+                        ]
                     },
                     "uuid": {
-                        "description": "The universally unique identifier (UUID) version 5 generated from the URL property above and the UUID of the document as namespace.",
+                        "description": "This file's UUID (version 5, RFC 4122). Compute it as uuid5(document_uuid, file_url), where document_uuid is this document's own 'uuid' property above and file_url is this file's 'url' property. Submissions are rejected if the value does not match what the server computes. Example: uuid5('c27c51bd-e6b6-5c09-91fd-ef122afdde8e', 'https://myorganization.org/report/12345/attachment.pdf') = '78d63e84-e2b4-5467-813d-1c2456f40d63'.",
                         "type": "string",
-                        "format": "uuid"
+                        "format": "uuid",
+                        "examples": [
+                            "78d63e84-e2b4-5467-813d-1c2456f40d63"
+                        ]
                     },
                     "filename": {
-                        "description": "File name",
+                        "description": "File name including .pdf extension.",
                         "type": "string",
                         "maxLength": 255,
                         "allOf": [
@@ -135,10 +169,10 @@
                             },
                             {
                                 "description": "No control characters or separators except for spaces.",
-                                "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                                "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                             },
                             {
-                                "description": "No system character: '<>:\"/\\|?*'.",
+                                "description": "No system characters: '<>:\"/\\|?*'.",
                                 "pattern": "^[^<>:\"/\\|?*]+$"
                             }
                         ],
@@ -148,9 +182,12 @@
                         }
                     },
                     "checksum": {
-                        "description": "SHA-256 checksum of the file",
+                        "description": "Lowercase SHA-256 checksum of the file.",
                         "type": "string",
-                        "pattern": "^[0-9a-f]{64}$"
+                        "pattern": "^[0-9a-f]{64}$",
+                        "examples": [
+                            "42fffa6c0e84ebab15f0f1ead8319efc448d0d883a0b492528997b4f17989755"
+                        ]
                     },
                     "description": {
                         "description": "Optional brief description or title of the file.",
@@ -163,7 +200,7 @@
                             },
                             {
                                 "description": "No control characters or separators except for spaces.",
-                                "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                                "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                             }
                         ],
                         "not": {
@@ -172,33 +209,63 @@
                         }
                     },
                     "language": {
-                        "description": "Optional ISO2 code of UN official language. Add 'German Version', for example, to the description field above if the attachment is not in a UN official language.",
+                        "description": "Optional ISO2 code of a supported UN official language (ar, en, es, fr, ru, zh) or ot (other). Add 'German Version', for example, to the description field above if the attachment is not in a supported UN official language.",
                         "type": "string",
-                        "enum": ["ar", "en", "es", "fr", "ru"]
+                        "enum": ["ar", "en", "es", "fr", "ru", "zh", "ot"],
+                        "examples": [
+                            "en"
+                        ]
                     }
                 },
-                "required": ["url", "uuid", "filename", "checksum"]
+                "required": [
+                    "url",
+                    "uuid",
+                    "filename",
+                    "checksum"
+                ]
             },
-            "maxItems": 10
+            "maxItems": 10,
+            "examples": [
+                [
+                    {
+                        "url": "https://myorganization.org/report/12345/attachment.pdf",
+                        "uuid": "78d63e84-e2b4-5467-813d-1c2456f40d63",
+                        "filename": "attachment.pdf",
+                        "checksum": "42fffa6c0e84ebab15f0f1ead8319efc448d0d883a0b492528997b4f17989755",
+                        "description": "First attachment",
+                        "language": "en"
+                    }
+                ]
+            ]
         },
         "image": {
             "description": "Image to illustrate the document with a minimum width of 700px and a maximum size of 5MB.",
             "type": "object",
             "properties": {
                 "url": {
+                    "description": "Valid public URL to an image file that can be downloaded during import (must end in .jpg, .png or .webp without query parameters).",
                     "type": "string",
                     "format": "iri",
-                    "pattern": "\\.(jpg|png|webp)$"
+                    "pattern": "\\.(jpg|png|webp)$",
+                    "examples": [
+                        "https://myorganization.org/report/12345/image.png"
+                    ]
                 },
                 "uuid": {
-                    "description": "The universally unique identifier (UUID) version 5 generated from the URL property above and the UUID of the document as namespace.",
+                    "description": "This image's UUID (version 5, RFC 4122). Compute it as uuid5(document_uuid, image_url), where document_uuid is this document's own 'uuid' property above and image_url is this image's 'url' property. Submissions are rejected if the value does not match what the server computes. Example: uuid5('c27c51bd-e6b6-5c09-91fd-ef122afdde8e', 'https://myorganization.org/report/12345/image.png') = '76d64603-5ab0-51a2-9444-758732250a64'.",
                     "type": "string",
-                    "format": "uuid"
+                    "format": "uuid",
+                    "examples": [
+                        "76d64603-5ab0-51a2-9444-758732250a64"
+                    ]
                 },
                 "checksum": {
-                    "description": "SHA-256 checksum of the image",
+                    "description": "Lowercase SHA-256 checksum of the image.",
                     "type": "string",
-                    "pattern": "^[0-9a-f]{64}$"
+                    "pattern": "^[0-9a-f]{64}$",
+                    "examples": [
+                        "c24863f6aa2065dd5071a831ee78439260ea72983799dd3e88fbfb4aa08fdc18"
+                    ]
                 },
                 "description": {
                     "description": "Alternative text describing the content of the image.",
@@ -211,7 +278,7 @@
                         },
                         {
                             "description": "No control characters or separators except for spaces.",
-                            "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                            "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                         }
                     ],
                     "not": {
@@ -230,7 +297,7 @@
                         },
                         {
                             "description": "No control characters or separators except for spaces.",
-                            "pattern": "^([^\\p{Z}\\p{C}]|[ \u3000])+$"
+                            "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                         }
                     ],
                     "not": {
@@ -239,40 +306,71 @@
                     }
                 }
             },
-            "required": ["url", "uuid", "checksum", "description", "copyright"]
+            "required": [
+                "url",
+                "uuid",
+                "checksum",
+                "description",
+                "copyright"
+            ],
+            "examples": [
+                {
+                    "url": "https://myorganization.org/report/12345/image.png",
+                    "uuid": "76d64603-5ab0-51a2-9444-758732250a64",
+                    "checksum": "c24863f6aa2065dd5071a831ee78439260ea72983799dd3e88fbfb4aa08fdc18",
+                    "description": "Test image",
+                    "copyright": "Test NGO"
+                }
+            ]
         },
         "disaster": {
-            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v1/disasters. Only select the most relevant disasters as over-tagging often results in reduced discoverability.",
+            "description": "Document disaster(s) as a list of IDs from https://api.reliefweb.int/v2/disasters. Only select the most relevant disasters as over-tagging often results in reduced discoverability.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 30
+            "maxItems": 30,
+            "examples": [
+                [51754]
+            ]
         },
         "disaster_type": {
-            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v1/references/disaster-types. Only select the most relevant disaster types as over-tagging often results in reduced discoverability.",
+            "description": "Document disaster type(s) as a list of IDs from https://api.reliefweb.int/v2/references/disaster-types. Only select the most relevant disaster types as over-tagging often results in reduced discoverability.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 30
+            "maxItems": 30,
+            "examples": [
+                [4628]
+            ]
         },
         "theme": {
-            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Document theme(s) as a list of IDs from https://api.reliefweb.int/v2/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 20
+            "maxItems": 20,
+            "examples": [
+                [4587, 4595, 4603]
+            ]
         },
         "notify": {
             "description": "List of email addresses to notify when the document is published.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "string",
                 "format": "idn-email"
             },
-            "maxItems": 10
+            "maxItems": 10,
+            "examples": [
+                ["test@example.com", "test2@example.com"]
+            ]
         }
     },
     "required": [
