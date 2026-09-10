@@ -82,7 +82,6 @@ class Training extends ContentProcessorPluginBase {
 
     // Set the optional fields.
     $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
-    $this->setStringField($node, 'field_city', $data['city'] ?? '');
 
     if (!empty($data['dates'])) {
       $this->setField($node, 'field_training_date', [

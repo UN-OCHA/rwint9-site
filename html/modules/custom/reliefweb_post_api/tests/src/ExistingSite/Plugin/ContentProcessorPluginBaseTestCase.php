@@ -1567,6 +1567,37 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
+   * Test resolve file language code.
+   */
+  public function testResolveFileLanguageCode(): void {
+    $definition = $this->getDummyPluginDefinition();
+    $services = $this->getDummyPluginServices();
+
+    $plugin = new class([], $definition['id'], $definition, ...$services) extends ContentProcessorPluginBase {
+
+      /**
+       * {@inheritdoc}
+       */
+      public function process(array $data): ?ContentEntityInterface {
+        return NULL;
+      }
+
+      /**
+       * {@inheritdoc}
+       */
+      protected function getFileLanguages(): array {
+        return ['zz' => 'Test language'];
+      }
+
+    };
+
+    $this->assertSame('', $plugin->resolveFileLanguageCode(''));
+    $this->assertSame('ot', $plugin->resolveFileLanguageCode('ot'));
+    $this->assertSame('zz', $plugin->resolveFileLanguageCode('zz'));
+    $this->assertSame('ot', $plugin->resolveFileLanguageCode('xx-unknown'));
+  }
+
+  /**
    * Test save new entity.
    */
   public function testSaveNewEntity(): void {
@@ -1635,6 +1666,50 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Assert log message and save return value.
     $this->assertStringContainsString('Automatic update from Post API.', $entity->getRevisionLogMessage());
+    $this->assertEquals(2, $result);
+  }
+
+  /**
+   * Test save uses a custom log message when provided.
+   */
+  public function testSaveWithCustomLogMessage(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 124);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $custom_message = 'Automatic partial update from Post API. Applied: file. Skipped by reimport rules: title. Please review [original document](https://data.unhcr.org/en/documents/details/123941).';
+    $data = [
+      'url' => 'https://test.test',
+      'partial' => TRUE,
+      'log_message' => $custom_message,
+      'hash' => 'custom-log-hash',
+    ];
+
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    $this->assertSame($custom_message, $entity->getRevisionLogMessage());
+    $this->assertEquals(2, $result);
+  }
+
+  /**
+   * Test save uses the default partial update log message.
+   */
+  public function testSavePartialDefaultLogMessage(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 125);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $data = [
+      'url' => 'https://test.test',
+      'partial' => TRUE,
+      'hash' => 'partial-default-hash',
+    ];
+
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    $this->assertSame('Automatic partial update from Post API.', $entity->getRevisionLogMessage());
     $this->assertEquals(2, $result);
   }
 
@@ -1750,31 +1825,36 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
-   * Create a dummy content processor plugin.
+   * Get a default dummy plugin definition.
    *
    * @param array $definition
-   *   Plugin definition.
-   * @param array $services
-   *   Service overrides.
-   * @param bool $use_plugin_class
-   *   Whether to use the same class the `$this->plugin` or use an anymous
-   *   class.
+   *   Definition overrides.
    *
-   * @return \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface
-   *   The dummy plugin.
+   * @return array
+   *   Plugin definition.
    */
-  protected function createDummyPlugin(array $definition = [], array $services = [], bool $use_plugin_class = TRUE): ContentProcessorPluginInterface {
-    $container = \drupal::getContainer();
-
-    $definition += [
+  protected function getDummyPluginDefinition(array $definition = []): array {
+    return $definition + [
       'id' => 'reliefweb_post_api.content_processor.dummy',
       'label' => new TranslatableMarkup('Dummy content processor'),
       'entityType' => 'dummy',
       'bundle' => 'dummy',
       'resource' => 'dummies',
     ];
+  }
 
-    $services = [
+  /**
+   * Get constructor services for a dummy content processor plugin.
+   *
+   * @param array $services
+   *   Service overrides keyed by service id.
+   *
+   * @return array
+   *   Positional constructor services.
+   */
+  protected function getDummyPluginServices(array $services = []): array {
+    $container = \Drupal::getContainer();
+    return [
       $services['entity_type.manager'] ?? $container->get('entity_type.manager'),
       $services['entity.repository'] ?? $container->get('entity.repository'),
       $services['database'] ?? $container->get('database'),
@@ -1786,6 +1866,25 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       $services['file.mime_type.guesser'] ?? $container->get('file.mime_type.guesser'),
       $services['language_manager'] ?? $container->get('language_manager'),
     ];
+  }
+
+  /**
+   * Create a dummy content processor plugin.
+   *
+   * @param array $definition
+   *   Plugin definition.
+   * @param array $services
+   *   Service overrides.
+   * @param bool $use_plugin_class
+   *   Whether to use the same class the `$this->plugin` or use an anymous
+   *   class.
+   *
+   * @return \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface
+   *   The dummy plugin.
+   */
+  protected function createDummyPlugin(array $definition = [], array $services = [], bool $use_plugin_class = TRUE): ContentProcessorPluginInterface {
+    $definition = $this->getDummyPluginDefinition($definition);
+    $services = $this->getDummyPluginServices($services);
 
     if ($use_plugin_class) {
       return new ($this->plugin::class)([], $definition['id'], $definition, ...$services);

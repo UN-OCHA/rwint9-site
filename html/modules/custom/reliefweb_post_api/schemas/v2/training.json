@@ -5,15 +5,21 @@
     "type": "object",
     "properties": {
         "url": {
-            "description": "Unique URL to identify the training opportunity. Use the original canonical url if available.",
+            "description": "An immutable, unique identifier in URL format under your organization's domain (e.g., https://myorganization.org/training/12345). Used as the seed to derive the training's UUID v5 and link subsequent updates. Must never change after initial submission. It does not need to resolve to a live web page.",
             "type": "string",
             "format": "iri",
-            "maxLength": 2048
+            "maxLength": 2048,
+            "examples": [
+                "https://myorganization.org/training/12345"
+            ]
         },
         "uuid": {
-            "description": "The universally unique identifier (UUID) version 5 generated from the URL property above, with the namespace: '8e27a998-c362-5d1f-b152-d474e1d36af2'.",
+            "description": "The training's UUID (version 5, RFC 4122). Compute it as uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', url), where url is the exact string in this training's 'url' property above. Submissions are rejected if the value does not match what the server computes. Example: uuid5('8e27a998-c362-5d1f-b152-d474e1d36af2', 'https://myorganization.org/training/12345') = 'c2484d60-fa5d-591e-bcdd-401ffa63b92c'.",
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "examples": [
+                "c2484d60-fa5d-591e-bcdd-401ffa63b92c"
+            ]
         },
         "title": {
             "description": "The title of the training. Other information such as location, date and Organization should not be included in this field.",
@@ -27,79 +33,81 @@
                 },
                 {
                     "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ 　])+$"
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces.",
-                "pattern": "(?:^[ 　]|[ 　]$|[ 　]{2,})"
+                "pattern": "(?:^[ \u3000]|[ \u3000]$|[ \u3000]{2,})"
             }
         },
         "source": {
-            "description": "Training source(s) as a list of IDs from https://api.reliefweb.int/v1/sources.",
+            "description": "Training source(s) as a list of IDs from https://api.reliefweb.int/v2/sources.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 30
+            "maxItems": 30,
+            "examples": [
+                [1503]
+            ]
         },
         "format": {
-            "description": "Training format (on-site and/or online) as a list of IDs from https://api.reliefweb.int/v1/references/training-formats.",
+            "description": "Training format (on-site and/or online) as a list of IDs from https://api.reliefweb.int/v2/references/training-formats.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 2
+            "maxItems": 2,
+            "examples": [
+                [4607],
+                [4606, 4607]
+            ]
         },
         "country": {
-            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v1/countries. Mandatory when the training format includes 'on-site', otherwise not allowed.",
+            "description": "Training country(ies) as a list of IDs from https://api.reliefweb.int/v2/countries. Mandatory when the training format includes 'on-site', otherwise omit this property.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 300
-        },
-        "city": {
-            "description": "City. Optional and only relevant when a country is also set.",
-            "type": "string",
-            "minLength": 0,
-            "maxLength": 255,
-            "allOf": [
-                {
-                    "description": "Must contain letters (any language).",
-                    "pattern": "\\p{L}+"
-                },
-                {
-                    "description": "No control characters or separators except for spaces.",
-                    "pattern": "^([^\\p{Z}\\p{C}]|[ 　])+$"
-                }
-            ],
-            "not": {
-                "description": "No leading, trailing or consecutive spaces.",
-                "pattern": "(?:^[ 　]|[ 　]$|[ 　]{2,})"
-            }
+            "maxItems": 300,
+            "examples": [
+                [13]
+            ]
         },
         "dates": {
-            "description": "Training dates. Leave blank if the training is ongoing (recurrent/always available).",
+            "description": "Training dates. Omit this property if the training is ongoing (recurrent/always available).",
             "type": "object",
             "properties": {
                 "start": {
-                    "description": "Training start date (ISO 8601) of the document.",
+                    "description": "Training start date-time (ISO 8601).",
                     "type": "string",
-                    "format": "date-time"
+                    "format": "date-time",
+                    "examples": [
+                        "2026-09-01T09:00:00+00:00"
+                    ]
                 },
                 "end": {
-                    "description": "Training end date (ISO 8601) of the document.",
+                    "description": "Training end date-time (ISO 8601).",
                     "type": "string",
-                    "format": "date-time"
+                    "format": "date-time",
+                    "examples": [
+                        "2026-09-05T17:00:00+00:00"
+                    ]
                 },
                 "registration_deadline": {
-                    "description": "Registration deadline (ISO 8601) of the document. All advertisements should include a registration deadline unless it is an 'ongoing course'. Advertisements immediately expire after the registration deadline has passed. Advertisements tagged with 'Call for Papers' usually include a submission deadline in the body text, so they should not be ongoing ads. For Universities, any ads advertising degrees should not be ongoing ads and should have a deadline.",
+                    "description": "Registration deadline (ISO 8601 date-time) for the training. All advertisements should include a registration deadline unless it is an 'ongoing course'. Advertisements immediately expire after the registration deadline has passed. Advertisements tagged with 'Call for Papers' usually include a submission deadline in the body text, so they should not be ongoing ads. For Universities, any ads advertising degrees should not be ongoing ads and should have a deadline.",
                     "type": "string",
-                    "format": "date-time"
+                    "format": "date-time",
+                    "examples": [
+                        "2026-08-15T00:00:00+00:00"
+                    ]
                 }
             },
             "required": [
@@ -120,10 +128,13 @@
             "enum": [
                 "free",
                 "fee-based"
+            ],
+            "examples": [
+                "fee-based"
             ]
         },
         "fee_information": {
-            "description": "This plain text field must contain the exact course fee (including what it does and does not cover) and cannot be substituted by providing a link.",
+            "description": "This plain text field must contain the exact course fee (including what it does and does not cover) and cannot be substituted by providing a link. Mandatory when cost is 'fee-based', otherwise omit this property.",
             "type": "string",
             "minLength": 10,
             "maxLength": 100000,
@@ -133,57 +144,77 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
-                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
             }
         },
         "category": {
-            "description": "Training category as a single ID from https://api.reliefweb.int/v1/references/training-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Training category as an array containing a single ID from https://api.reliefweb.int/v2/references/training-types. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 1
+            "maxItems": 1,
+            "examples": [
+                [4604]
+            ]
         },
         "training_language": {
-            "description": "Language(s) in which the course/event will be held as a list of IDs from https://api.reliefweb.int/v1/references/languages.",
+            "description": "Language(s) in which the course/event will be held as a list of IDs from https://api.reliefweb.int/v2/references/languages.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 10
+            "maxItems": 10,
+            "examples": [
+                [267]
+            ]
         },
         "professional_function": {
-            "description": "Professional function(s) as a list of IDs from https://api.reliefweb.int/v1/references/career-categories. Only select the most relevant functions as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Professional function(s) as a list of IDs from https://api.reliefweb.int/v2/references/career-categories. Only select the most relevant functions as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 3
+            "maxItems": 3,
+            "examples": [
+                [36601]
+            ]
         },
         "theme": {
-            "description": "Training theme(s) as a list of IDs from https://api.reliefweb.int/v1/references/themes. Only select the most relevant themes as over-tagging often results in reduced discoverability. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
+            "description": "Training theme as an array containing a single ID from https://api.reliefweb.int/v2/references/themes. Only select the most relevant theme. For definitions, see https://reliefweb.int/taxonomy-descriptions.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
-            "maxItems": 3
+            "maxItems": 1,
+            "examples": [
+                [4587]
+            ]
         },
         "language": {
-            "description": "Language(s) in which this advertisement is written as a list of IDs from https://api.reliefweb.int/v1/references/languages. ReliefWeb accepts advertisements submitted in English, Spanish or French. This Advertisement Language refers to the language in which the submitted advertisement is written, not the actual language that will be used in the training/event.",
+            "description": "Language(s) in which this advertisement is written as a list of IDs from https://api.reliefweb.int/v2/references/languages. ReliefWeb accepts advertisements submitted in English, Spanish or French. This Advertisement Language refers to the language in which the submitted advertisement is written, not the actual language that will be used in the training/event.",
             "type": "array",
+            "uniqueItems": true,
             "items": {
                 "type": "integer"
             },
             "minItems": 1,
-            "maxItems": 10
+            "maxItems": 10,
+            "examples": [
+                [267]
+            ]
         },
         "body": {
             "description": "Training content in markdown or html (supported tags: <h1> <h2> <h3> <h4> <h5> <h6> <br> <p> <strong> <em> <a> <ul> <ol> <li> <blockquote>). The Body field must contain the complete description of the training opportunity (ex: introduction, methodology, objectives, target audience). This core information cannot be substituted by providing a link for 'further details'.",
@@ -196,13 +227,13 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
-                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
             }
         },
         "how_to_register": {
@@ -216,18 +247,15 @@
                     "pattern": "\\p{L}+"
                 },
                 {
-                    "description": "No control characters or separators except for spaces and new lines.",
-                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ 　\\n])+$"
+                    "description": "No control characters or separators except for spaces and UNIX newlines (\\n).",
+                    "pattern": "^(?:[^\\p{Z}\\p{C}]|[ \u3000\\n])+$"
                 }
             ],
             "not": {
                 "description": "No leading, trailing or consecutive spaces and new lines (except at the end of a line to support markdown linebreaks).",
-                "pattern": "(?:^[ 　\\n]|[ 　\\n]$|[ 　]{2,}[^ 　\\n])"
+                "pattern": "(?:^[ \u3000\\n]|[ \u3000\\n]$|[ \u3000]{2,}[^ \u3000\\n])"
             }
         }
-    },
-    "dependentRequired": {
-        "city": ["country"]
     },
     "allOf": [
         {
@@ -262,11 +290,12 @@
             "if": {
                 "properties": {
                     "cost": {
-                        "contains": {
-                            "const": "fee-based"
-                        }
+                        "const": "fee-based"
                     }
-                }
+                },
+                "required": [
+                    "cost"
+                ]
             },
             "then": {
                 "description": "The fee information field is mandatory.",

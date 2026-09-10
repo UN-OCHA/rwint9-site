@@ -156,4 +156,40 @@ class TrainingTest extends ContentProcessorPluginBaseTestCase {
     $plugin->process($data);
   }
 
+  /**
+   * Test fee_information is forbidden when cost is free.
+   */
+  public function testValidateSchemaFreeWithFeeInformation(): void {
+    $data = $this->getPostApiData('training');
+    $data['cost'] = 'free';
+    $data['fee_information'] = 'The course fee is 100 USD including materials.';
+
+    $this->expectException(ContentProcessorException::class);
+    $this->plugin->validateSchema($data);
+  }
+
+  /**
+   * Test fee_information is required when cost is fee-based.
+   */
+  public function testValidateSchemaFeeBasedWithoutFeeInformation(): void {
+    $data = $this->getPostApiData('training');
+    $data['cost'] = 'fee-based';
+    unset($data['fee_information']);
+
+    $this->expectException(ContentProcessorException::class);
+    $this->plugin->validateSchema($data);
+  }
+
+  /**
+   * Test fee_information is accepted when cost is fee-based.
+   */
+  public function testValidateSchemaFeeBasedWithFeeInformation(): void {
+    $data = $this->getPostApiData('training');
+    $data['cost'] = 'fee-based';
+    $data['fee_information'] = 'The course fee is 100 USD including materials.';
+
+    $this->plugin->validateSchema($data);
+    $this->assertTrue(TRUE);
+  }
+
 }
