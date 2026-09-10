@@ -294,7 +294,7 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
     }
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['url'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['url'] ?? NULL) ? $this->generateUuid($item['url']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Prepare the documents and submit them.
@@ -321,7 +321,7 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
       $import_record['imported_item_id'] = $id;
 
       // Retrieve the document URL.
-      if (!isset($document['url'])) {
+      if (!isset($document['url']) || !is_string($document['url']) || $document['url'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for Worldbank document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
@@ -483,19 +483,19 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
     $url = str_replace('http://', 'https://', $document['url']);
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText($document['display_title'] ?? '');
+    $title = $this->sanitizeText(is_string($document['display_title'] ?? NULL) ? $document['display_title'] : '');
 
     // No body text is available in the API for the Worldbank documents.
     $body = '';
 
     // Retrieve the publication date.
-    $published = strtotime($document['docdt'] ?? $document['last_modified_date']);
+    $published = strtotime($document['docdt'] ?? $document['last_modified_date'] ?? '');
     $published = DateHelper::format($published, 'custom', 'c');
 
     // Retrieve the document languages and default to English if none of the
     // supported languages were found.
     $languages = [];
-    if (isset($document['lang'])) {
+    if (isset($document['lang']) && is_string($document['lang'])) {
       if (isset($this->languageMapping[$document['lang']])) {
         $languages[$document['lang']] = $this->languageMapping[$document['lang']];
       }
@@ -510,7 +510,7 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
-    if (isset($document['count'])) {
+    if (isset($document['count']) && is_string($document['count']) && $document['count'] !== '') {
       $primary_country = $this->getCountryByName($document['count']);
       if ($primary_country) {
         $countries[] = $primary_country;
@@ -524,7 +524,7 @@ class WorldbankImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    if (isset($document['pdfurl'])) {
+    if (isset($document['pdfurl']) && is_string($document['pdfurl']) && $document['pdfurl'] !== '') {
       $document_url = $document['pdfurl'];
       $info = $this->getRemoteFileInfo($document_url);
       if (!empty($info)) {

@@ -111,7 +111,10 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    $file_url = strtr($file_url_pattern, ['@id' => $document['ContentItemId']]);
+    if (!isset($document['ContentItemId']) || !is_scalar($document['ContentItemId']) || $document['ContentItemId'] === '') {
+      return [];
+    }
+    $file_url = strtr($file_url_pattern, ['@id' => (string) $document['ContentItemId']]);
     $info = $this->getRemoteFileInfo($file_url);
     if (!empty($info)) {
       $file_uuid = $this->generateUuid($file_url, $uuid);
@@ -132,12 +135,12 @@ class EchoMapImporter extends EchoFlashUpdateImporter {
     // consistent with what was published on ReliefWeb.
     // All recent ECHO maps seem to use `DG ECHO` in the title on ReliefWeb.
     $map_source = 'DG ECHO';
-    $map_type = $document['MapType'] ?? 'Daily Map';
+    $map_type = is_string($document['MapType'] ?? NULL) ? $document['MapType'] : 'Daily Map';
 
     // Create the title.
-    if (!empty($document['Description'])) {
+    if (!empty($document['Description']) && is_string($document['Description'])) {
       // Extract the date part from the ISO date.
-      $title_date = substr($document['MapOf'] ?? $data['published'], 0, 10);
+      $title_date = substr(is_string($document['MapOf'] ?? NULL) ? $document['MapOf'] : $data['published'], 0, 10);
       // Convert to DD-MM-YYYY.
       $title_date = implode('/', array_reverse(explode('-', $title_date)));
 

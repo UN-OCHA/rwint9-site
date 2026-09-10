@@ -305,7 +305,7 @@ class UnepImporter extends ReliefWebImporterPluginBase {
     $manually_posted = $this->getManuallyPostedDocumentsFromUrls($document_urls);
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['path'] ?? NULL) ? $this->generateUuid($item['path']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Prepare the documents and submit them.
@@ -332,7 +332,7 @@ class UnepImporter extends ReliefWebImporterPluginBase {
       $import_record['imported_item_id'] = $id;
 
       // Retrieve the document URL.
-      if (!isset($document['path'])) {
+      if (!isset($document['path']) || !is_string($document['path']) || $document['path'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for UNEP document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
@@ -479,13 +479,13 @@ class UnepImporter extends ReliefWebImporterPluginBase {
     $url = $document['path'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText($document['title'] ?? '');
+    $title = $this->sanitizeText(is_string($document['title'] ?? NULL) ? $document['title'] : '');
 
     // No body text is available in the API for the UNEP documents.
     $body = '';
 
     // Retrieve the publication date.
-    $published = strtotime($document['publication_date']);
+    $published = strtotime($document['publication_date'] ?? '');
     $published = DateHelper::format($published, 'custom', 'c');
 
     $languages['English'] = 267;
@@ -494,17 +494,18 @@ class UnepImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    if (isset($document['links'])) {
-      foreach ($document['links'] ?? [] as $document_url) {
-        $info = $this->getRemoteFileInfo($document_url);
-        if (!empty($info)) {
-          $file_url = $document_url;
-          $file_uuid = $this->generateUuid($file_url, $uuid);
-          $files[] = [
-            'url' => $file_url,
-            'uuid' => $file_uuid,
-          ] + $info;
-        }
+    foreach ($document['links'] ?? [] as $document_url) {
+      if (!is_string($document_url) || $document_url === '') {
+        continue;
+      }
+      $info = $this->getRemoteFileInfo($document_url);
+      if (!empty($info)) {
+        $file_url = $document_url;
+        $file_uuid = $this->generateUuid($file_url, $uuid);
+        $files[] = [
+          'url' => $file_url,
+          'uuid' => $file_uuid,
+        ] + $info;
       }
     }
 

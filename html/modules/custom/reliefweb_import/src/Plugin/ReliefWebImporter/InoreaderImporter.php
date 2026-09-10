@@ -231,7 +231,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $plugin->setPluginSetting('validate_file_content_type', FALSE);
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['canonical'][0]['href'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['canonical'][0]['href'] ?? NULL) ? $this->generateUuid($item['canonical'][0]['href']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Max import attempts.
@@ -240,13 +240,14 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $processed = 0;
     $import_records = [];
     foreach ($documents as $document) {
-      $source_title = trim(substr($document['origin']['title'] ?? '', 0, strpos($document['origin']['title'] ?? '', '[source:') ?: NULL));
+      $origin_title = is_string($document['origin']['title'] ?? NULL) ? $document['origin']['title'] : '';
+      $source_title = trim(substr($origin_title, 0, strpos($origin_title, '[source:') ?: NULL));
       $source_title = $this->sanitizeText($source_title);
 
       // Ex: feed/webfeed://https%3A%2F%2Fwww.unicef.org%2Freports--44f158e4
       // We need to URL encode everything after `feed/` to build a working
       // inoreader feed URL.
-      $feed_url = $document['origin']['streamId'] ?? '';
+      $feed_url = is_string($document['origin']['streamId'] ?? NULL) ? $document['origin']['streamId'] : '';
       $feed_url = str_starts_with($feed_url, 'feed/') ? 'feed/' . urlencode(substr($feed_url, 5)) : $feed_url;
       $feed_url = 'https://www.inoreader.com/' . $feed_url;
 
@@ -260,9 +261,9 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
         'source' => $source_title,
         'extra' => [
           'inoreader' => [
-            'feed_name' => $document['origin']['title'] ?? '',
+            'feed_name' => $origin_title,
             'feed_url' => $feed_url,
-            'feed_origin' => $document['origin']['htmlUrl'] ?? '',
+            'feed_origin' => is_string($document['origin']['htmlUrl'] ?? NULL) ? $document['origin']['htmlUrl'] : '',
           ],
         ],
       ];
@@ -276,7 +277,7 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $import_record['imported_item_id'] = $id;
 
       // Retrieve the document URL.
-      if (!isset($document['canonical'][0]['href'])) {
+      if (!isset($document['canonical'][0]['href']) || !is_string($document['canonical'][0]['href']) || $document['canonical'][0]['href'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for Inoreader document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
@@ -483,6 +484,13 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     if ($has_pdf) {
       $pdf = $data['file_data']['pdf'] ?? '';
       $pdf_bytes = $data['file_data']['bytes'] ?? NULL;
+      if (!is_string($pdf) || $pdf === '') {
+        $this->logger->info(strtr('No files found for Inoreader @id, skipping.', [
+          '@id' => $id,
+        ]));
+
+        return [];
+      }
 
       $files = [];
       $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);

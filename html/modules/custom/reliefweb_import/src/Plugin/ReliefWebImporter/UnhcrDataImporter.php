@@ -869,7 +869,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     );
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['documentLink'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['documentLink'] ?? NULL) ? $this->generateUuid($item['documentLink']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Prepare the documents and submit them.
@@ -904,7 +904,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
       }
 
       // Retrieve the document URL.
-      if (!isset($document['documentLink'])) {
+      if (!isset($document['documentLink']) || !is_string($document['documentLink']) || $document['documentLink'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for UNHCR document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
@@ -1054,7 +1054,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $url = $document['documentLink'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText($document['title'] ?? '');
+    $title = $this->sanitizeText(is_string($document['title'] ?? NULL) ? $document['title'] : '');
 
     // The documents in the UNHCR API seldom have descriptions or good ones
     // so we simply skip the body.
@@ -1070,6 +1070,9 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $languages = [];
     foreach ($document['languageName'] ?? [] as $language) {
       // Note: UNHCR language items have a 'name' property.
+      if (!is_array($language) || !isset($language['name']) || !is_string($language['name'])) {
+        continue;
+      }
       if (isset($this->languageMapping[$language['name']])) {
         $languages[$language['name']] = $this->languageMapping[$language['name']];
       }
@@ -1082,7 +1085,7 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $formats = [9];
     foreach ($document['docTypeName'] ?? [] as $type) {
       // Note: UNHCR doc type items are name strings directly.
-      if (isset($this->formatMapping[$type])) {
+      if (is_string($type) && isset($this->formatMapping[$type])) {
         $formats = [$this->formatMapping[$type]];
         break;
       }
@@ -1092,11 +1095,18 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $countries = [];
     foreach ($document['location'] ?? [] as $location) {
       // Note: UNHCR location items have a 'code' property.
-      if (isset($this->countryMapping[$location['code']])) {
-        $country = [$location['code'] => $this->countryMapping[$location['code']]];
+      if (!is_array($location)) {
+        continue;
+      }
+      $code = $location['code'] ?? NULL;
+      if (!(is_int($code) || (is_string($code) && $code !== ''))) {
+        continue;
+      }
+      if (isset($this->countryMapping[$code])) {
+        $country = [$code => $this->countryMapping[$code]];
         // If the location is in the title, add it at the beginning so it is
         // considered the primary country.
-        if (isset($location['name'])) {
+        if (isset($location['name']) && is_string($location['name'])) {
           $country_name = trim(str_replace(' (country)', '', $location['name']));
           if (mb_stripos($title, $country_name) !== FALSE) {
             $countries = $country + $countries;
@@ -1116,14 +1126,14 @@ class UnhcrDataImporter extends ReliefWebImporterPluginBase {
     $themes = [];
     foreach ($document['sectorName'] ?? [] as $sector) {
       // Note: UNHCR sector items are name strings directly.
-      if (isset($this->themeMapping[$sector])) {
+      if (is_string($sector) && isset($this->themeMapping[$sector])) {
         $themes[$sector] = $this->themeMapping[$sector];
       }
     }
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    if (isset($document['downloadLink'])) {
+    if (isset($document['downloadLink']) && is_string($document['downloadLink']) && $document['downloadLink'] !== '') {
       $info = $this->getRemoteFileInfo($document['downloadLink']);
       if (!empty($info)) {
         $file_url = $document['downloadLink'];
