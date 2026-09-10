@@ -278,8 +278,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $entity->setModerationStatus($status);
 
     // Set the log message based on whether it was updated or created.
-    $message = match (TRUE) {
-      $entity->isNew() =>  'Automatic creation from Post API.',
+    // Importers may pass a richer log_message for partial reimports.
+    $message = $data['log_message'] ?? match (TRUE) {
+      $entity->isNew() => 'Automatic creation from Post API.',
       !empty($data['partial']) => 'Automatic partial update from Post API.',
       default => 'Automatic update from Post API.',
     };
@@ -332,6 +333,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     unset($data['user']);
     unset($data['hash']);
     unset($data['status']);
+    unset($data['log_message']);
 
     // Partial update.
     $partial = !empty($data['partial']);

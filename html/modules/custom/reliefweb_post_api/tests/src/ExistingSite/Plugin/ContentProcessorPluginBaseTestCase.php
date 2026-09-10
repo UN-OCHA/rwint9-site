@@ -1670,6 +1670,50 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
+   * Test save uses a custom log message when provided.
+   */
+  public function testSaveWithCustomLogMessage(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 124);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $custom_message = 'Automatic partial update from Post API. Applied: file. Skipped by reimport rules: title. Please review [original document](https://data.unhcr.org/en/documents/details/123941).';
+    $data = [
+      'url' => 'https://test.test',
+      'partial' => TRUE,
+      'log_message' => $custom_message,
+      'hash' => 'custom-log-hash',
+    ];
+
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    $this->assertSame($custom_message, $entity->getRevisionLogMessage());
+    $this->assertEquals(2, $result);
+  }
+
+  /**
+   * Test save uses the default partial update log message.
+   */
+  public function testSavePartialDefaultLogMessage(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 125);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $data = [
+      'url' => 'https://test.test',
+      'partial' => TRUE,
+      'hash' => 'partial-default-hash',
+    ];
+
+    $result = $this->plugin->save($entity, $provider, $data);
+
+    $this->assertSame('Automatic partial update from Post API.', $entity->getRevisionLogMessage());
+    $this->assertEquals(2, $result);
+  }
+
+  /**
    * Create a mock of a select query statement.
    *
    * @param string $method
