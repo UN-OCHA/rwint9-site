@@ -1878,70 +1878,95 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
   /**
    * Find country by iso code.
    */
-  protected function getCountryByIso(string $iso3): ?int {
-    if (empty($iso3)) {
+  protected function getCountryByIso(string $iso3): int {
+    if ($iso3 === '') {
       return 254;
     }
 
+    $key = strtolower($iso3);
     static $country_mapping = [];
-    if (empty($country_mapping)) {
-      $countries = $this->entityTypeManager
-        ->getStorage('taxonomy_term')
-        ->loadByProperties(['vid' => 'country']);
-      foreach ($countries as $country) {
-        $country_mapping[strtolower($country->get('field_iso3')->value)] = (int) $country->id();
-      }
+    if (array_key_exists($key, $country_mapping)) {
+      return $country_mapping[$key];
     }
 
-    $iso3 = strtolower($iso3);
-    return $country_mapping[$iso3] ?? 254;
+    $query = $this->database->select('taxonomy_term__field_iso3', 'i');
+    $query->innerJoin(
+      'taxonomy_term_field_data',
+      't',
+      't.tid = i.entity_id AND t.default_langcode = 1 AND t.langcode = i.langcode',
+    );
+    $query->fields('i', ['entity_id']);
+    $query->condition('i.bundle', 'country');
+    $query->condition('i.deleted', 0);
+    $query->condition('t.vid', 'country');
+    $query->condition('t.status', 1);
+    $query->where('LOWER(i.field_iso3_value) = :iso3', [':iso3' => $key]);
+    $query->range(0, 1);
+
+    $tid = $query->execute()?->fetchField();
+    $country_mapping[$key] = $tid ? (int) $tid : 254;
+    return $country_mapping[$key];
   }
 
   /**
    * Find country by name.
    */
-  protected function getCountryByName(string $name): ?int {
-    if (empty($name)) {
+  protected function getCountryByName(string $name): int {
+    if ($name === '') {
       return 254;
     }
 
+    $key = strtolower($name);
     static $country_mapping = [];
-    if (empty($country_mapping)) {
-      $countries = $this->entityTypeManager
-        ->getStorage('taxonomy_term')
-        ->loadByProperties(['vid' => 'country']);
-      foreach ($countries as $country) {
-        $country_mapping[strtolower($country->label())] = (int) $country->id();
-      }
+    if (array_key_exists($key, $country_mapping)) {
+      return $country_mapping[$key];
     }
 
-    $name = strtolower($name);
-    return $country_mapping[$name] ?? 254;
+    $query = $this->database->select('taxonomy_term_field_data', 't');
+    $query->fields('t', ['tid']);
+    $query->condition('t.vid', 'country');
+    $query->condition('t.status', 1);
+    $query->condition('t.default_langcode', 1);
+    $query->where('LOWER(t.name) = :name', [':name' => $key]);
+    $query->range(0, 1);
+
+    $tid = $query->execute()?->fetchField();
+    $country_mapping[$key] = $tid ? (int) $tid : 254;
+    return $country_mapping[$key];
   }
 
   /**
    * Find source by name or short name.
    */
-  protected function getSourceByName(string $name): ?int {
-    if (empty($iso3)) {
+  protected function getSourceByName(string $name): int {
+    if ($name === '') {
       return 0;
     }
 
+    $key = strtolower($name);
     static $source_mapping = [];
-    if (empty($source_mapping)) {
-      $sources = $this->entityTypeManager
-        ->getStorage('taxonomy_term')
-        ->loadByProperties(['vid' => 'source']);
-      foreach ($sources as $source) {
-        $source_mapping[strtolower($source->label())] = (int) $source->id();
-        if ($source->hasField('field_shortname') && !$source->get('field_shortname')->isEmpty()) {
-          $source_mapping[strtolower($source->get('field_shortname')->value)] = (int) $source->id();
-        }
-      }
+    if (array_key_exists($key, $source_mapping)) {
+      return $source_mapping[$key];
     }
 
-    $name = strtolower($name);
-    return $source_mapping[$name] ?? 0;
+    $query = $this->database->select('taxonomy_term_field_data', 't');
+    $query->leftJoin(
+      'taxonomy_term__field_shortname',
+      's',
+      's.entity_id = t.tid AND s.deleted = 0 AND s.langcode = t.langcode',
+    );
+    $query->fields('t', ['tid']);
+    $query->condition('t.vid', 'source');
+    $query->condition('t.status', 1);
+    $query->condition('t.default_langcode', 1);
+    $query->condition($query->orConditionGroup()
+      ->where('LOWER(t.name) = :name', [':name' => $key])
+      ->where('LOWER(s.field_shortname_value) = :shortname', [':shortname' => $key]));
+    $query->range(0, 1);
+
+    $tid = $query->execute()?->fetchField();
+    $source_mapping[$key] = $tid ? (int) $tid : 0;
+    return $source_mapping[$key];
   }
 
 }

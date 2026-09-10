@@ -277,7 +277,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     );
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['Link'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['Link'] ?? NULL) ? $this->generateUuid($item['Link']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Max import attempts.
@@ -318,7 +318,7 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
       }
 
       // Retrieve the document URL.
-      if (!isset($document['Link'])) {
+      if (!isset($document['Link']) || !is_string($document['Link']) || $document['Link'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for @source document ID @id, skipping document import.', [
           '@source' => $this->sourceName,
           '@id' => $id,
@@ -464,10 +464,16 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     $url = $document['Link'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText($document['Title'] ?? '');
+    $title = $this->sanitizeText(is_string($document['Title'] ?? NULL) ? $document['Title'] : '');
 
     // Retrieve the sources.
-    $sources = array_map(fn($item) => $this->sanitizeText($item['Name'] ?? ''), $document['ItemSources']);
+    $sources = [];
+    foreach ($document['ItemSources'] ?? [] as $item) {
+      if (!is_array($item) || !isset($item['Name']) || !is_string($item['Name']) || $item['Name'] === '') {
+        continue;
+      }
+      $sources[] = $this->sanitizeText($item['Name']);
+    }
     $sources = array_unique(array_filter($sources));
 
     // Retrieve the publication date.
@@ -484,18 +490,18 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
     }
 
     // Retrieve the description.
-    $body = $this->sanitizeText($document['Description'] ?? '', TRUE);
+    $body = $this->sanitizeText(is_string($document['Description'] ?? NULL) ? $document['Description'] : '', TRUE);
 
     // Retrieve the countries.
     $countries = [];
-    if (isset($document['Country']['Iso3'])) {
+    if (isset($document['Country']['Iso3']) && is_string($document['Country']['Iso3'])) {
       $country = $this->getCountryByIso($document['Country']['Iso3']);
       if (!empty($country)) {
         $countries[] = $country;
       }
     }
     foreach ($document['Countries'] ?? [] as $location) {
-      if (isset($location['Iso3'])) {
+      if (isset($location['Iso3']) && is_string($location['Iso3'])) {
         $country = $this->getCountryByIso($location['Iso3']);
         if (!empty($country)) {
           $countries[] = $country;
@@ -512,21 +518,20 @@ class EchoFlashUpdateImporter extends ReliefWebImporterPluginBase {
 
     // Extract the event types.
     $event_type_codes = [];
-    if (isset($document['EventTypeCode'])) {
+    if (isset($document['EventTypeCode']) && is_string($document['EventTypeCode'])) {
       $event_type_code = strtoupper($document['EventTypeCode']);
       $event_type_codes[$event_type_code] = $event_type_code;
     }
-    elseif (isset($document['EventType']['Code'])) {
+    elseif (isset($document['EventType']['Code']) && is_string($document['EventType']['Code'])) {
       $event_type_code = strtoupper($document['EventType']['Code']);
       $event_type_codes[$event_type_code] = $event_type_code;
     }
-    if (isset($document['EventTypes'])) {
-      foreach ($document['EventTypes'] ?? [] as $event_type) {
-        if (isset($event_type['Code'])) {
-          $event_type_code = strtoupper($event_type['Code']);
-          $event_type_codes[$event_type_code] = $event_type_code;
-        }
+    foreach ($document['EventTypes'] ?? [] as $event_type) {
+      if (!is_array($event_type) || !isset($event_type['Code']) || !is_string($event_type['Code'])) {
+        continue;
       }
+      $event_type_code = strtoupper($event_type['Code']);
+      $event_type_codes[$event_type_code] = $event_type_code;
     }
 
     // Disaster types and themes.
