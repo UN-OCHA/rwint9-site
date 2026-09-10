@@ -334,7 +334,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     }
 
     // Retrieve the list of existing import records for the documents.
-    $uuids = array_filter(array_map(fn($item) => $this->generateUuid($item['path'] ?? ''), $documents));
+    $uuids = array_filter(array_map(fn($item) => is_string($item['path'] ?? NULL) ? $this->generateUuid($item['path']) : '', $documents));
     $existing_import_records = $this->getExistingImportRecords($uuids);
 
     // Prepare the documents and submit them.
@@ -361,7 +361,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $import_record['imported_item_id'] = $id;
 
       // Retrieve the document URL.
-      if (!isset($document['path'])) {
+      if (!isset($document['path']) || !is_string($document['path']) || $document['path'] === '') {
         $this->getLogger()->notice(strtr('Undefined document URL for WFP Logcluster document ID @id, skipping document import.', [
           '@id' => $id,
         ]));
@@ -585,7 +585,8 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     if (isset($document['organisations'])) {
       foreach ($document['organisations'] ?? [] as $organisation) {
-        if ($organisation === 'WFP') {
+        // API occasionally includes null/empty organisation entries.
+        if (!is_string($organisation) || $organisation === '' || $organisation === 'WFP') {
           continue;
         }
 
@@ -600,19 +601,19 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     $url = $document['path'];
 
     // Retrieve the title and clean it.
-    $title = $this->sanitizeText($document['title'] ?? '');
+    $title = $this->sanitizeText(is_string($document['title'] ?? NULL) ? $document['title'] : '');
 
     // No body text is available in the API for the WFP Logcluster documents.
     $body = '';
 
     // Retrieve the publication date.
-    $published = strtotime($document['date'] ?? $document['last_update']);
+    $published = strtotime($document['date'] ?? $document['last_update'] ?? '');
     $published = DateHelper::format($published, 'custom', 'c');
 
     // Retrieve the document languages and default to English if none of the
     // supported languages were found.
     $languages = [];
-    if (isset($document['document_language'])) {
+    if (isset($document['document_language']) && is_string($document['document_language'])) {
       if (isset($this->languageMapping[$document['document_language']])) {
         $languages[$document['document_language']] = $this->languageMapping[$document['document_language']];
       }
@@ -624,7 +625,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the content format and map it to 'Other' if there is no match.
     foreach ($document['document_type'] ?? [] as $type) {
-      if (isset($this->formatMapping[$type])) {
+      if (is_string($type) && isset($this->formatMapping[$type])) {
         $formats = [$this->formatMapping[$type]];
         break;
       }
@@ -637,6 +638,10 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     // Retrieve the countries. Consider the first one as the primary country.
     $countries = [];
     foreach ($document['countries'] ?? [] as $location) {
+      // API occasionally includes null/empty country entries.
+      if (!is_string($location) || $location === '') {
+        continue;
+      }
       $country = $this->getCountryByIso($location);
       $countries[] = $country;
       $countries = array_unique($countries);
@@ -649,17 +654,21 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     // Retrieve the data for the attachment if any.
     $files = [];
-    if (isset($document['document_url'])) {
-      foreach ($document['document_url'] ?? [] as $file_entry) {
-        $file_url = reset($file_entry);
-        $info = $this->getRemoteFileInfo($file_url);
-        if (!empty($info)) {
-          $file_uuid = $this->generateUuid($file_url, $uuid);
-          $files[] = [
-            'url' => $file_url,
-            'uuid' => $file_uuid,
-          ] + $info;
-        }
+    foreach ($document['document_url'] ?? [] as $file_entry) {
+      if (!is_array($file_entry)) {
+        continue;
+      }
+      $file_url = reset($file_entry);
+      if (!is_string($file_url) || $file_url === '') {
+        continue;
+      }
+      $info = $this->getRemoteFileInfo($file_url);
+      if (!empty($info)) {
+        $file_uuid = $this->generateUuid($file_url, $uuid);
+        $files[] = [
+          'url' => $file_url,
+          'uuid' => $file_uuid,
+        ] + $info;
       }
     }
 
