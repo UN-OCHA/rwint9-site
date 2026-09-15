@@ -6,10 +6,10 @@ namespace Drupal\reliefweb_entities\Services;
 
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Mail\MailManagerInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
 
 /**
@@ -84,15 +84,14 @@ final class PublicationNotifier {
 
     $this->setStagedEmails($entity, $emails);
 
-    if (!$entity instanceof RevisionLogInterface) {
+    if (!$entity instanceof EntityRevisionedInterface) {
       return;
     }
 
     $log = strtr('Publication notification sent to @to', [
       '@to' => implode(', ', $emails),
     ]);
-    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
-    $entity->setRevisionLogMessage($existing === '' ? $log : $existing . ' - ' . $log);
+    $entity->updateRevisionLogMessage($log, 'append', TRUE, ' - ');
   }
 
   /**

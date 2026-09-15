@@ -175,7 +175,7 @@ class ReliefWebModerationCommands extends DrushCommands {
           $source->notifications_content_disable = TRUE;
           $source->setModerationStatus($status);
           $source->setNewRevision(TRUE);
-          $source->setRevisionLogMessage('Automatic status update due to inactivity.');
+          $source->updateRevisionLogMessage('Automatic status update due to inactivity.', 'replace', FALSE);
           $source->setRevisionUserId(2);
           $source->setRevisionCreationTime(time());
           $source->save();

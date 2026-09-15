@@ -11,7 +11,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\user\UserInterface;
@@ -318,7 +318,7 @@ function reliefweb_user_history_get_account_history_content(UserInterface $user)
           'status' => NULL,
           'message' => [
             'type' => $modification_comment_type,
-            'content' => !empty($modification_comment) ? EntityHelper::formatRevisionLogMessage($modification_comment) : '',
+            'content' => !empty($modification_comment) ? RevisionLogHelper::formatMessage($modification_comment) : '',
           ],
           'content' => $differences,
         ];

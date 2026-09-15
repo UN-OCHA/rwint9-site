@@ -31,6 +31,7 @@ use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Helpers\UrlHelper;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use GuzzleHttp\ClientInterface;
@@ -289,7 +290,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $entity->setNewRevision(TRUE);
     $entity->setRevisionCreationTime(time());
     $entity->setRevisionUserId($user_id);
-    $entity->setRevisionLogMessage($message);
+    if ($entity instanceof EntityRevisionedInterface) {
+      $entity->updateRevisionLogMessage($message, 'replace', FALSE);
+    }
 
     return $entity->save();
   }

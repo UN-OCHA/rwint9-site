@@ -34,6 +34,8 @@ use Psr\Log\LoggerInterface;
 #[Group('reliefweb_content_analyzer')]
 class ReportDuplicateMatchHooksTest extends UnitTestCase {
 
+  use RevisionLogMockTrait;
+
   /**
    * Builds a hook instance with stubbed services.
    *
@@ -229,11 +231,8 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $this->configureNewReport($entity);
     $entity->expects($this->once())->method('setModerationStatus')->with('draft');
 
-    $capturedMessage = NULL;
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessage): void {
-        $capturedMessage = $msg;
-      });
+    $log = 'Import log.';
+    $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresave($entity);
 
@@ -247,12 +246,11 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $this->assertSame('duplicate', $context->targetStatus);
     $this->assertTrue(ReliefWebApiIndexingSkipStore::consumeSkip($entity));
 
-    $this->assertNotNull($capturedMessage);
-    $this->assertStringStartsWith('Import log.', $capturedMessage);
-    $this->assertStringContainsString('Near-duplicate of: Matched report (nid 42, ' . $method . ' 95%)', $capturedMessage);
+    $this->assertStringStartsWith('Import log.', $log);
+    $this->assertStringContainsString('Near-duplicate of: Matched report (nid 42, ' . $method . ' 95%)', $log);
     $this->assertStringContainsString(
       'Moderation status: draft (original: published, reason: interim while applying duplicate status).',
-      $capturedMessage,
+      $log,
     );
   }
 
@@ -416,14 +414,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $entity->method('bundle')->willReturn('report');
 
     $currentLog = 'draft detection log';
-    $entity->method('getRevisionLogMessage')
-      ->willReturnCallback(static function () use (&$currentLog): string {
-        return $currentLog;
-      });
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$currentLog): void {
-        $currentLog = $msg;
-      });
+    $this->wireRevisionLogMock($entity, $currentLog);
 
     $entity->expects($this->once())->method('setNewRevision')->with(TRUE);
     $entity->expects($this->once())->method('save');
@@ -471,8 +462,8 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $entity->method('getEntityTypeId')->willReturn('node');
     $entity->method('bundle')->willReturn('report');
     $entity->method('id')->willReturn(99);
-    $entity->method('getRevisionLogMessage')->willReturn('');
-    $entity->method('setRevisionLogMessage');
+    $log = '';
+    $this->wireRevisionLogMock($entity, $log);
     $entity->expects($this->once())->method('setNewRevision')->with(TRUE);
     $entity->expects($this->once())->method('save');
 
@@ -513,22 +504,17 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
       'duplicate' => 'Duplicate',
       'published' => 'Published',
     ]);
-    $entity->method('getRevisionLogMessage')->willReturn('Near-duplicate of: Matched report (nid 42, jaccard 95%)');
     $entity->expects($this->once())->method('setModerationStatus')->with('duplicate');
 
-    $capturedMessage = NULL;
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessage): void {
-        $capturedMessage = $msg;
-      });
+    $log = 'Near-duplicate of: Matched report (nid 42, jaccard 95%)';
+    $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresaveModerationAfterPostingRights($entity);
 
     $this->assertSame('duplicate', $context->appliedModerationStatus);
-    $this->assertNotNull($capturedMessage);
     $this->assertStringContainsString(
       'Moderation status: duplicate (original: published, reason: near-duplicate detection).',
-      $capturedMessage,
+      $log,
     );
   }
 
@@ -550,12 +536,8 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
       ),
     );
 
-    $entity->method('getRevisionLogMessage')->willReturn('Near-duplicate of: Matched report (nid 42, jaccard 95%)');
-    $capturedMessage = NULL;
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessage): void {
-        $capturedMessage = $msg;
-      });
+    $log = 'Near-duplicate of: Matched report (nid 42, jaccard 95%)';
+    $this->wireRevisionLogMock($entity, $log);
 
     $skip = FALSE;
     $hooks->skipClassificationAlter(
@@ -565,8 +547,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     );
 
     $this->assertTrue($skip);
-    $this->assertNotNull($capturedMessage);
-    $this->assertStringContainsString('Automated classification skipped.', $capturedMessage);
+    $this->assertStringContainsString('Automated classification skipped.', $log);
   }
 
   /**

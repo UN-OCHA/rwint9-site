@@ -14,6 +14,7 @@ use Drupal\Core\Entity\EntityFieldManagerInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityOwnerInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -232,8 +233,8 @@ final class ReportSeriesMatchClassificationHooks {
 
     // Restore the original revision log captured before rev 1 annotations so
     // that rev 2 starts from the submitter's/importer's original message.
-    if ($entity instanceof RevisionLogInterface) {
-      $entity->setRevisionLogMessage($context->originalRevisionLog);
+    if ($entity instanceof EntityRevisionedInterface) {
+      $entity->updateRevisionLogMessage($context->originalRevisionLog, 'replace', FALSE);
     }
 
     // Apply proposed field values to the entity.
@@ -603,7 +604,7 @@ final class ReportSeriesMatchClassificationHooks {
     float $series_confidence,
     ?string $pre_draft_status,
   ): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
@@ -644,7 +645,7 @@ final class ReportSeriesMatchClassificationHooks {
     float $series_confidence,
     float $tagging_confidence,
   ): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
@@ -678,7 +679,7 @@ final class ReportSeriesMatchClassificationHooks {
     string $applied_moderation,
     string $baseline,
   ): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
@@ -882,13 +883,11 @@ final class ReportSeriesMatchClassificationHooks {
    *   The message to append.
    */
   protected function appendToRevisionLog(EntityInterface $entity, string $message): void {
-    if (!($entity instanceof RevisionLogInterface) || $message === '') {
+    if (!($entity instanceof EntityRevisionedInterface) || $message === '') {
       return;
     }
 
-    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
-    $combined = $existing === '' ? $message : $existing . ' ' . $message;
-    $entity->setRevisionLogMessage($combined);
+    $entity->updateRevisionLogMessage($message, 'append');
   }
 
   /**
@@ -898,17 +897,11 @@ final class ReportSeriesMatchClassificationHooks {
    *   The report entity being saved.
    */
   protected function appendClassificationSkippedRevisionLog(EntityInterface $entity): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
-    $message = 'Automated classification skipped.';
-    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
-    if ($existing !== '' && str_contains($existing, $message)) {
-      return;
-    }
-
-    $this->appendToRevisionLog($entity, $message);
+    $entity->updateRevisionLogMessage('Automated classification skipped.', 'append');
   }
 
   /**
