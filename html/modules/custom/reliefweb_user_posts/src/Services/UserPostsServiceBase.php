@@ -12,6 +12,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Pager\PagerManagerInterface;
 use Drupal\Core\Pager\PagerParametersInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
@@ -19,9 +20,14 @@ use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Moderation service for the report nodes.
+ * Base moderation service for the user posts pages.
  */
-class UserPostsService extends ModerationServiceBase {
+abstract class UserPostsServiceBase extends ModerationServiceBase {
+
+  /**
+   * Supported content bundles for My posts.
+   */
+  public const BUNDLES = ['report', 'job', 'training'];
 
   /**
    * The route match service.
@@ -87,17 +93,6 @@ class UserPostsService extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function getBundle() {
-    return [
-      'job',
-      'training',
-      'report',
-    ];
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function getEntityTypeId() {
     return 'node';
   }
@@ -110,38 +105,134 @@ class UserPostsService extends ModerationServiceBase {
   }
 
   /**
-   * {@inheritdoc}
+   * Get the human-readable label for a bundle.
+   *
+   * @param string $bundle
+   *   Bundle machine name.
+   *
+   * @return \Drupal\Core\StringTranslation\TranslatableMarkup|string
+   *   Bundle label.
    */
-  public function getStatuses() {
-    $statuses = [
-      'draft' => $this->t('Draft'),
-      'pending' => $this->t('Pending'),
-      'on-hold' => $this->t('On-hold'),
-      'to-review' => $this->t('To review'),
-      'published' => $this->t('Published'),
-      'refused' => $this->t('Refused'),
-      'expired' => $this->t('Expired'),
-      'duplicate' => $this->t('Duplicate'),
+  public static function getBundleLabel(string $bundle) {
+    return match ($bundle) {
+      'report' => t('Reports'),
+      'job' => t('Jobs'),
+      'training' => t('Training'),
+      default => $bundle,
+    };
+  }
+
+  /**
+   * Whether the account can manage affiliated content of the given bundle.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account.
+   * @param string $bundle
+   *   Content bundle.
+   *
+   * @return bool
+   *   TRUE if the account has affiliated view or edit permission.
+   */
+  public static function hasAffiliatedAccess(AccountInterface $account, string $bundle): bool {
+    return $account->hasPermission('edit affiliated ' . $bundle . ' content')
+      || $account->hasPermission('view affiliated unpublished ' . $bundle . ' content');
+  }
+
+  /**
+   * Get the My posts bundles available for a user.
+   *
+   * A bundle is available when the user can create it, has affiliated access,
+   * or has authored at least one node of that type.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   Profile user.
+   *
+   * @return string[]
+   *   Available bundle machine names, in display order.
+   */
+  public function getAvailableBundles(AccountInterface $account): array {
+    $available = [];
+    foreach (static::BUNDLES as $bundle) {
+      if (
+        $account->hasPermission('create ' . $bundle . ' content')
+        || static::hasAffiliatedAccess($account, $bundle)
+        || $this->userHasAuthoredBundle($account, $bundle)
+      ) {
+        $available[] = $bundle;
+      }
+    }
+    return $available;
+  }
+
+  /**
+   * Check whether the user has authored at least one node of the given bundle.
+   *
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   User account.
+   * @param string $bundle
+   *   Node bundle.
+   *
+   * @return bool
+   *   TRUE if the user authored at least one node of that type.
+   */
+  protected function userHasAuthoredBundle(AccountInterface $account, string $bundle): bool {
+    $uid = (int) $account->id();
+    if ($uid === 0) {
+      return FALSE;
+    }
+    $query = $this->database->select('node_field_data', 'n');
+    $query->addExpression('1');
+    $query->condition('n.uid', $uid);
+    $query->condition('n.type', $bundle);
+    $query->range(0, 1);
+    return (bool) $query->execute()->fetchField();
+  }
+
+  /**
+   * Get overview statistics for this service's content type.
+   *
+   * @return array
+   *   Associative array with:
+   *   - mine: number of posts authored by the page user
+   *   - colleagues: number of colleagues' posts, or NULL when not applicable
+   *   - organizations: number of linked organizations for this type
+   */
+  public function getOverviewStats(): array {
+    $user = $this->getUser();
+    $mine = $this->executeQuery([
+      'poster' => [
+        'me' => 1,
+        'colleagues' => 0,
+      ],
+    ], 1);
+    $stats = [
+      'mine' => (int) ($mine['totals']['total'] ?? 0),
+      'colleagues' => NULL,
+      'organizations' => count($this->getSourceFilterOptions()['options'] ?? []),
     ];
 
-    return $statuses;
+    if ($user && static::hasAffiliatedAccess($user, $this->getBundle())) {
+      $colleagues = $this->executeQuery([
+        'poster' => [
+          'me' => 0,
+          'colleagues' => 1,
+        ],
+      ], 1);
+      $stats['colleagues'] = (int) ($colleagues['totals']['total'] ?? 0);
+    }
+
+    return $stats;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getHeaders() {
-    return [
+    $headers = [
       'id' => [
         'label' => $this->t('Id'),
         'type' => 'property',
         'specifier' => 'nid',
-        'sortable' => TRUE,
-      ],
-      'type' => [
-        'label' => $this->t('Type'),
-        'type' => 'property',
-        'specifier' => 'type',
         'sortable' => TRUE,
       ],
       'status' => [
@@ -168,13 +259,28 @@ class UserPostsService extends ModerationServiceBase {
         'specifier' => 'created',
         'sortable' => TRUE,
       ],
-      'deadline' => [
+    ];
+
+    if ($this->hasDeadlineColumn()) {
+      $headers['deadline'] = [
         'label' => $this->t('Deadline'),
         'type' => 'custom',
         'specifier' => 'deadline',
         'sortable' => TRUE,
-      ],
-    ];
+      ];
+    }
+
+    return $headers;
+  }
+
+  /**
+   * Whether this service shows a deadline column and filter.
+   *
+   * @return bool
+   *   TRUE for jobs and training.
+   */
+  protected function hasDeadlineColumn(): bool {
+    return FALSE;
   }
 
   /**
@@ -185,28 +291,27 @@ class UserPostsService extends ModerationServiceBase {
       return [];
     }
 
-    // Retrieve the user for this page.
     $user_id = $this->getUserId();
 
     /** @var \Drupal\reliefweb_moderation\EntityModeratedInterface[] $entities */
     $entities = $results['entities'];
 
-    // Prepare the table rows' data from the entities.
     $rows = [];
     foreach ($entities as $entity) {
       $cells = [];
 
       $cells['id'] = $entity->id();
-      $cells['type'] = $entity->bundle();
       $cells['status'] = new FormattableMarkup('<div class="rw-moderation-status" data-moderation-status="@status">@label</div>', [
         '@status' => $entity->getModerationStatus(),
         '@label' => $entity->getModerationStatusLabel(),
       ]);
 
-      // Me if the entity author is the user for this My Posts page.
-      $cells['poster'] = $user_id == $entity->getOwnerId() ? $this->t('me') : $this->t('other');
+      $poster_type = $user_id == $entity->getOwnerId() ? 'me' : 'colleague';
+      $cells['poster'] = new FormattableMarkup('<div class="rw-user-posts-poster rw-user-posts-poster--@type">@label</div>', [
+        '@type' => $poster_type,
+        '@label' => $poster_type == 'me' ? $this->t('Me') : $this->t('Colleague'),
+      ]);
 
-      // Jobs can have 1 source, training can have several.
       $sources = [];
       foreach ($entity->field_source->referencedEntities() as $source) {
         $source_label = $source->field_shortname->value ?? $source->label();
@@ -224,24 +329,11 @@ class UserPostsService extends ModerationServiceBase {
 
       $cells['title'] = $entity->toLink()->toString();
 
-      // The `reliefweb-moderation-table.hml.twig` template expects an array or
-      // object with a date property for the "date" cells.
+      // The reliefweb-moderation-table template expects a date property.
       $cells['date']['date'] = $this->getEntityCreationDate($entity);
 
-      // Registration deadline for training or closing date for jobs.
-      if ($entity->bundle() === 'training') {
-        if ($entity->field_registration_deadline->isEmpty()) {
-          $cells['deadline'] = $this->t('Ongoing');
-        }
-        else {
-          $cells['deadline'] = $this->formatDate($entity->field_registration_deadline->value);
-        }
-      }
-      elseif ($entity->bundle() === 'job') {
-        $cells['deadline'] = $this->formatDate($entity->field_job_closing_date->value);
-      }
-      else {
-        $cells['deadline'] = $this->t('N/A');
+      if ($this->hasDeadlineColumn()) {
+        $cells['deadline'] = $this->getDeadlineCell($entity);
       }
 
       $rows[] = $cells;
@@ -258,52 +350,41 @@ class UserPostsService extends ModerationServiceBase {
       'title',
       'status',
       'created',
-      'source',
     ]);
 
-    // Filter by node id.
+    // Dedicated fields in UserPostsPageFilterForm; not omnibox.
+    unset($definitions['title']['form'], $definitions['created']['form']);
+
     $definitions['nid'] = [
       'type' => 'property',
       'field' => 'nid',
       'label' => $this->t('Id'),
       'shortcut' => 'i',
-      'form' => 'omnibox',
       'widget' => 'search',
     ];
 
-    // Filter by bundle.
-    $allowed_bundles = [
-      'job' => $this->t('Job'),
-      'training' => $this->t('Training'),
-      'report' => $this->t('Report'),
-    ];
-
-    $definitions['bundle'] = [
-      'type' => 'property',
-      'field' => 'type',
-      'label' => $this->t('Type'),
-      'shortcut' => 'ty',
-      'form' => 'other',
+    // Built as a dedicated autocomplete select in UserPostsPageFilterForm.
+    $definitions['source'] = [
+      'type' => 'field',
+      'column' => 'target_id',
+      'field' => 'field_source',
+      'label' => $this->t('Source'),
       'operator' => 'OR',
-      'values' => $allowed_bundles,
+      'widget' => 'autocomplete',
     ];
 
-    // Limit sources.
-    $definitions['source']['autocomplete_callback'] = 'getSourcesTheUserHasPostedFor';
+    if ($this->hasDeadlineColumn()) {
+      $definitions['deadline'] = [
+        'type' => 'property',
+        'field' => 'deadline',
+        'label' => $this->t('Deadline'),
+        'widget' => 'datepicker',
+        'join_callback' => 'joinDeadline',
+        'condition_callback' => 'conditionDeadline',
+        'operator' => 'AND',
+      ];
+    }
 
-    // Filter on deadline.
-    $definitions['deadline'] = [
-      'type' => 'property',
-      'field' => 'deadline',
-      'label' => $this->t('Deadline'),
-      'form' => 'omnibox',
-      'widget' => 'datepicker',
-      'join_callback' => 'joinDeadline',
-      'condition_callback' => 'conditionDeadline',
-      'operator' => 'AND',
-    ];
-
-    // Filter the author of the nodes.
     $definitions['poster'] = [
       'type' => 'property',
       'field' => 'uid',
@@ -313,9 +394,9 @@ class UserPostsService extends ModerationServiceBase {
       'operator' => 'AND',
       'values' => [
         'me' => $this->t('Me'),
-        'other' => $this->t('Other'),
+        'colleagues' => $this->t('Colleagues'),
       ],
-      // This is handled in ::filterQuery().
+      // Handled in ::filterQuery().
       'join_callback' => '',
       'condition_callback' => '',
     ];
@@ -324,59 +405,71 @@ class UserPostsService extends ModerationServiceBase {
   }
 
   /**
-   * Get taxonomy term suggestions for the given term.
-   *
-   * @param string $filter
-   *   Filter name.
-   * @param string $term
-   *   Autocomplete search term.
-   * @param string $conditions
-   *   Stringified database conditions in the form:
-   *   "(@field = 'bar' AND @field = 'bar')".
-   *   This conditions will be duplicated for each passed field and combined
-   *   into a OR condition.
-   * @param array $replacements
-   *   Value replacements for the search condition.
+   * Get source options for the My posts source filter select.
    *
    * @return array
-   *   List of suggestions. Each suggestion is an object with a value, label
-   *   and optional abbreviation (abbr).
+   *   Associative array with:
+   *   - options: tid => label
+   *   - attributes: tid => attribute map (e.g. data-shortname)
    */
-  protected function getSourcesTheUserHasPostedFor($filter, $term, $conditions, array $replacements) {
+  public function getSourceFilterOptions(): array {
     $user = $this->getUser();
     if (empty($user)) {
-      return [];
+      return [
+        'options' => [],
+        'attributes' => [],
+      ];
     }
 
-    $all_sources = parent::getTaxonomyTermAutocompleteSuggestions($filter, $term, $conditions, $replacements);
-
-    // Filter sources.
-    $sources = [];
-    foreach ($all_sources as $source) {
-      $sources[] = $source->value;
-    }
-
-    $rights = $this->userPostingRightsManager->getUserPostingRights($user, $sources);
-
-    // For editors, we allow returning sources that are blocked for the user.
+    $bundle = $this->getBundle();
     $min_right = $this->currentUser->hasPermission('edit any job content') ? 0 : 1;
+    $tids = [];
 
-    $allowed_sources = [];
-    foreach ($all_sources as $source) {
-      if (isset($rights[$source->value])) {
-        if (isset($rights[$source->value]['job']) && $rights[$source->value]['job'] > $min_right) {
-          $allowed_sources[] = $source;
-        }
-        elseif (isset($rights[$source->value]['training']) && $rights[$source->value]['training'] > $min_right) {
-          $allowed_sources[] = $source;
-        }
-        elseif (isset($rights[$source->value]['report']) && $rights[$source->value]['report'] > $min_right) {
-          $allowed_sources[] = $source;
-        }
+    foreach ($this->userPostingRightsManager->getUserPostingRights($user, []) as $tid => $rights) {
+      if (isset($rights[$bundle]) && (int) $rights[$bundle] > $min_right) {
+        $tids[(int) $tid] = (int) $tid;
       }
     }
 
-    return $allowed_sources;
+    // Also include sources from the user's own posts of this type.
+    $source_table = $this->getFieldTableName('node', 'field_source');
+    $source_field = $this->getFieldColumnName('node', 'field_source', 'target_id');
+    $query = $this->database->select('node_field_data', 'n');
+    $query->innerJoin($source_table, 'source', 'source.entity_id = n.nid');
+    $query->addField('source', $source_field, 'tid');
+    $query->condition('n.uid', $user->id());
+    $query->condition('n.type', $bundle);
+    $query->distinct();
+    foreach ($query->execute() as $row) {
+      $tid = (int) $row->tid;
+      if ($tid > 0) {
+        $tids[$tid] = $tid;
+      }
+    }
+
+    if (empty($tids)) {
+      return [
+        'options' => [],
+        'attributes' => [],
+      ];
+    }
+
+    /** @var \Drupal\taxonomy\TermInterface[] $terms */
+    $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($tids);
+    $options = [];
+    $attributes = [];
+    foreach ($terms as $tid => $term) {
+      $options[$tid] = $term->label();
+      if (!$term->get('field_shortname')->isEmpty()) {
+        $attributes[$tid]['data-shortname'] = $term->get('field_shortname')->value;
+      }
+    }
+    natcasesort($options);
+
+    return [
+      'options' => $options,
+      'attributes' => $attributes,
+    ];
   }
 
   /**
@@ -385,24 +478,22 @@ class UserPostsService extends ModerationServiceBase {
    * @see ::joinField()
    */
   protected function joinDeadline(Select $query, array $definition, $entity_type_id, $entity_base_table, $entity_id_field, $or = FALSE, $values = []) {
-    $table_job = $this->getFieldTableName('node', 'field_job_closing_date');
-    $field_name_job = $this->getFieldColumnName('node', 'field_job_closing_date', 'value');
+    $bundle = $this->getBundle();
+    if ($bundle === 'job') {
+      $table = $this->getFieldTableName('node', 'field_job_closing_date');
+      $field_name = $this->getFieldColumnName('node', 'field_job_closing_date', 'value');
+    }
+    elseif ($bundle === 'training') {
+      $table = $this->getFieldTableName('node', 'field_registration_deadline');
+      $field_name = $this->getFieldColumnName('node', 'field_registration_deadline', 'value');
+    }
+    else {
+      return '';
+    }
 
-    $table_training = $this->getFieldTableName('node', 'field_registration_deadline');
-    $field_name_training = $this->getFieldColumnName('node', 'field_registration_deadline', 'value');
-
-    // Join the job and training deadline tables.
-    $table_alias_job = $query->leftJoin($table_job, $table_job, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
-    $table_alias_training = $query->leftJoin($table_training, $table_training, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
-
-    // Expression to get the deadline value.
-    $expression = "COALESCE({$table_alias_job}.{$field_name_job}, {$table_alias_training}.{$field_name_training})";
-
-    // Add deadline field.
+    $table_alias = $query->leftJoin($table, $table, "%alias.entity_id = {$entity_base_table}.{$entity_id_field}");
+    $expression = "{$table_alias}.{$field_name}";
     $query->addExpression($expression, 'deadline');
-
-    // We have to return the expression instead of its alias for the condition
-    // in ::conditionDeadline() to work.
     return $expression;
   }
 
@@ -427,13 +518,9 @@ class UserPostsService extends ModerationServiceBase {
       $end = isset($value[1]) ? intval($value[1]) : NULL;
     }
 
-    // Should not happen.
     if (empty($start) && empty($end)) {
       return;
     }
-    // The $fields variable is the expression from ::joinDeadline() so we
-    // need to use Condition::where() to add the condition to avoid Drupal
-    // from stripping characters from the expression.
     elseif (empty($start)) {
       $end += 86399;
       $condition->where("UNIX_TIMESTAMP({$fields}) <= {$end}");
@@ -454,54 +541,53 @@ class UserPostsService extends ModerationServiceBase {
     $user = $this->getUser();
 
     // This should never happen, but just in case make sure we don't return
-    // any restults if there is no user.
+    // any results if there is no user.
     if (empty($user)) {
       $query->alwaysFalse();
       return;
     }
 
-    // Extract the poster filter, we'll handle it below.
     $filters['poster'] = array_filter($filters['poster'] ?? []);
+    // Accept legacy "other" key from old bookmarked URLs.
+    if (!empty($filters['poster']['other'])) {
+      $filters['poster']['colleagues'] = $filters['poster']['other'];
+      unset($filters['poster']['other']);
+    }
     $posted_by_me = empty($filters['poster']) || !empty($filters['poster']['me']);
-    $posted_by_other = empty($filters['poster']) || !empty($filters['poster']['other']);
+    $posted_by_colleagues = empty($filters['poster']) || !empty($filters['poster']['colleagues']);
     unset($filters['poster']);
 
-    // Apply any other filtering.
     parent::filterQuery($query, $filters);
 
-    // Retrieve any filtering on the bundles so that we can limit the conditions
-    // on the allowed and blocked sources.
-    $types = [];
-    $filters['bundle'] = array_filter($filters['bundle'] ?? []);
-    if (empty($filters['bundle']) || !empty($filters['bundle']['job'])) {
-      $types[] = 'job';
-    }
-    if (empty($filters['bundle']) || !empty($filters['bundle']['training'])) {
-      $types[] = 'training';
-    }
-    if (empty($filters['bundle']) || !empty($filters['bundle']['report'])) {
-      $types[] = 'report';
-    }
+    $bundle = $this->getBundle();
+    $can_see_colleagues = static::hasAffiliatedAccess($user, $bundle);
 
-    // Get the user rights keyed by source ids and store the ones
-    // for which the user is allowed to post.
-    $allowed = [];
-    $blocked = [];
-    foreach ($this->userPostingRightsManager->getUserPostingRights($user, []) as $tid => $rights) {
-      foreach ($types as $type) {
-        if (isset($rights[$type])) {
-          if ($rights[$type] > 1) {
-            $allowed[$type][$tid] = $tid;
-          }
-          elseif ($rights[$type] == 1) {
-            $blocked[$type][$tid] = $tid;
-          }
-        }
+    // Without affiliated access, colleagues' posts are never included.
+    if (!$can_see_colleagues) {
+      $posted_by_colleagues = FALSE;
+      if (!$posted_by_me) {
+        $query->alwaysFalse();
+        return;
       }
     }
 
-    // We cannot retrieve any content if the user is not allowed for any source
-    // and "other" is selected as filter so bail out.
+    $allowed = [];
+    $blocked = [];
+
+    foreach ($this->userPostingRightsManager->getUserPostingRights($user, []) as $tid => $rights) {
+      if (!isset($rights[$bundle])) {
+        continue;
+      }
+      if ($rights[$bundle] > 1) {
+        if ($can_see_colleagues) {
+          $allowed[$tid] = $tid;
+        }
+      }
+      elseif ($rights[$bundle] == 1) {
+        $blocked[$tid] = $tid;
+      }
+    }
+
     if (!$posted_by_me && empty($allowed)) {
       $query->alwaysFalse();
       return;
@@ -512,8 +598,6 @@ class UserPostsService extends ModerationServiceBase {
     $source_table = $this->getFieldTableName('node', 'field_source');
     $source_field = $this->getFieldColumnName('node', 'field_source', 'target_id');
 
-    // Retrieve the entity table (node) and the source field table if joined
-    // already.
     $node_table_alias = '';
     $source_table_alias = '';
     foreach ($query->getTables() as $alias => $info) {
@@ -527,75 +611,61 @@ class UserPostsService extends ModerationServiceBase {
       }
     }
 
-    // Join the node table if it was not already.
     if (empty($node_table_alias)) {
-      // The base table alias for the query is the content moderation table.
       $base_table_alias = $this->getQueryBaseTableAlias($query);
       $node_table_alias = $query->innerJoin($node_table, $node_table, "%alias.{$node_id_field} = {$base_table_alias}.content_entity_id");
     }
 
-    // Join the source table if it was not already.
     if (empty($source_table_alias)) {
-      // Left join because to be able to retrieve posts without a source.
-      $source_table_alias = $query->leftJoin($source_table, $source_table, "%alias.entity_id = {$node_table}.{$node_id_field}");
-    }
-
-    if ($posted_by_me and !$posted_by_other) {
-      $query->condition($node_table_alias . '.uid', $user->id(), '=');
-    }
-    elseif ($posted_by_other and !$posted_by_me) {
-      $query->condition($node_table_alias . '.uid', $user->id(), '<>');
+      $source_table_alias = $query->leftJoin($source_table, $source_table, "%alias.entity_id = {$node_table_alias}.{$node_id_field}");
     }
 
     $poster_condition = NULL;
 
     // Posted by me only.
-    if ($posted_by_me && !$posted_by_other) {
+    if ($posted_by_me && !$posted_by_colleagues) {
       $query->condition($node_table_alias . '.uid', $user->id(), '=');
     }
-    // Posted by me or other.
-    elseif ($posted_by_me && $posted_by_other) {
+    // Posted by me or colleagues.
+    elseif ($posted_by_me && $posted_by_colleagues) {
       $poster_condition = $query->orConditionGroup();
       $poster_condition->condition($node_table_alias . '.uid', $user->id(), '=');
     }
-    // Poster by other.
+    // Posted by colleagues only.
     else {
       $poster_condition = $query->andConditionGroup();
       $poster_condition->condition($node_table_alias . '.uid', $user->id(), '<>');
     }
 
-    // Posts from the organizations the user is allowed to post for.
+    // Posts from organizations the user is allowed to post for.
     if (!empty($poster_condition)) {
       $allowed_condition = $query->orConditionGroup();
-      foreach ($types as $type) {
-        if (!empty($allowed[$type])) {
-          // Ex: "(type = 'training' AND source_id IN (...))".
-          $condition = $query->andConditionGroup()
-            ->condition($source_table_alias . '.bundle', $type, '=')
-            ->condition($source_table_alias . '.' . $source_field, array_keys($allowed[$type]), 'IN');
-          $allowed_condition->condition($condition);
-        }
+      if (!empty($allowed)) {
+        $condition = $query->andConditionGroup()
+          ->condition($source_table_alias . '.bundle', $bundle, '=')
+          ->condition($source_table_alias . '.' . $source_field, array_keys($allowed), 'IN');
+        $allowed_condition->condition($condition);
       }
       if ($allowed_condition->count() > 0) {
         $poster_condition->condition($allowed_condition);
       }
+      elseif (!$posted_by_me) {
+        // Colleagues selected but no allowed sources.
+        $query->alwaysFalse();
+        return;
+      }
       $query->condition($poster_condition);
     }
 
-    // Filter out docs with sources the user is blocked for, except if the
-    // current user is an Editor so that the user can see all the posts.
+    // Filter out docs with sources the user is blocked for, except editors.
     if (!empty($blocked) && !$this->currentUser->hasPermission('edit any job content')) {
-      foreach ($types as $type) {
-        if (!empty($blocked[$type])) {
-          $type_source_alias = $source_table_alias . '_' . $type;
-          $type_source_join = "%alias.entity_id = {$node_table}.{$node_id_field} AND %alias.bundle = :type AND %alias.{$source_field} IN (:sources[])";
-          $query->leftJoin($source_table, $type_source_alias, $type_source_join, [
-            ':type' => $type,
-            ':sources[]' => array_keys($blocked[$type]),
-          ]);
-          $query->isNull($type_source_alias . '.entity_id');
-        }
-      }
+      $type_source_alias = $source_table_alias . '_' . $bundle;
+      $type_source_join = "%alias.entity_id = {$node_table_alias}.{$node_id_field} AND %alias.bundle = :type AND %alias.{$source_field} IN (:sources[])";
+      $query->leftJoin($source_table, $type_source_alias, $type_source_join, [
+        ':type' => $bundle,
+        ':sources[]' => array_keys($blocked),
+      ]);
+      $query->isNull($type_source_alias . '.entity_id');
     }
   }
 
@@ -603,48 +673,38 @@ class UserPostsService extends ModerationServiceBase {
    * {@inheritdoc}
    */
   protected function wrapQuery(Select $query, $limit = 30) {
-    // Get the order information.
+    if (!$this->hasDeadlineColumn()) {
+      return parent::wrapQuery($query, $limit);
+    }
+
     $info = $this->getOrderInformation();
     $sort_direction = $info['sort'] ?? 'desc';
 
-    // Special handling of the headline sorting.
     $deadline_alias = '';
     if (isset($info['order']) && $info['order'] === 'deadline') {
-      // Check if the join for the headline field was already performed.
       foreach ($query->getExpressions() as $expression) {
-        if (strpos($expression['alias'], 'headline') === 0) {
+        if (($expression['alias'] ?? '') === 'deadline') {
           $deadline_alias = $expression['alias'];
           break;
         }
       }
 
-      // If not, join the tables.
       if (empty($deadline_alias)) {
-        // Entity information.
         $entity_type_id = $this->getEntityTypeId();
         $entity_base_table = $this->getEntityTypeDataTable($entity_type_id);
         $entity_id_field = $this->getEntityTypeIdField($entity_type_id);
-
-        // Filter definition.
         $definition = $this->getFilterDefinitions()['deadline'];
-
-        // Join the deadline tables.
         $deadline_alias = $this->joinDeadline($query, $definition, $entity_type_id, $entity_base_table, $entity_id_field);
       }
     }
 
-    // Let the parent wrap the query.
     $wrapper = parent::wrapQuery($query, $limit);
 
-    // Add the sort property to the wrapper query.
     if (!empty($deadline_alias)) {
-      // Clear existing order.
       $existing_order = &$wrapper->getOrderBy();
       $existing_order = [];
-
-      // Add field and order.
       $wrapper->addField('subquery', 'deadline');
-      $wrapper->orderBy("subquery.deadline", $sort_direction);
+      $wrapper->orderBy('subquery.deadline', $sort_direction);
     }
 
     return $wrapper;

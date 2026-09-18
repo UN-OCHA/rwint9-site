@@ -1,4 +1,43 @@
 services:
-  reliefweb_moderation.user_posts.moderation:
-    class: Drupal\reliefweb_user_posts\Services\UserPostsService
-    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', '@current_route_match']
+  reliefweb_moderation.user_posts_report.moderation:
+    class: Drupal\reliefweb_user_posts\Services\UserPostsReportService
+    arguments:
+      - '@current_user'
+      - '@database'
+      - '@date.formatter'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@pager.manager'
+      - '@pager.parameters'
+      - '@request_stack'
+      - '@string_translation'
+      - '@reliefweb_moderation.user_posting_rights'
+      - '@current_route_match'
+  reliefweb_moderation.user_posts_job.moderation:
+    class: Drupal\reliefweb_user_posts\Services\UserPostsJobService
+    arguments:
+      - '@current_user'
+      - '@database'
+      - '@date.formatter'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@pager.manager'
+      - '@pager.parameters'
+      - '@request_stack'
+      - '@string_translation'
+      - '@reliefweb_moderation.user_posting_rights'
+      - '@current_route_match'
+  reliefweb_moderation.user_posts_training.moderation:
+    class: Drupal\reliefweb_user_posts\Services\UserPostsTrainingService
+    arguments:
+      - '@current_user'
+      - '@database'
+      - '@date.formatter'
+      - '@entity_field.manager'
+      - '@entity_type.manager'
+      - '@pager.manager'
+      - '@pager.parameters'
+      - '@request_stack'
+      - '@string_translation'
+      - '@reliefweb_moderation.user_posting_rights'
+      - '@current_route_match'

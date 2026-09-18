@@ -1,0 +1,219 @@
+/* My posts pages: overview and content type lists. */
+.rw-user-posts {
+  padding-top: 24px;
+}
+.rw-user-posts .rw-river-views {
+  margin-bottom: 2rem;
+}
+.rw-user-posts-intro {
+  margin-bottom: 24px;
+  padding-bottom: 24px;
+  text-align: center;
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
+}
+
+/* Overview cards: browse posts by type (whole card is the link). */
+.rw-user-posts-overview__list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rw-user-posts-overview__item {
+  display: flex;
+  border: 1px solid var(--cd-reliefweb-brand-grey--light);
+  background: var(--cd-white);
+}
+.rw-user-posts-overview__link {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  padding: 16px;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  color: var(--cd-reliefweb-brand-grey--dark);
+}
+.rw-user-posts-overview__item:hover,
+.rw-user-posts-overview__item:focus-within {
+  border-color: var(--cd-reliefweb-brand-blue--dark);
+  box-shadow: 0 0 0 1px var(--cd-reliefweb-brand-blue--dark);
+}
+.rw-user-posts-overview__link:hover,
+.rw-user-posts-overview__link:focus {
+  outline: none;
+  background: rgb(var(--cd-rgb-reliefweb-brand-blue--dark), 0.06);
+}
+.rw-user-posts-overview__label {
+  font-size: 18px;
+  font-weight: bold;
+}
+.rw-user-posts-overview__split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-top: 18px;
+  background: var(--cd-reliefweb-brand-grey--light);
+}
+.rw-user-posts-overview__split--single {
+  grid-template-columns: 1fr;
+}
+.rw-user-posts-overview__split-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px 18px;
+}
+.rw-user-posts-overview__split-cell + .rw-user-posts-overview__split-cell {
+  border-left: 1px solid var(--cd-white);
+}
+.rw-user-posts-overview__split-value {
+  font-size: 28px;
+  font-weight: bold;
+  line-height: 1.1;
+}
+.rw-user-posts-overview__split-label {
+  color: var(--cd-reliefweb-brand-grey--dark);
+  font-size: 14px;
+  line-height: 1.3;
+}
+.rw-user-posts-overview__orgs {
+  margin-top: 18px;
+  padding-bottom: 18px;
+  color: var(--cd-reliefweb-brand-grey--dark);
+  border-bottom: 1px solid var(--cd-reliefweb-brand-grey--light);
+  font-size: 16px;
+  line-height: 1.35;
+}
+.rw-user-posts-overview__orgs--muted {
+  color: var(--cd-reliefweb-brand-grey--mid);
+}
+.rw-user-posts-overview__view {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: auto;
+  padding-top: 16px;
+  color: var(--cd-reliefweb-brand-blue--dark);
+  font-size: 16px;
+  font-weight: bold;
+}
+.rw-user-posts-overview__view::after {
+  display: inline-block;
+  flex: 0 0 12px;
+  width: 12px;
+  height: 12px;
+  content: "";
+  background: var(--rw-icons--common--arrow-right--12--dark-blue);
+}
+.rw-user-posts-overview__link:hover .rw-user-posts-overview__view,
+.rw-user-posts-overview__link:focus .rw-user-posts-overview__view {
+  text-decoration: underline;
+}
+.rw-user-posts-overview__empty {
+  margin: 0;
+}
+
+/* Display "other" filters on separate lines. */
+.rw-moderation-filters--user-posts .rw-moderation-filter-other .fieldset-wrapper > fieldset + fieldset {
+  display: block;
+  margin-top: 24px;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-source {
+  margin-top: 24px;
+  margin-bottom: 16px;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-text,
+.rw-moderation-filters--user-posts .rw-moderation-filter-date {
+  margin-top: 16px;
+  margin-bottom: 8px;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+  align-items: flex-end;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-text .form-item {
+  margin: 0;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-title {
+  flex: 1 1 20rem;
+  min-width: 16rem;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-title input[type="text"] {
+  width: 100%;
+  max-width: 100%;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-nid input[type="text"] {
+  width: 8rem;
+  max-width: 100%;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-date .fieldset-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px 24px;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-date .form-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-date .form-item label {
+  margin: 0;
+  white-space: nowrap;
+}
+.rw-moderation-filters--user-posts .rw-moderation-filter-date input[type="text"] {
+  width: 16rem;
+  max-width: 100%;
+}
+/* User posts source list */
+.rw-moderation-list--user-posts .rw-moderation-table ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* Status is column 2 on My posts; do not use the global "main column" width. */
+.rw-moderation-list--user-posts .rw-moderation-table tr td:nth-child(2) {
+  width: auto;
+  word-break: unset;
+}
+.rw-moderation-list--user-posts .rw-moderation-table__cell--id {
+  font-size: 15px;
+}
+/* Title is the expandable column on My posts. */
+.rw-moderation-list--user-posts .rw-moderation-table__cell--title {
+  width: 100%;
+  overflow-wrap: break-word;
+}
+/* User posts status column */
+.rw-moderation-list--user-posts td .rw-moderation-status[data-moderation-status] {
+  margin: 0;
+}
+.rw-moderation-list--user-posts .rw-moderation-table__cell--poster {
+  font-size: 16px;
+
+  .rw-user-posts-poster--me {
+    font-weight: bold;
+  }
+}
+/* User posts posted and deadline date columns */
+.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
+.rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
+  text-align: center;
+  white-space: unset;
+  font-size: 15px;
+}
+/* Prevent the Sortable icon from break to a new line */
+.rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__header--date {
+  white-space: nowrap;
+}
+
+@media screen and (min-width: 768px) {
+  .rw-moderation-list--user-posts .rw-moderation-table .rw-moderation-table__cell__date,
+  .rw-moderation-list--user-posts .rw-moderation-table tr td:last-child {
+    white-space: nowrap;
+  }
+}

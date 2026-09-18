@@ -686,7 +686,7 @@
         var input = document.createElement('input');
         input.setAttribute('type', 'search');
         input.setAttribute('autocomplete', 'off');
-        input.setAttribute('placeholder', t('type and select...'));
+        input.setAttribute('placeholder', parent.getAttribute('data-autocomplete-placeholder') || t('type and select...'));
         input.setAttribute('id', id);
         input.classList.add('rw-autocomplete-input');
 

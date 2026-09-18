@@ -115,9 +115,12 @@
           return;
         }
 
-        var value = input.value;
+        var value = input.value.trim();
+        // Empty is allowed when the widget was enabled with
+        // data-with-datepicker="optional" (e.g. filter forms).
+        var optional = input.getAttribute('data-with-datepicker') === 'optional';
         var date = parseDateValue(datepicker, value, format, false);
-        var valid = date && !date.invalid() && date.format(format) === value;
+        var valid = (value === '' && optional) || (date && !date.invalid() && date.format(format) === value);
 
         // Show an error message if the input is not a valid date.
         if (clear !== true && !valid && !datepicker.visible()) {

@@ -1,0 +1,66 @@
+{#
+
+/**
+ * @file
+ * Template for the My posts overview page.
+ *
+ * Available variables:
+ * - attributes: wrapper attributes.
+ * - intro: links for creating available post types.
+ * - tabs: navigation tabs.
+ * - sections: list of content type cards with stats and links.
+ * - empty: message when the user has no available content types.
+ */
+
+#}
+{% set attributes = attributes|default(create_attribute()) %}
+<div{{ attributes.addClass('rw-user-posts', 'rw-user-posts-overview') }}>
+  {% if intro %}
+    <section class="rw-user-posts-intro">
+      <h2 class="visually-hidden">{{ 'Create'|t }}</h2>
+      {{ intro }}
+    </section>
+  {% endif %}
+
+  {% if tabs %}
+    {{ tabs }}
+  {% endif %}
+
+  {% if sections is not empty %}
+    <ul class="rw-user-posts-overview__list">
+      {% for section in sections %}
+        <li class="rw-user-posts-overview__item rw-user-posts-overview__item--{{ section.bundle }}">
+          <a class="rw-user-posts-overview__link" href="{{ section.url }}">
+            <span class="rw-user-posts-overview__label">{{ section.label }}</span>
+            <span class="rw-user-posts-overview__split{% if section.colleagues is null %} rw-user-posts-overview__split--single{% endif %}">
+              <span class="rw-user-posts-overview__split-cell">
+                <span class="rw-user-posts-overview__split-value">{{ section.mine|number_format }}</span>
+                <span class="rw-user-posts-overview__split-label">{{ 'Posted by you'|t }}</span>
+              </span>
+              {% if section.colleagues is not null %}
+                <span class="rw-user-posts-overview__split-cell">
+                  <span class="rw-user-posts-overview__split-value">{{ section.colleagues|number_format }}</span>
+                  <span class="rw-user-posts-overview__split-label">{{ 'By colleagues'|t }}</span>
+                </span>
+              {% endif %}
+            </span>
+            <span class="rw-user-posts-overview__orgs{% if not section.organizations %} rw-user-posts-overview__orgs--muted{% endif %}">
+              {% if section.organizations %}
+                {% trans with {'@count': section.organizations|number_format} %}
+                  <strong>1</strong> linked organization
+                {% plural section.organizations %}
+                  <strong>@count</strong> linked organizations
+                {% endtrans %}
+              {% else %}
+                {{ 'No linked organizations'|t }}
+              {% endif %}
+            </span>
+            <span class="rw-user-posts-overview__view">{{ section.view_label }}</span>
+          </a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elseif empty %}
+    <p class="rw-user-posts-overview__empty">{{ empty }}</p>
+  {% endif %}
+</div>
