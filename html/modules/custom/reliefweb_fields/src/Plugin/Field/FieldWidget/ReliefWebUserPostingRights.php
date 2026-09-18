@@ -12,6 +12,7 @@ use Drupal\Core\Url;
 use Drupal\field\Entity\FieldConfig;
 use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DomainHelper;
 use Drupal\user\UserInterface;
 
@@ -535,11 +536,13 @@ class ReliefWebUserPostingRights extends WidgetBase implements ContainerFactoryP
 
         // Set the revision log. Not using `t` as it's an editorial message
         // that should always be in English.
-        $entity->setRevisionLogMessage(strtr('Automatic update of the !fields !plural due to changes to user #!uid.', [
-          '!fields' => implode(', ', $fields),
-          '!plural' => count($fields) > 1 ? 'fields' : 'field',
-          '!uid' => $user->id(),
-        ]));
+        if ($entity instanceof EntityRevisionedInterface) {
+          $entity->updateRevisionLogMessage(strtr('Automatic update of the !fields !plural due to changes to user #!uid.', [
+            '!fields' => implode(', ', $fields),
+            '!plural' => count($fields) > 1 ? 'fields' : 'field',
+            '!uid' => $user->id(),
+          ]), 'replace', FALSE);
+        }
 
         // Force a new revision.
         $entity->setNewRevision(TRUE);

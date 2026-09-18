@@ -5,7 +5,11 @@ This module provides a [service](src/Services/EntityHistory.php) to display an e
 
 ## Revisioned entities
 
-This module provides an [interface](src/EntityRevisionedInterface.php) and a [trait](src/EntityRevisionedTrait.php) to make help retrieve an entity's history.
+This module provides an [interface](src/EntityRevisionedInterface.php) and a [trait](src/EntityRevisionedTrait.php) to help retrieve an entity's history and update revision log messages.
+
+Use `EntityRevisionedInterface::updateRevisionLogMessage()` (append / prepend / replace, with optional skip-if-present and separator) instead of calling `setRevisionLogMessage()` directly so editorial notes are not duplicated across saves. When skip-if-present is enabled, a message is considered present only if it matches a full clause after normalization (not a substring).
+
+String merge, deduplication, and display formatting live in [`RevisionLogHelper`](../reliefweb_utility/src/Helpers/RevisionLogHelper.php) (`reliefweb_utility`); the trait wraps `updateMessage()` for entity fields. Call the helper directly when you only have a string (for example form state values) or need `formatMessage()` for display.
 
 This interface is used by the [reliefweb_entities](../reliefweb_entities) module for the content entities.
 

@@ -9,7 +9,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\EntityFieldManagerInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Session\AccountInterface;
@@ -46,6 +45,8 @@ use PHPUnit\Framework\Attributes\Group;
 #[CoversClass(ReportSeriesMatchClassificationHooks::class)]
 #[Group('reliefweb_content_analyzer')]
 class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
+
+  use RevisionLogMockTrait;
 
   /**
    * Default workflow config shared by hook tests.
@@ -884,13 +885,9 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     $entity->method('bundle')->willReturn('report');
     $entity->method('hasField')->willReturn(FALSE);
     $entity->method('getModerationStatus')->willReturn('published');
-    $entity->method('getRevisionLogMessage')->willReturn('Import log.');
 
-    $capturedMessage = NULL;
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessage): void {
-        $capturedMessage = $msg;
-      });
+    $log = 'Import log.';
+    $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresave($entity);
 
@@ -901,20 +898,17 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     );
 
     // A detection message was appended to the revision log.
-    $this->assertNotNull($capturedMessage, 'setRevisionLogMessage should have been called.');
-
-    // The original log is preserved at the start of the combined message.
-    $this->assertStringStartsWith('Import log.', $capturedMessage);
+    $this->assertStringStartsWith('Import log.', $log);
 
     // The series found clause is present.
     $this->assertStringContainsString(
       'Series found (3 similar reports over 24 months, 100% confidence).',
-      $capturedMessage,
+      $log,
     );
 
     // The interim draft moderation clause is present.
     $draft_clause = 'Moderation status: draft (original: published, reason: interim while applying series tagging).';
-    $this->assertStringContainsString($draft_clause, $capturedMessage);
+    $this->assertStringContainsString($draft_clause, $log);
   }
 
   /**
@@ -924,13 +918,12 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
    * appendDetectionRevisionLog.
    */
   public function testEntityPresaveDetectionLogOmitsModerationClauseForNonModeratedEntity(): void {
-    // Build a non-moderated entity (no EntityModeratedInterface).
-    // We use a plain RevisionLogInterface + ContentEntityInterface mock.
-    $nonModerated = $this->createMock(RevisionLogInterface::class);
+    // Build a non-moderated revisioned entity (no EntityModeratedInterface).
+    $nonModerated = $this->createMock(SeriesMatchTestEntityInterface::class);
 
-    // Since the entity does not extend ContentEntityInterface,
-    // shouldAttemptSeriesMatch will return FALSE immediately. So we test the
-    // builder directly via reflection.
+    // Since the entity does not extend ContentEntityInterface in a useful way
+    // for shouldAttemptSeriesMatch in this unit path, test the builder and
+    // appendDetectionRevisionLog directly via reflection.
     $hooks = $this->buildHooks();
     $result = $this->buildHighConfidenceResult();
 
@@ -948,12 +941,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
 
     // appendDetectionRevisionLog with NULL pre_draft_status should only append
     // the series found clause (no moderation line).
-    $capturedMessages = [];
-    $nonModerated->method('getRevisionLogMessage')->willReturn('');
-    $nonModerated->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessages): void {
-        $capturedMessages[] = $msg;
-      });
+    $log = '';
+    $this->wireRevisionLogMock($nonModerated, $log);
 
     $appendMethod = new \ReflectionMethod(
       ReportSeriesMatchClassificationHooks::class,
@@ -961,12 +950,11 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     );
     $appendMethod->invoke($hooks, $nonModerated, $result, 1.0, NULL);
 
-    $this->assertCount(1, $capturedMessages);
     $this->assertSame(
       'Series found (3 similar reports over 24 months, 100% confidence).',
-      $capturedMessages[0],
+      $log,
     );
-    $this->assertStringNotContainsString('Moderation status', $capturedMessages[0]);
+    $this->assertStringNotContainsString('Moderation status', $log);
   }
 
   /**
@@ -988,20 +976,13 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
       'to-review' => 'To review',
       'published' => 'Published',
     ]);
-    $entity->method('getRevisionLogMessage')->willReturn('Series found (...).');
-
-    $capturedMessages = [];
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessages): void {
-        $capturedMessages[] = $msg;
-      });
+    $log = 'Series found (...).';
+    $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresaveModerationAfterPostingRights($entity);
 
-    $this->assertNotEmpty($capturedMessages);
-    $final = end($capturedMessages);
     $high_clause = 'Moderation status: to-review (original: to-review, reason: high-confidence series match).';
-    $this->assertStringContainsString($high_clause, $final);
+    $this->assertStringContainsString($high_clause, $log);
   }
 
   /**
@@ -1022,13 +1003,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
       'pending' => 'Pending',
       'published' => 'Published',
     ]);
-    $entity->method('getRevisionLogMessage')->willReturn('Series found (...).');
-
-    $capturedMessages = [];
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessages): void {
-        $capturedMessages[] = $msg;
-      });
+    $log = 'Series found (...).';
+    $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresaveModerationAfterPostingRights($entity);
 
@@ -1039,10 +1015,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     );
 
     // Revision log records the actual applied status, original, and reason.
-    $this->assertNotEmpty($capturedMessages);
-    $final = end($capturedMessages);
     $low_clause = 'Moderation status: pending (original: published, reason: low-confidence series match).';
-    $this->assertStringContainsString($low_clause, $final);
+    $this->assertStringContainsString($low_clause, $log);
   }
 
   /**
@@ -1064,13 +1038,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
       'to-review' => 'To review',
       'published' => 'Published',
     ]);
-    $entity->method('getRevisionLogMessage')->willReturn('Series found (...).');
-
-    $capturedMessages = [];
-    $entity->method('setRevisionLogMessage')
-      ->willReturnCallback(static function (string $msg) use (&$capturedMessages): void {
-        $capturedMessages[] = $msg;
-      });
+    $log = 'Series found (...).';
+    $this->wireRevisionLogMock($entity, $log);
 
     // Status is already 'pending' (equal to final) — no status change.
     $entity->expects($this->never())->method('setModerationStatus');
@@ -1078,13 +1047,8 @@ class ReportSeriesMatchClassificationHooksTest extends UnitTestCase {
     $hooks->entityPresaveModerationAfterPostingRights($entity);
 
     // The revision log clause is appended despite no status setter call.
-    $this->assertNotEmpty(
-      $capturedMessages,
-      'Revision log should be updated even when status does not change.',
-    );
-    $final = end($capturedMessages);
-    $this->assertStringContainsString('Moderation status: pending', $final);
-    $this->assertStringContainsString('high-confidence series match', $final);
+    $this->assertStringContainsString('Moderation status: pending', $log);
+    $this->assertStringContainsString('high-confidence series match', $log);
   }
 
   /**

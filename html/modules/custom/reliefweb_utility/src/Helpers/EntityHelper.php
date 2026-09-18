@@ -3,7 +3,6 @@
 namespace Drupal\reliefweb_utility\Helpers;
 
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Render\Markup;
 use Drupal\Core\Routing\RouteMatch;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -99,27 +98,6 @@ class EntityHelper {
   public static function getBundleLabel($entity_type_id, $bundle) {
     $bundle_info = \Drupal::service('entity_type.bundle.info')->getBundleInfo($entity_type_id);
     return $bundle_info[$bundle]['label'] ?? $bundle;
-  }
-
-  /**
-   * Format a revision log message.
-   *
-   * @param string $message
-   *   Revision log message.
-   *
-   * @return \Drupal\Component\Render\MarkupInterface
-   *   Formatted revision log message wrapped in a MarkupInterface so it's not
-   *   escaped a second time when rendered in a template.
-   */
-  public static function formatRevisionLogMessage($message) {
-    if (!empty($message)) {
-      $message = MarkdownHelper::convertInlinesOnly($message);
-      $message = HtmlSanitizer::sanitize($message);
-    }
-    else {
-      $message = '';
-    }
-    return Markup::create($message);
   }
 
 }

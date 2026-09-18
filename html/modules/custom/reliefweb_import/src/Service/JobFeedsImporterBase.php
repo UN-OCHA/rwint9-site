@@ -599,10 +599,10 @@ class JobFeedsImporterBase {
     $formatted_errors = $this->formatImportErrorsForRevisionLog($job);
     $formatted_messages = $this->formatImportMessagesForRevisionLog($job);
     if (!empty($formatted_messages)) {
-      $job->setRevisionLogMessage(implode(' ', array_merge([$log], $formatted_messages)));
+      $job->updateRevisionLogMessage(implode(' ', array_merge([$log], $formatted_messages)), 'replace', FALSE);
     }
     else {
-      $job->setRevisionLogMessage($log);
+      $job->updateRevisionLogMessage($log, 'replace', FALSE);
     }
 
     // Ensure notifications are disabled.
