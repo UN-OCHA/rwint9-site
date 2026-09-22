@@ -136,8 +136,8 @@ report_series_matching:
     download_missing_attachment: false
     download_missing_attachment_source_url: 'https://reliefweb.int'
 report_duplicate_matching:
-  automation_enabled_form_created: false
-  automation_enabled_imported: false
+  automation_enabled_form_created: true
+  automation_enabled_imported: true
   skip_with_attachments: false
   filter_by_source: true
   lookback_days: 7
