@@ -25,4 +25,11 @@ class ReportModerationTest extends NodeModerationServiceTestBase {
     return \Drupal::service('reliefweb_moderation.report.moderation');
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  protected function getExpectedTerminalStatuses(): array {
+    return ['refused', 'duplicate', 'archive'];
+  }
+
 }

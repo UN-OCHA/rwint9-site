@@ -5,7 +5,6 @@ namespace Drupal\reliefweb_moderation\Services;
 use Drupal\Core\Database\Query\Select;
 use Drupal\Core\Database\Statement\FetchAs;
 use Drupal\Core\Link;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\node\NodeInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
@@ -269,6 +268,13 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
+  public function getTerminalStatuses(): array {
+    return ['refused', 'duplicate', 'archive'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getEntityFormSubmitButtons($status, EntityModeratedInterface $entity) {
     if (UserHelper::userHasRoles(['editor'])) {
       return $this->getButtonsForEditors($status, $entity);
@@ -327,21 +333,21 @@ class ReportModeration extends ModerationServiceBase {
 
     // Allow to refuse content submitted via the API or already refused
     // documents.
-    if (($api_submitted || $status === 'refused') && $account->hasPermission('edit refused content')) {
+    if (($api_submitted || $status === 'refused') && $account->hasPermission(static::getTerminalStatusPermission('refused'))) {
       $buttons['refused'] = [
         '#value' => $this->t('Refused'),
       ];
     }
 
     // Allow editors with permission to mark reports as duplicates.
-    if ($account->hasPermission('edit duplicate content')) {
+    if ($account->hasPermission(static::getTerminalStatusPermission('duplicate'))) {
       $buttons['duplicate'] = [
         '#value' => $this->t('Duplicate'),
       ];
     }
 
     // Allow to archive documents.
-    if ($account->hasPermission('edit archived content')) {
+    if ($account->hasPermission(static::getTerminalStatusPermission('archive'))) {
       $buttons['archive'] = [
         '#value' => $this->t('Archive'),
       ];
@@ -443,19 +449,6 @@ class ReportModeration extends ModerationServiceBase {
    */
   public function isPublishedStatus($status) {
     return $status === 'to-review' || $status === 'published';
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    $account = $account ?: $this->currentUser;
-    return match ($status) {
-      'archive' => $account->hasPermission('edit archived content'),
-      'refused' => $account->hasPermission('edit refused content'),
-      'duplicate' => $account->hasPermission('edit duplicate content'),
-      default => TRUE,
-    };
   }
 
   /**

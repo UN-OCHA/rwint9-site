@@ -101,7 +101,7 @@ permissions:
   - 'delete terms in training_type'
   - 'delete terms in vulnerable_group'
   - 'edit any guideline content'
-  - 'edit archived content'
+  - 'edit archive content'
   - 'edit own guideline content'
   - 'edit refused content'
   - 'edit terms in career_category'

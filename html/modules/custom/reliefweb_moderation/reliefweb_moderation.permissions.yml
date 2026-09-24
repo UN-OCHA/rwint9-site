@@ -14,18 +14,6 @@ view any content:
   title: 'View any content'
   description: 'Allow users to view any content.'
 
-edit archived content:
-  title: 'Edit archived content'
-  description: 'Allow users to edit archived content.'
-
-edit duplicate content:
-  title: 'Edit duplicate content'
-  description: 'Allow users to edit duplicate content.'
-
-edit refused content:
-  title: 'Edit refused content'
-  description: 'Allow users to edit refused content.'
-
 manage external disasters:
   title: 'Manage external disasters'
   description: 'Allow users to manage external disasters.'
@@ -80,3 +68,4 @@ access role capabilities overview:
 permission_callbacks:
   - \Drupal\reliefweb_moderation\AffiliatedContentPermissions::permissions
   - \Drupal\reliefweb_moderation\ContentPermissions::permissions
+  - \Drupal\reliefweb_moderation\TerminalStatusPermissions::permissions

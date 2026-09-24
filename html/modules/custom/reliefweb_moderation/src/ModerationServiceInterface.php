@@ -120,6 +120,29 @@ interface ModerationServiceInterface {
   public function isEditableStatus($status, ?AccountInterface $account = NULL);
 
   /**
+   * Get statuses that are terminal for external resubmission (e.g. Post API).
+   *
+   * Entities in these statuses must not be updated via partner submissions.
+   * Editorial users may still edit them when they have the matching
+   * permission from ::getTerminalStatusPermission().
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getTerminalStatuses(): array;
+
+  /**
+   * Get the permission name to edit content in a terminal status.
+   *
+   * @param string $status
+   *   Moderation status machine name.
+   *
+   * @return string
+   *   Permission name (edit {status} content).
+   */
+  public static function getTerminalStatusPermission(string $status): string;
+
+  /**
    * Check if an entity with the given status is deletable for the account.
    *
    * @param string $status

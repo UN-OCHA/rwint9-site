@@ -27,6 +27,7 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Validation\Constraint\ReliefWebFileHashConstraint;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
@@ -271,10 +272,15 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $hash = $data['hash'] ?? HashHelper::generateHash($data, ['provider', 'user']);
     $this->setField($entity, 'field_post_api_hash', $hash);
 
-    // Set the new status.
+    // Set the moderation status.
+    // - Explicit status (importers) wins.
+    // - Creates use the provider default intake status.
+    // - Updates re-enter the workflow as pending so posting rights re-run in
+    //   preSave (trusted may return to published; others stay pending, etc.).
     $status = match (TRUE) {
       !empty($data['status']) => $data['status'],
-      default => $provider->getDefaultResourceStatus(),
+      $entity->isNew() => $provider->getDefaultResourceStatus(),
+      default => 'pending',
     };
     $entity->setModerationStatus($status);
 
@@ -301,19 +307,128 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function isProcessable(string $uuid): bool {
+    $terminal_statuses = $this->getTerminalModerationStatuses();
+    if ($terminal_statuses === []) {
+      return TRUE;
+    }
+
     $storage = $this->entityTypeManager->getStorage($this->getEntityType());
     $uuid_key = $storage->getEntityType()->getKey('uuid');
 
-    // Check if the entity is marked as refused, in which case it cannot be
-    // processed.
+    // Terminal editorial statuses: do not accept further submissions.
     $ids = $storage
       ->getQuery()
       ->accessCheck(FALSE)
       ->condition($uuid_key, $uuid, '=')
-      ->condition('moderation_status', 'refused', '=')
+      ->condition('moderation_status', $terminal_statuses, 'IN')
       ->execute();
 
     return empty($ids);
+  }
+
+  /**
+   * Terminal moderation statuses that block further Post API processing.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  protected function getTerminalModerationStatuses(): array {
+    $service = ModerationServiceBase::getModerationService($this->getBundle());
+    return $service ? $service->getTerminalStatuses() : [];
+  }
+
+  /**
+   * Ensure an existing entity matches the plugin bundle.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Entity being processed.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   When the entity bundle does not match this plugin.
+   */
+  protected function validateEntityBundle(ContentEntityInterface $entity): void {
+    if ($entity->isNew()) {
+      return;
+    }
+
+    $bundle = $this->getBundle();
+    if ($entity->bundle() !== $bundle) {
+      throw new ContentProcessorException(strtr('Existing entity with the UUID @uuid is not a @bundle.', [
+        '@uuid' => $entity->uuid(),
+        '@bundle' => $bundle,
+      ]));
+    }
+  }
+
+  /**
+   * Ensure an existing entity is not in a terminal moderation status.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Entity being processed.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   When the entity is in a terminal moderation status.
+   */
+  protected function validateEntityProcessable(ContentEntityInterface $entity): void {
+    if ($entity->isNew() || !method_exists($entity, 'getModerationStatus')) {
+      return;
+    }
+
+    $status = $entity->getModerationStatus();
+    if (in_array($status, $this->getTerminalModerationStatuses(), TRUE)) {
+      throw new ContentProcessorException(strtr('Skipping processing: existing entity with the UUID @uuid is marked as @status.', [
+        '@uuid' => $entity->uuid(),
+        '@status' => $status,
+      ]));
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUnchanged(ContentEntityInterface $entity, array $data): bool {
+    if ($entity->isNew() || !$entity->hasField('field_post_api_hash')) {
+      return FALSE;
+    }
+
+    $stored = $entity->get('field_post_api_hash')->value ?? '';
+    if ($stored === '') {
+      return FALSE;
+    }
+
+    return hash_equals((string) $stored, $this->getSubmissionHash($data));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isUnchangedSubmission(string $uuid, array $data): bool {
+    $storage = $this->entityTypeManager->getStorage($this->getEntityType());
+    $uuid_key = $storage->getEntityType()->getKey('uuid');
+    $hash = $this->getSubmissionHash($data);
+
+    $ids = $storage
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition($uuid_key, $uuid, '=')
+      ->condition('field_post_api_hash', $hash, '=')
+      ->range(0, 1)
+      ->execute();
+
+    return !empty($ids);
+  }
+
+  /**
+   * Compute the Post API payload hash used for change detection.
+   *
+   * @param array $data
+   *   Post API data.
+   *
+   * @return string
+   *   Hash string.
+   */
+  protected function getSubmissionHash(array $data): string {
+    return $data['hash'] ?? HashHelper::generateHash($data, ['provider', 'user']);
   }
 
   /**
