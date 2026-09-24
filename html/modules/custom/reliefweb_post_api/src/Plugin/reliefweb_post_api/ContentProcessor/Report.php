@@ -152,19 +152,14 @@ class Report extends ContentProcessorPluginBase {
             ]);
 
     // Verify the bundle if the entity already exists.
-    if (!$node->isNew() && $node->bundle() !== $bundle) {
-      throw new ContentProcessorException(strtr('Existing entity with the UUID @uuid is not a @bundle.', [
-        '@uuid' => $uuid,
-        '@bundle' => $bundle,
-      ]));
-    }
+    $this->validateEntityBundle($node);
 
-    // Skip if the node was marked as refused.
-    if (!$node->isNew() && $node->getModerationStatus() === 'refused') {
-      throw new ContentProcessorException(strtr('Skipping processing: existing entity with the UUID @uuid is marked as refused.', [
-        '@uuid' => $uuid,
-        '@bundle' => $bundle,
-      ]));
+    // Verify the entity is processable (not in a terminal status).
+    $this->validateEntityProcessable($node);
+
+    // Identical payload: no field writes, revision, or status change.
+    if ($this->isUnchanged($node, $data)) {
+      return $node;
     }
 
     // Partial update?

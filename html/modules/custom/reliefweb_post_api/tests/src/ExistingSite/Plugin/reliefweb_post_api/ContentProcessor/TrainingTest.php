@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTestCase;
+use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Training;
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -154,6 +155,73 @@ class TrainingTest extends ContentProcessorPluginBaseTestCase {
     $this->expectExceptionMessage('is marked as refused');
 
     $plugin->process($data);
+  }
+
+  /**
+   * Test process with duplicate status.
+   */
+  public function testProcessDuplicate(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin($this->plugin->getPluginDefinition(), [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $data = ['source' => [123]] + $this->getPostApiData('training');
+
+    $provider = $this->getTestProvider();
+
+    $entity = $this->createEntity('node', 'training');
+    $entity->nid = 124;
+    $entity->uuid = $plugin->generateUuid($data['url']);
+    $entity->moderation_status = 'duplicate';
+    $entity->enforceIsNew(FALSE);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['node', $entity->uuid(), $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
+      ]);
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage('is marked as duplicate');
+
+    $plugin->process($data);
+  }
+
+  /**
+   * Test process skips save when the payload hash is unchanged.
+   */
+  public function testProcessUnchanged(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin($this->plugin->getPluginDefinition(), [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $data = ['source' => [123]] + $this->getPostApiData('training');
+    $provider = $this->getTestProvider();
+
+    $entity = $this->createEntity('node', 'training');
+    $entity->nid = 125;
+    $entity->uuid = $plugin->generateUuid($data['url']);
+    $entity->title = 'Original title';
+    $entity->moderation_status = 'on-hold';
+    $entity->set('field_post_api_hash', HashHelper::generateHash($data, ['provider', 'user']));
+    $entity->enforceIsNew(FALSE);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['node', $entity->uuid(), $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
+      ]);
+
+    $result = $plugin->process($data);
+    $this->assertSame($entity, $result);
+    $this->assertSame('Original title', $entity->label());
+    $this->assertSame('on-hold', $entity->getModerationStatus());
   }
 
   /**

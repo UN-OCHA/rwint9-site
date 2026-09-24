@@ -52,6 +52,11 @@ Reports can have the following moderation statuses:
 - **to-review**: Published but editorial review requested
 - **published**: Published and publicly available
 
+**Terminal statuses**
+- **refused**: Unpublished, rejected content, closed to further partner submissions
+- **duplicate**: Unpublished, duplicate content, closed to further partner submissions
+- **archive**: Unpublished, archived content, closed to further partner submissions
+
 ### Ownership
 
 A user is considered the owner of a report if they are the author of the document or if they have posting rights for at least one of the sources associated with the report.
@@ -189,6 +194,10 @@ Jobs can have the following moderation statuses:
 **Published statuses:**
 - **published**: Published and publicly available
 
+**Terminal statuses**
+- **refused**: Unpublished, rejected content, closed to further partner submissions
+- **duplicate**: Unpublished, duplicate content, closed to further partner submissions
+
 ### Ownership
 
 A user is considered the owner of a job if they are the author of the document or if they have posting rights for at least one of the sources associated with the job.
@@ -293,6 +302,10 @@ Training can have the following moderation statuses:
 
 **Published statuses:**
 - **published**: Published and publicly available
+
+**Terminal statuses**
+- **refused**: Unpublished, rejected content, closed to further partner submissions
+- **duplicate**: Unpublished, duplicate content, closed to further partner submissions
 
 ### Ownership
 

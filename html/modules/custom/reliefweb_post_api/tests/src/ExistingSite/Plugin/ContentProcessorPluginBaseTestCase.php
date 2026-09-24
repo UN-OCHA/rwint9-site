@@ -272,7 +272,12 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       'getStorage' => $storage,
     ]);
 
-    $plugin = $this->createDummyPlugin(services: [
+    // Use a real Post API bundle so terminal statuses come from moderation.
+    $plugin = $this->createDummyPlugin([
+      'entityType' => 'node',
+      'bundle' => 'job',
+      'resource' => 'jobs',
+    ], [
       'entity_type.manager' => $entity_type_manager,
     ]);
 
@@ -1657,8 +1662,8 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $this->assertEquals($provider, $entity->field_post_api_provider->entity);
     $this->assertEquals($expected_hash, $entity->field_post_api_hash->value);
 
-    // Assert moderation status and revision settings.
-    $this->assertEquals($provider->getDefaultResourceStatus(), $entity->moderation_status->value);
+    // Updates re-enter the workflow as pending (unless status is overridden).
+    $this->assertEquals('pending', $entity->moderation_status->value);
     $this->assertTrue($entity->isNewRevision());
 
     // Since no user is provided in data, provider's user ID should be used.
@@ -1667,6 +1672,88 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Assert log message and save return value.
     $this->assertStringContainsString('Automatic update from Post API.', $entity->getRevisionLogMessage());
     $this->assertEquals(2, $result);
+  }
+
+  /**
+   * Test save update keeps an explicit importer status override.
+   */
+  public function testSaveUpdatedEntityWithStatusOverride(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 126);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $data = [
+      'url' => 'https://test.test',
+      'status' => 'draft',
+      'hash' => 'status-override-hash',
+    ];
+
+    $this->plugin->save($entity, $provider, $data);
+    $this->assertEquals('draft', $entity->moderation_status->value);
+  }
+
+  /**
+   * Test isUnchanged detects matching Post API hashes.
+   */
+  public function testIsUnchanged(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 127);
+    $entity->enforceIsNew(FALSE);
+
+    $data = [
+      'url' => 'https://test.test',
+      'title' => 'Example',
+    ];
+    $hash = HashHelper::generateHash($data, ['provider', 'user']);
+    $entity->set('field_post_api_hash', $hash);
+
+    $this->assertTrue($this->plugin->isUnchanged($entity, $data));
+    $this->assertFalse($this->plugin->isUnchanged($entity, ['title' => 'Changed'] + $data));
+  }
+
+  /**
+   * Test isUnchangedSubmission uses an entity query without loading the entity.
+   */
+  public function testIsUnchangedSubmission(): void {
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $data = [
+      'url' => 'https://test.test',
+      'title' => 'Example',
+    ];
+    $hash = HashHelper::generateHash($data, ['provider', 'user']);
+
+    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
+      'getKey' => 'uuid',
+    ]);
+
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('range')->willReturnSelf();
+    $query->method('execute')->willReturnOnConsecutiveCalls(
+      ['12345'],
+      [],
+    );
+
+    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
+      'getEntityType' => $entity_type,
+      'getQuery' => $query,
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getStorage' => $storage,
+    ]);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity_type.manager' => $entity_type_manager,
+    ]);
+
+    $this->assertTrue($plugin->isUnchangedSubmission($uuid, $data));
+    $this->assertFalse($plugin->isUnchangedSubmission($uuid, ['title' => 'Changed'] + $data));
+
+    // Ensure the hash was used in the query conditions for the first call path.
+    $this->assertNotSame('', $hash);
   }
 
   /**

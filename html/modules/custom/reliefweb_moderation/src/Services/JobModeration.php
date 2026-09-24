@@ -2,7 +2,6 @@
 
 namespace Drupal\reliefweb_moderation\Services;
 
-use Drupal\Core\Session\AccountInterface;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\ReliefWebStateHelper;
@@ -165,21 +164,15 @@ class JobModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status) {
-    return $status === 'to-review' || $status === 'published';
+  public function getTerminalStatuses(): array {
+    return ['refused', 'duplicate'];
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isEditableStatus($status, ?AccountInterface $account = NULL) {
-    $account = $account ?: $this->currentUser;
-    return match ($status) {
-      'duplicate' => $account->hasPermission('edit duplicate content'),
-      'refused' => $account->hasPermission('edit refused content'),
-      'draft', 'pending', 'on-hold', 'to-review', 'published', 'expired' => TRUE,
-      default => FALSE,
-    };
+  public function isPublishedStatus($status) {
+    return $status === 'to-review' || $status === 'published';
   }
 
   /**

@@ -234,7 +234,28 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getTerminalStatuses(): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function getTerminalStatusPermission(string $status): string {
+    return 'edit ' . $status . ' content';
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isEditableStatus($status, ?AccountInterface $account = NULL) {
+    $account = $account ?: $this->currentUser;
+    if (in_array($status, $this->getTerminalStatuses(), TRUE)) {
+      return $account->hasPermission(static::getTerminalStatusPermission($status));
+    }
+    if (!$this->hasStatus($status)) {
+      return FALSE;
+    }
     return TRUE;
   }
 
@@ -848,6 +869,27 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
     catch (ServiceNotFoundException $exception) {
       return NULL;
     }
+  }
+
+  /**
+   * Get all registered moderation services.
+   *
+   * @return list<\Drupal\reliefweb_moderation\ModerationServiceInterface>
+   *   Moderation services.
+   */
+  public static function getAllModerationServices(): array {
+    $container = \Drupal::getContainer();
+    $services = [];
+    foreach ($container->getServiceIds() as $id) {
+      if (!preg_match('/^reliefweb_moderation\.[a-z0-9_]+\.moderation$/', $id)) {
+        continue;
+      }
+      $service = $container->get($id);
+      if ($service instanceof ModerationServiceInterface) {
+        $services[] = $service;
+      }
+    }
+    return $services;
   }
 
   /**

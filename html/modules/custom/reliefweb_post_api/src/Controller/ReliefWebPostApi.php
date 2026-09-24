@@ -213,8 +213,12 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
       }
 
+      // Skip queue/process when the payload matches the stored hash.
+      if ($plugin->isUnchangedSubmission($uuid, $data)) {
+        $response = new JsonResponse('No changes.', 200);
+      }
       // Process the document directly.
-      if ($provider->skipQueue()) {
+      elseif ($provider->skipQueue()) {
         try {
           $plugin->process($data);
         }
