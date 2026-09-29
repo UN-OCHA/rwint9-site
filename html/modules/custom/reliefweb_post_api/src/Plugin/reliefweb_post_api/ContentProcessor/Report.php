@@ -8,6 +8,7 @@ use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Url;
 use Drupal\reliefweb_post_api\Attribute\ContentProcessor;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
@@ -54,20 +55,20 @@ class Report extends ContentProcessorPluginBase {
    */
   public function validateFileData(array $data, array $file, string $type): void {
     if (empty($file['url'])) {
-      throw new ContentProcessorException(strtr('Missing @type URL.', [
+      throw new ContentProcessorException(ContentProcessorMessage::MissingTypeUrl->format([
         '@type' => $type,
       ]));
     }
 
     $allow_raw_bytes = $this->getPluginSetting('allow_raw_bytes', FALSE);
     if (!$allow_raw_bytes && !empty($file['bytes'])) {
-      throw new ContentProcessorException(strtr('Raw bytes not allowed for @type.', [
+      throw new ContentProcessorException(ContentProcessorMessage::RawBytesNotAllowed->format([
         '@type' => $type,
       ]));
     }
 
     if (empty($file['uuid'])) {
-      throw new ContentProcessorException(strtr('Missing @type UUID.', [
+      throw new ContentProcessorException(ContentProcessorMessage::MissingTypeUuid->format([
         '@type' => $type,
       ]));
     }
@@ -76,14 +77,14 @@ class Report extends ContentProcessorPluginBase {
     $pattern = $provider->getUrlPattern($type);
 
     if (!empty($file['url']) && !$this->validateUrl($file['url'], $pattern)) {
-      throw new ContentProcessorException(strtr('Unallowed @type URL: @url.', [
+      throw new ContentProcessorException(ContentProcessorMessage::UnallowedTypeUrl->format([
         '@type' => $type,
         '@url' => $file['url'],
       ]));
     }
 
     if ($this->generateUuid($file['url'], $data['uuid']) !== $file['uuid']) {
-      throw new ContentProcessorException(strtr('The @type UUID @uuid is not derived from the @type url and document UUID.', [
+      throw new ContentProcessorException(ContentProcessorMessage::TypeUuidNotDerived->format([
         '@type' => $type,
         '@uuid' => $file['uuid'],
         '@url' => $file['url'],
@@ -92,7 +93,7 @@ class Report extends ContentProcessorPluginBase {
 
     if ($type === 'file') {
       if (empty($file['checksum'])) {
-        throw new ContentProcessorException(strtr('Missing @type checksum.', [
+        throw new ContentProcessorException(ContentProcessorMessage::MissingTypeChecksum->format([
           '@type' => $type,
         ]));
       }

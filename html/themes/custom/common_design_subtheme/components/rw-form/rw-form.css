@@ -281,8 +281,7 @@ form #actions {
   padding: 0 12px 12px;
   text-align: center;
   border: 1px solid var(--cd-reliefweb-brand-grey--light);
-  background: var(--cd-reliefweb-brand-grey--light);
-  background: rgba(230, 236, 239, 0.4);
+  background: oklch(from var(--cd-reliefweb-brand-grey--light) l c h / 0.4);
 }
 form #actions .cd-button {
   margin: 12px 2px 0 2px;
@@ -519,16 +518,84 @@ form button[value="edit"] {
   font-size: 15px;
 }
 
+/* Base button styles */
+form #actions .cd-button[data-drupal-selector^="edit-"] {
+  background-color: var(--cd-reliefweb-brand-blue);
+
+  &:hover,
+  &:focus {
+    border: 2px solid transparent;
+    background-color: oklch(from var(--cd-reliefweb-brand-blue) min(l + 0.10, 0.95) c h);
+  }
+}
+
 /* Preview button */
-button[data-drupal-selector="edit-preview"] {
+form #actions .cd-button[data-drupal-selector="edit-preview"] {
   background-color: var(--cd-grey--dark);
+
+  &:hover,
+  &:focus {
+    border: 2px solid transparent;
+    background-color: oklch(from var(--cd-grey--dark) min(l + 0.10, 0.95) c h);
+  }
 }
-button[data-drupal-selector="edit-preview"]:hover,
-button[data-drupal-selector="edit-preview"]:focus {
-  background-color: var(--cd-grey--mid);
+
+/* Draft button */
+form #actions .cd-button[data-drupal-selector="edit-draft"] {
+  color: var(--cd-reliefweb-brand-grey--dark);
+  background-color: var(--cd-reliefweb-grey--light);
+
+  &:hover,
+  &:focus {
+    color: var(--cd-reliefweb-brand-grey--dark);
+    border: 2px solid transparent;
+    background-color: oklch(from var(--cd-reliefweb-grey--light) min(l + 0.10, 0.95) c h);
+  }
 }
-button[data-drupal-selector="edit-preview"]:focus {
-  border: 2px solid var(--cd-black);
+
+/* To Review / Published buttons */
+form #actions .cd-button[data-drupal-selector="edit-to-review"],
+form #actions .cd-button[data-drupal-selector="edit-published"] {
+  background-color: var(--cd-reliefweb-brand-blue--dark);
+
+  &:hover,
+  &:focus {
+    border: 2px solid transparent;
+    background-color: oklch(from var(--cd-reliefweb-brand-blue--dark) min(l + 0.10, 0.95) c h);
+  }
+
+  &::before {
+    display: inline-flex;
+    overflow: hidden;
+    align-self: center;
+    width: 12px;
+    height: 12px;
+    margin-right: 9px;
+    content: "";
+    background: var(--rw-icons--common--selected--12--white);
+  }
+}
+
+/* Delete button */
+form #actions .cd-button[data-drupal-selector="edit-delete"] {
+  background-color: var(--cd-reliefweb-brand-red--dark);
+
+  &:hover,
+  &:focus {
+    border: 2px solid transparent;
+    background-color: oklch(from var(--cd-reliefweb-brand-red--dark) min(l + 0.10, 0.95) c h);
+  }
+
+  &::before {
+    display: inline-flex;
+    overflow: hidden;
+    align-self: center;
+    width: 12px;
+    height: 12px;
+    margin-right: 9px;
+    content: "";
+    background: var(--rw-icons--common--close--12--white);
+  }
 }
 
 /* legends with the required class need some extra rules. */
@@ -572,8 +639,7 @@ form:not(.rw-entity-form-altered) .form-actions.form-item {
   .rw-form-instructions {
     padding: 12px;
     border: 1px solid var(--cd-reliefweb-brand-grey--light);
-    background: var(--cd-reliefweb-brand-grey--light);
-    background: rgba(230, 236, 239, 0.4);
+    background: oklch(from var(--cd-reliefweb-brand-grey--light) l c h / 0.4);
   }
 
   .rw-form-fieldset {

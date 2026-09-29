@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTestCase;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Training;
@@ -118,7 +119,10 @@ class TrainingTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is not a training');
+    $this->expectExceptionMessage(ContentProcessorMessage::ExistingEntityWrongBundle->format([
+      '@uuid' => $entity->uuid(),
+      '@bundle' => 'training',
+    ]));
 
     $plugin->process($data);
   }
@@ -152,7 +156,10 @@ class TrainingTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is marked as refused');
+    $this->expectExceptionMessage(ContentProcessorMessage::SkippingTerminalEntity->format([
+      '@uuid' => $entity->uuid(),
+      '@status' => 'refused',
+    ]));
 
     $plugin->process($data);
   }
@@ -185,7 +192,10 @@ class TrainingTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is marked as duplicate');
+    $this->expectExceptionMessage(ContentProcessorMessage::SkippingTerminalEntity->format([
+      '@uuid' => $entity->uuid(),
+      '@status' => 'duplicate',
+    ]));
 
     $plugin->process($data);
   }

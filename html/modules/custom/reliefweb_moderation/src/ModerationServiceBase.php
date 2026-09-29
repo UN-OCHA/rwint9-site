@@ -241,6 +241,20 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getRetiredStatuses(): array {
+    return [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isRetiredStatus($status): bool {
+    return in_array($status, $this->getRetiredStatuses(), TRUE);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public static function getTerminalStatusPermission(string $status): string {
     return 'edit ' . $status . ' content';
   }
@@ -269,8 +283,15 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPublishedStatuses(): array {
+    return ['published'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isPublishedStatus($status) {
-    return $status === 'published';
+    return in_array($status, $this->getPublishedStatuses(), TRUE);
   }
 
   /**
