@@ -1840,11 +1840,15 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   public function testWithdrawExistingEntity(): void {
     $entity_repository = $this->createMock(EntityRepositoryInterface::class);
 
-    $plugin = $this->createDummyPlugin(services: [
+    $bundle = $this->plugin->getBundle();
+    $plugin = $this->createDummyPlugin([
+      'entityType' => 'node',
+      'bundle' => $bundle,
+    ], [
       'entity.repository' => $entity_repository,
     ]);
 
-    $entity = $this->createEntity('node', $plugin->getBundle(), 2);
+    $entity = $this->createEntity('node', $bundle, 2);
     $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
     $entity->uuid = $uuid;
     $entity->set('nid', 200);
