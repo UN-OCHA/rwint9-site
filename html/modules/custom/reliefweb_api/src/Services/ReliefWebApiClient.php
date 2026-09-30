@@ -11,7 +11,6 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Url;
-use Drupal\ocha_reliefweb\Services\ReliefWebApiClientInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Utils;
 use Psr\Log\LoggerInterface;
@@ -189,8 +188,14 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         $cache_ids[$index] = $cache_id;
         // Attempt to retrieve the cached data for the query.
         $cache = $this->cacheBackend->get($cache_id);
-        if (!$refresh && isset($cache->data)) {
-          $results[$index] = $cache->data;
+        if (!$refresh && isset($cache->data) && is_string($cache->data)) {
+          if ($decode) {
+            // Leave NULL on invalid/corrupt entries so the query is refetched.
+            $results[$index] = $this->decodeApiJsonObject($cache->data);
+          }
+          else {
+            $results[$index] = $cache->data;
+          }
         }
       }
     }
@@ -260,10 +265,11 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
     }
 
     // Execute the requests in parallel and retrieve and cache the response's
-    // data.
+    // data. Cache the undecoded JSON body so decode TRUE/FALSE share one entry;
+    // only store bodies that json_decode successfully.
     $promise_results = Utils::settle($promises)->wait();
     foreach ($promise_results as $index => $result) {
-      $data = NULL;
+      $raw = NULL;
 
       // Parse the response in case of success.
       if ($result['state'] === 'fulfilled') {
@@ -271,7 +277,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
         // Retrieve the raw response's data.
         if ($response->getStatusCode() === 200) {
-          $data = (string) $response->getBody();
+          $raw = (string) $response->getBody();
         }
         else {
           $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
@@ -291,38 +297,30 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         ]);
       }
 
-      // Cache successful responses only. Failed requests leave $data as NULL
-      // and must not be stored, otherwise empty failures can stick until tags
-      // invalidate (or forever when cache_lifetime is unset/0).
-      if (isset($cache_ids[$index]) && is_string($data)) {
+      if ($raw === NULL || $raw === '') {
+        $results[$index] = NULL;
+        continue;
+      }
+
+      $decoded = $this->decodeApiJsonObject($raw);
+      if ($decoded === NULL) {
+        $this->getLogger()->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
+          '@url' => $api_url . '/' . $queries[$index]['resource'],
+          '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
+        ]);
+        $results[$index] = NULL;
+        continue;
+      }
+
+      // Cache valid JSON object bodies only. Failed or empty responses must not
+      // be stored, otherwise they can stick until tags invalidate (or forever
+      // when cache_lifetime is unset/0).
+      if (isset($cache_ids[$index])) {
         $tags = $this->getCacheTags($queries[$index]['resource']);
-        $this->cacheBackend->set($cache_ids[$index], $data, $this->getCacheExpiration(), $tags);
+        $this->cacheBackend->set($cache_ids[$index], $raw, $this->getCacheExpiration(), $tags);
       }
 
-      $results[$index] = $data;
-    }
-
-    // We don't store the decoded data. This is to ensure that we can use the
-    // same cached data regardless of whether to return JSON data or not.
-    if ($decode) {
-      foreach ($results as $index => $data) {
-        if (!empty($data)) {
-          // Decode the data, skip if invalid.
-          try {
-            $data = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);
-          }
-          catch (\Exception $exception) {
-            $data = NULL;
-            $this->getLogger()->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
-              '@url' => $api_url . '/' . $queries[$index]['resource'],
-              '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
-            ]);
-          }
-
-          // Add the resulting data with same index as the query.
-          $results[$index] = $data;
-        }
-      }
+      $results[$index] = $decode ? $decoded : $raw;
     }
 
     // Merge resource cache tags and set max-age 0 when any request failed so
@@ -332,9 +330,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         if (!empty($query['resource'])) {
           $cacheability->addCacheTags($this->getCacheTags($query['resource']));
         }
-        $result = $results[$index] ?? NULL;
-        $failed = $decode ? !is_array($result) : !is_string($result);
-        if ($failed) {
+        // Failures are stored as NULL (isset is false for null values).
+        if (!isset($results[$index])) {
           $cacheability->setCacheMaxAge(0);
         }
       }
@@ -809,6 +806,33 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
       $this->verifySsl = $this->config()->get('verify_ssl') ?: TRUE;
     }
     return $this->verifySsl;
+  }
+
+  /**
+   * Decode a ReliefWeb API JSON object body.
+   *
+   * @param string $raw
+   *   Raw response body.
+   *
+   * @return array|null
+   *   Associative array when the body is a JSON object, NULL otherwise.
+   */
+  protected function decodeApiJsonObject(string $raw): ?array {
+    try {
+      $decoded = json_decode($raw, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $exception) {
+      return NULL;
+    }
+
+    // Callers expect an object payload (data, totalCount, etc.), not a list
+    // or scalar. json_decode('{}', TRUE) becomes [] which array_is_list treats
+    // as a list and is also rejected, which is fine for this API.
+    if (!is_array($decoded) || array_is_list($decoded)) {
+      return NULL;
+    }
+
+    return $decoded;
   }
 
   /**

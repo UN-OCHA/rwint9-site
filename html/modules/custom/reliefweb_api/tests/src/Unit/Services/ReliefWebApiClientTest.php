@@ -237,4 +237,61 @@ class ReliefWebApiClientTest extends UnitTestCase {
     $this->assertContains('taxonomy_term_list', $cacheability->getCacheTags());
   }
 
+  /**
+   * Empty 200 bodies are not written to the API cache bin.
+   */
+  public function testEmptyBodyIsNotCached(): void {
+    $this->cacheBackend->expects($this->once())
+      ->method('get')
+      ->willReturn(FALSE);
+
+    $this->cacheBackend->expects($this->never())
+      ->method('set');
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->willReturn(Create::promiseFor(new Response(200, [], '')));
+
+    $result = $this->apiClient->request('reports', ['limit' => 1]);
+    $this->assertNull($result);
+  }
+
+  /**
+   * Non-JSON 200 bodies are not written to the API cache bin.
+   */
+  public function testNonJsonBodyIsNotCached(): void {
+    $this->cacheBackend->expects($this->once())
+      ->method('get')
+      ->willReturn(FALSE);
+
+    $this->cacheBackend->expects($this->never())
+      ->method('set');
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->willReturn(Create::promiseFor(new Response(200, [], '<html>error</html>')));
+
+    $result = $this->apiClient->request('reports', ['limit' => 1]);
+    $this->assertNull($result);
+  }
+
+  /**
+   * JSON array 200 bodies are not written to the API cache bin.
+   */
+  public function testJsonArrayBodyIsNotCached(): void {
+    $this->cacheBackend->expects($this->once())
+      ->method('get')
+      ->willReturn(FALSE);
+
+    $this->cacheBackend->expects($this->never())
+      ->method('set');
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->willReturn(Create::promiseFor(new Response(200, [], '[{"id":1}]')));
+
+    $result = $this->apiClient->request('reports', ['limit' => 1]);
+    $this->assertNull($result);
+  }
+
 }

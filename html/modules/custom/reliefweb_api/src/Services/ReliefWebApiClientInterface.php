@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ocha_reliefweb\Services;
+namespace Drupal\reliefweb_api\Services;
 
 use Drupal\Core\Cache\CacheableMetadata;
 
