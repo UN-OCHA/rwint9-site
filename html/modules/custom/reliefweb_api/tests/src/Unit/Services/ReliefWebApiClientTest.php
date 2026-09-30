@@ -64,6 +64,7 @@ class ReliefWebApiClientTest extends UnitTestCase {
         'cache_enabled' => TRUE,
         'cache_lifetime' => 60,
         'cache_namespace' => 'reliefweb:api',
+        'timeout' => 5,
         default => NULL,
       };
     });

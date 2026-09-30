@@ -23,6 +23,9 @@ reliefweb_api.settings:
     cache_namespace:
       type: string
       label: 'Namespace for the API caching.'
+    timeout:
+      type: integer
+      label: 'Request timeout in seconds for ReliefWeb API HTTP calls.'
     verify_ssl:
       type: boolean
       label: 'Verify the SSL certificate of the API query performing requests.'

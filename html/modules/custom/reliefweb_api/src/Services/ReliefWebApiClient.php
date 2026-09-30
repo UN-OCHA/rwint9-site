@@ -11,6 +11,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Url;
+use Drupal\ocha_reliefweb\Services\ReliefWebApiClientInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Promise\Utils;
 use Psr\Log\LoggerInterface;
@@ -19,7 +20,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * ReliefWeb API client service class.
  */
-class ReliefWebApiClient {
+class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
   /**
    * The base API URL.
@@ -72,6 +73,13 @@ class ReliefWebApiClient {
   protected string $cacheNamespace;
 
   /**
+   * Request timeout in seconds from config.
+   *
+   * @var int
+   */
+  protected int $requestTimeout;
+
+  /**
    * Map API resources to cache tags.
    *
    * @var array
@@ -114,40 +122,13 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Perform a request against the ReliefWeb API.
-   *
-   * Note: the order of the parameters is to preserve the compatibility with the
-   * code calling the previous version of this method.
-   *
-   * @param string $resource
-   *   API resource endpoint (ex: reports).
-   * @param ?array $payload
-   *   API request payload (with fields, filters, sort etc.)
-   * @param bool $decode
-   *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
-   * @param bool $cache_enabled
-   *   Whether to cache the queries or not.
-   * @param string $method
-   *   The method (GET, POST, PUT or PATCH) to use for the request.
-   * @param array $headers
-   *   Extra request headers.
-   * @param bool $refresh
-   *   If TRUE, skip the cached data and call the API to refresh it.
-   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
-   *   Optional cacheability metadata to merge with. On success, resource cache
-   *   tags are added. On failure, max-age is set to 0 so upstream page builds
-   *   are not stored empty for anonymous users.
-   *
-   * @return array|string|null
-   *   The data from the API response or NULL in case of error.
+   * {@inheritdoc}
    */
   public function request(
     string $resource,
     ?array $payload = NULL,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     string $method = 'POST',
     array $headers = [],
@@ -169,43 +150,19 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Perform parallel queries to the API.
-   *
-   * @param array $queries
-   *   List of queries to perform in parallel. Each item is an associative
-   *   array with the following properties:
-   *   - method: request method
-   *   - resource: API resource
-   *   - payload: optional API payload
-   *   - headers: optional headers
-   *   - refresh: optional flag to refresh the cached data.
-   * @param bool $decode
-   *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
-   * @param bool $cache_enabled
-   *   Whether to cache the queries or not.
-   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
-   *   Optional cacheability metadata to merge with. On success, resource cache
-   *   tags are added. On failure, max-age is set to 0 so upstream page builds
-   *   are not stored empty for anonymous users.
-   *
-   * @return array
-   *   Return array where each item contains the response to the corresponding
-   *   query to the API.
-   *
-   * @see https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
+   * {@inheritdoc}
    */
   public function requestMultiple(
     array $queries,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     ?CacheableMetadata $cacheability = NULL,
   ): array {
     $results = [];
     $api_url = $this->getApiUrl();
     $appname = $this->getAppName();
+    $timeout ??= $this->getTimeout();
     $cache_enabled = $cache_enabled && $this->isCacheEnabled();
     $verify_ssl = $this->verifySsl();
 
@@ -387,19 +344,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Build an API URL.
-   *
-   * This is mostly used to build a suggestion API URL.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array $parameters
-   *   Query parameters.
-   * @param bool $suggest_url
-   *   TRUE to create a suggestion URL (for example to use in the UI filters).
-   *
-   * @return string
-   *   API URL.
+   * {@inheritdoc}
    */
   public function buildApiUrl(
     string $resource,
@@ -446,35 +391,18 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Submit content.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array $payload
-   *   Content to submit.
-   * @param array $headers
-   *   Request headers. This notably must include the X-RW-POST-API-KEY and
-   *   X-RW-POST-API-PROVIDER headers.
-   * @param int $timeout
-   *   Request timeout.
-   *
-   * @return array
-   *   An associative array with the response status code and data.
-   *
-   * @throws \Exception
-   *   An exception if the request was not successful.
-   *
-   * @todo review the return value.
+   * {@inheritdoc}
    */
   public function submitContent(
     string $resource,
     array $payload,
     array $headers,
-    int $timeout = 5,
+    ?int $timeout = NULL,
   ): array {
     $api_url = $this->getApiUrl();
     $appname = $this->getAppName();
     $verify_ssl = $this->verifySsl();
+    $timeout ??= $this->getTimeout();
 
     $url = rtrim($api_url) . '/' . ltrim($resource, '/');
     $url .= '?' . http_build_query(['appname' => $appname]);
@@ -590,7 +518,7 @@ class ReliefWebApiClient {
         $url = rtrim($url, '/') . '/' . $schema_file;
       }
 
-      $timeout = 5;
+      $timeout = $this->getTimeout();
 
       try {
         $response = $this->httpClient->get($url, options: [
@@ -642,15 +570,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Sanitize and simplify an API query payload.
-   *
-   * @param array $payload
-   *   API query payload.
-   * @param bool $combine
-   *   TRUE to optimize the filters by combining their values when possible.
-   *
-   * @return array
-   *   Sanitized payload.
+   * {@inheritdoc}
    */
   public function sanitizePayload(array $payload, bool $combine = FALSE): array {
     if (empty($payload)) {
@@ -802,10 +722,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Get the ReliefWeb UUID namespace.
-   *
-   * @return string
-   *   UUID to use as namespace to generate V5 UUIDs.
+   * {@inheritdoc}
    */
   public function getNamespaceUuid(): string {
     /* The default namespace is the UUID generated with
@@ -814,13 +731,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Update the host of API URLs.
-   *
-   * Note: this mostly for development to convert the URLs from the API used
-   * for dev (ex: stage) to URLs with the current host and scheme.
-   *
-   * @param array $data
-   *   API data.
+   * {@inheritdoc}
    */
   public static function updateApiUrls(array &$data): void {
     $request = \Drupal::request();
@@ -911,6 +822,20 @@ class ReliefWebApiClient {
       $this->cacheEnabled = $this->config()->get('cache_enabled');
     }
     return $this->cacheEnabled;
+  }
+
+  /**
+   * Get the request timeout in seconds.
+   *
+   * @return int
+   *   Timeout from reliefweb_api.settings:timeout, falling back to 5.
+   */
+  protected function getTimeout(): int {
+    if (!isset($this->requestTimeout)) {
+      $timeout = (int) ($this->config()->get('timeout') ?? 5);
+      $this->requestTimeout = $timeout > 0 ? $timeout : 5;
+    }
+    return $this->requestTimeout;
   }
 
   /**

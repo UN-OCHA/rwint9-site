@@ -23,8 +23,8 @@ interface ReliefWebApiClientInterface {
    *   API request payload (with fields, filters, sort etc.)
    * @param bool $decode
    *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
    * @param string $method
@@ -45,7 +45,7 @@ interface ReliefWebApiClientInterface {
     string $resource,
     ?array $payload = NULL,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     string $method = 'POST',
     array $headers = [],
@@ -66,8 +66,8 @@ interface ReliefWebApiClientInterface {
    *   - refresh: optional flag to refresh the cached data.
    * @param bool $decode
    *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
    * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
@@ -84,7 +84,7 @@ interface ReliefWebApiClientInterface {
   public function requestMultiple(
     array $queries,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     ?CacheableMetadata $cacheability = NULL,
   ): array;
@@ -120,8 +120,8 @@ interface ReliefWebApiClientInterface {
    * @param array $headers
    *   Request headers. This notably must include the X-RW-POST-API-KEY and
    *   X-RW-POST-API-PROVIDER headers.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    *
    * @return array
    *   An associative array with the response status code and data.
@@ -135,7 +135,7 @@ interface ReliefWebApiClientInterface {
     string $resource,
     array $payload,
     array $headers,
-    int $timeout = 5,
+    ?int $timeout = NULL,
   ): array;
 
   /**
