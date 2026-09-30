@@ -5,6 +5,7 @@
  * Disaster map service.
  */
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Render\BubbleableMetadata;
 
 /**
@@ -87,19 +88,21 @@ function reliefweb_disaster_map_get_disaster_type_tokens() {
 }
 
 /**
- * Get the disaster map markup for the given token.
+ * Get the disaster map markup or render array for the given token.
  *
  * @param string $token
  *   Token to replace.
- * @param \Drupal\Core\Render\BubbleableMetadata|null $bubbleable_metadata
- *   Metadata to bubble to the renderer.
+ * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+ *   Optional cacheability to merge with (BubbleableMetadata from tokens).
  * @param bool $render
- *   Whether to render the map or return the render array.
+ *   Whether to render the map to HTML (TRUE) or return the render array
+ *   (FALSE).
  *
- * @return \Drupal\Component\Render\MarkupInterface|string
- *   The rendered disaster map HTML content to use as token replacement.
+ * @return \Drupal\Component\Render\MarkupInterface|string|array
+ *   Rendered HTML for token replacement, or the render array when $render is
+ *   FALSE (e.g. embeddable map controller).
  */
-function reliefweb_disaster_map_get_disaster_map_token_replacement($token, ?BubbleableMetadata $bubbleable_metadata = NULL, $render = TRUE) {
+function reliefweb_disaster_map_get_disaster_map_token_replacement($token, ?CacheableMetadata $cacheability = NULL, $render = TRUE) {
   $tokens = reliefweb_disaster_map_get_disaster_type_tokens();
   $values = !empty($token) ? explode('-', strtoupper($token)) : [];
   $options = [];
@@ -135,11 +138,12 @@ function reliefweb_disaster_map_get_disaster_map_token_replacement($token, ?Bubb
     }
   }
 
-  if (!empty($title)) {
-    return \Drupal::service('reliefweb_disaster_map.service')
-      ->getDisasterMap($id, $title, $options, $render);
+  if (empty($title)) {
+    return $render ? '' : [];
   }
-  return '';
+
+  return \Drupal::service('reliefweb_disaster_map.service')
+    ->getDisasterMap($id, $title, $options, $render, $cacheability);
 }
 
 /**

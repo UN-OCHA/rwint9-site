@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
@@ -81,10 +82,13 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
     ];
 
     // Retrieve the data from the API.
+    $cacheability = new CacheableMetadata();
     $data = \Drupal::service('reliefweb_api.client')
-      ->request($this->getApiResource(), $payload);
-    if (empty($data)) {
-      return [];
+      ->request($this->getApiResource(), $payload, cacheability: $cacheability);
+    if (!is_array($data) || empty($data)) {
+      $build = [];
+      $cacheability->applyTo($build);
+      return $build;
     }
 
     $entities = RiverServiceBase::getRiverData('blog_post', $data, '', [
@@ -92,10 +96,12 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
       'tags',
     ]);
     if (empty($entities)) {
-      return [];
+      $build = [];
+      $cacheability->applyTo($build);
+      return $build;
     }
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_rivers_river__blog_post',
       '#id' => 'latest-blog-posts',
       '#title' => $this->t('Latest blog posts'),
@@ -111,6 +117,9 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
         ],
       ],
     ];
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**

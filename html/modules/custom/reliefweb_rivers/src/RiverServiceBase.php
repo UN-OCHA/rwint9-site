@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_rivers;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Language\LanguageManagerInterface;
 use Drupal\Core\Link;
@@ -225,7 +226,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  abstract public function parseApiData(array $api_data, $view = '');
+  abstract public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL);
 
   /**
    * {@inheritdoc}
@@ -645,10 +646,12 @@ abstract class RiverServiceBase implements RiverServiceInterface {
    * {@inheritdoc}
    */
   public function getRiverContent() {
-    // Get the resources for the search query.
-    $entities = $this->getApiData($this->limit);
+    $cacheability = new CacheableMetadata();
 
-    return [
+    // Get the resources for the search query.
+    $entities = $this->getApiData($this->limit, cacheability: $cacheability);
+
+    $build = [
       '#theme' => 'reliefweb_rivers_river',
       '#id' => 'river-list',
       '#title' => $this->t('List'),
@@ -660,6 +663,10 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         'tags' => $this->getRiverCacheTags(),
       ],
     ];
+
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**
@@ -851,12 +858,17 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL) {
+  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL, ?CacheableMetadata $cacheability = NULL) {
     $view = $this->validateView($view) ?? $this->getSelectedView();
     $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload);
+    $data = $this->requestApi($payload, $cacheability);
+
+    // Non-array results mean the API request failed.
+    if (!is_array($data)) {
+      return [];
+    }
 
     // Skip if there is no data.
     if (empty($data)) {
@@ -869,14 +881,18 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Parse the API data and return the entities.
-    return $this->parseApiData($data, $view);
+    return $this->parseApiData($data, $view, $cacheability);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function requestApi(array $payload) {
-    return $this->apiClient->request($this->getResource(), $payload);
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL) {
+    return $this->apiClient->request(
+      $this->getResource(),
+      $payload,
+      cacheability: $cacheability,
+    );
   }
 
   /**
@@ -885,7 +901,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   public function getRssContent() {
     $river = Html::getId($this->getRiver());
     $request = $this->requestStack->getCurrentRequest();
-    $items = $this->getApiDataForRss();
+    $cacheability = new CacheableMetadata();
+    $items = $this->getApiDataForRss(cacheability: $cacheability);
     $first = reset($items);
     $date = $first['date'] ?? static::createDate('now');
 
@@ -907,14 +924,18 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         'tags' => $this->getRiverCacheTags(),
       ],
     ];
+    $cacheability->applyTo($content);
 
     $headers = [
       'Content-Type' => 'application/rss+xml; charset=utf-8',
     ];
 
-    // Add the cache control header.
+    // Add the cache control header. Do not cache empty feeds after API failure.
     $cache_settings = $this->configFactory->get('system.performance')?->get('cache');
-    if (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
+    if ($cacheability->getCacheMaxAge() === 0) {
+      $headers['Cache-Control'] = 'private, max-age=0';
+    }
+    elseif (!empty($cache_settings['page']['max_age']) && $cache_settings['page']['max_age'] > 0) {
       $headers['Cache-Control'] = 'max-age=' . $cache_settings['page']['max_age'] . ', public';
     }
     else {
@@ -927,7 +948,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function getApiDataForRss($limit = 20) {
+  public function getApiDataForRss($limit = 20, ?CacheableMetadata $cacheability = NULL) {
     $view = $this->getSelectedView();
 
     $payload = $this->getApiPayloadForRss($view);
@@ -962,7 +983,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload);
+    $data = $this->requestApi($payload, $cacheability);
 
     // Skip if there is no data.
     if (empty($data)) {

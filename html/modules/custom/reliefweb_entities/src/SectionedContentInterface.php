@@ -2,6 +2,8 @@
 
 namespace Drupal\reliefweb_entities;
 
+use Drupal\Core\Cache\CacheableMetadata;
+
 /**
  * Interface for entities with sectioned content.
  */
@@ -22,10 +24,14 @@ interface SectionedContentInterface {
   /**
    * Get page sections.
    *
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata passed through to API queries so resource
+   *   tags and failure max-age can be merged onto the final page build.
+   *
    * @return array
    *   List of sections as render arrays.
    */
-  public function getPageSections();
+  public function getPageSections(?CacheableMetadata $cacheability = NULL);
 
   /**
    * Get page table of content.
@@ -40,12 +46,15 @@ interface SectionedContentInterface {
    *
    * @param array $queries
    *   ReliefWeb API queries.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata populated by the API client with resource
+   *   cache tags and max-age 0 on request failure.
    *
    * @return array
    *   Associative array of render arrays for the sections matching the given
    *   queries keyed by section id.
    */
-  public function getSectionsFromReliefWebApiQueries(array $queries);
+  public function getSectionsFromReliefWebApiQueries(array $queries, ?CacheableMetadata $cacheability = NULL);
 
   /**
    * Consolidate content sections.
@@ -59,11 +68,13 @@ interface SectionedContentInterface {
    *   Content sections.
    * @param array $labels
    *   Labels for the sections.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional API request cacheability to apply to the final render array.
    *
    * @return array
    *   Render array with the table of contents and sections.
    */
-  public function consolidateSections(array $contents, array $sections, array $labels = []);
+  public function consolidateSections(array $contents, array $sections, array $labels = [], ?CacheableMetadata $cacheability = NULL);
 
   /**
    * Get payload for the key content reports.

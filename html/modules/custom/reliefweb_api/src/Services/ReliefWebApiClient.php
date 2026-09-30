@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_api\Services;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -80,6 +81,10 @@ class ReliefWebApiClient {
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
     'training' => ['node_list:training'],
+    'topics' => ['node_list:topic'],
+    'countries' => ['taxonomy_term_list:country'],
+    'disasters' => ['taxonomy_term_list:disaster'],
+    'sources' => ['taxonomy_term_list:source'],
   ];
 
   /**
@@ -130,6 +135,10 @@ class ReliefWebApiClient {
    *   Extra request headers.
    * @param bool $refresh
    *   If TRUE, skip the cached data and call the API to refresh it.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
    *
    * @return array|string|null
    *   The data from the API response or NULL in case of error.
@@ -143,6 +152,7 @@ class ReliefWebApiClient {
     string $method = 'POST',
     array $headers = [],
     bool $refresh = FALSE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array|string|null {
     $queries = [
       $resource => [
@@ -154,7 +164,7 @@ class ReliefWebApiClient {
       ],
     ];
 
-    $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled);
+    $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled, $cacheability);
     return $results[$resource] ?? NULL;
   }
 
@@ -175,6 +185,10 @@ class ReliefWebApiClient {
    *   Request timeout.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
    *
    * @return array
    *   Return array where each item contains the response to the corresponding
@@ -187,6 +201,7 @@ class ReliefWebApiClient {
     bool $decode = TRUE,
     int $timeout = 5,
     bool $cache_enabled = TRUE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array {
     $results = [];
     $api_url = $this->getApiUrl();
@@ -307,22 +322,22 @@ class ReliefWebApiClient {
             '@url' => $api_url . '/' . $queries[$index]['resource'],
             '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
           ]);
-          $data = '';
         }
       }
       // Otherwise log the error.
       else {
-        $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload: @reason', [
+        $this->getLogger()->notice('Unable to retrieve API data (@code: @reason) when requesting @url with payload @payload', [
           '@code' => $result['reason']->getCode(),
+          '@reason' => $result['reason']->getMessage(),
           '@url' => $api_url . '/' . $queries[$index]['resource'],
           '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
-          '@reason' => $result['reason']->getMessage(),
         ]);
       }
 
-      // Cache the data unless cache is disabled or there was an issue with the
-      // request in which case $data is NULL.
-      if (isset($cache_ids, $cache_ids[$index], $queries[$index]['resource'])) {
+      // Cache successful responses only. Failed requests leave $data as NULL
+      // and must not be stored, otherwise empty failures can stick until tags
+      // invalidate (or forever when cache_lifetime is unset/0).
+      if (isset($cache_ids[$index]) && is_string($data)) {
         $tags = $this->getCacheTags($queries[$index]['resource']);
         $this->cacheBackend->set($cache_ids[$index], $data, $this->getCacheExpiration(), $tags);
       }
@@ -352,6 +367,22 @@ class ReliefWebApiClient {
         }
       }
     }
+
+    // Merge resource cache tags and set max-age 0 when any request failed so
+    // callers can apply this to their render arrays without re-checking.
+    if ($cacheability !== NULL) {
+      foreach ($queries as $index => $query) {
+        if (!empty($query['resource'])) {
+          $cacheability->addCacheTags($this->getCacheTags($query['resource']));
+        }
+        $result = $results[$index] ?? NULL;
+        $failed = $decode ? !is_array($result) : !is_string($result);
+        if ($failed) {
+          $cacheability->setCacheMaxAge(0);
+        }
+      }
+    }
+
     return $results;
   }
 

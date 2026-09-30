@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_homepage\Controller;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -116,12 +117,17 @@ class Homepage extends ControllerBase {
       'training' => $this->getOpportuntiesTotalApiPayload('training'),
     ];
 
+    $cacheability = new CacheableMetadata();
     // Get the API data.
     $results = $this->reliefWebApiClient
-      ->requestMultiple(array_filter($queries), TRUE);
+      ->requestMultiple(array_filter($queries), cacheability: $cacheability);
 
     // Parse the API results, building the page sections data.
     foreach ($results as $index => $result) {
+      if (!is_array($result)) {
+        continue;
+      }
+
       $query = $queries[$index];
       $cache_tags = [
         $query['entity_type'] . '_list:' . $query['bundle'],
@@ -200,6 +206,7 @@ class Homepage extends ControllerBase {
         'contexts' => ['user.permissions'],
       ],
     ];
+    $cacheability->applyTo($build);
 
     // Add the headlines widget.
     if ($this->currentUser->hasPermission('edit homepage headlines')) {
@@ -474,14 +481,17 @@ class Homepage extends ControllerBase {
     // Get the latest 24 headlines.
     $query = $this->getHeadlinesApiPayload(24);
 
+    $cacheability = new CacheableMetadata();
+    // Admin AJAX response — never cache the widget payload.
+    $cacheability->setCacheMaxAge(0);
+
     // Get the API data.
     $results = $this->reliefWebApiClient
-      ->requestMultiple(['headlines' => $query]);
+      ->requestMultiple(['headlines' => $query], cacheability: $cacheability);
 
     $build = [];
-    if (!empty($results['headlines']['data'])) {
-      $result = $results['headlines'];
-
+    $result = $results['headlines'] ?? NULL;
+    if (is_array($result) && !empty($result['data'])) {
       // Sort the headlines by id DESC to have the most recent first.
       uasort($result['data'], function ($a, $b) {
         return $b['id'] <=> $a['id'];
@@ -499,12 +509,10 @@ class Homepage extends ControllerBase {
           '#title' => $query['title'],
           '#resource' => $query['resource'],
           '#entities' => $entities,
-          '#cache' => [
-            'max-age' => 0,
-          ],
         ];
       }
     }
+    $cacheability->applyTo($build);
 
     return new Response($this->renderer->render($build));
   }

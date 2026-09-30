@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Drupal\ocha_reliefweb\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
+
 /**
  * Interface for the ReliefWeb API client.
  */
@@ -31,6 +33,10 @@ interface ReliefWebApiClientInterface {
    *   Extra request headers.
    * @param bool $refresh
    *   If TRUE, skip the cached data and call the API to refresh it.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
    *
    * @return array|string|null
    *   The data from the API response or NULL in case of error.
@@ -44,6 +50,7 @@ interface ReliefWebApiClientInterface {
     string $method = 'POST',
     array $headers = [],
     bool $refresh = FALSE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array|string|null;
 
   /**
@@ -63,6 +70,10 @@ interface ReliefWebApiClientInterface {
    *   Request timeout.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
    *
    * @return array
    *   Return array where each item contains the response to the corresponding
@@ -75,6 +86,7 @@ interface ReliefWebApiClientInterface {
     bool $decode = TRUE,
     int $timeout = 5,
     bool $cache_enabled = TRUE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array;
 
   /**

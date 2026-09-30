@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_entities\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -68,34 +69,47 @@ class RelatedContentService implements RelatedContentServiceInterface {
     $payload = $this->buildApiPayload($entity, (int) $settings['candidate_limit']);
     $query_clauses = $this->buildQueryClauses($entity);
     $entities = [];
+    $cacheability = new CacheableMetadata();
 
     if ($query_clauses !== []) {
       $payload['query']['value'] = implode(' OR ', $query_clauses);
       $payload['sort'] = ['score:desc', 'date.original:desc'];
 
-      $data = $this->apiClient->request('reports', $payload);
-      $items = $data['data'] ?? $data['items'] ?? [];
-      if ($items !== []) {
-        $items = $this->rankCandidates($items, $entity, $settings, $limit);
-        if (isset($data['data'])) {
-          $data['data'] = $items;
+      $data = $this->apiClient->request('reports', $payload, cacheability: $cacheability);
+      if (is_array($data)) {
+        $items = $data['data'] ?? $data['items'] ?? [];
+        if ($items !== []) {
+          $items = $this->rankCandidates($items, $entity, $settings, $limit);
+          if (isset($data['data'])) {
+            $data['data'] = $items;
+          }
+          else {
+            $data['items'] = $items;
+          }
         }
-        else {
-          $data['items'] = $items;
-        }
+        $entities = RiverServiceBase::getRiverData('report', $data);
       }
-      $entities = RiverServiceBase::getRiverData('report', $data);
     }
 
     if ($entities === []) {
       $title = $this->t('Latest Updates');
       unset($payload['query']);
       $payload['limit'] = $limit;
-      $data = $this->apiClient->request('reports', $payload);
-      $entities = RiverServiceBase::getRiverData('report', $data);
+      // Use a separate cacheability object so a failed related-content query
+      // does not force max-age 0 when the fallback request succeeds.
+      $fallback_cacheability = new CacheableMetadata();
+      $data = $this->apiClient->request('reports', $payload, cacheability: $fallback_cacheability);
+      $entities = is_array($data) ? RiverServiceBase::getRiverData('report', $data) : [];
+      if (is_array($data)) {
+        $fallback_cacheability->addCacheTags($cacheability->getCacheTags());
+        $cacheability = $fallback_cacheability;
+      }
+      else {
+        $cacheability->addCacheableDependency($fallback_cacheability);
+      }
     }
 
-    return $this->buildRenderArray($entities, $title);
+    return $this->buildRenderArray($entities, $title, $cacheability);
   }
 
   /**
@@ -893,12 +907,14 @@ class RelatedContentService implements RelatedContentServiceInterface {
    *   River entities.
    * @param string $title
    *   Block title.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional API request cacheability to merge onto the build.
    *
    * @return array
    *   Render array.
    */
-  protected function buildRenderArray(array $entities, string $title): array {
-    return [
+  protected function buildRenderArray(array $entities, string $title, ?CacheableMetadata $cacheability = NULL): array {
+    $build = [
       '#theme' => 'reliefweb_rivers_river',
       '#id' => 'related',
       '#title' => $title,
@@ -912,6 +928,10 @@ class RelatedContentService implements RelatedContentServiceInterface {
         ],
       ],
     ];
+
+    $cacheability?->applyTo($build);
+
+    return $build;
   }
 
   /**
