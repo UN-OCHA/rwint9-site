@@ -8,6 +8,8 @@ payload_url: 'http://response-local.test/webhook/invalidate'
 type: outgoing
 events: 'a:2:{s:25:"reliefweb:country_updated";s:25:"reliefweb:country_updated";s:24:"reliefweb:source_updated";s:24:"reliefweb:source_updated";}'
 secret: REPLACE
+signature_header: null
+signature_algorithm: null
 content_type: application/json
 token: REPLACE
 non_blocking: false
