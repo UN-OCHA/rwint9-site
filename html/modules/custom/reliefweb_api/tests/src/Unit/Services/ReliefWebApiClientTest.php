@@ -41,6 +41,11 @@ class ReliefWebApiClientTest extends UnitTestCase {
   protected ClientInterface&MockObject $httpClient;
 
   /**
+   * Logger channel mock.
+   */
+  protected LoggerChannelInterface&MockObject $logger;
+
+  /**
    * API client under test.
    */
   protected ReliefWebApiClient $apiClient;
@@ -76,9 +81,9 @@ class ReliefWebApiClientTest extends UnitTestCase {
     $time = $this->createMock(TimeInterface::class);
     $time->method('getRequestTime')->willReturn(1_700_000_000);
 
-    $logger = $this->createMock(LoggerChannelInterface::class);
+    $this->logger = $this->createMock(LoggerChannelInterface::class);
     $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
-    $logger_factory->method('get')->willReturn($logger);
+    $logger_factory->method('get')->willReturn($this->logger);
 
     $request_stack = new RequestStack();
     $request_stack->push(Request::create('https://example.com/'));
@@ -345,6 +350,32 @@ class ReliefWebApiClientTest extends UnitTestCase {
       ->willReturn(Create::promiseFor(new Response(200, [], $body)));
 
     $this->apiClient->request('reports', ['limit' => 1]);
+  }
+
+  /**
+   * Failed requests log the request-id near the start of the message.
+   */
+  public function testFailureLogIncludesRequestId(): void {
+    $this->cacheBackend->method('get')->willReturn(FALSE);
+    $this->httpClient->method('requestAsync')
+      ->willReturn(Create::promiseFor(new Response(500, [], 'error')));
+
+    $this->logger->expects($this->once())
+      ->method('notice')
+      ->with(
+        $this->callback(static function (string $message): bool {
+          return str_starts_with($message, '[@request_id]');
+        }),
+        $this->callback(static function (array $context): bool {
+          return ($context['@request_id'] ?? NULL) === 'rw.homepage.headlines';
+        }),
+      );
+
+    $this->apiClient->request(
+      'reports',
+      ['limit' => 1],
+      request_id: 'homepage.headlines',
+    );
   }
 
 }

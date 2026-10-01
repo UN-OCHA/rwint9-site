@@ -234,7 +234,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
           // Skip the request if something is wrong with the payload.
           if ($payload === FALSE) {
             $results[$index] = NULL;
-            $this->getLogger()->error('Could not encode payload when requesting @url: @payload', [
+            $this->getLogger()->error('[@request_id] Could not encode payload when requesting @url: @payload', [
+              '@request_id' => $this->getQueryRequestId($query),
               '@url' => $api_url . '/' . $query['resource'],
               '@payload' => strtr(print_r($query['payload'], TRUE), "\n", " "),
             ]);
@@ -245,8 +246,9 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
       // Add request-id after GET payload merge so callers' payloads cannot
       // overwrite it, and it is never part of the POST body / cache key.
-      if (!empty($query['request_id']) && is_string($query['request_id'])) {
-        $parameters['request-id'] = $this->getRequestIdPrefix() . '.' . $query['request_id'];
+      $request_id = $this->getQueryRequestId($query);
+      if ($request_id !== '-') {
+        $parameters['request-id'] = $request_id;
       }
 
       $url = $api_url . '/' . $query['resource'] . '?' . http_build_query($parameters);
@@ -265,7 +267,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         $promises[$index] = $this->httpClient->requestAsync($method, $url, $options);
       }
       catch (\Exception $exception) {
-        $this->getLogger()->error('Exception while querying @url: @exception', [
+        $this->getLogger()->error('[@request_id] Exception while querying @url: @exception', [
+          '@request_id' => $request_id,
           '@url' => $api_url . '/' . $query['resource'],
           '@exception' => $exception->getMessage(),
         ]);
@@ -278,6 +281,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
     $promise_results = Utils::settle($promises)->wait();
     foreach ($promise_results as $index => $result) {
       $raw = NULL;
+      $request_id = $this->getQueryRequestId($queries[$index]);
 
       // Parse the response in case of success.
       if ($result['state'] === 'fulfilled') {
@@ -288,7 +292,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
           $raw = (string) $response->getBody();
         }
         else {
-          $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
+          $this->getLogger()->notice('[@request_id] Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
+            '@request_id' => $request_id,
             '@code' => $response->getStatusCode(),
             '@url' => $api_url . '/' . $queries[$index]['resource'],
             '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
@@ -297,7 +302,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
       }
       // Otherwise log the error.
       else {
-        $this->getLogger()->notice('Unable to retrieve API data (@code: @reason) when requesting @url with payload @payload', [
+        $this->getLogger()->notice('[@request_id] Unable to retrieve API data (@code: @reason) when requesting @url with payload @payload', [
+          '@request_id' => $request_id,
           '@code' => $result['reason']->getCode(),
           '@reason' => $result['reason']->getMessage(),
           '@url' => $api_url . '/' . $queries[$index]['resource'],
@@ -312,7 +318,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
       $decoded = $this->decodeApiJsonObject($raw);
       if ($decoded === NULL) {
-        $this->getLogger()->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
+        $this->getLogger()->notice('[@request_id] Unable to decode ReliefWeb API data for request @url with payload @payload', [
+          '@request_id' => $request_id,
           '@url' => $api_url . '/' . $queries[$index]['resource'],
           '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
         ]);
@@ -811,6 +818,22 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
    */
   protected function getRequestIdPrefix(): string {
     return $this->config()->get('request_id_prefix') ?: 'rw';
+  }
+
+  /**
+   * Get the full request-id for a query, for URL params and log messages.
+   *
+   * @param array $query
+   *   Query definition that may contain a request_id suffix.
+   *
+   * @return string
+   *   Prefixed request-id, or '-' when unset.
+   */
+  protected function getQueryRequestId(array $query): string {
+    if (!empty($query['request_id']) && is_string($query['request_id'])) {
+      return $this->getRequestIdPrefix() . '.' . $query['request_id'];
+    }
+    return '-';
   }
 
   /**
