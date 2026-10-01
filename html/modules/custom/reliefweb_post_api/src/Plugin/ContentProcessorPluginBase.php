@@ -27,8 +27,11 @@ use Drupal\file\Validation\FileValidatorInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Validation\Constraint\ReliefWebFileHashConstraint;
+use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
+use Drupal\reliefweb_post_api\Exception\DocumentNotFoundException;
 use Drupal\reliefweb_post_api\Exception\DuplicateException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Helpers\UrlHelper;
@@ -219,7 +222,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
       $schema = @file_get_contents($path . '/schemas/v2/' . $bundle . '.json');
       if ($schema === FALSE) {
-        throw new ContentProcessorException(strtr('Missing @bundle JSON schema.', [
+        throw new ContentProcessorException(ContentProcessorMessage::MissingBundleJsonSchema->format([
           '@bundle' => $bundle,
         ]));
       }
@@ -233,7 +236,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function getProvider(string $uuid): ProviderInterface {
     if (!Uuid::isValid($uuid)) {
-      throw new ContentProcessorException('Invalid provider UUID.');
+      throw new ContentProcessorException(ContentProcessorMessage::InvalidProviderUuid->value);
     }
     if (array_key_exists($uuid, $this->providers)) {
       $provider = $this->providers[$uuid];
@@ -243,10 +246,10 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $this->providers[$uuid] = $provider;
     }
     if (is_null($provider)) {
-      throw new ContentProcessorException('Invalid provider.');
+      throw new ContentProcessorException(ContentProcessorMessage::InvalidProvider->value);
     }
     elseif (empty($provider->status->value)) {
-      throw new ContentProcessorException('Blocked provider.');
+      throw new ContentProcessorException(ContentProcessorMessage::BlockedProvider->value);
     }
     return $provider;
   }
@@ -307,23 +310,47 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function isProcessable(string $uuid): bool {
-    $terminal_statuses = $this->getTerminalModerationStatuses();
-    if ($terminal_statuses === []) {
+    $status = $this->getModerationStatusByUuid($uuid);
+    if ($status === NULL) {
       return TRUE;
     }
+    return !$this->isTerminalModerationStatus($status);
+  }
 
-    $storage = $this->entityTypeManager->getStorage($this->getEntityType());
-    $uuid_key = $storage->getEntityType()->getKey('uuid');
+  /**
+   * {@inheritdoc}
+   */
+  public function getModerationStatusByUuid(string $uuid): ?string {
+    $entity_type = $this->entityTypeManager->getDefinition($this->getEntityType());
+    $base_table = $entity_type->getBaseTable();
+    $data_table = $entity_type->getDataTable() ?? $base_table;
+    $id_key = $entity_type->getKey('id');
+    $uuid_key = $entity_type->getKey('uuid');
 
-    // Terminal editorial statuses: do not accept further submissions.
-    $ids = $storage
-      ->getQuery()
-      ->accessCheck(FALSE)
-      ->condition($uuid_key, $uuid, '=')
-      ->condition('moderation_status', $terminal_statuses, 'IN')
-      ->execute();
+    $query = $this->database->select($data_table, 'data');
+    $query->addField('data', 'moderation_status');
+    if ($data_table !== $base_table) {
+      $query->join($base_table, 'base', "base.{$id_key} = data.{$id_key}");
+      $query->condition("base.{$uuid_key}", $uuid, '=');
+    }
+    else {
+      $query->condition("data.{$uuid_key}", $uuid, '=');
+    }
+    $default_langcode_key = $entity_type->getKey('default_langcode');
+    if ($default_langcode_key) {
+      $query->condition('data.' . $default_langcode_key, 1);
+    }
+    $query->range(0, 1);
 
-    return empty($ids);
+    $status = $query->execute()?->fetchField();
+    return is_string($status) && $status !== '' ? $status : NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isTerminalModerationStatus(string $status): bool {
+    return in_array($status, $this->getTerminalModerationStatuses(), TRUE);
   }
 
   /**
@@ -335,6 +362,17 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   protected function getTerminalModerationStatuses(): array {
     $service = ModerationServiceBase::getModerationService($this->getBundle());
     return $service ? $service->getTerminalStatuses() : [];
+  }
+
+  /**
+   * Retired moderation statuses that skip Post API hash no-op.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  protected function getRetiredModerationStatuses(): array {
+    $service = ModerationServiceBase::getModerationService($this->getBundle());
+    return $service ? $service->getRetiredStatuses() : [];
   }
 
   /**
@@ -353,7 +391,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $bundle = $this->getBundle();
     if ($entity->bundle() !== $bundle) {
-      throw new ContentProcessorException(strtr('Existing entity with the UUID @uuid is not a @bundle.', [
+      throw new ContentProcessorException(ContentProcessorMessage::ExistingEntityWrongBundle->format([
         '@uuid' => $entity->uuid(),
         '@bundle' => $bundle,
       ]));
@@ -370,13 +408,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    *   When the entity is in a terminal moderation status.
    */
   protected function validateEntityProcessable(ContentEntityInterface $entity): void {
-    if ($entity->isNew() || !method_exists($entity, 'getModerationStatus')) {
+    if ($entity->isNew() || !($entity instanceof EntityModeratedInterface)) {
       return;
     }
 
     $status = $entity->getModerationStatus();
     if (in_array($status, $this->getTerminalModerationStatuses(), TRUE)) {
-      throw new ContentProcessorException(strtr('Skipping processing: existing entity with the UUID @uuid is marked as @status.', [
+      throw new ContentProcessorException(ContentProcessorMessage::SkippingTerminalEntity->format([
         '@uuid' => $entity->uuid(),
         '@status' => $status,
       ]));
@@ -388,6 +426,11 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function isUnchanged(ContentEntityInterface $entity, array $data): bool {
     if ($entity->isNew() || !$entity->hasField('field_post_api_hash')) {
+      return FALSE;
+    }
+
+    // Allow identical payloads to reopen retired content.
+    if ($entity instanceof EntityModeratedInterface && $entity->isRetiredModerationStatus()) {
       return FALSE;
     }
 
@@ -407,15 +450,53 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $uuid_key = $storage->getEntityType()->getKey('uuid');
     $hash = $this->getSubmissionHash($data);
 
-    $ids = $storage
+    $query = $storage
       ->getQuery()
       ->accessCheck(FALSE)
       ->condition($uuid_key, $uuid, '=')
       ->condition('field_post_api_hash', $hash, '=')
-      ->range(0, 1)
-      ->execute();
+      ->range(0, 1);
+
+    $retired_statuses = $this->getRetiredModerationStatuses();
+    if ($retired_statuses !== []) {
+      $query->condition('moderation_status', $retired_statuses, 'NOT IN');
+    }
+
+    $ids = $query->execute();
 
     return !empty($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function withdraw(string $uuid, int $user_id): ContentEntityInterface {
+    $entity = $this->entityRepository->loadEntityByUuid($this->getEntityType(), $uuid);
+    if (empty($entity) || !($entity instanceof ContentEntityInterface)) {
+      throw new DocumentNotFoundException(ContentProcessorMessage::DocumentNotFound->value);
+    }
+
+    $this->validateEntityBundle($entity);
+    $this->validateEntityProcessable($entity);
+
+    if (!($entity instanceof EntityModeratedInterface)) {
+      throw new ContentProcessorException(ContentProcessorMessage::DocumentCannotBeWithdrawn->value);
+    }
+
+    if ($entity->getModerationStatus() === 'withdrawn') {
+      return $entity;
+    }
+
+    $entity->setModerationStatus('withdrawn');
+    $entity->setNewRevision(TRUE);
+    $entity->setRevisionCreationTime(time());
+    $entity->setRevisionUserId($user_id);
+    if ($entity instanceof EntityRevisionedInterface) {
+      $entity->updateRevisionLogMessage('Withdrawn via Post API.', 'replace', FALSE);
+    }
+    $entity->save();
+
+    return $entity;
   }
 
   /**
@@ -588,19 +669,19 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function validateUuid(array $data): void {
     if (empty($data['url'])) {
-      throw new ContentProcessorException('Missing document URL.');
+      throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUrl->value);
     }
     elseif (empty($data['uuid'])) {
-      throw new ContentProcessorException('Missing document UUID.');
+      throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUuid->value);
     }
     elseif (!Uuid::isValid($data['uuid'])) {
-      throw new ContentProcessorException('Invalid document UUID.');
+      throw new ContentProcessorException(ContentProcessorMessage::InvalidDocumentUuid->value);
     }
     // @todo if we want to allow providers to edit existing ReliefWeb content
     // then we cannot do this comparison because the UUID is not generated this
     // way and is not derived from the document URL.
     elseif ($this->generateUuid($data['url']) !== $data['uuid']) {
-      throw new ContentProcessorException('The UUID does not match the one generated from the URL.');
+      throw new ContentProcessorException(ContentProcessorMessage::UuidUrlMismatch->value);
     }
   }
 
@@ -627,7 +708,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // source is among the allowed sources.
     // Check if any of the given sources is not in the list of allowed ones.
     if (empty($data['source']) || count(array_diff($data['source'], $sources)) > 0) {
-      throw new ContentProcessorException('Unallowed source(s)');
+      throw new ContentProcessorException(ContentProcessorMessage::UnallowedSources->value);
     }
   }
 
@@ -639,10 +720,12 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $document_pattern = $provider->getUrlPattern('document');
     if (empty($data['url'])) {
-      throw new ContentProcessorException('Missing document URL.');
+      throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUrl->value);
     }
     elseif (!$this->validateUrl($data['url'], $document_pattern)) {
-      throw new ContentProcessorException('Unallowed document URL: ' . $data['url']);
+      throw new ContentProcessorException(ContentProcessorMessage::UnallowedDocumentUrl->format([
+        '@url' => $data['url'],
+      ]));
     }
   }
 
@@ -1267,7 +1350,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   public function guessFileMimeType(string $path, array $allowed_mimetypes = []): string {
     $mimetype = $this->mimeTypeGuesser->guessMimeType($path);
     if (empty($mimetype) || (!empty($allowed_mimetypes) && !in_array($mimetype, $allowed_mimetypes))) {
-      throw new ContentProcessorException(strtr('Unsupported @mimetype mimetype for @path.', [
+      throw new ContentProcessorException(ContentProcessorMessage::UnsupportedMimetype->format([
         '@mimetype' => $mimetype ?? 'unknown',
         '@path' => $path,
       ]));

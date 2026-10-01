@@ -181,9 +181,10 @@ class TrainingModeration extends ModerationServiceBase {
       'on-hold' => $this->t('On-hold'),
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
+      'expired' => $this->t('Expired'),
+      'withdrawn' => $this->t('Withdrawn'),
       'refused' => $this->t('Refused'),
       'duplicate' => $this->t('Duplicate'),
-      'expired' => $this->t('Expired'),
     ];
   }
 
@@ -197,8 +198,15 @@ class TrainingModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status) {
-    return $status === 'to-review' || $status === 'published';
+  public function getRetiredStatuses(): array {
+    return ['expired', 'withdrawn'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPublishedStatuses(): array {
+    return ['to-review', 'published'];
   }
 
   /**
@@ -209,7 +217,7 @@ class TrainingModeration extends ModerationServiceBase {
     $new = empty($status) || $status === 'draft' || $entity->isNew();
 
     // Only show save as draft for non-published but editable documents.
-    if ($new || in_array($status, ['draft', 'pending', 'on-hold'])) {
+    if ($new || in_array($status, ['draft', 'pending', 'on-hold', 'withdrawn'])) {
       $buttons['draft'] = [
         '#value' => $this->t('Save as draft'),
       ];
@@ -241,7 +249,7 @@ class TrainingModeration extends ModerationServiceBase {
       ];
 
       // Add confirmation when attempting to change published document.
-      if ($this->isPublishedStatus($status) || $status === 'expired') {
+      if ($this->isPublishedStatus($status) || $this->isRetiredStatus($status)) {
         $message = $this->t('Press OK to submit the changes for review by the ReliefWeb editors. The training may be set as pending.');
         $buttons['pending']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
       }
@@ -257,11 +265,23 @@ class TrainingModeration extends ModerationServiceBase {
       $buttons['draft']['#attributes']['onclick'] = 'return confirm("' . $message . '")';
     }
 
-    // Add a button to close (set as expired) a published training.
-    if ($this->isPublishedStatus($status) || $status === 'expired') {
-      $buttons['expired'] = [
-        '#value' => $this->t('Close Training'),
-      ];
+    // Close Training: withdrawn for intentional close; preserve expired when
+    // already past the closing date.
+    if ($this->isPublishedStatus($status) || in_array($status, [
+      'pending',
+      'on-hold',
+      ...$this->getRetiredStatuses(),
+    ], TRUE)) {
+      if ($status === 'expired') {
+        $buttons['expired'] = [
+          '#value' => $this->t('Close Training'),
+        ];
+      }
+      else {
+        $buttons['withdrawn'] = [
+          '#value' => $this->t('Close Training'),
+        ];
+      }
     }
 
     return $buttons;

@@ -6,6 +6,7 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api
 
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTestCase;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Report;
@@ -120,7 +121,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is not a report');
+    $this->expectExceptionMessage(ContentProcessorMessage::ExistingEntityWrongBundle->format([
+      '@uuid' => $entity->uuid(),
+      '@bundle' => 'report',
+    ]));
 
     $plugin->process($data);
   }
@@ -154,7 +158,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is marked as refused');
+    $this->expectExceptionMessage(ContentProcessorMessage::SkippingTerminalEntity->format([
+      '@uuid' => $entity->uuid(),
+      '@status' => 'refused',
+    ]));
 
     $plugin->process($data);
   }
@@ -187,7 +194,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is marked as duplicate');
+    $this->expectExceptionMessage(ContentProcessorMessage::SkippingTerminalEntity->format([
+      '@uuid' => $entity->uuid(),
+      '@status' => 'duplicate',
+    ]));
 
     $plugin->process($data);
   }
@@ -220,7 +230,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
       ]);
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('is marked as archive');
+    $this->expectExceptionMessage(ContentProcessorMessage::SkippingTerminalEntity->format([
+      '@uuid' => $entity->uuid(),
+      '@status' => 'archive',
+    ]));
 
     $plugin->process($data);
   }
@@ -268,7 +281,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
 
     // Unallowed image URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed image URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
+      '@type' => 'image',
+      '@url' => 'https://wrong.test/test.jpg',
+    ]));
     $this->plugin->validateFiles($data);
   }
 
@@ -281,7 +297,10 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
 
     // Unallowed file URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed file URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
+      '@type' => 'file',
+      '@url' => 'https://wrong.test/test.pdf',
+    ]));
     $this->plugin->validateFiles($data);
   }
 

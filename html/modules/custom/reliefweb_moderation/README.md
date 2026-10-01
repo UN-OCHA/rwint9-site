@@ -47,6 +47,7 @@ Reports can have the following moderation statuses:
 - **refused**: Unpublished, rejected content
 - **duplicate**: Unpublished, duplicate content
 - **archive**: Unpublished, archived content
+- **withdrawn**: Unpublished, withdrawn by the partner or editor
 
 **Published statuses:**
 - **to-review**: Published but editorial review requested
@@ -75,6 +76,7 @@ A user is considered the owner of a report if they are the author of the documen
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | archive | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Authenticated User Access
 
@@ -90,6 +92,7 @@ A user is considered the owner of a report if they are the author of the documen
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | archive | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Submitter Access
 
@@ -107,6 +110,7 @@ Submitters can only access their own reports and require posting rights for crea
 | refused | ✅ | ✅* | ✅ | ❌ | ❌ |
 | duplicate | ✅ | ✅* | ✅* | ❌ | ❌ |
 | archive | ✅ | ✅* | ❌ | ❌ | ❌ |
+| withdrawn | ✅ | ✅* | ✅ | ❌ | ❌ |
 
 **Access Restrictions:**
 - **View/Update**: Limited to reports owned by the submitter only for unpublished content
@@ -131,6 +135,7 @@ Contributors have broader access to reports and can view moderation information.
 | refused | ✅ | ✅ | ❌ | ❌ | ✅ |
 | duplicate | ✅ | ✅ | ❌ | ❌ | ✅ |
 | archive | ✅ | ✅ | ❌ | ❌ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ❌ | ✅ |
 
 ### Editor Access
 
@@ -148,6 +153,7 @@ Editors have full access to all reports and can edit refused and duplicate repor
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | archive | ✅ | ✅ | ❌ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ### Administrator/Webmaster Access
 
@@ -165,6 +171,7 @@ Administrators and webmasters have full access including the ability to edit arc
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | archive | ✅ | ✅ | ✅ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Job access
 
@@ -189,7 +196,8 @@ Jobs can have the following moderation statuses:
 - **on-hold**: Unpublished, requires modifications/verifications/instructions
 - **refused**: Unpublished, rejected content
 - **duplicate**: Unpublished, duplicate content
-- **expired**: Unpublished, previously published but now expired
+- **expired**: Unpublished, past the closing date (jobs/training lifecycle)
+- **withdrawn**: Unpublished, intentionally closed by the partner or editor
 
 **Published statuses:**
 - **published**: Published and publicly available
@@ -213,6 +221,7 @@ A user is considered the owner of a job if they are the author of the document o
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | expired | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Authenticated User Access
 
@@ -225,6 +234,7 @@ A user is considered the owner of a job if they are the author of the document o
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | expired | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Advertiser Access
 
@@ -239,6 +249,7 @@ Advertisers can create and manage their own jobs with posting rights.
 | refused | ✅* | ✅ | ✅* | ❌ | ✅* |
 | duplicate | ✅* | ✅ | ✅* | ❌ | ✅* |
 | expired | ✅* | ✅ | ✅* | ❌ | ✅* |
+| withdrawn | ✅* | ✅ | ✅* | ❌ | ✅* |
 
 **Access Restrictions:**
 - **View**: Published jobs are publicly viewable; unpublished jobs only if owned by advertiser with posting rights
@@ -260,6 +271,7 @@ Editors have full access to all jobs and can edit refused jobs.
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | expired | ✅ | ✅ | ✅ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ### Administrator/Webmaster Access
 
@@ -274,6 +286,7 @@ Administrators and webmasters have full access including the ability to edit all
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | expired | ✅ | ✅ | ✅ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Training access
 
@@ -298,7 +311,8 @@ Training can have the following moderation statuses:
 - **on-hold**: Unpublished, requires modifications/verifications/instructions
 - **refused**: Unpublished, rejected content
 - **duplicate**: Unpublished, duplicate content
-- **expired**: Unpublished, previously published but now expired
+- **expired**: Unpublished, past the closing date (jobs/training lifecycle)
+- **withdrawn**: Unpublished, intentionally closed by the partner or editor
 
 **Published statuses:**
 - **published**: Published and publicly available
@@ -322,6 +336,7 @@ A user is considered the owner of a training if they are the author of the docum
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | expired | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Authenticated User Access
 
@@ -334,6 +349,7 @@ A user is considered the owner of a training if they are the author of the docum
 | refused | ❌ | ❌ | ❌ | ❌ | ❌ |
 | duplicate | ❌ | ❌ | ❌ | ❌ | ❌ |
 | expired | ❌ | ❌ | ❌ | ❌ | ❌ |
+| withdrawn | ❌ | ❌ | ❌ | ❌ | ❌ |
 
 ### Advertiser Access
 
@@ -348,6 +364,7 @@ Advertisers can create and manage their own training with posting rights.
 | refused | ✅* | ✅ | ✅* | ❌ | ✅* |
 | duplicate | ✅* | ✅ | ✅* | ❌ | ✅* |
 | expired | ✅* | ✅ | ✅* | ❌ | ✅* |
+| withdrawn | ✅* | ✅ | ✅* | ❌ | ✅* |
 
 **Access Restrictions:**
 - **View**: Published training is publicly viewable; unpublished training only if owned by advertiser with posting rights
@@ -369,6 +386,7 @@ Editors have full access to all training and can edit refused training.
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | expired | ✅ | ✅ | ✅ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ### Administrator/Webmaster Access
 
@@ -383,6 +401,7 @@ Administrators and webmasters have full access including the ability to edit all
 | refused | ✅ | ✅ | ✅ | ✅ | ✅ |
 | duplicate | ✅ | ✅ | ✅ | ✅ | ✅ |
 | expired | ✅ | ✅ | ✅ | ✅ | ✅ |
+| withdrawn | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## Inactive sources
 

@@ -69,6 +69,15 @@ trait EntityModeratedTrait {
   }
 
   /**
+   * Check if the entity's current status is retired.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::isRetiredModerationStatus()
+   */
+  public function isRetiredModerationStatus(): bool {
+    return $this->getModerationService()?->isRetiredStatus($this->getModerationStatus()) ?? FALSE;
+  }
+
+  /**
    * Get the list of allowed statuses for the enitity.
    *
    * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::getAllowedModerationStatuses()
@@ -169,6 +178,37 @@ trait EntityModeratedTrait {
       }
     }
     return NULL;
+  }
+
+  /**
+   * Whether any revision was ever in a published-equivalent status.
+   *
+   * @see \Drupal\reliefweb_moderation\EntityModeratedInterface::wasEverPublished()
+   */
+  public function wasEverPublished(): bool {
+    if ($this->id() === NULL) {
+      return $this->isPublishedModerationStatus();
+    }
+
+    $statuses = $this->getModerationService()?->getPublishedStatuses() ?? ['published'];
+    if ($statuses === []) {
+      return FALSE;
+    }
+
+    $entity_type = $this->getEntityType();
+    $table = $entity_type->getRevisionDataTable();
+    $id_field = $entity_type->getKey('id');
+
+    $revision_id = \Drupal::database()
+      ->select($table, $table)
+      ->fields($table, [$entity_type->getKey('revision')])
+      ->condition($table . '.' . $id_field, $this->id(), '=')
+      ->condition($table . '.moderation_status', $statuses, 'IN')
+      ->range(0, 1)
+      ->execute()
+      ?->fetchField();
+
+    return !empty($revision_id);
   }
 
 }

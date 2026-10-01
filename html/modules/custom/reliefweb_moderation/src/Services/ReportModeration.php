@@ -245,11 +245,12 @@ class ReportModeration extends ModerationServiceBase {
       'draft' => $this->t('Draft'),
       'pending' => $this->t('Pending'),
       'on-hold' => $this->t('On-hold'),
+      'embargoed' => $this->t('Embargoed'),
       'to-review' => $this->t('To review'),
       'published' => $this->t('Published'),
+      'withdrawn' => $this->t('Withdrawn'),
       'refused' => $this->t('Refused'),
       'duplicate' => $this->t('Duplicate'),
-      'embargoed' => $this->t('Embargoed'),
       'reference' => $this->t('Reference'),
       'archive' => $this->t('Archived'),
     ];
@@ -270,6 +271,13 @@ class ReportModeration extends ModerationServiceBase {
    */
   public function getTerminalStatuses(): array {
     return ['refused', 'duplicate', 'archive'];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getRetiredStatuses(): array {
+    return ['withdrawn'];
   }
 
   /**
@@ -312,30 +320,27 @@ class ReportModeration extends ModerationServiceBase {
       'published' => [
         '#value' => $this->t('Publish'),
       ],
+      'pending' => [
+        '#value' => $this->t('Pending'),
+      ],
       'on-hold' => [
         '#value' => $this->t('On-hold'),
+      ],
+      'withdrawn' => [
+        '#value' => $this->t('Withdraw'),
       ],
       'reference' => [
         '#value' => $this->t('Reference'),
       ],
     ];
 
-    // The provider is only set on content submitted via the API.
-    $api_submitted = $entity->hasField('field_post_api_provider') && !empty($entity->field_post_api_provider?->target_id);
     $account = $this->currentUser;
-
-    // Allow to set the status to pending for content submitted via the API.
-    if ($api_submitted) {
-      $buttons['pending'] = [
-        '#value' => $this->t('Pending'),
-      ];
-    }
 
     // Allow to refuse content submitted via the API or already refused
     // documents.
-    if (($api_submitted || $status === 'refused') && $account->hasPermission(static::getTerminalStatusPermission('refused'))) {
+    if ($account->hasPermission(static::getTerminalStatusPermission('refused'))) {
       $buttons['refused'] = [
-        '#value' => $this->t('Refused'),
+        '#value' => $this->t('Refuse'),
       ];
     }
 
@@ -353,7 +358,27 @@ class ReportModeration extends ModerationServiceBase {
       ];
     }
 
-    return $buttons;
+    // Re-order the buttons.
+    $order = [
+      'draft',
+      'to-review',
+      'published',
+      'pending',
+      'on-hold',
+      'duplicate',
+      'withdrawn',
+      'refused',
+      'reference',
+      'archive',
+    ];
+    $reordered_buttons = [];
+    foreach ($order as $key) {
+      if (isset($buttons[$key])) {
+        $reordered_buttons[$key] = $buttons[$key];
+      }
+    }
+
+    return $reordered_buttons;
   }
 
   /**
@@ -430,7 +455,7 @@ class ReportModeration extends ModerationServiceBase {
 
     if (!$new) {
       // This button allows to unpublish a document.
-      $buttons['on-hold'] = [
+      $buttons['withdrawn'] = [
         '#value' => $this->t('Unpublish'),
       ];
     }
@@ -447,8 +472,8 @@ class ReportModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status) {
-    return $status === 'to-review' || $status === 'published';
+  public function getPublishedStatuses(): array {
+    return ['to-review', 'published'];
   }
 
   /**

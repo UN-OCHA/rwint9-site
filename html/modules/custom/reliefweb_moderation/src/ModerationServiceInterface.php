@@ -132,6 +132,29 @@ interface ModerationServiceInterface {
   public function getTerminalStatuses(): array;
 
   /**
+   * Get statuses that mean the content has been retired from public life.
+   *
+   * Retired statuses (for example expired or withdrawn) are unpublished and
+   * editable/reopenable, unlike terminal statuses. Used for 410 Gone handling
+   * and Post API hash no-op skips.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getRetiredStatuses(): array;
+
+  /**
+   * Check if a status is a retired status.
+   *
+   * @param string $status
+   *   Entity moderation status.
+   *
+   * @return bool
+   *   TRUE if the status is retired.
+   */
+  public function isRetiredStatus($status): bool;
+
+  /**
    * Get the permission name to edit content in a terminal status.
    *
    * @param string $status
@@ -154,6 +177,14 @@ interface ModerationServiceInterface {
    *   TRUE if the entity is deletable.
    */
   public function isDeletableStatus(string $status, ?AccountInterface $account = NULL): bool;
+
+  /**
+   * Get statuses that are considered published.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getPublishedStatuses(): array;
 
   /**
    * Check if an entity with the given status is considered published.

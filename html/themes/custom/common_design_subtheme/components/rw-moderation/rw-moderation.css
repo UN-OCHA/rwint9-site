@@ -28,7 +28,7 @@
 .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-  grid-gap: 0 24px;
+  gap: 0 24px;
   margin-bottom: -12px;
 }
 .path-moderation-content-disaster .rw-moderation-filters .rw-moderation-filter-status .form-checkboxes {
@@ -98,19 +98,18 @@
 .rw-moderation-list > h3 {
   position: absolute;
   overflow: hidden;
-  clip: rect(0, 0, 0, 0);
+  clip-path: inset(100%);
   width: 1px;
   height: 1px;
   margin: -1px;
   padding: 0;
   white-space: nowrap;
   border: none;
-  clip-path: inset(100%);
 }
 .rw-moderation-content__total-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  grid-gap: 24px;
+  gap: 12px;
   margin: 0 0 24px 0;
   padding: 0;
   text-align: center;
@@ -151,7 +150,7 @@
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) {
   width: 100%;
-  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 .rw-moderation-list .rw-moderation-table tr td:nth-child(2) div + div {
   margin-top: 4px;
@@ -237,7 +236,7 @@
 /* User posts type column */
 .rw-moderation-list--user-posts .rw-moderation-table tr td:nth-child(2) {
   width: auto;
-  word-break: unset;
+  overflow-wrap: unset;
 }
 /* User posts source list */
 .rw-moderation-list--user-posts .rw-moderation-table ul {
@@ -285,7 +284,7 @@
   }
 
   .rw-moderation-table tr td {
-    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .rw-moderation-table tr td:nth-child(1) {
