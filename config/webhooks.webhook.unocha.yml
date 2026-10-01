@@ -8,6 +8,8 @@ payload_url: 'http://unocha-local.test/webhook/publications'
 type: outgoing
 events: 'a:1:{s:24:"reliefweb:entity_updated";s:24:"reliefweb:entity_updated";}'
 secret: ''
+signature_header: null
+signature_algorithm: null
 content_type: application/json
 token: ''
 non_blocking: false
