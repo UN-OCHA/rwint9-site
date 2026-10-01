@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_entities\Entity;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\node\Entity\Node;
 use Drupal\reliefweb_entities\BundleEntityInterface;
@@ -55,7 +56,8 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
    * {@inheritdoc}
    */
   public function getPageContent() {
-    $sections = $this->getPageSections();
+    $cacheability = new CacheableMetadata();
+    $sections = $this->getPageSections($cacheability);
     $contents = $this->getPageTableOfContents();
 
     // We do a bit of gymnastic to add the sections not already assigned in the
@@ -79,13 +81,13 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     $contents['sections']['sections'] = $sections_sections + $contents['sections']['sections'];
 
     // Consolidate sections, removing empty ones.
-    return $this->consolidateSections($contents, $sections);
+    return $this->consolidateSections($contents, $sections, cacheability: $cacheability);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPageSections() {
+  public function getPageSections(?CacheableMetadata $cacheability = NULL) {
     $sections = [];
 
     // Text sections.
@@ -174,10 +176,14 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     // Prepare the API queries.
     $queries = [];
     foreach ($section_links as $index => $section_link) {
-      $queries[$index] = $this->riverUrlToApi($section_link);
+      $query = $this->riverUrlToApi($section_link);
+      if (!empty($query)) {
+        $query['request_id'] = 'topic.' . $index;
+        $queries[$index] = $query;
+      }
     }
 
-    $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+    $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     return $sections;
   }

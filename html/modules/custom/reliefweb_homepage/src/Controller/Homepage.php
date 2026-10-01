@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_homepage\Controller;
 
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\RendererInterface;
@@ -116,12 +117,17 @@ class Homepage extends ControllerBase {
       'training' => $this->getOpportuntiesTotalApiPayload('training'),
     ];
 
+    $cacheability = new CacheableMetadata();
     // Get the API data.
     $results = $this->reliefWebApiClient
-      ->requestMultiple(array_filter($queries), TRUE);
+      ->requestMultiple(array_filter($queries), cacheability: $cacheability);
 
     // Parse the API results, building the page sections data.
     foreach ($results as $index => $result) {
+      if (!is_array($result)) {
+        continue;
+      }
+
       $query = $queries[$index];
       $cache_tags = [
         $query['entity_type'] . '_list:' . $query['bundle'],
@@ -200,6 +206,7 @@ class Homepage extends ControllerBase {
         'contexts' => ['user.permissions'],
       ],
     ];
+    $cacheability->applyTo($build);
 
     // Add the headlines widget.
     if ($this->currentUser->hasPermission('edit homepage headlines')) {
@@ -214,11 +221,13 @@ class Homepage extends ControllerBase {
    *
    * @param int $limit
    *   Number of headlines to return.
+   * @param string $request_id
+   *   Request ID suffix for API log attribution.
    *
    * @return array
    *   API Payload.
    */
-  public function getHeadlinesApiPayload($limit = 8) {
+  public function getHeadlinesApiPayload($limit = 8, string $request_id = 'homepage.headlines') {
     $payload = RiverServiceBase::getRiverApiPayload('report', 'headlines');
     $payload['fields']['exclude'][] = 'file';
     $payload['fields']['include'][] = 'headline.image';
@@ -248,6 +257,7 @@ class Homepage extends ControllerBase {
       'title' => $this->t('Latest Headlines'),
       'callback' => [$this, 'parseHeadlinesApiData'],
       'view' => 'headlines',
+      'request_id' => $request_id,
       // Link to the headlines river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
@@ -316,6 +326,7 @@ class Homepage extends ControllerBase {
       'entity_type' => 'node',
       'payload' => $payload,
       'title' => $title ?? $this->t('Latest Updates'),
+      'request_id' => 'homepage.most-read',
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
@@ -347,6 +358,7 @@ class Homepage extends ControllerBase {
       'payload' => $payload,
       'title' => $this->t('Recent Disasters'),
       'callback' => [$this, 'parseDisastersApiData'],
+      'request_id' => 'homepage.disasters',
       // Link to the disasters river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('disaster'),
@@ -372,6 +384,7 @@ class Homepage extends ControllerBase {
       'payload' => $payload,
       'title' => $this->t('Latest Blog'),
       'callback' => [$this, 'parseBlogPostApiData'],
+      'request_id' => 'homepage.blog',
       // Link to the blog river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('blog_post'),
@@ -398,10 +411,12 @@ class Homepage extends ControllerBase {
     if ($bundle === 'job') {
       $title = $this->t('Open jobs');
       $resource = 'jobs';
+      $request_id = 'homepage.jobs-count';
     }
     else {
       $title = $this->t('Training programs');
       $resource = 'training';
+      $request_id = 'homepage.training-count';
     }
 
     return [
@@ -410,6 +425,7 @@ class Homepage extends ControllerBase {
       'entity_type' => 'node',
       'payload' => $payload,
       'title' => $title,
+      'request_id' => $request_id,
       // Link to the job/training river for the entity.
       'url' => RiverServiceBase::getRiverUrl($bundle),
     ];
@@ -472,16 +488,19 @@ class Homepage extends ControllerBase {
    */
   public function retrieveHeadlines() {
     // Get the latest 24 headlines.
-    $query = $this->getHeadlinesApiPayload(24);
+    $query = $this->getHeadlinesApiPayload(24, request_id: 'homepage.headlines-admin');
+
+    $cacheability = new CacheableMetadata();
+    // Admin AJAX response — never cache the widget payload.
+    $cacheability->setCacheMaxAge(0);
 
     // Get the API data.
     $results = $this->reliefWebApiClient
-      ->requestMultiple(['headlines' => $query]);
+      ->requestMultiple(['headlines' => $query], cacheability: $cacheability);
 
     $build = [];
-    if (!empty($results['headlines']['data'])) {
-      $result = $results['headlines'];
-
+    $result = $results['headlines'] ?? NULL;
+    if (is_array($result) && !empty($result['data'])) {
       // Sort the headlines by id DESC to have the most recent first.
       uasort($result['data'], function ($a, $b) {
         return $b['id'] <=> $a['id'];
@@ -499,12 +518,10 @@ class Homepage extends ControllerBase {
           '#title' => $query['title'],
           '#resource' => $query['resource'],
           '#entities' => $entities,
-          '#cache' => [
-            'max-age' => 0,
-          ],
         ];
       }
     }
+    $cacheability->applyTo($build);
 
     return new Response($this->renderer->render($build));
   }

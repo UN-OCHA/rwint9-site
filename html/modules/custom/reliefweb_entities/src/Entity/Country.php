@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\SectionedContentInterface;
@@ -40,7 +41,8 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
    * {@inheritdoc}
    */
   public function getPageContent() {
-    $sections = $this->getPageSections();
+    $cacheability = new CacheableMetadata();
+    $sections = $this->getPageSections($cacheability);
     $contents = $this->getPageTableOfContents();
 
     // Section label overrides.
@@ -49,13 +51,13 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
     ];
 
     // Consolidate sections, removing empty ones.
-    return $this->consolidateSections($contents, $sections, $labels);
+    return $this->consolidateSections($contents, $sections, $labels, $cacheability);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPageSections() {
+  public function getPageSections(?CacheableMetadata $cacheability = NULL) {
     $sections = [];
 
     $queries = [];
@@ -81,7 +83,13 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
       'training' => $this->getLatestTrainingApiQuery(),
     ];
 
-    $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $queries[$slot]['request_id'] = 'country.' . $slot;
+      }
+    }
+
+    $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     return $sections;
   }

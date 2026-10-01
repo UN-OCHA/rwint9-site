@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -329,7 +330,7 @@ class ReportRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function parseApiData(array $api_data, $view = '') {
+  public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL) {
     $headlines = $view === 'headlines';
 
     // Retrieve the API data (with backward compatibility).

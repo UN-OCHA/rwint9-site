@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_entities\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
@@ -23,6 +24,8 @@ class RelatedContentService implements RelatedContentServiceInterface {
    * Default related content settings.
    */
   private const array DEFAULT_SETTINGS = [
+    'enabled' => FALSE,
+    'fallback' => TRUE,
     'candidate_limit' => 20,
     'recency_short_months' => 3,
     'recency_long_months' => 12,
@@ -60,56 +63,91 @@ class RelatedContentService implements RelatedContentServiceInterface {
    */
   public function getRelatedContent(EntityInterface $entity, int $limit = 4): array {
     if (!$entity instanceof FieldableEntityInterface) {
-      return $this->buildRenderArray([], $this->t('Related Content'));
+      return [];
+    }
+
+    $settings = $this->getSettings();
+    $related_enabled = !empty($settings['enabled']);
+    $fallback_enabled = !empty($settings['fallback']);
+
+    // Nothing to show when both the related query and fallback are disabled.
+    if (!$related_enabled && !$fallback_enabled) {
+      return [];
     }
 
     $title = $this->t('Related Content');
-    $settings = $this->getSettings();
-    $payload = $this->buildApiPayload($entity, (int) $settings['candidate_limit']);
-    $query_clauses = $this->buildQueryClauses($entity);
     $entities = [];
+    $cacheability = new CacheableMetadata();
 
-    if ($query_clauses !== []) {
-      $payload['query']['value'] = implode(' OR ', $query_clauses);
-      $payload['sort'] = ['score:desc', 'date.original:desc'];
+    if ($related_enabled) {
+      $query_clauses = $this->buildQueryClauses($entity);
+      if ($query_clauses !== []) {
+        $payload = $this->buildApiPayload((int) $settings['candidate_limit']);
+        $payload['query']['value'] = implode(' OR ', $query_clauses);
+        $payload['sort'] = ['score:desc', 'date.original:desc'];
 
-      $data = $this->apiClient->request('reports', $payload);
-      $items = $data['data'] ?? $data['items'] ?? [];
-      if ($items !== []) {
-        $items = $this->rankCandidates($items, $entity, $settings, $limit);
-        if (isset($data['data'])) {
-          $data['data'] = $items;
+        // Exclude the current report only from the related query so the
+        // fallback payload stays identical across pages and can be cached once.
+        $report_id = $this->getReportEntityId($entity);
+        if ($report_id !== NULL) {
+          $payload['filter'] = [
+            'field' => 'id',
+            'value' => $report_id,
+            'negate' => TRUE,
+          ];
         }
-        else {
-          $data['items'] = $items;
+
+        $data = $this->apiClient->request('reports', $payload, cacheability: $cacheability, request_id: 'related.reports');
+        if (is_array($data)) {
+          $items = $data['data'] ?? [];
+          if ($items !== []) {
+            $data['data'] = $this->rankCandidates($items, $entity, $settings, $limit);
+          }
+          $entities = RiverServiceBase::getRiverData('report', $data);
         }
       }
-      $entities = RiverServiceBase::getRiverData('report', $data);
+    }
+
+    if ($entities === [] && $fallback_enabled) {
+      $title = $this->t('Latest Updates');
+      // Shared payload for all entity pages (no per-report filter).
+      // Include one extra so that, if the current report is in the results,
+      // we can remove it and still get the requested number of items.
+      $payload = $this->buildApiPayload($limit + 1);
+      // Use a separate cacheability object so a failed related-content query
+      // does not force max-age 0 when the fallback request succeeds.
+      $fallback_cacheability = new CacheableMetadata();
+      $data = $this->apiClient->request('reports', $payload, cacheability: $fallback_cacheability, request_id: 'related.fallback');
+      if (is_array($data)) {
+        // Remove the current report from the fallback API data, if present.
+        $data = $this->trimFallbackApiData($data, $entity, $limit);
+        $entities = RiverServiceBase::getRiverData('report', $data);
+        // Add the cache tags from the related query to the fallback query.
+        $fallback_cacheability->addCacheTags($cacheability->getCacheTags());
+        $cacheability = $fallback_cacheability;
+      }
+      else {
+        $cacheability->addCacheableDependency($fallback_cacheability);
+      }
     }
 
     if ($entities === []) {
-      $title = $this->t('Latest Updates');
-      unset($payload['query']);
-      $payload['limit'] = $limit;
-      $data = $this->apiClient->request('reports', $payload);
-      $entities = RiverServiceBase::getRiverData('report', $data);
+      return [];
     }
 
-    return $this->buildRenderArray($entities, $title);
+    return $this->buildRenderArray($entities, $title, $cacheability);
   }
 
   /**
-   * Build the API payload for related content requests.
+   * Build the API payload for related content / fallback requests.
    *
-   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
-   *   The document entity.
    * @param int $limit
    *   Result limit.
    *
    * @return array
    *   API payload.
    */
-  protected function buildApiPayload(FieldableEntityInterface $entity, int $limit): array {
+  protected function buildApiPayload(int $limit): array {
     $payload = $this->getReportRiverApiPayload();
     $payload['fields']['exclude'][] = 'body-html';
     $payload['fields']['exclude'][] = 'file';
@@ -119,15 +157,79 @@ class RelatedContentService implements RelatedContentServiceInterface {
     $payload['fields']['include'][] = 'format.id';
     $payload['fields']['include'][] = 'disaster_type.id';
 
-    if ($entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report' && !empty($entity->id())) {
-      $payload['filter'] = [
-        'field' => 'id',
-        'value' => $entity->id(),
-        'negate' => TRUE,
-      ];
+    return $payload;
+  }
+
+  /**
+   * Remove the current report from the API data and trim to the display limit.
+   *
+   * Requests fetch limit + 1 so that after excluding the viewed report there
+   * are still enough items for the block.
+   *
+   * @param array $data
+   *   Raw API response.
+   * @param \Drupal\Core\Entity\FieldableEntityInterface $entity
+   *   The document entity being viewed.
+   * @param int $limit
+   *   Number of items to keep for display.
+   *
+   * @return array
+   *   API response with trimmed item list, or an empty array if the response
+   *   has no valid data list.
+   */
+  protected function trimFallbackApiData(array $data, FieldableEntityInterface $entity, int $limit): array {
+    if (!isset($data['data']) || !is_array($data['data'])) {
+      return [];
     }
 
-    return $payload;
+    $items = $data['data'];
+
+    // Remove the current report from the API data, if present.
+    $report_id = $this->getReportEntityId($entity);
+    if ($report_id !== NULL) {
+      $filtered = [];
+      foreach ($items as $item) {
+        if (is_array($item) && is_numeric($item['id'] ?? NULL) && (int) $item['id'] !== $report_id) {
+          $filtered[] = $item;
+        }
+      }
+      $items = $filtered;
+    }
+
+    $data['data'] = array_slice($items, 0, $limit);
+    return $data;
+  }
+
+  /**
+   * Check whether the entity is a report node.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity to check.
+   *
+   * @return bool
+   *   TRUE when the entity is a report node.
+   */
+  protected function isReportEntity(EntityInterface $entity): bool {
+    return $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report';
+  }
+
+  /**
+   * Get the report node ID when the entity is a saved report.
+   *
+   * Matches the Elasticsearch/API integer id field.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *   Entity to check.
+   *
+   * @return int|null
+   *   Report ID, or NULL when the entity is not a report with an ID.
+   */
+  protected function getReportEntityId(EntityInterface $entity): ?int {
+    if (!$this->isReportEntity($entity)) {
+      return NULL;
+    }
+    $id = $entity->id();
+    return is_numeric($id) ? (int) $id : NULL;
   }
 
   /**
@@ -157,7 +259,7 @@ class RelatedContentService implements RelatedContentServiceInterface {
     $disaster_ids = $this->getReferencedEntityIds($entity, 'field_disaster');
     $country_ids = $this->getCountryIds($entity);
     $source_ids = $this->getReferencedEntityIds($entity, 'field_source');
-    $is_report = $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report';
+    $is_report = $this->isReportEntity($entity);
 
     if ($is_report) {
       $translation = $this->buildTranslationClause($entity, $settings);
@@ -444,7 +546,7 @@ class RelatedContentService implements RelatedContentServiceInterface {
       return [];
     }
 
-    $is_report = $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report';
+    $is_report = $this->isReportEntity($entity);
     if ($is_report) {
       return $this->getReferencedEntityIds($entity, 'field_country');
     }
@@ -552,7 +654,7 @@ class RelatedContentService implements RelatedContentServiceInterface {
    *   Match context for tier detection.
    */
   protected function buildMatchContext(FieldableEntityInterface $entity, array $settings): array {
-    $is_report = $entity->getEntityTypeId() === 'node' && $entity->bundle() === 'report';
+    $is_report = $this->isReportEntity($entity);
     $title = $entity->label() ?? '';
     $patterns = $is_report && $title !== ''
       ? TitlePatternHelper::titleToLikePatterns($title, $settings['title_pattern_token_counts'])
@@ -883,6 +985,8 @@ class RelatedContentService implements RelatedContentServiceInterface {
     $config = $this->configFactory->get('reliefweb_entities.settings')->get('related_content') ?? [];
     $settings = array_replace_recursive(self::DEFAULT_SETTINGS, $config);
     $settings['boosts'] = array_replace(self::DEFAULT_SETTINGS['boosts'], $settings['boosts'] ?? []);
+    $settings['enabled'] = !empty($settings['enabled']);
+    $settings['fallback'] = !empty($settings['fallback']);
     return $settings;
   }
 
@@ -893,12 +997,14 @@ class RelatedContentService implements RelatedContentServiceInterface {
    *   River entities.
    * @param string $title
    *   Block title.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional API request cacheability to merge onto the build.
    *
    * @return array
    *   Render array.
    */
-  protected function buildRenderArray(array $entities, string $title): array {
-    return [
+  protected function buildRenderArray(array $entities, string $title, ?CacheableMetadata $cacheability = NULL): array {
+    $build = [
       '#theme' => 'reliefweb_rivers_river',
       '#id' => 'related',
       '#title' => $title,
@@ -912,6 +1018,10 @@ class RelatedContentService implements RelatedContentServiceInterface {
         ],
       ],
     ];
+
+    $cacheability?->applyTo($build);
+
+    return $build;
   }
 
   /**

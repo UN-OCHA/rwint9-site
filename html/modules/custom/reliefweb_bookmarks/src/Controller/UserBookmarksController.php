@@ -8,6 +8,7 @@ namespace Drupal\reliefweb_bookmarks\Controller;
  */
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
@@ -147,20 +148,27 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
           'title' => $service->getPageTitle(),
           'payload' => $payload,
           'entity_type' => $entity_type,
+          'request_id' => 'bookmarks.' . $bundle,
         ];
       }
     }
 
     $sections = [];
+    $cacheability = new CacheableMetadata();
+    $cacheability->addCacheContexts(['user']);
+    $cacheability->addCacheTags(['reliefweb_bookmarks:user:' . $uid]);
     if (!empty($queries)) {
       // Get the API data.
       $results = $this->reliefWebApiClient
-        ->requestMultiple(array_filter($queries), TRUE);
+        ->requestMultiple(array_filter($queries), cacheability: $cacheability);
 
       // Prepare the sections.
       foreach ($results as $bundle => $result) {
-        $query = $queries[$bundle];
+        if (!is_array($result)) {
+          continue;
+        }
 
+        $query = $queries[$bundle];
         $entities = RiverServiceBase::getRiverData($bundle, $result);
         if (empty($entities)) {
           continue;
@@ -193,11 +201,14 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
       }
     }
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_bookmarks',
       '#tabs' => $this->getNavigationTabs($user),
       '#sections' => $sections,
     ];
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**
@@ -236,6 +247,13 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
     // Get the section content.
     $entities = [];
+    $cacheability = new CacheableMetadata();
+    $cacheability->addCacheContexts(['user']);
+    $cacheability->addCacheTags([
+      'reliefweb_bookmarks:user:' . $uid,
+      'reliefweb_bookmarks:' . $entity_type,
+      $entity_type . '_list:' . $bundle,
+    ]);
     if ($count > 0) {
       // Get the ids of the bookmarked items for the current page.
       $ids = $this->getEntityIds($entity_type, $bundle, $uid, $currentPage * $limit, $limit);
@@ -269,10 +287,10 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
         // Get the API data.
         $result = $this->reliefWebApiClient
-          ->request($service->getResource(), $payload);
+          ->request($service->getResource(), $payload, cacheability: $cacheability, request_id: 'bookmarks.' . $bundle . '.list');
 
         // Prepare the data from the API.
-        $entities = RiverServiceBase::getRiverData($bundle, $result);
+        $entities = is_array($result) ? RiverServiceBase::getRiverData($bundle, $result) : [];
       }
     }
 
@@ -294,19 +312,10 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
       '#empty' => $this->t('No bookmarked @resource.', [
         '@resource' => $service->getResource(),
       ]),
-      '#cache' => [
-        'contexts' => [
-          'user',
-        ],
-        'tags' => [
-          'reliefweb_bookmarks:user:' . $uid,
-          'reliefweb_bookmarks:' . $entity_type,
-          $entity_type . '_list:' . $bundle,
-        ],
-      ],
     ];
+    $cacheability->applyTo($section);
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_bookmarks',
       '#tabs' => $this->getNavigationTabs($user, $bundle),
       '#sections' => [$bundle => $section],
@@ -315,6 +324,9 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
         'label' => $this->t('All bookmarks'),
       ],
     ];
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**

@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_disaster_map;
 
 use Drupal\Component\Utility\Html;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Render\Markup;
 use Drupal\Core\Render\Renderer;
@@ -77,13 +78,20 @@ class DisasterMapService {
    *   - ids (array): list of disaster ids
    *   - from (int): to retrieve disasters creatrd after the timestamp.
    * @param bool $render
-   *   Whether to render the map or return the render array.
+   *   Whether to render the map to HTML. Prefer FALSE when embedding in a
+   *   render array so cache metadata can bubble via the returned build.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability (including BubbleableMetadata from tokens) to
+   *   merge with. On API failure, max-age is set to 0.
    *
    * @return \Drupal\Component\Render\MarkupInterface|string|array
-   *   The disaster map rendered HTML or the render array if $render is FALSE.
+   *   Render array when $render is FALSE; otherwise rendered HTML (empty
+   *   string/Markup when there is no map content).
    */
-  public function getDisasterMap($id, $title, array $options = [], $render = TRUE) {
+  public function getDisasterMap($id, $title, array $options = [], $render = FALSE, ?CacheableMetadata $cacheability = NULL) {
+    $request_id = 'disaster-map.' . $id;
     $id = Html::getUniqueId($id);
+    $cacheability ??= new CacheableMetadata();
 
     $legend = [
       'ongoing' => $this->t('Red markers indicate ongoing situations.'),
@@ -160,41 +168,46 @@ class DisasterMapService {
     ];
 
     // Get the disasters.
-    $data = $this->disasterRiver->requestApi($payload);
+    $data = $this->disasterRiver->requestApi($payload, $cacheability, $request_id);
+    $cacheability->addCacheTags(['taxonomy_term_list:disaster']);
 
     // We group the disasters by primary country and add other disasters
     // affecting the same primary country as related.
     $entities = [];
-    foreach ($this->disasterRiver->parseApiData($data ?? []) as $entity) {
-      // Get the primary country.
-      $primary_country_id = NULL;
-      foreach ($entity['tags']['country'] as $country) {
-        if (!empty($country['main'])) {
-          $primary_country_id = $country['id'];
-          break;
+    if (is_array($data)) {
+      foreach ($this->disasterRiver->parseApiData($data) as $entity) {
+        // Get the primary country.
+        $primary_country_id = NULL;
+        foreach ($entity['tags']['country'] as $country) {
+          if (!empty($country['main'])) {
+            $primary_country_id = $country['id'];
+            break;
+          }
         }
-      }
 
-      // Skip if there is no primary country or no locations for the disaster
-      // as we will not be able to render it on the map. This should never
-      // happen though.
-      if (empty($primary_country_id) || empty($entity['location'])) {
-        continue;
-      }
+        // Skip if there is no primary country or no locations for the disaster
+        // as we will not be able to render it on the map. This should never
+        // happen though.
+        if (empty($primary_country_id) || empty($entity['location'])) {
+          continue;
+        }
 
-      // There is already a more recent disaster affecting the primary country
-      // so we simply add this disaster as a related disaster.
-      if (isset($entities[$primary_country_id])) {
-        $entities[$primary_country_id]['related_disasters'][] = $entity;
-      }
-      else {
-        $entities[$primary_country_id] = $entity;
+        // There is already a more recent disaster affecting the primary country
+        // so we simply add this disaster as a related disaster.
+        if (isset($entities[$primary_country_id])) {
+          $entities[$primary_country_id]['related_disasters'][] = $entity;
+        }
+        else {
+          $entities[$primary_country_id] = $entity;
+        }
       }
     }
 
-    // Skip if there is no content.
+    // No map content (API failure or no matching disasters).
     if (empty($entities)) {
-      return '';
+      $render_array = [];
+      $cacheability->applyTo($render_array);
+      return $render ? Markup::create('') : $render_array;
     }
 
     // Limit the statuses for the legend to those of the disasters that would be
@@ -240,16 +253,10 @@ class DisasterMapService {
           ],
         ],
       ],
-      '#cache' => [
-        'tags' => [
-          'taxonomy_term_list:disaster',
-        ],
-      ],
     ];
+    $cacheability->applyTo($render_array);
 
-    // We wrap the rendered map in a Markup to mark it as safe and prevent
-    // double escaping when its retrieved from the cache.
-    return $render ? Markup::create($this->renderer->render($render_array)) : $render_array;
+    return $render ? Markup::create($this->renderer->renderInIsolation($render_array)) : $render_array;
   }
 
   /**
@@ -257,15 +264,17 @@ class DisasterMapService {
    *
    * @param bool $render
    *   Whether to render the map or return the render array.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability to merge with from the API request.
    *
-   * @return array
-   *   The disaster map render array.
+   * @return \Drupal\Component\Render\MarkupInterface|string|array
+   *   The disaster map render array or HTML.
    */
-  public static function getAlertAndOngoingDisasterMap($render = FALSE) {
+  public static function getAlertAndOngoingDisasterMap($render = FALSE, ?CacheableMetadata $cacheability = NULL) {
     return \Drupal::service('reliefweb_disaster_map.service')
       ->getDisasterMap('disaster-map', t('Alert and Ongoing Disasters'), [
         'statuses' => ['alert', 'ongoing'],
-      ], $render);
+      ], $render, $cacheability);
   }
 
 }
