@@ -24,6 +24,12 @@ reliefweb_entities.settings:
       type: mapping
       label: 'Related content block settings'
       mapping:
+        enabled:
+          type: boolean
+          label: 'Enable related content query'
+        fallback:
+          type: boolean
+          label: 'Enable latest updates fallback'
         recency_short_months:
           type: integer
           label: 'Short recency window in months for disaster-related content'
