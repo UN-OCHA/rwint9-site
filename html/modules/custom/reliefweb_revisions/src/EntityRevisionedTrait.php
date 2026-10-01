@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_revisions;
 
 use Drupal\Core\Entity\ContentEntityInterface;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 
 /**
  * Provides a trait for the entity revision history.
@@ -55,30 +56,20 @@ trait EntityRevisionedTrait {
    *
    * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::updateRevisionLogMessage()
    */
-  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE): void {
-    $message = trim($message);
-    if (empty($message)) {
-      return;
-    }
-
+  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE, string $separator = ' '): void {
     $revision_log_field = $this->getEntityType()?->getRevisionMetadataKey('revision_log_message');
     if (empty($revision_log_field)) {
       return;
     }
 
     $log = trim($this->{$revision_log_field}->value ?? '');
-    if ($skip_if_present && mb_stripos($log, $message) !== FALSE) {
-      return;
-    }
-
-    $log = match ($action) {
-      'prepend' => $message . $log,
-      'append' => $log . $message,
-      'replace' => $message,
-      default => $log,
-    };
-
-    $this->{$revision_log_field}->value = trim($log);
+    $this->{$revision_log_field}->value = RevisionLogHelper::updateMessage(
+      $log,
+      $message,
+      $action,
+      $skip_if_present,
+      $separator,
+    );
   }
 
   /**

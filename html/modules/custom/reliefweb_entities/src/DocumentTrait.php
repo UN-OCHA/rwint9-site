@@ -4,13 +4,13 @@ namespace Drupal\reliefweb_entities;
 
 use Drupal\Component\Utility\Unicode;
 use Drupal\Core\Entity\EntityPublishedInterface;
-use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Field\EntityReferenceFieldItemList;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\Url;
 use Drupal\reliefweb_entities\Entity\Source;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_entities\Services\RelatedContentServiceInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
@@ -300,7 +300,7 @@ trait DocumentTrait {
         $source->notifications_content_disable = TRUE;
         $source->setModerationStatus('active');
         $source->setNewRevision(TRUE);
-        $source->setRevisionLogMessage('Automatic status update due to publication of node ' . $this->id());
+        $source->updateRevisionLogMessage('Automatic status update due to publication of node ' . $this->id(), 'replace', FALSE);
         $source->setRevisionUserId(2);
         $source->setRevisionCreationTime(time());
         $source->save();
@@ -332,16 +332,9 @@ trait DocumentTrait {
       $this->setModerationStatus('refused');
 
       // Add a message to the revision log.
-      if ($this instanceof RevisionLogInterface) {
+      if ($this instanceof EntityRevisionedInterface) {
         $message = 'Submissions from "' . implode('", "', $blocked) . '" are no longer allowed.';
-
-        $log = $this->getRevisionLogMessage();
-        if (empty($log)) {
-          $this->setRevisionLogMessage($message);
-        }
-        else {
-          $this->setRevisionLogMessage($message . ' ' . $log);
-        }
+        $this->updateRevisionLogMessage($message, 'prepend');
       }
     }
   }

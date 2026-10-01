@@ -17,6 +17,8 @@ cron:
   expired_jobs_limit: 20
   expired_training_limit: 20
 related_content:
+  enabled: false
+  fallback: true
   recency_short_months: 3
   recency_long_months: 12
   candidate_limit: 20

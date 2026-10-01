@@ -8,6 +8,7 @@ use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 
 /**
  * Moderation service for the source terms.
@@ -228,13 +229,13 @@ class SourceModeration extends ModerationServiceBase {
       }
 
       // Add a message if something changed.
-      if ($changed) {
+      if ($changed && $entity instanceof EntityRevisionedInterface) {
         $entity->setNewRevision(TRUE);
         $entity->setRevisionCreationTime(time());
-        $entity->setRevisionLogMessage(trim(implode(' ', [
+        $entity->updateRevisionLogMessage(
           'Posting rights changed to blocked due to source being blocked.',
-          $entity->getRevisionLogMessage() ?? '',
-        ])));
+          'prepend',
+        );
       }
     }
   }

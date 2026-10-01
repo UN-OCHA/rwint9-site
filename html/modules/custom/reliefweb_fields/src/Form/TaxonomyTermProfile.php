@@ -44,9 +44,9 @@ class TaxonomyTermProfile extends TermForm {
   public function save(array $form, FormStateInterface $form_state) {
     $this->entity->setRevisionUserId($this->currentUser()->id());
     $this->entity->setRevisionCreationTime(time());
-    $this->entity->setRevisionLogMessage(strtr('!bundle profile update', [
+    $this->entity->updateRevisionLogMessage(strtr('!bundle profile update', [
       '!bundle' => $this->getBundleLabel(),
-    ]));
+    ]), 'replace', FALSE);
     return parent::save($form, $form_state);
   }
 

@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Drupal\ocha_reliefweb\Services;
+namespace Drupal\reliefweb_api\Services;
+
+use Drupal\Core\Cache\CacheableMetadata;
 
 /**
  * Interface for the ReliefWeb API client.
@@ -21,8 +23,8 @@ interface ReliefWebApiClientInterface {
    *   API request payload (with fields, filters, sort etc.)
    * @param bool $decode
    *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
    * @param string $method
@@ -31,6 +33,14 @@ interface ReliefWebApiClientInterface {
    *   Extra request headers.
    * @param bool $refresh
    *   If TRUE, skip the cached data and call the API to refresh it.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
+   * @param string|null $request_id
+   *   Optional request ID suffix (e.g. country.maps-infographics). Prefixed
+   *   with the configured request_id_prefix and sent as the request-id URL
+   *   query parameter for API log attribution.
    *
    * @return array|string|null
    *   The data from the API response or NULL in case of error.
@@ -39,11 +49,13 @@ interface ReliefWebApiClientInterface {
     string $resource,
     ?array $payload = NULL,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     string $method = 'POST',
     array $headers = [],
     bool $refresh = FALSE,
+    ?CacheableMetadata $cacheability = NULL,
+    ?string $request_id = NULL,
   ): array|string|null;
 
   /**
@@ -57,12 +69,17 @@ interface ReliefWebApiClientInterface {
    *   - payload: optional API payload
    *   - headers: optional headers
    *   - refresh: optional flag to refresh the cached data.
+   *   - request_id: optional request ID suffix for the request-id URL param.
    * @param bool $decode
    *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    * @param bool $cache_enabled
    *   Whether to cache the queries or not.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with. On success, resource cache
+   *   tags are added. On failure, max-age is set to 0 so upstream page builds
+   *   are not stored empty for anonymous users.
    *
    * @return array
    *   Return array where each item contains the response to the corresponding
@@ -73,8 +90,9 @@ interface ReliefWebApiClientInterface {
   public function requestMultiple(
     array $queries,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array;
 
   /**
@@ -108,8 +126,8 @@ interface ReliefWebApiClientInterface {
    * @param array $headers
    *   Request headers. This notably must include the X-RW-POST-API-KEY and
    *   X-RW-POST-API-PROVIDER headers.
-   * @param int $timeout
-   *   Request timeout.
+   * @param int|null $timeout
+   *   Request timeout in seconds, or NULL to use the config timeout value.
    *
    * @return array
    *   An associative array with the response status code and data.
@@ -123,7 +141,7 @@ interface ReliefWebApiClientInterface {
     string $resource,
     array $payload,
     array $headers,
-    int $timeout = 5,
+    ?int $timeout = NULL,
   ): array;
 
   /**

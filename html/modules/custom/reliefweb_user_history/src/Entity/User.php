@@ -65,7 +65,7 @@ class User extends UserBase implements EntityRevisionedInterface {
    *
    * @see \Drupal\reliefweb_revisions\EntityRevisionedInterface::updateRevisionLogMessage()
    */
-  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE): void {
+  public function updateRevisionLogMessage(string $message, string $action = 'append', bool $skip_if_present = TRUE, string $separator = ' '): void {
     // No revision log message for users since they are not revisioned.
   }
 

@@ -1,5 +1,5 @@
 {
-    "_hash": "ea2d71707f5505a0bdfd87c9ec7ddce233ce761de2117a2d5f6a68462113d66e",
+    "_hash": "9cdd23dac4764736fe1f96b9d96489634a356ebbddac970285b31fd5a2813d1b",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -129,16 +129,6 @@
                 "description": "Handle case if user is in blocked state after SSO Authorization",
                 "url": "PATCHES/openid_connect-3390668-6.patch",
                 "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            },
-            {
-                "package": "drupal/openid_connect",
-                "description": "Remove form ID in user logout confirmation to prevent drupalLogout failing in tests",
-                "url": "PATCHES/openid_connect-3577169-mr189.patch",
-                "sha256": "7878507a6bbd281dcfc1187c0989098ec65955fa47c3c69001a7feafaf86342c",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"

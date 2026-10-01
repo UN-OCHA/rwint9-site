@@ -35,13 +35,20 @@ class RelatedContentServiceTest extends UnitTestCase {
   protected ReliefWebApiClient&MockObject $apiClient;
 
   /**
+   * Related content config returned by the mocked factory.
+   */
+  protected array $relatedContentConfig = [];
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
 
     $config = $this->createMock(ImmutableConfig::class);
-    $config->method('get')->with('related_content')->willReturn([]);
+    $config->method('get')->with('related_content')->willReturnCallback(
+      fn(): array => $this->relatedContentConfig,
+    );
 
     $config_factory = $this->createMock(ConfigFactoryInterface::class);
     $config_factory->method('get')->with('reliefweb_entities.settings')->willReturn($config);
@@ -58,6 +65,119 @@ class RelatedContentServiceTest extends UnitTestCase {
       $config_factory,
       $string_translation,
     );
+  }
+
+  /**
+   * Tests default settings disable related query and enable fallback.
+   */
+  public function testDefaultSettingsDisableRelatedAndEnableFallback(): void {
+    $settings = $this->service->exposeGetSettings();
+
+    $this->assertFalse($settings['enabled']);
+    $this->assertTrue($settings['fallback']);
+  }
+
+  /**
+   * Tests both flags off returns no block and skips API requests.
+   */
+  public function testBothDisabledReturnsEmptyWithoutApiCalls(): void {
+    $this->relatedContentConfig = [
+      'enabled' => FALSE,
+      'fallback' => FALSE,
+    ];
+
+    $this->apiClient->expects($this->never())->method('request');
+
+    $entity = $this->createReportEntity([
+      'field_disaster' => [52461],
+      'field_country' => [71],
+    ]);
+
+    $this->assertSame([], $this->service->getRelatedContent($entity));
+  }
+
+  /**
+   * Tests related disabled with fallback enabled only calls the fallback API.
+   */
+  public function testRelatedDisabledUsesFallbackOnly(): void {
+    $this->relatedContentConfig = [
+      'enabled' => FALSE,
+      'fallback' => TRUE,
+    ];
+
+    $this->apiClient->expects($this->once())
+      ->method('request')
+      ->willReturnCallback(function (
+        string $resource,
+        ?array $payload = NULL,
+        bool $decode = TRUE,
+        ?int $timeout = NULL,
+        bool $cache_enabled = TRUE,
+        string $method = 'POST',
+        array $headers = [],
+        bool $refresh = FALSE,
+        mixed $cacheability = NULL,
+        ?string $request_id = NULL,
+      ): ?array {
+        $this->assertSame('reports', $resource);
+        $this->assertSame('related.fallback', $request_id);
+        $this->assertIsArray($payload);
+        $this->assertArrayNotHasKey('query', $payload);
+        $this->assertArrayNotHasKey('filter', $payload);
+        // Fetch one extra so the current report can be dropped in PHP.
+        $this->assertSame(5, $payload['limit']);
+        $this->assertSame(['date.created:desc'], $payload['sort']);
+        return NULL;
+      });
+
+    $entity = $this->createReportEntity([
+      'field_disaster' => [52461],
+      'field_country' => [71],
+    ]);
+
+    $this->assertSame([], $this->service->getRelatedContent($entity));
+  }
+
+  /**
+   * Tests related enabled with no results and fallback disabled hides block.
+   */
+  public function testRelatedEnabledWithoutFallbackReturnsEmptyWhenNoResults(): void {
+    $this->relatedContentConfig = [
+      'enabled' => TRUE,
+      'fallback' => FALSE,
+    ];
+
+    $this->apiClient->expects($this->once())
+      ->method('request')
+      ->willReturnCallback(function (
+        string $resource,
+        ?array $payload = NULL,
+        bool $decode = TRUE,
+        ?int $timeout = NULL,
+        bool $cache_enabled = TRUE,
+        string $method = 'POST',
+        array $headers = [],
+        bool $refresh = FALSE,
+        mixed $cacheability = NULL,
+        ?string $request_id = NULL,
+      ): ?array {
+        $this->assertSame('reports', $resource);
+        $this->assertSame('related.reports', $request_id);
+        $this->assertIsArray($payload);
+        $this->assertArrayHasKey('query', $payload);
+        $this->assertArrayHasKey('value', $payload['query']);
+        $this->assertSame('id', $payload['filter']['field']);
+        $this->assertSame(1, $payload['filter']['value']);
+        $this->assertTrue($payload['filter']['negate']);
+        return NULL;
+      });
+
+    $entity = $this->createReportEntity([
+      'field_disaster' => [52461],
+      'field_country' => [71],
+    ]);
+
+    $this->assertSame([], $this->service->getRelatedContent($entity));
   }
 
   /**
@@ -196,19 +316,56 @@ class RelatedContentServiceTest extends UnitTestCase {
   }
 
   /**
-   * Tests report payload excludes the current entity.
+   * Tests base API payload does not include a self-exclusion filter.
+   *
+   * Self-exclusion is applied only on the related query path so the fallback
+   * Latest Updates payload stays identical across pages for caching.
    */
-  public function testBuildApiPayloadForReportExcludesSelf(): void {
-    $entity = $this->createReportEntity([
-      'field_disaster' => [52461],
-      'field_country' => [71],
-    ], 100);
+  public function testBuildApiPayloadDoesNotExcludeSelf(): void {
+    $payload = $this->service->exposeBuildApiPayload(4);
 
-    $payload = $this->service->exposeBuildApiPayload($entity, 4);
+    $this->assertArrayNotHasKey('filter', $payload);
+    $this->assertSame(4, $payload['limit']);
+  }
 
-    $this->assertSame('id', $payload['filter']['field']);
-    $this->assertSame(100, $payload['filter']['value']);
-    $this->assertTrue($payload['filter']['negate']);
+  /**
+   * Tests fallback trimming drops the current report and respects the limit.
+   */
+  public function testTrimFallbackApiDataExcludesCurrentReport(): void {
+    $entity = $this->createReportEntity([], 100);
+    $data = [
+      'data' => [
+        ['id' => 100, 'fields' => ['title' => 'Self']],
+        ['id' => 101, 'fields' => ['title' => 'Other 1']],
+        ['id' => 102, 'fields' => ['title' => 'Other 2']],
+        ['id' => 103, 'fields' => ['title' => 'Other 3']],
+        ['id' => 104, 'fields' => ['title' => 'Other 4']],
+      ],
+    ];
+
+    $trimmed = $this->service->exposeTrimFallbackApiData($data, $entity, 4);
+
+    $this->assertSame([101, 102, 103, 104], array_column($trimmed['data'], 'id'));
+  }
+
+  /**
+   * Tests fallback trimming keeps the limit when the current report is absent.
+   */
+  public function testTrimFallbackApiDataSlicesWhenSelfAbsent(): void {
+    $entity = $this->createReportEntity([], 999);
+    $data = [
+      'data' => [
+        ['id' => 101, 'fields' => ['title' => 'Other 1']],
+        ['id' => 102, 'fields' => ['title' => 'Other 2']],
+        ['id' => 103, 'fields' => ['title' => 'Other 3']],
+        ['id' => 104, 'fields' => ['title' => 'Other 4']],
+        ['id' => 105, 'fields' => ['title' => 'Other 5']],
+      ],
+    ];
+
+    $trimmed = $this->service->exposeTrimFallbackApiData($data, $entity, 4);
+
+    $this->assertSame([101, 102, 103, 104], array_column($trimmed['data'], 'id'));
   }
 
   /**
@@ -548,6 +705,7 @@ final class TestableRelatedContentService extends RelatedContentService {
         'include' => [],
         'exclude' => [],
       ],
+      'sort' => ['date.created:desc'],
     ];
   }
 
@@ -589,8 +747,15 @@ final class TestableRelatedContentService extends RelatedContentService {
   /**
    * Expose buildApiPayload().
    */
-  public function exposeBuildApiPayload(object $entity, int $limit): array {
-    return $this->buildApiPayload($entity, $limit);
+  public function exposeBuildApiPayload(int $limit): array {
+    return $this->buildApiPayload($limit);
+  }
+
+  /**
+   * Expose trimFallbackApiData().
+   */
+  public function exposeTrimFallbackApiData(array $data, object $entity, int $limit): array {
+    return $this->trimFallbackApiData($data, $entity, $limit);
   }
 
   /**

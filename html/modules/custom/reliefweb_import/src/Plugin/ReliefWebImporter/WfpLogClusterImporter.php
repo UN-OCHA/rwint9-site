@@ -401,9 +401,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
           if ($report) {
             $report->setUnpublished();
             $report->setModerationStatus('refused');
-            $report->setRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
+            $report->updateRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
               '@id' => $id,
-            ]));
+            ]), 'replace', FALSE);
             $report->save();
             $this->getLogger()->info(strtr('WFP Logcluster document @id report @report_id unpublished.', [
               '@id' => $id,
@@ -438,9 +438,9 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
           if ($report) {
             $report->setUnpublished();
             $report->setModerationStatus('refused');
-            $report->setRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
+            $report->updateRevisionLogMessage(strtr('Unpublished WFP Logcluster document @id.', [
               '@id' => $id,
-            ]));
+            ]), 'replace', FALSE);
             $report->save();
             $this->getLogger()->info(strtr('WFP Logcluster document @id (node/@report_id) unpublished.', [
               '@id' => $id,

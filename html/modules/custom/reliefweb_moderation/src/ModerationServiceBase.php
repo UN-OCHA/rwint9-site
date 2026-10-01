@@ -24,8 +24,8 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\Core\StringTranslation\TranslationInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
 use Drupal\reliefweb_utility\Traits\EntityDatabaseInfoTrait;
 use Drupal\user\EntityOwnerInterface;
@@ -2815,7 +2815,7 @@ abstract class ModerationServiceBase implements ModerationServiceInterface {
       return [];
     }
 
-    $revision_message = EntityHelper::formatRevisionLogMessage($revision_message);
+    $revision_message = RevisionLogHelper::formatMessage($revision_message);
 
     $revision_user = $entity->getRevisionUser();
     if (!$revision_user->isAnonymous()) {

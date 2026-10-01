@@ -1104,29 +1104,33 @@ class UserPostingRightsManager implements UserPostingRightsManagerInterface {
     $entity->setModerationStatus($status);
 
     // Add messages indicating the posting rights for easier review.
-    $message = '';
+    $parts = [];
     if (!empty($rights[PostingRight::Blocked->value])) {
-      $message = trim($message . strtr(' Blocked user for @sources.', [
+      $parts[] = strtr('Blocked user for @sources.', [
         '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Blocked->value])),
-      ]));
+      ]);
     }
     if (!empty($rights[PostingRight::Unverified->value])) {
-      $message = trim($message . strtr(' Unverified user for @sources.', [
+      $parts[] = strtr('Unverified user for @sources.', [
         '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Unverified->value])),
-      ]));
+      ]);
     }
     if (!empty($rights[PostingRight::Allowed->value])) {
-      $message = trim($message . strtr(' Allowed user for @sources.', [
+      $parts[] = strtr('Allowed user for @sources.', [
         '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Allowed->value])),
-      ]));
+      ]);
     }
     if (!empty($rights[PostingRight::Trusted->value])) {
-      $message = trim($message . strtr(' Trusted user for @sources.', [
+      $parts[] = strtr('Trusted user for @sources.', [
         '@sources' => implode(', ', TaxonomyHelper::getSourceShortnames($rights[PostingRight::Trusted->value])),
-      ]));
+      ]);
     }
-    // Prepend the message to the revision log.
-    $entity->updateRevisionLogMessage($message, 'prepend');
+    // Prepend each clause so skip_if_present can dedupe when the rights set
+    // grows without re-adding clauses that are already in the log. Reverse so
+    // the final order matches the previous implode-then-prepend behavior.
+    foreach (array_reverse($parts) as $part) {
+      $entity->updateRevisionLogMessage($part, 'prepend');
+    }
 
     return TRUE;
   }

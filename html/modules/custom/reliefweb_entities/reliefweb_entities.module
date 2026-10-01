@@ -1103,9 +1103,9 @@ function reliefweb_entities_cron() {
       $report->setNewRevision(TRUE);
       $report->setRevisionUserId(2);
       $report->setRevisionCreationTime(time());
-      $report->setRevisionLogMessage(strtr('Embargoed document automatically published on @date.', [
+      $report->updateRevisionLogMessage(strtr('Embargoed document automatically published on @date.', [
         '@date' => DateHelper::format($timestamp, 'custom', 'd M Y H:i e'),
-      ]));
+      ]), 'replace', FALSE);
       $report->save();
     }
   }
@@ -1140,10 +1140,10 @@ function reliefweb_entities_cron() {
       $node->setNewRevision(TRUE);
       $node->setRevisionUserId(2);
       $node->setRevisionCreationTime(time());
-      $node->setRevisionLogMessage(strtr('@type automatically expired on @date.', [
+      $node->updateRevisionLogMessage(strtr('@type automatically expired on @date.', [
         '@type' => ucfirst($node->bundle()),
         '@date' => DateHelper::format($time, 'custom', 'd M Y H:i e'),
-      ]));
+      ]), 'replace', FALSE);
       $node->save();
     }
   }

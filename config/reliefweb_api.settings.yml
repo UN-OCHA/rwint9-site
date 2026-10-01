@@ -3,7 +3,9 @@ _core:
 api_url: 'https://api.reliefweb.int/v1'
 api_url_external: 'https://api.reliefweb.int/v1'
 appname: reliefweb.int
+request_id_prefix: rw
 cache_enabled: true
+timeout: 5
 verify_ssl: true
 elasticsearch: 'http://elasticsearch:9200'
 elasticsearch_auth_type: none

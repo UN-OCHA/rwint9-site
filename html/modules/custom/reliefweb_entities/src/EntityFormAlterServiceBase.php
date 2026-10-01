@@ -20,6 +20,7 @@ use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 use Drupal\reliefweb_utility\Helpers\TaxonomyHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 use Drupal\reliefweb_utility\Helpers\UserHelper;
@@ -602,8 +603,6 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
 
     if (!empty($entity_type) && $entity_type instanceof ContentEntityTypeInterface) {
       $revision_log_field = $entity_type->getRevisionMetadataKey('revision_log_message');
-
-      $log = $form_state->getValue([$revision_log_field, 0, 'value'], '');
       $status = $this->getEntityModerationStatus($form_state);
 
       // Add the information about potential new source and update the status.
@@ -614,8 +613,13 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
         if (!$form_state->isValueEmpty(['field_source_new', 'url'])) {
           $source .= ' (' . $form_state->getValue(['field_source_new', 'url']) . ')';
         }
-        $log = 'Potential new source: ' . $source . '. ' . $log;
-        $form_state->setValue([$revision_log_field, 0, 'value'], $log);
+        $clause = 'Potential new source: ' . $source . '.';
+
+        $current = (string) $form_state->getValue([$revision_log_field, 0, 'value'], '');
+        $form_state->setValue(
+          [$revision_log_field, 0, 'value'],
+          RevisionLogHelper::updateMessage($current, $clause, 'prepend'),
+        );
 
         // If the status is "published" or "pending", change as appropriate.
         if ($status === 'published' || $status === 'pending') {

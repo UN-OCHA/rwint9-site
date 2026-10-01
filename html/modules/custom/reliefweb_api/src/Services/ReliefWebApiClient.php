@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_api\Services;
 
 use Drupal\Component\Datetime\TimeInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
@@ -18,7 +19,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
 /**
  * ReliefWeb API client service class.
  */
-class ReliefWebApiClient {
+class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
   /**
    * The base API URL.
@@ -71,6 +72,13 @@ class ReliefWebApiClient {
   protected string $cacheNamespace;
 
   /**
+   * Request timeout in seconds from config.
+   *
+   * @var int
+   */
+  protected int $requestTimeout;
+
+  /**
    * Map API resources to cache tags.
    *
    * @var array
@@ -80,6 +88,10 @@ class ReliefWebApiClient {
     'reports' => ['node_list:report'],
     'jobs' => ['node_list:job'],
     'training' => ['node_list:training'],
+    'topics' => ['node_list:topic'],
+    'countries' => ['taxonomy_term_list:country'],
+    'disasters' => ['taxonomy_term_list:disaster'],
+    'sources' => ['taxonomy_term_list:source'],
   ];
 
   /**
@@ -109,40 +121,19 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Perform a request against the ReliefWeb API.
-   *
-   * Note: the order of the parameters is to preserve the compatibility with the
-   * code calling the previous version of this method.
-   *
-   * @param string $resource
-   *   API resource endpoint (ex: reports).
-   * @param ?array $payload
-   *   API request payload (with fields, filters, sort etc.)
-   * @param bool $decode
-   *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
-   * @param bool $cache_enabled
-   *   Whether to cache the queries or not.
-   * @param string $method
-   *   The method (GET, POST, PUT or PATCH) to use for the request.
-   * @param array $headers
-   *   Extra request headers.
-   * @param bool $refresh
-   *   If TRUE, skip the cached data and call the API to refresh it.
-   *
-   * @return array|string|null
-   *   The data from the API response or NULL in case of error.
+   * {@inheritdoc}
    */
   public function request(
     string $resource,
     ?array $payload = NULL,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
     string $method = 'POST',
     array $headers = [],
     bool $refresh = FALSE,
+    ?CacheableMetadata $cacheability = NULL,
+    ?string $request_id = NULL,
   ): array|string|null {
     $queries = [
       $resource => [
@@ -151,46 +142,28 @@ class ReliefWebApiClient {
         'payload' => $payload,
         'headers' => $headers,
         'refresh' => $refresh,
+        'request_id' => $request_id,
       ],
     ];
 
-    $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled);
+    $results = $this->requestMultiple($queries, $decode, $timeout, $cache_enabled, $cacheability);
     return $results[$resource] ?? NULL;
   }
 
   /**
-   * Perform parallel queries to the API.
-   *
-   * @param array $queries
-   *   List of queries to perform in parallel. Each item is an associative
-   *   array with the following properties:
-   *   - method: request method
-   *   - resource: API resource
-   *   - payload: optional API payload
-   *   - headers: optional headers
-   *   - refresh: optional flag to refresh the cached data.
-   * @param bool $decode
-   *   Whether to decode (json) the output or not.
-   * @param int $timeout
-   *   Request timeout.
-   * @param bool $cache_enabled
-   *   Whether to cache the queries or not.
-   *
-   * @return array
-   *   Return array where each item contains the response to the corresponding
-   *   query to the API.
-   *
-   * @see https://docs.guzzlephp.org/en/stable/quickstart.html#concurrent-requests
+   * {@inheritdoc}
    */
   public function requestMultiple(
     array $queries,
     bool $decode = TRUE,
-    int $timeout = 5,
+    ?int $timeout = NULL,
     bool $cache_enabled = TRUE,
+    ?CacheableMetadata $cacheability = NULL,
   ): array {
     $results = [];
     $api_url = $this->getApiUrl();
     $appname = $this->getAppName();
+    $timeout ??= $this->getTimeout();
     $cache_enabled = $cache_enabled && $this->isCacheEnabled();
     $verify_ssl = $this->verifySsl();
 
@@ -217,8 +190,14 @@ class ReliefWebApiClient {
         $cache_ids[$index] = $cache_id;
         // Attempt to retrieve the cached data for the query.
         $cache = $this->cacheBackend->get($cache_id);
-        if (!$refresh && isset($cache->data)) {
-          $results[$index] = $cache->data;
+        if (!$refresh && isset($cache->data) && is_string($cache->data)) {
+          if ($decode) {
+            // Leave NULL on invalid/corrupt entries so the query is refetched.
+            $results[$index] = $this->decodeApiJsonObject($cache->data);
+          }
+          else {
+            $results[$index] = $cache->data;
+          }
         }
       }
     }
@@ -255,13 +234,21 @@ class ReliefWebApiClient {
           // Skip the request if something is wrong with the payload.
           if ($payload === FALSE) {
             $results[$index] = NULL;
-            $this->getLogger()->error('Could not encode payload when requesting @url: @payload', [
+            $this->getLogger()->error('[@request_id] Could not encode payload when requesting @url: @payload', [
+              '@request_id' => $this->getQueryRequestId($query),
               '@url' => $api_url . '/' . $query['resource'],
               '@payload' => strtr(print_r($query['payload'], TRUE), "\n", " "),
             ]);
             continue;
           }
         }
+      }
+
+      // Add request-id after GET payload merge so callers' payloads cannot
+      // overwrite it, and it is never part of the POST body / cache key.
+      $request_id = $this->getQueryRequestId($query);
+      if ($request_id !== '-') {
+        $parameters['request-id'] = $request_id;
       }
 
       $url = $api_url . '/' . $query['resource'] . '?' . http_build_query($parameters);
@@ -280,7 +267,8 @@ class ReliefWebApiClient {
         $promises[$index] = $this->httpClient->requestAsync($method, $url, $options);
       }
       catch (\Exception $exception) {
-        $this->getLogger()->error('Exception while querying @url: @exception', [
+        $this->getLogger()->error('[@request_id] Exception while querying @url: @exception', [
+          '@request_id' => $request_id,
           '@url' => $api_url . '/' . $query['resource'],
           '@exception' => $exception->getMessage(),
         ]);
@@ -288,10 +276,12 @@ class ReliefWebApiClient {
     }
 
     // Execute the requests in parallel and retrieve and cache the response's
-    // data.
+    // data. Cache the undecoded JSON body so decode TRUE/FALSE share one entry;
+    // only store bodies that json_decode successfully.
     $promise_results = Utils::settle($promises)->wait();
     foreach ($promise_results as $index => $result) {
-      $data = NULL;
+      $raw = NULL;
+      $request_id = $this->getQueryRequestId($queries[$index]);
 
       // Parse the response in case of success.
       if ($result['state'] === 'fulfilled') {
@@ -299,76 +289,74 @@ class ReliefWebApiClient {
 
         // Retrieve the raw response's data.
         if ($response->getStatusCode() === 200) {
-          $data = (string) $response->getBody();
+          $raw = (string) $response->getBody();
         }
         else {
-          $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
+          $this->getLogger()->notice('[@request_id] Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
+            '@request_id' => $request_id,
             '@code' => $response->getStatusCode(),
             '@url' => $api_url . '/' . $queries[$index]['resource'],
             '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
           ]);
-          $data = '';
         }
       }
       // Otherwise log the error.
       else {
-        $this->getLogger()->notice('Unable to retrieve API data (code: @code) when requesting @url with payload @payload: @reason', [
+        $this->getLogger()->notice('[@request_id] Unable to retrieve API data (@code: @reason) when requesting @url with payload @payload', [
+          '@request_id' => $request_id,
           '@code' => $result['reason']->getCode(),
+          '@reason' => $result['reason']->getMessage(),
           '@url' => $api_url . '/' . $queries[$index]['resource'],
           '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
-          '@reason' => $result['reason']->getMessage(),
         ]);
       }
 
-      // Cache the data unless cache is disabled or there was an issue with the
-      // request in which case $data is NULL.
-      if (isset($cache_ids, $cache_ids[$index], $queries[$index]['resource'])) {
-        $tags = $this->getCacheTags($queries[$index]['resource']);
-        $this->cacheBackend->set($cache_ids[$index], $data, $this->getCacheExpiration(), $tags);
+      if ($raw === NULL || $raw === '') {
+        $results[$index] = NULL;
+        continue;
       }
 
-      $results[$index] = $data;
+      $decoded = $this->decodeApiJsonObject($raw);
+      if ($decoded === NULL) {
+        $this->getLogger()->notice('[@request_id] Unable to decode ReliefWeb API data for request @url with payload @payload', [
+          '@request_id' => $request_id,
+          '@url' => $api_url . '/' . $queries[$index]['resource'],
+          '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
+        ]);
+        $results[$index] = NULL;
+        continue;
+      }
+
+      // Cache valid JSON object bodies only. Failed or empty responses must not
+      // be stored, otherwise they can stick until tags invalidate (or forever
+      // when cache_lifetime is unset/0).
+      if (isset($cache_ids[$index])) {
+        $tags = $this->getCacheTags($queries[$index]['resource']);
+        $this->cacheBackend->set($cache_ids[$index], $raw, $this->getCacheExpiration(), $tags);
+      }
+
+      $results[$index] = $decode ? $decoded : $raw;
     }
 
-    // We don't store the decoded data. This is to ensure that we can use the
-    // same cached data regardless of whether to return JSON data or not.
-    if ($decode) {
-      foreach ($results as $index => $data) {
-        if (!empty($data)) {
-          // Decode the data, skip if invalid.
-          try {
-            $data = json_decode($data, TRUE, 512, JSON_THROW_ON_ERROR);
-          }
-          catch (\Exception $exception) {
-            $data = NULL;
-            $this->getLogger()->notice('Unable to decode ReliefWeb API data for request @url with payload @payload', [
-              '@url' => $api_url . '/' . $queries[$index]['resource'],
-              '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
-            ]);
-          }
-
-          // Add the resulting data with same index as the query.
-          $results[$index] = $data;
+    // Merge resource cache tags and set max-age 0 when any request failed so
+    // callers can apply this to their render arrays without re-checking.
+    if ($cacheability !== NULL) {
+      foreach ($queries as $index => $query) {
+        if (!empty($query['resource'])) {
+          $cacheability->addCacheTags($this->getCacheTags($query['resource']));
+        }
+        // Failures are stored as NULL (isset is false for null values).
+        if (!isset($results[$index])) {
+          $cacheability->setCacheMaxAge(0);
         }
       }
     }
+
     return $results;
   }
 
   /**
-   * Build an API URL.
-   *
-   * This is mostly used to build a suggestion API URL.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array $parameters
-   *   Query parameters.
-   * @param bool $suggest_url
-   *   TRUE to create a suggestion URL (for example to use in the UI filters).
-   *
-   * @return string
-   *   API URL.
+   * {@inheritdoc}
    */
   public function buildApiUrl(
     string $resource,
@@ -415,35 +403,18 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Submit content.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array $payload
-   *   Content to submit.
-   * @param array $headers
-   *   Request headers. This notably must include the X-RW-POST-API-KEY and
-   *   X-RW-POST-API-PROVIDER headers.
-   * @param int $timeout
-   *   Request timeout.
-   *
-   * @return array
-   *   An associative array with the response status code and data.
-   *
-   * @throws \Exception
-   *   An exception if the request was not successful.
-   *
-   * @todo review the return value.
+   * {@inheritdoc}
    */
   public function submitContent(
     string $resource,
     array $payload,
     array $headers,
-    int $timeout = 5,
+    ?int $timeout = NULL,
   ): array {
     $api_url = $this->getApiUrl();
     $appname = $this->getAppName();
     $verify_ssl = $this->verifySsl();
+    $timeout ??= $this->getTimeout();
 
     $url = rtrim($api_url) . '/' . ltrim($resource, '/');
     $url .= '?' . http_build_query(['appname' => $appname]);
@@ -559,7 +530,7 @@ class ReliefWebApiClient {
         $url = rtrim($url, '/') . '/' . $schema_file;
       }
 
-      $timeout = 5;
+      $timeout = $this->getTimeout();
 
       try {
         $response = $this->httpClient->get($url, options: [
@@ -611,15 +582,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Sanitize and simplify an API query payload.
-   *
-   * @param array $payload
-   *   API query payload.
-   * @param bool $combine
-   *   TRUE to optimize the filters by combining their values when possible.
-   *
-   * @return array
-   *   Sanitized payload.
+   * {@inheritdoc}
    */
   public function sanitizePayload(array $payload, bool $combine = FALSE): array {
     if (empty($payload)) {
@@ -771,10 +734,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Get the ReliefWeb UUID namespace.
-   *
-   * @return string
-   *   UUID to use as namespace to generate V5 UUIDs.
+   * {@inheritdoc}
    */
   public function getNamespaceUuid(): string {
     /* The default namespace is the UUID generated with
@@ -783,13 +743,7 @@ class ReliefWebApiClient {
   }
 
   /**
-   * Update the host of API URLs.
-   *
-   * Note: this mostly for development to convert the URLs from the API used
-   * for dev (ex: stage) to URLs with the current host and scheme.
-   *
-   * @param array $data
-   *   API data.
+   * {@inheritdoc}
    */
   public static function updateApiUrls(array &$data): void {
     $request = \Drupal::request();
@@ -857,6 +811,32 @@ class ReliefWebApiClient {
   }
 
   /**
+   * Get the request-id prefix to use in the API queries.
+   *
+   * @return string
+   *   Request ID prefix.
+   */
+  protected function getRequestIdPrefix(): string {
+    return $this->config()->get('request_id_prefix') ?: 'rw';
+  }
+
+  /**
+   * Get the full request-id for a query, for URL params and log messages.
+   *
+   * @param array $query
+   *   Query definition that may contain a request_id suffix.
+   *
+   * @return string
+   *   Prefixed request-id, or '-' when unset.
+   */
+  protected function getQueryRequestId(array $query): string {
+    if (!empty($query['request_id']) && is_string($query['request_id'])) {
+      return $this->getRequestIdPrefix() . '.' . $query['request_id'];
+    }
+    return '-';
+  }
+
+  /**
    * Check if certificate verification is enabled.
    *
    * @return bool
@@ -870,6 +850,33 @@ class ReliefWebApiClient {
   }
 
   /**
+   * Decode a ReliefWeb API JSON object body.
+   *
+   * @param string $raw
+   *   Raw response body.
+   *
+   * @return array|null
+   *   Associative array when the body is a JSON object, NULL otherwise.
+   */
+  protected function decodeApiJsonObject(string $raw): ?array {
+    try {
+      $decoded = json_decode($raw, TRUE, 512, JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $exception) {
+      return NULL;
+    }
+
+    // Callers expect an object payload (data, totalCount, etc.), not a list
+    // or scalar. json_decode('{}', TRUE) becomes [] which array_is_list treats
+    // as a list and is also rejected, which is fine for this API.
+    if (!is_array($decoded) || array_is_list($decoded)) {
+      return NULL;
+    }
+
+    return $decoded;
+  }
+
+  /**
    * Get whether caching is enabled or not.
    *
    * @var bool
@@ -880,6 +887,20 @@ class ReliefWebApiClient {
       $this->cacheEnabled = $this->config()->get('cache_enabled');
     }
     return $this->cacheEnabled;
+  }
+
+  /**
+   * Get the request timeout in seconds.
+   *
+   * @return int
+   *   Timeout from reliefweb_api.settings:timeout, falling back to 5.
+   */
+  protected function getTimeout(): int {
+    if (!isset($this->requestTimeout)) {
+      $timeout = (int) ($this->config()->get('timeout') ?? 5);
+      $this->requestTimeout = $timeout > 0 ? $timeout : 5;
+    }
+    return $this->requestTimeout;
   }
 
   /**

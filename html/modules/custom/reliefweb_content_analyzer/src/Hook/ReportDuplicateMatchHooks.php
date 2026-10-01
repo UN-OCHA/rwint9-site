@@ -11,6 +11,7 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\RevisionLogInterface;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\Core\Hook\Attribute\Hook;
 use Drupal\Core\Hook\Order\OrderAfter;
 use Drupal\Core\Hook\Order\OrderBefore;
@@ -189,8 +190,8 @@ final class ReportDuplicateMatchHooks {
 
     $context->beginApplying();
 
-    if ($entity instanceof RevisionLogInterface) {
-      $entity->setRevisionLogMessage($context->originalRevisionLog);
+    if ($entity instanceof EntityRevisionedInterface) {
+      $entity->updateRevisionLogMessage($context->originalRevisionLog, 'replace', FALSE);
     }
 
     $this->appendToRevisionLog($entity, $this->buildRevisionLogMessage($context->result));
@@ -440,7 +441,7 @@ final class ReportDuplicateMatchHooks {
     DuplicateMatchResult $result,
     ?string $pre_draft_status,
   ): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
@@ -482,13 +483,11 @@ final class ReportDuplicateMatchHooks {
    *   The message to append.
    */
   protected function appendToRevisionLog(EntityInterface $entity, string $message): void {
-    if (!($entity instanceof RevisionLogInterface) || $message === '') {
+    if (!($entity instanceof EntityRevisionedInterface) || $message === '') {
       return;
     }
 
-    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
-    $combined = $existing === '' ? $message : $existing . ' ' . $message;
-    $entity->setRevisionLogMessage($combined);
+    $entity->updateRevisionLogMessage($message, 'append');
   }
 
   /**
@@ -498,17 +497,11 @@ final class ReportDuplicateMatchHooks {
    *   The report entity being saved.
    */
   protected function appendClassificationSkippedRevisionLog(EntityInterface $entity): void {
-    if (!($entity instanceof RevisionLogInterface)) {
+    if (!($entity instanceof EntityRevisionedInterface)) {
       return;
     }
 
-    $message = 'Automated classification skipped.';
-    $existing = trim((string) ($entity->getRevisionLogMessage() ?? ''));
-    if ($existing !== '' && str_contains($existing, $message)) {
-      return;
-    }
-
-    $this->appendToRevisionLog($entity, $message);
+    $entity->updateRevisionLogMessage('Automated classification skipped.', 'append');
   }
 
   /**

@@ -17,6 +17,7 @@ use Drupal\reliefweb_moderation\ModeratedNodeStorageSchema;
 use Drupal\reliefweb_moderation\ModeratedTermStorageSchema;
 use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_utility\Helpers\EntityHelper;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 
 /**
  * Implements hook_theme().
@@ -256,7 +257,7 @@ function reliefweb_moderation_preprocess_page(&$variables) {
     if (!empty($message)) {
       $element['#message'] = [
         'type' => $entity->getOriginalRevisionLogMessageType(),
-        'content' => EntityHelper::formatRevisionLogMessage($message),
+        'content' => RevisionLogHelper::formatMessage($message),
       ];
 
       if ($user->hasPermission('view moderation information revision message author')) {

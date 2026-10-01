@@ -90,6 +90,20 @@ class ReliefWebEntitiesSettingsForm extends ConfigFormBase {
       '#tree' => TRUE,
     ];
 
+    $form['related_content']['enabled'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable related content query'),
+      '#description' => $this->t('When enabled, fetch and rank related reports.'),
+      '#default_value' => (bool) ($config->get('related_content.enabled') ?? FALSE),
+    ];
+
+    $form['related_content']['fallback'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable latest updates fallback'),
+      '#description' => $this->t('When related content is empty or disabled, show the latest reports instead. If both this and the related query are disabled, the block is hidden.'),
+      '#default_value' => (bool) ($config->get('related_content.fallback') ?? TRUE),
+    ];
+
     $form['related_content']['candidate_limit'] = [
       '#type' => 'number',
       '#title' => $this->t('API candidate limit'),
@@ -238,7 +252,14 @@ class ReliefWebEntitiesSettingsForm extends ConfigFormBase {
     $config = $this->config('reliefweb_entities.settings');
 
     $config->set('cron', $form_state->getValue('cron'));
-    $config->set('related_content', $form_state->getValue('related_content'));
+
+    $related_content = $form_state->getValue('related_content') ?? [];
+    // Unchecked checkboxes are omitted from form values; persist explicit
+    // booleans.
+    $related_content['enabled'] = !empty($related_content['enabled']);
+    $related_content['fallback'] = !empty($related_content['fallback']);
+    $config->set('related_content', $related_content);
+
     $config->set(
       'allowed_social_media_links',
       $form_state->getValue('allowed_social_media_links'),

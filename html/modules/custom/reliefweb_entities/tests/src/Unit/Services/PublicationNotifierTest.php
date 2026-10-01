@@ -266,8 +266,13 @@ class PublicationNotifierTest extends UnitTestCase {
 
     $entity->method('getRevisionLogMessage')->willReturn('');
     $entity->expects($this->once())
-      ->method('setRevisionLogMessage')
-      ->with($this->stringContains('Publication notification sent to test@example.com'));
+      ->method('updateRevisionLogMessage')
+      ->with(
+        $this->stringContains('Publication notification sent to test@example.com'),
+        'append',
+        TRUE,
+        ' - ',
+      );
 
     return $entity;
   }

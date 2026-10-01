@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\reliefweb_disaster_map\DisasterMapService;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
@@ -187,7 +188,7 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function parseApiData(array $api_data, $view = '') {
+  public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL) {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
 
@@ -360,14 +361,14 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function requestApi(array $payload) {
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL, ?string $request_id = NULL) {
     if (!empty($payload['query']['value'])) {
       // Tiny hack to make searching by "ongoing" status possible as for
       // legacy reasons the actual status is "current".
       $payload['query']['value'] = str_replace('ongoing', 'current', $payload['query']['value']);
     }
 
-    return parent::requestApi($payload);
+    return parent::requestApi($payload, $cacheability, $request_id);
   }
 
   /**

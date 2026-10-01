@@ -27,7 +27,7 @@ use Drupal\reliefweb_moderation\Enum\PostingRight;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
-use Drupal\reliefweb_utility\Helpers\EntityHelper;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 use Drupal\reliefweb_utility\Helpers\MediaHelper;
 use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -283,7 +283,7 @@ class EntityHistory {
             ] : NULL,
             'message' => [
               'type' => isset($user, $author) && $user->id() === $author->id() ? 'instruction' : 'feedback',
-              'content' => !empty($message) ? EntityHelper::formatRevisionLogMessage($message) : '',
+              'content' => !empty($message) ? RevisionLogHelper::formatMessage($message) : '',
             ],
             'content' => $content,
           ];

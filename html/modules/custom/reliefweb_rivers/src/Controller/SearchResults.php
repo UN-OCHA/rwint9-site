@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Controller;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Render\Markup;
 use Drupal\reliefweb_api\Services\ReliefWebApiClient;
@@ -56,17 +57,18 @@ class SearchResults extends ControllerBase {
   public function getPageContent() {
     $totals = [];
     $sections = [];
+    $cacheability = new CacheableMetadata();
     $search = $this->getSearchQuery();
 
     if (!empty($search)) {
       // API queries.
       $queries = [
-        'reports' => $this->getRiverApiQuery('report'),
-        'jobs' => $this->getRiverApiQuery('job'),
-        'training' => $this->getRiverApiQuery('training'),
-        'disasters' => $this->getRiverApiQuery('disaster'),
-        'organizations' => $this->getRiverApiQuery('source'),
-        'countries' => $this->getRiverApiQuery('country'),
+        'reports' => $this->getRiverApiQuery('report', request_id: 'search.reports'),
+        'jobs' => $this->getRiverApiQuery('job', request_id: 'search.jobs'),
+        'training' => $this->getRiverApiQuery('training', request_id: 'search.training'),
+        'disasters' => $this->getRiverApiQuery('disaster', request_id: 'search.disasters'),
+        'organizations' => $this->getRiverApiQuery('source', request_id: 'search.organizations'),
+        'countries' => $this->getRiverApiQuery('country', request_id: 'search.countries'),
       ];
 
       // @todo replace with a switch and formatPlural?
@@ -81,16 +83,15 @@ class SearchResults extends ControllerBase {
 
       // Get the API data.
       $results = $this->reliefWebApiClient
-        ->requestMultiple(array_filter($queries), TRUE);
+        ->requestMultiple(array_filter($queries), cacheability: $cacheability);
 
       // Parse the API results, building the page sections data.
       foreach ($results as $index => $result) {
-        $query = $queries[$index];
-
-        if (empty($result['data'])) {
+        if (!is_array($result) || empty($result['data'])) {
           continue;
         }
 
+        $query = $queries[$index];
         $total = $result['totalCount'];
         $bundle = $query['bundle'];
         $view = $query['view'] ?? '';
@@ -130,13 +131,16 @@ class SearchResults extends ControllerBase {
       }
     }
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_rivers_search_results',
       '#title' => $this->t('Search results'),
       '#search' => $this->getSearch(),
       '#totals' => $totals,
       '#sections' => $sections,
     ];
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**
@@ -146,11 +150,13 @@ class SearchResults extends ControllerBase {
    *   Entity bundle of the river.
    * @param int $limit
    *   Number of headlines to return.
+   * @param string|null $request_id
+   *   Optional request ID suffix for API log attribution.
    *
    * @return array
    *   API Payload.
    */
-  public function getRiverApiQuery($bundle, $limit = 3) {
+  public function getRiverApiQuery($bundle, $limit = 3, ?string $request_id = NULL) {
     $service = RiverServiceBase::getRiverService($bundle);
     $resource = $service->getResource();
     $title = $service->getPageTitle();
@@ -179,7 +185,7 @@ class SearchResults extends ControllerBase {
       ];
     }
 
-    return [
+    $query = [
       'resource' => $resource,
       'bundle' => $bundle,
       'entity_type' => $service->getEntityTypeId(),
@@ -187,6 +193,10 @@ class SearchResults extends ControllerBase {
       'title' => $title,
       'more' => $more,
     ];
+    if ($request_id !== NULL) {
+      $query['request_id'] = $request_id;
+    }
+    return $query;
   }
 
   /**

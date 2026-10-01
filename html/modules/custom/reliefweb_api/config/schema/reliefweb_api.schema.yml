@@ -14,6 +14,9 @@ reliefweb_api.settings:
     appname:
       type: string
       label: 'App name parameter to indentify the API requests.'
+    request_id_prefix:
+      type: string
+      label: 'Prefix prepended to request-id URL query parameters for API log attribution.'
     cache_enabled:
       type: boolean
       label: 'Cache the query results.'
@@ -23,6 +26,9 @@ reliefweb_api.settings:
     cache_namespace:
       type: string
       label: 'Namespace for the API caching.'
+    timeout:
+      type: integer
+      label: 'Request timeout in seconds for ReliefWeb API HTTP calls.'
     verify_ssl:
       type: boolean
       label: 'Verify the SSL certificate of the API query performing requests.'
