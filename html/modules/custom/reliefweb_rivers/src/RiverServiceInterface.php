@@ -389,11 +389,14 @@ interface RiverServiceInterface {
    *   Request payload.
    * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
    *   Optional cacheability metadata to merge with from the API client.
+   * @param string|null $request_id
+   *   Optional request ID suffix. When NULL, one is built from the river name
+   *   and selected view.
    *
    * @return array|null
    *   API response's data.
    */
-  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL);
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL, ?string $request_id = NULL);
 
   /**
    * Get the RSS content for the river.

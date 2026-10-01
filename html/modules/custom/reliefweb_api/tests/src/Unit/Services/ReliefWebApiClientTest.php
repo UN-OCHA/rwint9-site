@@ -60,6 +60,7 @@ class ReliefWebApiClientTest extends UnitTestCase {
         'api_url' => 'https://api.example.com/v1',
         'api_url_external' => 'https://api.example.com/v1',
         'appname' => 'test-app',
+        'request_id_prefix' => 'rw',
         'verify_ssl' => TRUE,
         'cache_enabled' => TRUE,
         'cache_lifetime' => 60,
@@ -292,6 +293,58 @@ class ReliefWebApiClientTest extends UnitTestCase {
 
     $result = $this->apiClient->request('reports', ['limit' => 1]);
     $this->assertNull($result);
+  }
+
+  /**
+   * Request ID is appended to the URL query with the configured prefix.
+   */
+  public function testRequestIdIsAddedToUrl(): void {
+    $body = '{"data":[],"totalCount":0}';
+    $this->cacheBackend->method('get')->willReturn(FALSE);
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->with(
+        'POST',
+        $this->callback(static function (string $url): bool {
+          $query = parse_url($url, PHP_URL_QUERY);
+          parse_str((string) $query, $parameters);
+          return ($parameters['appname'] ?? NULL) === 'test-app'
+            && ($parameters['request-id'] ?? NULL) === 'rw.country.maps-infographics';
+        }),
+        $this->anything(),
+      )
+      ->willReturn(Create::promiseFor(new Response(200, [], $body)));
+
+    $this->apiClient->request(
+      'reports',
+      ['limit' => 1],
+      request_id: 'country.maps-infographics',
+    );
+  }
+
+  /**
+   * Request ID is omitted from the URL when not provided.
+   */
+  public function testRequestIdIsOmittedWhenUnset(): void {
+    $body = '{"data":[],"totalCount":0}';
+    $this->cacheBackend->method('get')->willReturn(FALSE);
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->with(
+        'POST',
+        $this->callback(static function (string $url): bool {
+          $query = parse_url($url, PHP_URL_QUERY);
+          parse_str((string) $query, $parameters);
+          return ($parameters['appname'] ?? NULL) === 'test-app'
+            && !array_key_exists('request-id', $parameters);
+        }),
+        $this->anything(),
+      )
+      ->willReturn(Create::promiseFor(new Response(200, [], $body)));
+
+    $this->apiClient->request('reports', ['limit' => 1]);
   }
 
 }

@@ -863,7 +863,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     $payload = $payload ?? $this->prepareApiRequest($limit, $paginated, $view);
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload, $cacheability);
+    $data = $this->requestApi($payload, $cacheability, $this->buildRequestId($view));
 
     // Non-array results mean the API request failed.
     if (!is_array($data)) {
@@ -887,12 +887,42 @@ abstract class RiverServiceBase implements RiverServiceInterface {
   /**
    * {@inheritdoc}
    */
-  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL) {
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL, ?string $request_id = NULL) {
     return $this->apiClient->request(
       $this->getResource(),
       $payload,
       cacheability: $cacheability,
+      request_id: $request_id ?? $this->buildRequestId(),
     );
+  }
+
+  /**
+   * Build a request ID suffix for river API calls.
+   *
+   * @param string|null $view
+   *   Optional view. Defaults to the selected view.
+   * @param bool $rss
+   *   Whether this is an RSS feed request.
+   *
+   * @return string
+   *   Request ID suffix (without configured prefix).
+   */
+  protected function buildRequestId(?string $view = NULL, bool $rss = FALSE): string {
+    $request_id = $this->getRiver();
+
+    // Add the view to the request ID.
+    $views = $this->getViews();
+    $view = $this->validateView($view) ?? $this->getSelectedView();
+    if (isset($views[$view])) {
+      $request_id .= '.' . $view;
+    }
+
+    // Add the RSS suffix to the request ID.
+    if ($rss) {
+      $request_id .= '.rss';
+    }
+
+    return $request_id;
   }
 
   /**
@@ -983,7 +1013,7 @@ abstract class RiverServiceBase implements RiverServiceInterface {
     }
 
     // Retrieve the API data.
-    $data = $this->requestApi($payload, $cacheability);
+    $data = $this->requestApi($payload, $cacheability, $this->buildRequestId($view, TRUE));
 
     // Skip if there is no data.
     if (empty($data)) {

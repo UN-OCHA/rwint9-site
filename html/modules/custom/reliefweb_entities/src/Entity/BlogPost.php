@@ -84,7 +84,7 @@ class BlogPost extends Node implements BundleEntityInterface, EntityModeratedInt
     // Retrieve the data from the API.
     $cacheability = new CacheableMetadata();
     $data = \Drupal::service('reliefweb_api.client')
-      ->request($this->getApiResource(), $payload, cacheability: $cacheability);
+      ->request($this->getApiResource(), $payload, cacheability: $cacheability, request_id: 'blog.latest');
     if (!is_array($data) || empty($data)) {
       $build = [];
       $cacheability->applyTo($build);

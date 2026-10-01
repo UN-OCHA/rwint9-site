@@ -176,7 +176,11 @@ class Topic extends Node implements BundleEntityInterface, EntityModeratedInterf
     // Prepare the API queries.
     $queries = [];
     foreach ($section_links as $index => $section_link) {
-      $queries[$index] = $this->riverUrlToApi($section_link);
+      $query = $this->riverUrlToApi($section_link);
+      if (!empty($query)) {
+        $query['request_id'] = 'topic.' . $index;
+        $queries[$index] = $query;
+      }
     }
 
     $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);

@@ -361,14 +361,14 @@ class DisasterRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL) {
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL, ?string $request_id = NULL) {
     if (!empty($payload['query']['value'])) {
       // Tiny hack to make searching by "ongoing" status possible as for
       // legacy reasons the actual status is "current".
       $payload['query']['value'] = str_replace('ongoing', 'current', $payload['query']['value']);
     }
 
-    return parent::requestApi($payload, $cacheability);
+    return parent::requestApi($payload, $cacheability, $request_id);
   }
 
   /**

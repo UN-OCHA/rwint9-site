@@ -63,12 +63,12 @@ class SearchResults extends ControllerBase {
     if (!empty($search)) {
       // API queries.
       $queries = [
-        'reports' => $this->getRiverApiQuery('report'),
-        'jobs' => $this->getRiverApiQuery('job'),
-        'training' => $this->getRiverApiQuery('training'),
-        'disasters' => $this->getRiverApiQuery('disaster'),
-        'organizations' => $this->getRiverApiQuery('source'),
-        'countries' => $this->getRiverApiQuery('country'),
+        'reports' => $this->getRiverApiQuery('report', request_id: 'search.reports'),
+        'jobs' => $this->getRiverApiQuery('job', request_id: 'search.jobs'),
+        'training' => $this->getRiverApiQuery('training', request_id: 'search.training'),
+        'disasters' => $this->getRiverApiQuery('disaster', request_id: 'search.disasters'),
+        'organizations' => $this->getRiverApiQuery('source', request_id: 'search.organizations'),
+        'countries' => $this->getRiverApiQuery('country', request_id: 'search.countries'),
       ];
 
       // @todo replace with a switch and formatPlural?
@@ -150,11 +150,13 @@ class SearchResults extends ControllerBase {
    *   Entity bundle of the river.
    * @param int $limit
    *   Number of headlines to return.
+   * @param string|null $request_id
+   *   Optional request ID suffix for API log attribution.
    *
    * @return array
    *   API Payload.
    */
-  public function getRiverApiQuery($bundle, $limit = 3) {
+  public function getRiverApiQuery($bundle, $limit = 3, ?string $request_id = NULL) {
     $service = RiverServiceBase::getRiverService($bundle);
     $resource = $service->getResource();
     $title = $service->getPageTitle();
@@ -183,7 +185,7 @@ class SearchResults extends ControllerBase {
       ];
     }
 
-    return [
+    $query = [
       'resource' => $resource,
       'bundle' => $bundle,
       'entity_type' => $service->getEntityTypeId(),
@@ -191,6 +193,10 @@ class SearchResults extends ControllerBase {
       'title' => $title,
       'more' => $more,
     ];
+    if ($request_id !== NULL) {
+      $query['request_id'] = $request_id;
+    }
+    return $query;
   }
 
   /**

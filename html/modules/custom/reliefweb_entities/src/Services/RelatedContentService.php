@@ -75,7 +75,7 @@ class RelatedContentService implements RelatedContentServiceInterface {
       $payload['query']['value'] = implode(' OR ', $query_clauses);
       $payload['sort'] = ['score:desc', 'date.original:desc'];
 
-      $data = $this->apiClient->request('reports', $payload, cacheability: $cacheability);
+      $data = $this->apiClient->request('reports', $payload, cacheability: $cacheability, request_id: 'related.reports');
       if (is_array($data)) {
         $items = $data['data'] ?? $data['items'] ?? [];
         if ($items !== []) {
@@ -98,7 +98,7 @@ class RelatedContentService implements RelatedContentServiceInterface {
       // Use a separate cacheability object so a failed related-content query
       // does not force max-age 0 when the fallback request succeeds.
       $fallback_cacheability = new CacheableMetadata();
-      $data = $this->apiClient->request('reports', $payload, cacheability: $fallback_cacheability);
+      $data = $this->apiClient->request('reports', $payload, cacheability: $fallback_cacheability, request_id: 'related.fallback');
       $entities = is_array($data) ? RiverServiceBase::getRiverData('report', $data) : [];
       if (is_array($data)) {
         $fallback_cacheability->addCacheTags($cacheability->getCacheTags());

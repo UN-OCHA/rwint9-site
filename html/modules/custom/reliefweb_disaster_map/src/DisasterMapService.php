@@ -89,6 +89,7 @@ class DisasterMapService {
    *   string/Markup when there is no map content).
    */
   public function getDisasterMap($id, $title, array $options = [], $render = FALSE, ?CacheableMetadata $cacheability = NULL) {
+    $request_id = 'disaster-map.' . $id;
     $id = Html::getUniqueId($id);
     $cacheability ??= new CacheableMetadata();
 
@@ -167,7 +168,7 @@ class DisasterMapService {
     ];
 
     // Get the disasters.
-    $data = $this->disasterRiver->requestApi($payload, $cacheability);
+    $data = $this->disasterRiver->requestApi($payload, $cacheability, $request_id);
     $cacheability->addCacheTags(['taxonomy_term_list:disaster']);
 
     // We group the disasters by primary country and add other disasters

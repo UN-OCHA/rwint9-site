@@ -4,6 +4,8 @@ api_url: https://api.reliefweb.int/v1
 api_url_external: https://api.reliefweb.int/v1
 # App name parameter to indentify the API requests.
 appname: reliefweb.int
+# Prefix for request-id URL query parameters.
+request_id_prefix: rw
 # Cache the query results.
 cache_enabled: true
 # Request timeout in seconds (connect + request).

@@ -133,6 +133,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
     array $headers = [],
     bool $refresh = FALSE,
     ?CacheableMetadata $cacheability = NULL,
+    ?string $request_id = NULL,
   ): array|string|null {
     $queries = [
       $resource => [
@@ -141,6 +142,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         'payload' => $payload,
         'headers' => $headers,
         'refresh' => $refresh,
+        'request_id' => $request_id,
       ],
     ];
 
@@ -239,6 +241,12 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
             continue;
           }
         }
+      }
+
+      // Add request-id after GET payload merge so callers' payloads cannot
+      // overwrite it, and it is never part of the POST body / cache key.
+      if (!empty($query['request_id']) && is_string($query['request_id'])) {
+        $parameters['request-id'] = $this->getRequestIdPrefix() . '.' . $query['request_id'];
       }
 
       $url = $api_url . '/' . $query['resource'] . '?' . http_build_query($parameters);
@@ -793,6 +801,16 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
                        $this->getRequestStack()->getCurrentRequest()->getHttpHost();
     }
     return $this->appname;
+  }
+
+  /**
+   * Get the request-id prefix to use in the API queries.
+   *
+   * @return string
+   *   Request ID prefix.
+   */
+  protected function getRequestIdPrefix(): string {
+    return $this->config()->get('request_id_prefix') ?: 'rw';
   }
 
   /**

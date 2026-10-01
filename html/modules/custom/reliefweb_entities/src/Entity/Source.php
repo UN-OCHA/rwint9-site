@@ -72,6 +72,12 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
       'training' => $this->getLatestTrainingApiQuery('S'),
     ];
 
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $queries[$slot]['request_id'] = 'source.' . $slot;
+      }
+    }
+
     $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     // Update the content rivers to show the total number of items in the

@@ -96,6 +96,13 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
       'disasters' => $this->getRelatedDisastersApiQuery(),
     ];
 
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $id = $slot === 'disasters' ? 'related-disasters' : $slot;
+        $queries[$slot]['request_id'] = 'disaster.' . $id;
+      }
+    }
+
     $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     return $sections;

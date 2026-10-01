@@ -221,11 +221,13 @@ class Homepage extends ControllerBase {
    *
    * @param int $limit
    *   Number of headlines to return.
+   * @param string $request_id
+   *   Request ID suffix for API log attribution.
    *
    * @return array
    *   API Payload.
    */
-  public function getHeadlinesApiPayload($limit = 8) {
+  public function getHeadlinesApiPayload($limit = 8, string $request_id = 'homepage.headlines') {
     $payload = RiverServiceBase::getRiverApiPayload('report', 'headlines');
     $payload['fields']['exclude'][] = 'file';
     $payload['fields']['include'][] = 'headline.image';
@@ -255,6 +257,7 @@ class Homepage extends ControllerBase {
       'title' => $this->t('Latest Headlines'),
       'callback' => [$this, 'parseHeadlinesApiData'],
       'view' => 'headlines',
+      'request_id' => $request_id,
       // Link to the headlines river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report', [
@@ -323,6 +326,7 @@ class Homepage extends ControllerBase {
       'entity_type' => 'node',
       'payload' => $payload,
       'title' => $title ?? $this->t('Latest Updates'),
+      'request_id' => 'homepage.most-read',
       // Link to the updates river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('report'),
@@ -354,6 +358,7 @@ class Homepage extends ControllerBase {
       'payload' => $payload,
       'title' => $this->t('Recent Disasters'),
       'callback' => [$this, 'parseDisastersApiData'],
+      'request_id' => 'homepage.disasters',
       // Link to the disasters river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('disaster'),
@@ -379,6 +384,7 @@ class Homepage extends ControllerBase {
       'payload' => $payload,
       'title' => $this->t('Latest Blog'),
       'callback' => [$this, 'parseBlogPostApiData'],
+      'request_id' => 'homepage.blog',
       // Link to the blog river for the entity.
       'more' => [
         'url' => RiverServiceBase::getRiverUrl('blog_post'),
@@ -405,10 +411,12 @@ class Homepage extends ControllerBase {
     if ($bundle === 'job') {
       $title = $this->t('Open jobs');
       $resource = 'jobs';
+      $request_id = 'homepage.jobs-count';
     }
     else {
       $title = $this->t('Training programs');
       $resource = 'training';
+      $request_id = 'homepage.training-count';
     }
 
     return [
@@ -417,6 +425,7 @@ class Homepage extends ControllerBase {
       'entity_type' => 'node',
       'payload' => $payload,
       'title' => $title,
+      'request_id' => $request_id,
       // Link to the job/training river for the entity.
       'url' => RiverServiceBase::getRiverUrl($bundle),
     ];
@@ -479,7 +488,7 @@ class Homepage extends ControllerBase {
    */
   public function retrieveHeadlines() {
     // Get the latest 24 headlines.
-    $query = $this->getHeadlinesApiPayload(24);
+    $query = $this->getHeadlinesApiPayload(24, request_id: 'homepage.headlines-admin');
 
     $cacheability = new CacheableMetadata();
     // Admin AJAX response — never cache the widget payload.

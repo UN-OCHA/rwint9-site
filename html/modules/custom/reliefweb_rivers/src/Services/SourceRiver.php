@@ -257,14 +257,17 @@ class SourceRiver extends RiverServiceBase {
       [
         'resource' => 'reports',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-reports',
       ],
       [
         'resource' => 'jobs',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-jobs',
       ],
       [
         'resource' => 'training',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-training',
       ],
     ];
 

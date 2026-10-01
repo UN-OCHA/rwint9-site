@@ -37,6 +37,10 @@ interface ReliefWebApiClientInterface {
    *   Optional cacheability metadata to merge with. On success, resource cache
    *   tags are added. On failure, max-age is set to 0 so upstream page builds
    *   are not stored empty for anonymous users.
+   * @param string|null $request_id
+   *   Optional request ID suffix (e.g. country.maps-infographics). Prefixed
+   *   with the configured request_id_prefix and sent as the request-id URL
+   *   query parameter for API log attribution.
    *
    * @return array|string|null
    *   The data from the API response or NULL in case of error.
@@ -51,6 +55,7 @@ interface ReliefWebApiClientInterface {
     array $headers = [],
     bool $refresh = FALSE,
     ?CacheableMetadata $cacheability = NULL,
+    ?string $request_id = NULL,
   ): array|string|null;
 
   /**
@@ -64,6 +69,7 @@ interface ReliefWebApiClientInterface {
    *   - payload: optional API payload
    *   - headers: optional headers
    *   - refresh: optional flag to refresh the cached data.
+   *   - request_id: optional request ID suffix for the request-id URL param.
    * @param bool $decode
    *   Whether to decode (json) the output or not.
    * @param int|null $timeout

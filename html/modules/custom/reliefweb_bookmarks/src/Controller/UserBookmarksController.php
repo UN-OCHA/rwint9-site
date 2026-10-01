@@ -148,6 +148,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
           'title' => $service->getPageTitle(),
           'payload' => $payload,
           'entity_type' => $entity_type,
+          'request_id' => 'bookmarks.' . $bundle,
         ];
       }
     }
@@ -286,7 +287,7 @@ class UserBookmarksController extends ControllerBase implements ContainerInjecti
 
         // Get the API data.
         $result = $this->reliefWebApiClient
-          ->request($service->getResource(), $payload, cacheability: $cacheability);
+          ->request($service->getResource(), $payload, cacheability: $cacheability, request_id: 'bookmarks.' . $bundle . '.list');
 
         // Prepare the data from the API.
         $entities = is_array($result) ? RiverServiceBase::getRiverData($bundle, $result) : [];

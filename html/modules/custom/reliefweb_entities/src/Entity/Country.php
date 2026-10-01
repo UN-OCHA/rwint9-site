@@ -83,6 +83,12 @@ class Country extends Term implements BundleEntityInterface, EntityModeratedInte
       'training' => $this->getLatestTrainingApiQuery(),
     ];
 
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $queries[$slot]['request_id'] = 'country.' . $slot;
+      }
+    }
+
     $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     return $sections;
