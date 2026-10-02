@@ -349,6 +349,24 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
+  public function isOwnedByProvider(string $uuid, ProviderInterface $provider): bool {
+    $storage = $this->entityTypeManager->getStorage($this->getEntityType());
+    $uuid_key = $storage->getEntityType()->getKey('uuid');
+
+    $ids = $storage
+      ->getQuery()
+      ->accessCheck(FALSE)
+      ->condition($uuid_key, $uuid, '=')
+      ->condition('field_post_api_provider', $provider->id(), '=')
+      ->range(0, 1)
+      ->execute();
+
+    return !empty($ids);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function isTerminalModerationStatus(string $status): bool {
     return in_array($status, $this->getTerminalModerationStatuses(), TRUE);
   }

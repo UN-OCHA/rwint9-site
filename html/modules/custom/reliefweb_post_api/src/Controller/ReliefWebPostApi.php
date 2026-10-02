@@ -153,6 +153,12 @@ class ReliefWebPostApi extends ControllerBase {
 
       $status = $plugin->getModerationStatusByUuid($uuid);
 
+      // Existing documents may only be modified by the same Post API provider.
+      // Unknown UUID skips this gate (PUT create; DELETE still 404s later).
+      if ($status !== NULL && !$plugin->isOwnedByProvider($uuid, $provider)) {
+        throw new AccessDeniedHttpException(PostApiResponseMessage::ProviderMismatch->value);
+      }
+
       if ($method === 'DELETE') {
         if ($status !== NULL && $plugin->isTerminalModerationStatus($status)) {
           $response = new JsonResponse(PostApiResponseMessage::TerminalNotPubliclyAvailable->format([

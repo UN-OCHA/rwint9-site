@@ -21,6 +21,14 @@ Creates and updates set moderation status differently:
 Importers can pass an explicit `status`, bypassing provider default and
 posting rights.
 
+**Provider ownership:** PUT and DELETE on an existing document are allowed only
+when the authenticated provider matches `field_post_api_provider` on that
+document. An empty provider field is denied (`403` / "Not allowed to modify
+this document."). Ownership is resolved with an entity query on UUID + provider
+(no full entity load), before terminal-status short-circuits. Creates (unknown
+UUID) skip this check. Importers call `process()` directly and are not subject
+to this HTTP gate.
+
 **Terminal locks:** PUT submissions for entities in statuses returned by the
 bundle moderation service's `getTerminalStatuses()` are rejected (`422` /
 not queued) with "Document is marked as @status (not publicly available) and cannot be updated."
@@ -45,9 +53,11 @@ DELETE (withdraw)
 `DELETE` on an existing document sets moderation status to `withdrawn`
 synchronously (no queue, no request body). Posting rights are not applied.
 Terminal and already-withdrawn documents are short-circuited with a UUID
-status query (no entity load).
+status query (no entity load). Same-provider ownership applies before those
+short-circuits (see Provider ownership above).
 
 - Unknown UUID → `404`
+- Wrong or empty provider → `403` with "Not allowed to modify this document."
 - Terminal status → `200` with "Document is marked as @status and is not publicly available." (no status change)
 - Already `withdrawn` → `200` with "Document already withdrawn." (idempotent)
 - Success → `200` with "Document withdrawn."
@@ -63,3 +73,5 @@ TODO
       --> Add other endpoint to query status (404, refused, pending, published)?
 - [ ] Limit the fields the provider can populate?
 - [ ] Validate report original publication date so it cannot be in the future?
+- [ ] Review authorizing a different provider (or non–Post-API content) to
+      alter documents owned by another provider.

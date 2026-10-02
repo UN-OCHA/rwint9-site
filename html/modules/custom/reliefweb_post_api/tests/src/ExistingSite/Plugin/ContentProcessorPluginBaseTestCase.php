@@ -337,6 +337,45 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
+   * Test isOwnedByProvider uses an entity query without loading the entity.
+   */
+  public function testIsOwnedByProvider(): void {
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 42,
+    ]);
+
+    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
+      'getKey' => 'uuid',
+    ]);
+
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('range')->willReturnSelf();
+    $query->method('execute')->willReturnOnConsecutiveCalls(
+      ['12345'],
+      [],
+    );
+
+    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
+      'getEntityType' => $entity_type,
+      'getQuery' => $query,
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getStorage' => $storage,
+    ]);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity_type.manager' => $entity_type_manager,
+    ]);
+
+    $this->assertTrue($plugin->isOwnedByProvider($uuid, $provider));
+    $this->assertFalse($plugin->isOwnedByProvider($uuid, $provider));
+  }
+
+  /**
    * Test validate.
    */
   public function testValidate(): void {

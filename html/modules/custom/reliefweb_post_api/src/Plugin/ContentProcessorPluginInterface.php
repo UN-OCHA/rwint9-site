@@ -148,6 +148,21 @@ interface ContentProcessorPluginInterface {
   public function getModerationStatusByUuid(string $uuid): ?string;
 
   /**
+   * Whether an entity UUID is owned by the given Post API provider.
+   *
+   * Uses an entity query only (no full entity load).
+   *
+   * @param string $uuid
+   *   Entity UUID.
+   * @param \Drupal\reliefweb_post_api\Entity\ProviderInterface $provider
+   *   Authenticated provider.
+   *
+   * @return bool
+   *   TRUE when an entity with that UUID stores the given provider.
+   */
+  public function isOwnedByProvider(string $uuid, ProviderInterface $provider): bool;
+
+  /**
    * Whether a moderation status is terminal for this plugin's bundle.
    *
    * @param string $status

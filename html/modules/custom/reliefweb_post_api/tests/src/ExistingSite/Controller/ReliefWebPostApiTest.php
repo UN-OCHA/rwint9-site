@@ -331,9 +331,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    * Test post content with unprocessable data.
    */
   public function testPostContentUnprocessable(): void {
+    $provider = $this->getTestProvider();
     $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
-      'getProvider' => $this->getTestProvider(),
+      'getProvider' => $provider,
       'getModerationStatusByUuid' => 'duplicate',
+      'isOwnedByProvider' => TRUE,
       'isTerminalModerationStatus' => TRUE,
     ]);
 
@@ -529,9 +531,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    */
   public function testPostContentDelete(): void {
     $uuid = $this->getTestUuid();
+    $provider = $this->getTestProvider();
     $plugin = $this->createMock(ContentProcessorPluginInterface::class);
-    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getProvider')->willReturn($provider);
     $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(TRUE);
     $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
     $plugin->expects($this->once())
       ->method('withdraw')
@@ -561,9 +565,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    * Test DELETE returns 200 when the document is already terminal.
    */
   public function testPostContentDeleteTerminal(): void {
+    $provider = $this->getTestProvider();
     $plugin = $this->createMock(ContentProcessorPluginInterface::class);
-    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getProvider')->willReturn($provider);
     $plugin->method('getModerationStatusByUuid')->willReturn('duplicate');
+    $plugin->method('isOwnedByProvider')->willReturn(TRUE);
     $plugin->method('isTerminalModerationStatus')->with('duplicate')->willReturn(TRUE);
     $plugin->expects($this->never())->method('withdraw');
 
@@ -593,9 +599,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
    * Test DELETE returns 200 when the document is already withdrawn.
    */
   public function testPostContentDeleteAlreadyWithdrawn(): void {
+    $provider = $this->getTestProvider();
     $plugin = $this->createMock(ContentProcessorPluginInterface::class);
-    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getProvider')->willReturn($provider);
     $plugin->method('getModerationStatusByUuid')->willReturn('withdrawn');
+    $plugin->method('isOwnedByProvider')->willReturn(TRUE);
     $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
     $plugin->expects($this->never())->method('withdraw');
 
@@ -646,6 +654,124 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(404, $response->getStatusCode());
     $this->assertStringContainsString(ContentProcessorMessage::DocumentNotFound->value, $response->getContent());
+  }
+
+  /**
+   * Test PUT returns 403 when the provider does not own the document.
+   */
+  public function testPostContentProviderMismatch(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('process');
+    $plugin->expects($this->never())->method('isUnchangedSubmission');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest();
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::ProviderMismatch->value, $response->getContent());
+  }
+
+  /**
+   * Test PUT returns 403 when the document has no Post API provider.
+   */
+  public function testPostContentProviderEmpty(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('process');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest();
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::ProviderMismatch->value, $response->getContent());
+  }
+
+  /**
+   * Test DELETE returns 403 when the provider does not own the document.
+   */
+  public function testPostContentDeleteProviderMismatch(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('withdraw');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::ProviderMismatch->value, $response->getContent());
+  }
+
+  /**
+   * Test DELETE returns 403 for terminal docs owned by another provider.
+   */
+  public function testPostContentDeleteTerminalProviderMismatch(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn('duplicate');
+    $plugin->method('isOwnedByProvider')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('isTerminalModerationStatus');
+    $plugin->expects($this->never())->method('withdraw');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::ProviderMismatch->value, $response->getContent());
   }
 
   /**
