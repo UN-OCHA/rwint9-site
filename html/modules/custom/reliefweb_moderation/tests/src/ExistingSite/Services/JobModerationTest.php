@@ -72,4 +72,34 @@ class JobModerationTest extends NodeModerationServiceTestBase {
     ]);
   }
 
+  /**
+   * Test Close Job maps to withdrawn except when already expired.
+   */
+  public function testCloseJobButtonStatusMapping(): void {
+    $entity = $this->createNode([
+      'type' => 'job',
+      'title' => 'Close job button',
+      'moderation_status' => 'published',
+      'field_job_closing_date' => [
+        'value' => time() + 86400,
+      ],
+    ]);
+    $advertiser = $this->createUser(values: [
+      'roles' => ['advertiser'],
+    ]);
+    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher->switchTo($advertiser);
+    try {
+      $buttons = $this->getModerationService()->getEntityFormSubmitButtons('published', $entity);
+      $this->assertArrayHasKey('withdrawn', $buttons);
+      $this->assertArrayNotHasKey('expired', $buttons);
+
+      $buttons = $this->getModerationService()->getEntityFormSubmitButtons('expired', $entity);
+      $this->assertArrayHasKey('expired', $buttons);
+    }
+    finally {
+      $account_switcher->switchBack();
+    }
+  }
+
 }

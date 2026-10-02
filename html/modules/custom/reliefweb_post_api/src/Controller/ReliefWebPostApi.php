@@ -9,11 +9,15 @@ use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Enum\PostApiResponseMessage;
+use Drupal\reliefweb_post_api\Exception\DocumentNotFoundException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
+use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueueFactory;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -85,24 +89,23 @@ class ReliefWebPostApi extends ControllerBase {
     try {
       $request = $this->requestStack->getCurrentRequest();
       $headers = $request->headers;
+      $method = $request->getMethod();
 
       // Check that the appname parameter is present.
       if (empty($request->query->get('appname'))) {
-        throw new BadRequestHttpException('Missing or invalid appname parameter.');
+        throw new BadRequestHttpException(PostApiResponseMessage::MissingAppname->value);
       }
 
-      // Only PUT requests are allowed currently.
-      // @todo handle PATCH and DELETE.
-      if ($request->getMethod() !== 'PUT') {
-        throw new MethodNotAllowedHttpException(['PUT'], 'Unsupported method.');
+      if (!in_array($method, ['PUT', 'DELETE'], TRUE)) {
+        throw new MethodNotAllowedHttpException(['PUT', 'DELETE'], PostApiResponseMessage::UnsupportedMethod->value);
       }
 
       // Validate the endpoint syntax.
       if (preg_match('/^[a-z_-]+$/', $resource) !== 1) {
-        throw new NotFoundHttpException('Invalid endpoint resource.');
+        throw new NotFoundHttpException(PostApiResponseMessage::InvalidEndpointResource->value);
       }
       if (!Uuid::isValid($uuid)) {
-        throw new NotFoundHttpException('Invalid endpoint UUID.');
+        throw new NotFoundHttpException(PostApiResponseMessage::InvalidEndpointUuid->value);
       }
 
       // Check if the resource is supported.
@@ -113,7 +116,7 @@ class ReliefWebPostApi extends ControllerBase {
         }
       }
       catch (\Exception $exception) {
-        throw new NotFoundHttpException('Unknown endpoint.');
+        throw new NotFoundHttpException(PostApiResponseMessage::UnknownEndpoint->value);
       }
 
       // Retrieve the provider.
@@ -121,13 +124,13 @@ class ReliefWebPostApi extends ControllerBase {
         $provider = $plugin->getProvider($headers->get('X-RW-POST-API-PROVIDER', ''));
       }
       catch (\Exception $exception) {
-        throw new AccessDeniedHttpException('Invalid provider.');
+        throw new AccessDeniedHttpException(PostApiResponseMessage::InvalidProvider->value);
       }
 
       // Check the validity of the API key.
       $api_key = $headers->get('X-RW-POST-API-KEY', '');
       if (empty($api_key)) {
-        throw new AccessDeniedHttpException('Invalid API key.');
+        throw new AccessDeniedHttpException(PostApiResponseMessage::InvalidApiKey->value);
       }
 
       // If the API key matches the provider's own API key then we'll use the
@@ -142,102 +145,34 @@ class ReliefWebPostApi extends ControllerBase {
       }
 
       if (is_null($user_id)) {
-        throw new AccessDeniedHttpException('Invalid API key.');
+        throw new AccessDeniedHttpException(PostApiResponseMessage::InvalidApiKey->value);
       }
 
       // Check the rate limits.
       $this->checkRateLimits($provider);
 
-      // Check if we received JSON data.
-      if ($request->getContentTypeFormat() !== 'json') {
-        throw new BadRequestHttpException('Invalid content format.');
-      }
+      $status = $plugin->getModerationStatusByUuid($uuid);
 
-      // Check if the submission can be processed.
-      if (!$plugin->isProcessable($uuid)) {
-        throw new UnprocessableEntityHttpException('Unprocessable submission.');
-      }
-
-      // Retrieve and decode the body.
-      $body = $request->getContent();
-      if (empty($body)) {
-        throw new BadRequestHttpException('Missing request body.');
-      }
-
-      if (!is_string($body)) {
-        throw new BadRequestHttpException('Invalid request body.');
-      }
-
-      $data = json_decode($body, TRUE);
-      if (!is_array($data)) {
-        throw new BadRequestHttpException('Invalid JSON body.');
-      }
-
-      if (isset($data['uuid']) && $data['uuid'] !== $uuid) {
-        throw new BadRequestHttpException('Document UUID mistmatch.');
-      }
-
-      // Add the UUID if not already in the payload.
-      $data['uuid'] = $data['uuid'] ?? $uuid;
-
-      // Add the bundle to the data so we can know which plugin to use when
-      // retrieve and processing it.
-      $data['bundle'] = $plugin->getBundle();
-
-      // Add the provider ID so we can perform additional checks like verifying
-      // the URLs of attachments.
-      $data['provider'] = $provider->uuid();
-
-      // Add the user ID that will be used as owner of the content.
-      $data['user'] = $user_id;
-
-      // Make sure we don't have an unwanted hash property. This will be
-      // generated when saving the entity.
-      unset($data['hash']);
-
-      // Make sure we don't have an unwanted status property. This will be
-      // set when saving the entity.
-      unset($data['status']);
-
-      // Disallow partial update for now.
-      // @todo review if/when we allow PATCH requests since we need to modify
-      // the schema validation in that case as well as a clean way to handle
-      // removing a non mandatory field value (ex: report theme).
-      unset($data['partial']);
-
-      // Validate the content against the schema for the bundle.
-      try {
-        $plugin->validate($data);
-      }
-      catch (\Exception $exception) {
-        throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
-      }
-
-      // Process the document directly.
-      if ($provider->skipQueue()) {
-        try {
-          $plugin->process($data);
+      if ($method === 'DELETE') {
+        if ($status !== NULL && $plugin->isTerminalModerationStatus($status)) {
+          $response = new JsonResponse(PostApiResponseMessage::TerminalNotPubliclyAvailable->format([
+            '@status' => $status,
+          ]), 200);
         }
-        catch (ContentProcessorException $exception) {
-          throw new BadRequestHttpException("Invalid data:\n\n" . $exception->getMessage());
+        elseif ($status === 'withdrawn') {
+          $response = new JsonResponse(PostApiResponseMessage::AlreadyWithdrawn->value, 200);
         }
-        catch (\Exception $exception) {
-          throw new HttpException(500, 'Internal server error.');
+        else {
+          $response = $this->handleDelete($plugin, $uuid, (int) $user_id);
         }
-
-        $response = new JsonResponse('Document processed.', 200);
       }
-      // Queue the data so it can be processed later (ex: drush command).
       else {
-        try {
-          $queue = $this->queueFactory->get('reliefweb_post_api');
-          $queue->createItem($data);
+        if ($status !== NULL && $plugin->isTerminalModerationStatus($status)) {
+          throw new UnprocessableEntityHttpException(PostApiResponseMessage::TerminalCannotUpdate->format([
+            '@status' => $status,
+          ]));
         }
-        catch (\Exception $exception) {
-          throw new HttpException(500, 'Internal server error.');
-        }
-
-        $response = new JsonResponse('Document queued for processing.', 202);
+        $response = $this->handlePut($request, $plugin, $provider, $uuid, (int) $user_id);
       }
     }
     catch (HttpException $exception) {
@@ -248,6 +183,149 @@ class ReliefWebPostApi extends ControllerBase {
     }
 
     return $response;
+  }
+
+  /**
+   * Handle a DELETE request: withdraw the document synchronously.
+   *
+   * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface $plugin
+   *   Content processor plugin.
+   * @param string $uuid
+   *   Document UUID.
+   * @param int $user_id
+   *   Revision user ID.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   Success response.
+   */
+  protected function handleDelete(ContentProcessorPluginInterface $plugin, string $uuid, int $user_id): JsonResponse {
+    try {
+      $plugin->withdraw($uuid, $user_id);
+    }
+    catch (DocumentNotFoundException $exception) {
+      throw new NotFoundHttpException($exception->getMessage());
+    }
+    catch (ContentProcessorException $exception) {
+      throw new BadRequestHttpException($exception->getMessage());
+    }
+    catch (\Exception $exception) {
+      throw new HttpException(500, PostApiResponseMessage::InternalServerError->value);
+    }
+
+    return new JsonResponse(PostApiResponseMessage::Withdrawn->value, 200);
+  }
+
+  /**
+   * Handle a PUT request: create or update the document.
+   *
+   * @param \Symfony\Component\HttpFoundation\Request $request
+   *   Current request.
+   * @param \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface $plugin
+   *   Content processor plugin.
+   * @param \Drupal\reliefweb_post_api\Entity\ProviderInterface $provider
+   *   Provider.
+   * @param string $uuid
+   *   Document UUID.
+   * @param int $user_id
+   *   Content owner / revision user ID.
+   *
+   * @return \Symfony\Component\HttpFoundation\JsonResponse
+   *   Success response.
+   */
+  protected function handlePut(Request $request, ContentProcessorPluginInterface $plugin, ProviderInterface $provider, string $uuid, int $user_id): JsonResponse {
+    // Check if we received JSON data.
+    if ($request->getContentTypeFormat() !== 'json') {
+      throw new BadRequestHttpException(PostApiResponseMessage::InvalidContentFormat->value);
+    }
+
+    // Retrieve and decode the body.
+    $body = $request->getContent();
+    if (empty($body)) {
+      throw new BadRequestHttpException(PostApiResponseMessage::MissingRequestBody->value);
+    }
+
+    if (!is_string($body)) {
+      throw new BadRequestHttpException(PostApiResponseMessage::InvalidRequestBody->value);
+    }
+
+    $data = json_decode($body, TRUE);
+    if (!is_array($data)) {
+      throw new BadRequestHttpException(PostApiResponseMessage::InvalidJsonBody->value);
+    }
+
+    if (isset($data['uuid']) && $data['uuid'] !== $uuid) {
+      throw new BadRequestHttpException(PostApiResponseMessage::DocumentUuidMismatch->value);
+    }
+
+    // Add the UUID if not already in the payload.
+    $data['uuid'] = $data['uuid'] ?? $uuid;
+
+    // Add the bundle to the data so we can know which plugin to use when
+    // retrieve and processing it.
+    $data['bundle'] = $plugin->getBundle();
+
+    // Add the provider ID so we can perform additional checks like verifying
+    // the URLs of attachments.
+    $data['provider'] = $provider->uuid();
+
+    // Add the user ID that will be used as owner of the content.
+    $data['user'] = $user_id;
+
+    // Make sure we don't have an unwanted hash property. This will be
+    // generated when saving the entity.
+    unset($data['hash']);
+
+    // Make sure we don't have an unwanted status property. This will be
+    // set when saving the entity.
+    unset($data['status']);
+
+    // Disallow partial update for now.
+    // @todo review if/when we allow PATCH requests since we need to modify
+    // the schema validation in that case as well as a clean way to handle
+    // removing a non mandatory field value (ex: report theme).
+    unset($data['partial']);
+
+    // Validate the content against the schema for the bundle.
+    try {
+      $plugin->validate($data);
+    }
+    catch (\Exception $exception) {
+      throw new BadRequestHttpException(PostApiResponseMessage::InvalidData->format([
+        '@message' => $exception->getMessage(),
+      ]));
+    }
+
+    // Skip queue/process when the payload matches the stored hash.
+    if ($plugin->isUnchangedSubmission($uuid, $data)) {
+      return new JsonResponse(PostApiResponseMessage::NoChanges->value, 200);
+    }
+    // Process the document directly.
+    if ($provider->skipQueue()) {
+      try {
+        $plugin->process($data);
+      }
+      catch (ContentProcessorException $exception) {
+        throw new BadRequestHttpException(PostApiResponseMessage::InvalidData->format([
+          '@message' => $exception->getMessage(),
+        ]));
+      }
+      catch (\Exception $exception) {
+        throw new HttpException(500, PostApiResponseMessage::InternalServerError->value);
+      }
+
+      return new JsonResponse(PostApiResponseMessage::Processed->value, 200);
+    }
+
+    // Queue the data so it can be processed later (ex: drush command).
+    try {
+      $queue = $this->queueFactory->get('reliefweb_post_api');
+      $queue->createItem($data);
+    }
+    catch (\Exception $exception) {
+      throw new HttpException(500, PostApiResponseMessage::InternalServerError->value);
+    }
+
+    return new JsonResponse(PostApiResponseMessage::Queued->value, 202);
   }
 
   /**
@@ -265,7 +343,7 @@ class ReliefWebPostApi extends ControllerBase {
     $rate_limit = $provider->getRateLimit();
 
     if (empty($quota)) {
-      throw new AccessDeniedHttpException('Not allowed to post content.');
+      throw new AccessDeniedHttpException(PostApiResponseMessage::NotAllowedToPost->value);
     }
 
     $info = $this->database
@@ -284,7 +362,7 @@ class ReliefWebPostApi extends ControllerBase {
       $diff = $request_date->diff($last_request_date);
     }
     catch (\Exception $exception) {
-      throw new HttpException(500, 'Internal server error.');
+      throw new HttpException(500, PostApiResponseMessage::InternalServerError->value);
     }
 
     $seconds_since_last_request = $diff->days * 24 * 60 * 60;
@@ -294,7 +372,7 @@ class ReliefWebPostApi extends ControllerBase {
 
     // Not enough time since last request.
     if ($seconds_since_last_request < $rate_limit) {
-      throw new TooManyRequestsHttpException($rate_limit - $seconds_since_last_request, 'Not enough time ellapsed since last request.');
+      throw new TooManyRequestsHttpException($rate_limit - $seconds_since_last_request, PostApiResponseMessage::RateLimitTooSoon->value);
     }
 
     $same_day = $diff->d === 0;
@@ -311,7 +389,7 @@ class ReliefWebPostApi extends ControllerBase {
         // DateTimeInterface::RFC7231 is deprecated in PHP 8.5+ so we use
         // the equivalent explicit string format.
         ->format('D, d M Y H:i:s \G\M\T');
-      throw new TooManyRequestsHttpException($date, 'Daily quota exceeded.');
+      throw new TooManyRequestsHttpException($date, PostApiResponseMessage::DailyQuotaExceeded->value);
     }
 
     // If the request is valid, update the database.
@@ -338,18 +416,18 @@ class ReliefWebPostApi extends ControllerBase {
    */
   public function getJsonSchema(string $schema): JsonResponse {
     if (preg_match('/^[a-z][a-z_-]+[a-z]\.json$/', $schema) !== 1) {
-      return new JsonResponse('Invalid schema file name.', 400);
+      return new JsonResponse(PostApiResponseMessage::InvalidSchemaFileName->value, 400);
     }
 
     $path = $this->pathResolver->getPath('module', 'reliefweb_post_api');
     $file = $path . '/schemas/v2/' . $schema;
     if (!file_exists($file)) {
-      return new JsonResponse('Unknown schema file.', 404);
+      return new JsonResponse(PostApiResponseMessage::UnknownSchemaFile->value, 404);
     }
 
     $content = @file_get_contents($file);
     if (empty($content)) {
-      return new JsonResponse('Internal server error.', 500);
+      return new JsonResponse(PostApiResponseMessage::InternalServerError->value, 500);
     }
 
     return new JsonResponse($content, 200, json: TRUE);

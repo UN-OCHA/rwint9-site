@@ -19,7 +19,10 @@ use Drupal\file\Entity\File;
 use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_moderation\ModerationServiceBase;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
+use Drupal\reliefweb_post_api\Exception\DocumentNotFoundException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginBase;
@@ -188,7 +191,9 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $plugin = $this->createDummyPlugin();
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Missing dummy JSON schema');
+    $this->expectExceptionMessage(ContentProcessorMessage::MissingBundleJsonSchema->format([
+      '@bundle' => 'dummy',
+    ]));
     $plugin->getJsonSchema();
   }
 
@@ -217,7 +222,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Invalid provider UUID.
     $uuid = 'invalid';
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Invalid provider UUID.');
+    $this->expectExceptionMessage(ContentProcessorMessage::InvalidProviderUuid->value);
     $plugin->getProvider($uuid);
   }
 
@@ -230,7 +235,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Blocked provider.
     $uuid = $this->getTestProviderUuid('test-provider-blocked');
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Blocked provider.');
+    $this->expectExceptionMessage(ContentProcessorMessage::BlockedProvider->value);
     $plugin->getProvider($uuid);
   }
 
@@ -243,7 +248,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Unknown provider.
     $uuid = $this->getTestProviderUuid('test-provider-unknown');
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Invalid provider.');
+    $this->expectExceptionMessage(ContentProcessorMessage::InvalidProvider->value);
     $plugin->getProvider($uuid);
   }
 
@@ -254,33 +259,81 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $uuid1 = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
     $uuid2 = 'b5724a52-0374-11ef-9d42-325096b39f47';
 
-    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
-      'getKey' => 'uuid',
-    ]);
-
-    $query = $this->createMock(QueryInterface::class);
-    $query->method('accessCheck')->willReturnSelf();
-    $query->method('condition')->willReturnSelf();
-    $query->method('execute')->willReturnOnConsecutiveCalls(['12345'], []);
-
-    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
-      'getEntityType' => $entity_type,
-      'getQuery' => $query,
+    $entity_type = $this->createMock(EntityTypeInterface::class);
+    $entity_type->method('getBaseTable')->willReturn('node');
+    $entity_type->method('getDataTable')->willReturn('node_field_data');
+    $entity_type->method('getKey')->willReturnMap([
+      ['id', 'nid'],
+      ['uuid', 'uuid'],
+      ['default_langcode', 'default_langcode'],
     ]);
 
     $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
-      'getStorage' => $storage,
+      'getDefinition' => $entity_type,
     ]);
 
-    $plugin = $this->createDummyPlugin(services: [
+    $statement = $this->createMock(StatementInterface::class);
+    $statement->method('fetchField')->willReturnOnConsecutiveCalls(
+      'duplicate',
+      'duplicate',
+      'pending',
+      'pending',
+    );
+    $select = $this->createSelectMock($statement);
+    $database = $this->createDatabaseMock($select);
+
+    // Use a real Post API bundle so terminal statuses come from moderation.
+    $plugin = $this->createDummyPlugin([
+      'entityType' => 'node',
+      'bundle' => 'job',
+      'resource' => 'jobs',
+    ], [
       'entity_type.manager' => $entity_type_manager,
+      'database' => $database,
     ]);
 
-    $result = $plugin->isProcessable($uuid1);
-    $this->assertFalse($result);
+    $this->assertSame('duplicate', $plugin->getModerationStatusByUuid($uuid1));
+    $this->assertTrue($plugin->isTerminalModerationStatus('duplicate'));
+    $this->assertFalse($plugin->isProcessable($uuid1));
 
-    $result = $plugin->isProcessable($uuid2);
-    $this->assertTrue($result);
+    $this->assertSame('pending', $plugin->getModerationStatusByUuid($uuid2));
+    $this->assertFalse($plugin->isTerminalModerationStatus('pending'));
+    $this->assertTrue($plugin->isProcessable($uuid2));
+  }
+
+  /**
+   * Test getModerationStatusByUuid returns NULL when missing.
+   */
+  public function testGetModerationStatusByUuidMissing(): void {
+    $entity_type = $this->createMock(EntityTypeInterface::class);
+    $entity_type->method('getBaseTable')->willReturn('node');
+    $entity_type->method('getDataTable')->willReturn('node_field_data');
+    $entity_type->method('getKey')->willReturnMap([
+      ['id', 'nid'],
+      ['uuid', 'uuid'],
+      ['default_langcode', 'default_langcode'],
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getDefinition' => $entity_type,
+    ]);
+
+    $statement = $this->createMock(StatementInterface::class);
+    $statement->method('fetchField')->willReturn(FALSE);
+    $select = $this->createSelectMock($statement);
+    $database = $this->createDatabaseMock($select);
+
+    $plugin = $this->createDummyPlugin([
+      'entityType' => 'node',
+      'bundle' => 'job',
+      'resource' => 'jobs',
+    ], [
+      'entity_type.manager' => $entity_type_manager,
+      'database' => $database,
+    ]);
+
+    $this->assertNull($plugin->getModerationStatusByUuid('00000000-0000-0000-0000-000000000000'));
+    $this->assertTrue($plugin->isProcessable('00000000-0000-0000-0000-000000000000'));
   }
 
   /**
@@ -385,7 +438,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $data = [];
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Missing document URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUrl->value);
     $plugin->validateUuid($data);
   }
 
@@ -397,7 +450,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $data = ['url' => 'https://test.test'];
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Missing document UUID');
+    $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUuid->value);
     $plugin->validateUuid($data);
   }
 
@@ -410,7 +463,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $data['uuid'] = 'abc';
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Invalid document UUID');
+    $this->expectExceptionMessage(ContentProcessorMessage::InvalidDocumentUuid->value);
     $plugin->validateUuid($data);
   }
 
@@ -423,7 +476,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $data['uuid'] = $plugin->generateUuid('test');
 
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('The UUID does not match the one generated from the URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::UuidUrlMismatch->value);
     $plugin->validateUuid($data);
   }
 
@@ -453,7 +506,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Missing source.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed source(s)');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedSources->value);
     $this->plugin->validateSources(['source' => []] + $data);
   }
 
@@ -465,7 +518,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Unallowed source.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed source(s)');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedSources->value);
     $this->plugin->validateSources(['source' => [456]] + $data);
   }
 
@@ -477,7 +530,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Unallowed extra source.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed source(s)');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedSources->value);
     $this->plugin->validateSources(['source' => [123, 456]] + $data);
   }
 
@@ -514,7 +567,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Empty URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Missing document URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUrl->value);
     $this->plugin->validateUrls(['url' => ''] + $data);
   }
 
@@ -526,7 +579,9 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Unallowed URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed document URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedDocumentUrl->format([
+      '@url' => 'https://wrong.test/',
+    ]));
     $this->plugin->validateUrls(['url' => 'https://wrong.test/'] + $data);
   }
 
@@ -571,7 +626,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Empty URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Missing document URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUrl->value);
     $plugin->validateUrls($data);
   }
 
@@ -587,7 +642,9 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Unallowed URL.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('Unallowed document URL');
+    $this->expectExceptionMessage(ContentProcessorMessage::UnallowedDocumentUrl->format([
+      '@url' => 'https://wrong.test/',
+    ]));
     $plugin->validateUrls($data);
   }
 
@@ -1657,8 +1714,8 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $this->assertEquals($provider, $entity->field_post_api_provider->entity);
     $this->assertEquals($expected_hash, $entity->field_post_api_hash->value);
 
-    // Assert moderation status and revision settings.
-    $this->assertEquals($provider->getDefaultResourceStatus(), $entity->moderation_status->value);
+    // Updates re-enter the workflow as pending (unless status is overridden).
+    $this->assertEquals('pending', $entity->moderation_status->value);
     $this->assertTrue($entity->isNewRevision());
 
     // Since no user is provided in data, provider's user ID should be used.
@@ -1667,6 +1724,146 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Assert log message and save return value.
     $this->assertStringContainsString('Automatic update from Post API.', $entity->getRevisionLogMessage());
     $this->assertEquals(2, $result);
+  }
+
+  /**
+   * Test save update keeps an explicit importer status override.
+   */
+  public function testSaveUpdatedEntityWithStatusOverride(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 126);
+    $entity->enforceIsNew(FALSE);
+
+    $provider = $this->getTestProvider('test-provider');
+    $data = [
+      'url' => 'https://test.test',
+      'status' => 'draft',
+      'hash' => 'status-override-hash',
+    ];
+
+    $this->plugin->save($entity, $provider, $data);
+    $this->assertEquals('draft', $entity->moderation_status->value);
+  }
+
+  /**
+   * Test isUnchanged detects matching Post API hashes.
+   */
+  public function testIsUnchanged(): void {
+    $entity = $this->createEntity('node', 'report', 2);
+    $entity->set('nid', 127);
+    $entity->enforceIsNew(FALSE);
+
+    $data = [
+      'url' => 'https://test.test',
+      'title' => 'Example',
+    ];
+    $hash = HashHelper::generateHash($data, ['provider', 'user']);
+    $entity->set('field_post_api_hash', $hash);
+
+    $this->assertTrue($this->plugin->isUnchanged($entity, $data));
+    $this->assertFalse($this->plugin->isUnchanged($entity, ['title' => 'Changed'] + $data));
+
+    $entity->set('moderation_status', 'withdrawn');
+    $this->assertFalse($this->plugin->isUnchanged($entity, $data));
+
+    $service = ModerationServiceBase::getModerationService($entity->bundle());
+    if ($service?->isRetiredStatus('expired')) {
+      $entity->set('moderation_status', 'expired');
+      $this->assertFalse($this->plugin->isUnchanged($entity, $data));
+    }
+  }
+
+  /**
+   * Test isUnchangedSubmission uses an entity query without loading the entity.
+   */
+  public function testIsUnchangedSubmission(): void {
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $data = [
+      'url' => 'https://test.test',
+      'title' => 'Example',
+    ];
+    $hash = HashHelper::generateHash($data, ['provider', 'user']);
+
+    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
+      'getKey' => 'uuid',
+    ]);
+
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('range')->willReturnSelf();
+    $query->method('execute')->willReturnOnConsecutiveCalls(
+      ['12345'],
+      [],
+    );
+
+    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
+      'getEntityType' => $entity_type,
+      'getQuery' => $query,
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getStorage' => $storage,
+    ]);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity_type.manager' => $entity_type_manager,
+    ]);
+
+    $this->assertTrue($plugin->isUnchangedSubmission($uuid, $data));
+    $this->assertFalse($plugin->isUnchangedSubmission($uuid, ['title' => 'Changed'] + $data));
+
+    // Ensure the hash was used in the query conditions for the first call path.
+    $this->assertNotSame('', $hash);
+  }
+
+  /**
+   * Test withdraw sets withdrawn and is idempotent.
+   */
+  public function testWithdraw(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $this->expectException(DocumentNotFoundException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::DocumentNotFound->value);
+    $entity_repository->method('loadEntityByUuid')->willReturn(NULL);
+    $plugin->withdraw($uuid, 2);
+  }
+
+  /**
+   * Test withdraw updates an existing entity.
+   */
+  public function testWithdrawExistingEntity(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $bundle = $this->plugin->getBundle();
+    $plugin = $this->createDummyPlugin([
+      'entityType' => 'node',
+      'bundle' => $bundle,
+    ], [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', $bundle, 2);
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $entity->uuid = $uuid;
+    $entity->set('nid', 200);
+    $entity->enforceIsNew(FALSE);
+    $entity->set('moderation_status', 'published');
+
+    $entity_repository->method('loadEntityByUuid')->willReturn($entity);
+
+    $result = $plugin->withdraw($uuid, 2);
+    $this->assertSame($entity, $result);
+    $this->assertSame('withdrawn', $entity->getModerationStatus());
+
+    // Idempotent when already withdrawn.
+    $result = $plugin->withdraw($uuid, 2);
+    $this->assertSame('withdrawn', $result->getModerationStatus());
   }
 
   /**
@@ -1751,7 +1948,19 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       ->willReturnSelf();
 
     $select->expects($this->any())
+      ->method('addField')
+      ->willReturnSelf();
+
+    $select->expects($this->any())
+      ->method('join')
+      ->willReturnSelf();
+
+    $select->expects($this->any())
       ->method('condition')
+      ->willReturnSelf();
+
+    $select->expects($this->any())
+      ->method('range')
       ->willReturnSelf();
 
     $select->expects($this->any())

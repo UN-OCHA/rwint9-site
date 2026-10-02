@@ -9,9 +9,13 @@ use Drupal\Core\Database\Connection;
 use Drupal\Core\Database\Query\SelectInterface;
 use Drupal\Core\Database\Query\Upsert;
 use Drupal\Core\Database\StatementInterface;
+use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Extension\ExtensionPathResolver;
 use Drupal\reliefweb_post_api\Controller\ReliefWebPostApi;
 use Drupal\reliefweb_post_api\Entity\ProviderInterface;
+use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
+use Drupal\reliefweb_post_api\Enum\PostApiResponseMessage;
+use Drupal\reliefweb_post_api\Exception\DocumentNotFoundException;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginManagerInterface;
 use Drupal\reliefweb_post_api\Queue\ReliefWebPostApiDatabaseQueue;
@@ -99,7 +103,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Missing or invalid appname parameter.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::MissingAppname->value, $response->getContent());
   }
 
   /**
@@ -118,7 +122,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(405, $response->getStatusCode());
-    $this->assertStringContainsString('Unsupported method.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::UnsupportedMethod->value, $response->getContent());
   }
 
   /**
@@ -137,7 +141,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(403, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid provider.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidProvider->value, $response->getContent());
   }
 
   /**
@@ -156,7 +160,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(403, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid API key.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidApiKey->value, $response->getContent());
   }
 
   /**
@@ -173,7 +177,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('test*test', $this->getTestUuid());
     $this->assertSame(404, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid endpoint resource.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidEndpointResource->value, $response->getContent());
   }
 
   /**
@@ -190,7 +194,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', 'test');
     $this->assertSame(404, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid endpoint UUID.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidEndpointUuid->value, $response->getContent());
   }
 
   /**
@@ -207,7 +211,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('test', $this->getTestUuid());
     $this->assertSame(404, $response->getStatusCode());
-    $this->assertStringContainsString('Unknown endpoint.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::UnknownEndpoint->value, $response->getContent());
   }
 
   /**
@@ -245,7 +249,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     ]);
 
     $this->expectException(HttpException::class);
-    $this->expectExceptionMessage('Internal server error.');
+    $this->expectExceptionMessage(PostApiResponseMessage::InternalServerError->value);
     $controller->checkRateLimits($provider);
   }
 
@@ -270,7 +274,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $controller = $this->createTestController(rate_limit_info: $rate_limit_info, now: $now);
 
     $this->expectException(TooManyRequestsHttpException::class);
-    $this->expectExceptionMessage('Not enough time ellapsed since last request.');
+    $this->expectExceptionMessage(PostApiResponseMessage::RateLimitTooSoon->value);
     $controller->checkRateLimits($provider);
   }
 
@@ -295,7 +299,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
     $controller = $this->createTestController(rate_limit_info: $rate_limit_info, now: $now);
 
     $this->expectException(TooManyRequestsHttpException::class);
-    $this->expectExceptionMessage('Daily quota exceeded.');
+    $this->expectExceptionMessage(PostApiResponseMessage::DailyQuotaExceeded->value);
     $controller->checkRateLimits($provider);
   }
 
@@ -329,7 +333,8 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   public function testPostContentUnprocessable(): void {
     $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
       'getProvider' => $this->getTestProvider(),
-      'isProcessable' => FALSE,
+      'getModerationStatusByUuid' => 'duplicate',
+      'isTerminalModerationStatus' => TRUE,
     ]);
 
     $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
@@ -347,7 +352,10 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(422, $response->getStatusCode());
-    $this->assertStringContainsString('Unprocessable submission.', $response->getContent());
+    $this->assertStringContainsString(
+      PostApiResponseMessage::TerminalCannotUpdate->format(['@status' => 'duplicate']),
+      $response->getContent()
+    );
   }
 
   /**
@@ -366,7 +374,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid content format.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidContentFormat->value, $response->getContent());
   }
 
   /**
@@ -385,7 +393,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Missing request body.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::MissingRequestBody->value, $response->getContent());
   }
 
   /**
@@ -404,7 +412,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid request body.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidRequestBody->value, $response->getContent());
   }
 
   /**
@@ -423,7 +431,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid JSON body.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidJsonBody->value, $response->getContent());
   }
 
   /**
@@ -442,7 +450,10 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid data', $response->getContent());
+    $this->assertStringContainsString(
+      PostApiResponseMessage::InvalidData->format(['@message' => '']),
+      json_decode($response->getContent())
+    );
   }
 
   /**
@@ -461,7 +472,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Document UUID mistmatch.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::DocumentUuidMismatch->value, $response->getContent());
   }
 
   /**
@@ -484,7 +495,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(500, $response->getStatusCode());
-    $this->assertStringContainsString('Internal server error.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InternalServerError->value, $response->getContent());
   }
 
   /**
@@ -510,7 +521,131 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(202, $response->getStatusCode());
-    $this->assertStringContainsString('Document queued for processing.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::Queued->value, $response->getContent());
+  }
+
+  /**
+   * Test DELETE withdraws a document.
+   */
+  public function testPostContentDelete(): void {
+    $uuid = $this->getTestUuid();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
+    $plugin->expects($this->once())
+      ->method('withdraw')
+      ->with($uuid, $this->anything())
+      ->willReturn($this->createMock(ContentEntityInterface::class));
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $uuid);
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::Withdrawn->value, $response->getContent());
+  }
+
+  /**
+   * Test DELETE returns 200 when the document is already terminal.
+   */
+  public function testPostContentDeleteTerminal(): void {
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getModerationStatusByUuid')->willReturn('duplicate');
+    $plugin->method('isTerminalModerationStatus')->with('duplicate')->willReturn(TRUE);
+    $plugin->expects($this->never())->method('withdraw');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString(
+      PostApiResponseMessage::TerminalNotPubliclyAvailable->format(['@status' => 'duplicate']),
+      $response->getContent()
+    );
+  }
+
+  /**
+   * Test DELETE returns 200 when the document is already withdrawn.
+   */
+  public function testPostContentDeleteAlreadyWithdrawn(): void {
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getModerationStatusByUuid')->willReturn('withdrawn');
+    $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('withdraw');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::AlreadyWithdrawn->value, $response->getContent());
+  }
+
+  /**
+   * Test DELETE returns 404 when the document is missing.
+   */
+  public function testPostContentDeleteNotFound(): void {
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($this->getTestProvider());
+    $plugin->method('getModerationStatusByUuid')->willReturn(NULL);
+    $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
+    $plugin->method('withdraw')
+      ->willThrowException(new DocumentNotFoundException(ContentProcessorMessage::DocumentNotFound->value));
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'DELETE',
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertStringContainsString(ContentProcessorMessage::DocumentNotFound->value, $response->getContent());
   }
 
   /**
@@ -536,7 +671,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->postContent('reports', $this->getTestUuid());
     $this->assertSame(202, $response->getStatusCode());
-    $this->assertStringContainsString('Document queued for processing.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::Queued->value, $response->getContent());
   }
 
   /**
@@ -547,11 +682,11 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->getJsonSchema('@fgh%');
     $this->assertSame(400, $response->getStatusCode());
-    $this->assertStringContainsString('Invalid schema file name.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InvalidSchemaFileName->value, $response->getContent());
 
     $response = $controller->getJsonSchema('test.json');
     $this->assertSame(404, $response->getStatusCode());
-    $this->assertStringContainsString('Unknown schema file.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::UnknownSchemaFile->value, $response->getContent());
 
     $response = $controller->getJsonSchema('report.json');
     $this->assertSame(200, $response->getStatusCode());
@@ -573,7 +708,7 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
 
     $response = $controller->getJsonSchema('empty.json');
     $this->assertSame(500, $response->getStatusCode());
-    $this->assertStringContainsString('Internal server error.', $response->getContent());
+    $this->assertStringContainsString(PostApiResponseMessage::InternalServerError->value, $response->getContent());
   }
 
   /**

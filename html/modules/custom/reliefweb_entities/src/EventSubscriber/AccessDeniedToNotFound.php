@@ -53,7 +53,7 @@ class AccessDeniedToNotFound extends HttpExceptionSubscriberBase {
         $cacheable_metadata->addCacheableDependency($throwable);
       }
 
-      if ($entity->getModerationStatus() === 'expired') {
+      if ($entity->isRetiredModerationStatus() && $entity->wasEverPublished()) {
         $message = $this->t('The @bundle %title is no longer available.', [
           '@bundle' => $entity->bundle(),
           '%title' => $entity->label(),

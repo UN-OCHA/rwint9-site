@@ -9,5 +9,5 @@ label: Administrator
 weight: 5
 is_admin: true
 permissions:
-  - 'edit archived content'
+  - 'edit archive content'
   - 'edit refused content'

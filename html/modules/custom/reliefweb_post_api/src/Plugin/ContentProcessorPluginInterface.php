@@ -121,8 +121,10 @@ interface ContentProcessorPluginInterface {
   /**
    * Checks of the entity with the give UUID can be processed/submitted.
    *
-   * By default, entities marked as refused by the editorial team are not
-   * processed again and their submission are not queued anymore.
+   * Entities in terminal moderation statuses (see the bundle moderation
+   * service's getTerminalStatuses()) are not processed again and their
+   * submissions are not queued anymore. For example refused, duplicate or
+   * archived entities are not processed again.
    *
    * @param string $uuid
    *   Entity UUID.
@@ -131,6 +133,77 @@ interface ContentProcessorPluginInterface {
    *   TRUE if the submission can be processed.
    */
   public function isProcessable(string $uuid): bool;
+
+  /**
+   * Get the current moderation status for an entity UUID.
+   *
+   * Uses a database query only (no full entity load).
+   *
+   * @param string $uuid
+   *   Entity UUID.
+   *
+   * @return string|null
+   *   The moderation status machine name, or NULL if no entity exists.
+   */
+  public function getModerationStatusByUuid(string $uuid): ?string;
+
+  /**
+   * Whether a moderation status is terminal for this plugin's bundle.
+   *
+   * @param string $status
+   *   Moderation status machine name.
+   *
+   * @return bool
+   *   TRUE if the status is among the bundle's terminal statuses.
+   */
+  public function isTerminalModerationStatus(string $status): bool;
+
+  /**
+   * Whether the Post API payload matches the hash stored on the entity.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Existing entity.
+   * @param array $data
+   *   Post API data.
+   *
+   * @return bool
+   *   TRUE when the payload is unchanged.
+   */
+  public function isUnchanged(ContentEntityInterface $entity, array $data): bool;
+
+  /**
+   * Whether a submission matches the stored hash for the given UUID.
+   *
+   * Uses an entity query only (no full entity load).
+   *
+   * @param string $uuid
+   *   Entity UUID.
+   * @param array $data
+   *   Post API data.
+   *
+   * @return bool
+   *   TRUE when an entity with that UUID stores the same payload hash.
+   */
+  public function isUnchangedSubmission(string $uuid, array $data): bool;
+
+  /**
+   * Withdraw an existing document via the Post API (DELETE).
+   *
+   * Sets the moderation status to withdrawn without applying posting rights
+   * or provider default intake status. Idempotent when already withdrawn.
+   *
+   * @param string $uuid
+   *   Entity UUID.
+   * @param int $user_id
+   *   Revision user ID.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   The withdrawn entity.
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   When the entity does not exist or cannot be withdrawn.
+   */
+  public function withdraw(string $uuid, int $user_id): ContentEntityInterface;
 
   /**
    * Validate Post API data.
