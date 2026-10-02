@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\SectionedContentInterface;
@@ -42,7 +43,8 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
    * {@inheritdoc}
    */
   public function getPageContent() {
-    $sections = $this->getPageSections();
+    $cacheability = new CacheableMetadata();
+    $sections = $this->getPageSections($cacheability);
     $contents = $this->getPageTableOfContents();
 
     // Sort the countries by alpha.
@@ -63,13 +65,13 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
     }
 
     // Consolidate sections, removing empty ones.
-    return $this->consolidateSections($contents, $sections, $labels);
+    return $this->consolidateSections($contents, $sections, $labels, $cacheability);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPageSections() {
+  public function getPageSections(?CacheableMetadata $cacheability = NULL) {
     $sections = [];
 
     $queries = [];
@@ -94,7 +96,14 @@ class Disaster extends Term implements BundleEntityInterface, EntityModeratedInt
       'disasters' => $this->getRelatedDisastersApiQuery(),
     ];
 
-    $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $id = $slot === 'disasters' ? 'related-disasters' : $slot;
+        $queries[$slot]['request_id'] = 'disaster.' . $id;
+      }
+    }
+
+    $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     return $sections;
   }

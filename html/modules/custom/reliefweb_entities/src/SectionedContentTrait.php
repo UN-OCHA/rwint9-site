@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 
@@ -19,41 +20,39 @@ trait SectionedContentTrait {
    *
    * @see \Drupal\reliefweb_entities\SectionedContentInterface::getSectionsFromReliefWebApiQueries()
    */
-  public function getSectionsFromReliefWebApiQueries(array $queries) {
+  public function getSectionsFromReliefWebApiQueries(array $queries, ?CacheableMetadata $cacheability = NULL) {
+    $queries = array_filter($queries);
+    $cacheability ??= new CacheableMetadata();
     $results = \Drupal::service('reliefweb_api.client')
-      ->requestMultiple(array_filter($queries));
+      ->requestMultiple($queries, cacheability: $cacheability);
 
     // Parse the API results, building the page sections data.
     $sections = [];
     foreach ($results as $index => $result) {
-      if (!empty($result['data'])) {
-        $query = $queries[$index];
-
-        $bundle = $query['bundle'];
-        $view = $query['view'] ?? '';
-        $exclude = $query['exclude'] ?? [];
-
-        // Parse the API result and return data suitable for use in the
-        // river templates.
-        $entities = RiverServiceBase::getRiverData($bundle, $result, $view, $exclude);
-
-        $sections[$index] = [
-          '#theme' => 'reliefweb_rivers_river',
-          '#id' => $index,
-          '#resource' => $query['resource'],
-          '#entities' => $entities,
-          '#more' => $query['more'] ?? NULL,
-          '#title' => $query['title'] ?? NULL,
-          '#total' => $result['totalCount'] ?? NULL,
-          '#cache' => [
-            'tags' => [
-              $query['entity_type'] . '_list:' . $query['bundle'],
-              'taxonomy_term_list',
-            ],
-          ],
-        ];
+      if (!is_array($result) || empty($result['data'])) {
+        continue;
       }
+
+      $query = $queries[$index];
+      $bundle = $query['bundle'];
+      $view = $query['view'] ?? '';
+      $exclude = $query['exclude'] ?? [];
+
+      // Parse the API result and return data suitable for use in the
+      // river templates.
+      $entities = RiverServiceBase::getRiverData($bundle, $result, $view, $exclude);
+
+      $sections[$index] = [
+        '#theme' => 'reliefweb_rivers_river',
+        '#id' => $index,
+        '#resource' => $query['resource'],
+        '#entities' => $entities,
+        '#more' => $query['more'] ?? NULL,
+        '#title' => $query['title'] ?? NULL,
+        '#total' => $result['totalCount'] ?? NULL,
+      ];
     }
+
     return $sections;
   }
 
@@ -62,7 +61,7 @@ trait SectionedContentTrait {
    *
    * @see \Drupal\reliefweb_entities\SectionedContentInterface::consolidateSections()
    */
-  public function consolidateSections(array $contents, array $sections, array $labels = []) {
+  public function consolidateSections(array $contents, array $sections, array $labels = [], ?CacheableMetadata $cacheability = NULL) {
     $consolidated = [];
 
     // Parse the table of content, remove empty sections and update the title
@@ -94,20 +93,25 @@ trait SectionedContentTrait {
       }
     }
 
-    // Skip if there is no content.
-    if (empty($consolidated)) {
-      return [];
+    $build = [];
+
+    // Build the render array for the sectioned content.
+    if (!empty($consolidated)) {
+      $build = [
+        '#theme' => 'reliefweb_entities_sectioned_content',
+        '#contents' => [
+          '#theme' => 'reliefweb_entities_table_of_contents',
+          '#title' => $this->t('Table of Contents'),
+          '#sections' => $contents,
+        ],
+        '#sections' => $consolidated,
+      ];
     }
 
-    return [
-      '#theme' => 'reliefweb_entities_sectioned_content',
-      '#contents' => [
-        '#theme' => 'reliefweb_entities_table_of_contents',
-        '#title' => $this->t('Table of Contents'),
-        '#sections' => $contents,
-      ],
-      '#sections' => $consolidated,
-    ];
+    // Bubble API cache tags and max-age (0 on request failure).
+    $cacheability?->applyTo($build);
+
+    return $build;
   }
 
   /**

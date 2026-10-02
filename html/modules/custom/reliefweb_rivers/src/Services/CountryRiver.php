@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
@@ -77,8 +78,10 @@ class CountryRiver extends RiverServiceBase {
    * {@inheritdoc}
    */
   public function getRiverContent() {
+    $cacheability = new CacheableMetadata();
+
     // Get the resources for the search query.
-    $entities = $this->getApiData($this->limit);
+    $entities = $this->getApiData($this->limit, cacheability: $cacheability);
 
     // Group the countries by first letter.
     $groups = [];
@@ -96,13 +99,17 @@ class CountryRiver extends RiverServiceBase {
     // Sort the groups by alpha.
     LocalizationHelper::collatedKsort($groups);
 
-    return [
+    $build = [
       '#theme' => 'reliefweb_rivers_country_list',
       '#groups' => $groups,
       '#cache' => [
         'tags' => $this->getRiverCacheTags(),
       ],
     ];
+
+    $cacheability->applyTo($build);
+
+    return $build;
   }
 
   /**
@@ -154,7 +161,7 @@ class CountryRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function parseApiData(array $api_data, $view = '') {
+  public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL) {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
 

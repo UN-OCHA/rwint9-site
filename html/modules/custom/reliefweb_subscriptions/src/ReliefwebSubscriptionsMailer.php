@@ -1771,7 +1771,15 @@ class ReliefwebSubscriptionsMailer {
     }
 
     // Create the request handler.
-    $result = $this->reliefwebApiClient->request($subscription['resource'], $payload);
+    $subscription_id = $subscription['id'] ?? '';
+    $request_id = str_starts_with((string) $subscription_id, 'country_updates_')
+      ? 'subscriptions.country-updates'
+      : 'subscriptions.' . $subscription_id;
+    $result = $this->reliefwebApiClient->request(
+      $subscription['resource'],
+      $payload,
+      request_id: $request_id,
+    );
 
     // Decode the API response.
     if ($result === FALSE) {

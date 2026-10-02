@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\reliefweb_rivers\RiverServiceBase;
 use Drupal\reliefweb_utility\Helpers\HtmlSanitizer;
 use Drupal\reliefweb_utility\Helpers\HtmlSummarizer;
@@ -93,7 +94,7 @@ class BlogPostRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function parseApiData(array $api_data, $view = '') {
+  public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL) {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
 

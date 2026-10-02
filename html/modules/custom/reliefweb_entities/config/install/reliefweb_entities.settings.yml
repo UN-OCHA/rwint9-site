@@ -22,6 +22,8 @@ cron:
 
 # Related content block settings.
 related_content:
+  enabled: false
+  fallback: true
   candidate_limit: 20
   recency_short_months: 3
   recency_long_months: 12

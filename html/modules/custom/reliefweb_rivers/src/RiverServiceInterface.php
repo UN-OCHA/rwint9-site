@@ -2,6 +2,8 @@
 
 namespace Drupal\reliefweb_rivers;
 
+use Drupal\Core\Cache\CacheableMetadata;
+
 /**
  * Interface for the river services.
  */
@@ -354,11 +356,13 @@ interface RiverServiceInterface {
    *   ::prepareApiRequest() will be used for the query to the API.
    * @param string|null $view
    *   Optional view override.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with from the API client.
    *
    * @return array
    *   List of resource data as returned by ::parseApiData().
    */
-  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL);
+  public function getApiData($limit = 20, $paginated = TRUE, ?array $payload = NULL, $view = NULL, ?CacheableMetadata $cacheability = NULL);
 
   /**
    * Parse the data from the ReliefWeb API to use in rivers.
@@ -367,11 +371,13 @@ interface RiverServiceInterface {
    *   Data returned by the ReliefWeb API.
    * @param string $view
    *   Current river view.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with from nested API requests.
    *
    * @return array
    *   Parsed data, ready to use in river templates.
    */
-  public function parseApiData(array $data, $view = '');
+  public function parseApiData(array $data, $view = '', ?CacheableMetadata $cacheability = NULL);
 
   /**
    * Perform a request against the API for the river's resource.
@@ -381,11 +387,16 @@ interface RiverServiceInterface {
    *
    * @param array $payload
    *   Request payload.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with from the API client.
+   * @param string|null $request_id
+   *   Optional request ID suffix. When NULL, one is built from the river name
+   *   and selected view.
    *
    * @return array|null
    *   API response's data.
    */
-  public function requestApi(array $payload);
+  public function requestApi(array $payload, ?CacheableMetadata $cacheability = NULL, ?string $request_id = NULL);
 
   /**
    * Get the RSS content for the river.
@@ -400,11 +411,13 @@ interface RiverServiceInterface {
    *
    * @param int $limit
    *   Number of resources to return.
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with from the API client.
    *
    * @return array
    *   List of resource data as returned by ::parseApiDataForRss().
    */
-  public function getApiDataForRss($limit = 20);
+  public function getApiDataForRss($limit = 20, ?CacheableMetadata $cacheability = NULL);
 
   /**
    * Get the ReliefWeb API payload for the given river RSS feed and view.

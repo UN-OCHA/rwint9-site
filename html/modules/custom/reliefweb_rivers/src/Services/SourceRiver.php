@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_rivers\Services;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\reliefweb_rivers\AdvancedSearch;
 use Drupal\reliefweb_rivers\RiverServiceBase;
@@ -149,7 +150,7 @@ class SourceRiver extends RiverServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function parseApiData(array $api_data, $view = '') {
+  public function parseApiData(array $api_data, $view = '', ?CacheableMetadata $cacheability = NULL) {
     // Retrieve the API data (with backward compatibility).
     $items = $api_data['items'] ?? $api_data['data'] ?? [];
 
@@ -161,7 +162,7 @@ class SourceRiver extends RiverServiceBase {
     }
 
     // Get the publications of the sources.
-    $publications = $this->getPublications('source', $ids);
+    $publications = $this->getPublications('source', $ids, $cacheability);
 
     // Parse the entities retrieved from the API.
     $entities = [];
@@ -216,12 +217,14 @@ class SourceRiver extends RiverServiceBase {
    *   Field name (without the 'field_' prefix) used to tag the taxonomy terms.
    * @param array $ids
    *   List of taxonomy term ids (id as key, name as value).
+   * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
+   *   Optional cacheability metadata to merge with from the API client.
    *
    * @return array
    *   Associative array with the term ids as keys and the total of published
    *   reports, jobs and training as values.
    */
-  public function getPublications($field, array $ids) {
+  public function getPublications($field, array $ids, ?CacheableMetadata $cacheability = NULL) {
     if (empty($ids)) {
       return [];
     }
@@ -254,22 +257,29 @@ class SourceRiver extends RiverServiceBase {
       [
         'resource' => 'reports',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-reports',
       ],
       [
         'resource' => 'jobs',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-jobs',
       ],
       [
         'resource' => 'training',
         'payload' => $payload,
+        'request_id' => 'river.organizations.facets-training',
       ],
     ];
 
-    $results = $this->apiClient->requestMultiple($queries);
+    $results = $this->apiClient->requestMultiple($queries, cacheability: $cacheability);
 
     // Parse the results.
     $publications = [];
     foreach ($results as $index => $data) {
+      if (!is_array($data)) {
+        continue;
+      }
+
       $resource = $queries[$index]['resource'];
       if (isset($data['embedded']['facets']['source']['data'])) {
         foreach ($data['embedded']['facets']['source']['data'] as $item) {

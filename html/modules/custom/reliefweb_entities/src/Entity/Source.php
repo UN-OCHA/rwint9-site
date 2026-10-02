@@ -2,6 +2,7 @@
 
 namespace Drupal\reliefweb_entities\Entity;
 
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\reliefweb_entities\BundleEntityInterface;
 use Drupal\reliefweb_entities\SectionedContentInterface;
@@ -43,20 +44,21 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
    * {@inheritdoc}
    */
   public function getPageContent() {
-    $sections = $this->getPageSections();
+    $cacheability = new CacheableMetadata();
+    $sections = $this->getPageSections($cacheability);
     $contents = $this->getPageTableOfContents();
 
     // Section label overrides.
     $labels = [];
 
     // Consolidate sections, removing empty ones.
-    return $this->consolidateSections($contents, $sections, $labels);
+    return $this->consolidateSections($contents, $sections, $labels, $cacheability);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getPageSections() {
+  public function getPageSections(?CacheableMetadata $cacheability = NULL) {
     $sections = [];
     $sections['description'] = $this->getEntityDescription('description');
     $sections['organization-details'] = $this->getOrganizationDetails();
@@ -70,7 +72,13 @@ class Source extends Term implements BundleEntityInterface, EntityModeratedInter
       'training' => $this->getLatestTrainingApiQuery('S'),
     ];
 
-    $sections += $this->getSectionsFromReliefWebApiQueries($queries);
+    foreach ($queries as $slot => $query) {
+      if (!empty($query)) {
+        $queries[$slot]['request_id'] = 'source.' . $slot;
+      }
+    }
+
+    $sections += $this->getSectionsFromReliefWebApiQueries($queries, $cacheability);
 
     // Update the content rivers to show the total number of items in the
     // more link label.
