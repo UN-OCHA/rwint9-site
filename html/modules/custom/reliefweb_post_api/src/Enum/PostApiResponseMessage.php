@@ -25,6 +25,7 @@ enum PostApiResponseMessage: string {
   case InvalidRequestBody = 'Invalid request body.';
   case InvalidJsonBody = 'Invalid JSON body.';
   case DocumentUuidMismatch = 'Document UUID mismatch.';
+  case DocumentNotFound = 'Document not found.';
   case InvalidData = "Invalid data:\n\n@message";
   case TerminalCannotUpdate = 'Document is marked as @status (publicly unavailable) and cannot be updated.';
   case TerminalNotPubliclyAvailable = 'Document is already publicly unavailable (marked as @status).';

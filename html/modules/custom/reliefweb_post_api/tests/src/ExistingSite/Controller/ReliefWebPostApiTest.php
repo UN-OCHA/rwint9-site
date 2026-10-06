@@ -775,6 +775,190 @@ class ReliefWebPostApiTest extends ExistingSiteBase {
   }
 
   /**
+   * Test PATCH queues a partial update for an existing document.
+   */
+  public function testPostContentPatch(): void {
+    $provider = $this->getTestProvider();
+    $uuid = $this->getTestUuid();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getBundle')->willReturn('report');
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(TRUE);
+    $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
+    $plugin->method('isUnchangedSubmission')->willReturn(FALSE);
+    $plugin->expects($this->once())->method('validate');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $queue = $this->createMock(ReliefWebPostApiDatabaseQueue::class);
+    $queue->expects($this->once())
+      ->method('createItem')
+      ->with($this->callback(static function (array $data): bool {
+        return !empty($data['partial']) && ($data['uuid'] ?? NULL) !== NULL;
+      }))
+      ->willReturn(TRUE);
+
+    $queue_factory = $this->createConfiguredMock(ReliefWebPostApiDatabaseQueueFactory::class, [
+      'get' => $queue,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'PATCH',
+      'getContent' => json_encode([
+        'uuid' => $uuid,
+        'theme' => [4596],
+      ]),
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+      'reliefweb_post_api.queue.database' => $queue_factory,
+    ]);
+
+    $response = $controller->postContent('reports', $uuid);
+    $this->assertSame(202, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::Queued->value, $response->getContent());
+  }
+
+  /**
+   * Test PATCH returns 404 when the document is missing.
+   */
+  public function testPostContentPatchNotFound(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn(NULL);
+    $plugin->expects($this->never())->method('validate');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'PATCH',
+      'getContent' => json_encode(['theme' => [4596]]),
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(404, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::DocumentNotFound->value, $response->getContent());
+  }
+
+  /**
+   * Test PATCH returns 403 when the provider does not own the document.
+   */
+  public function testPostContentPatchProviderMismatch(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(FALSE);
+    $plugin->expects($this->never())->method('validate');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'PATCH',
+      'getContent' => json_encode(['theme' => [4596]]),
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(403, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::ProviderMismatch->value, $response->getContent());
+  }
+
+  /**
+   * Test PATCH returns 422 when the document is terminal.
+   */
+  public function testPostContentPatchTerminal(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createConfiguredMock(ContentProcessorPluginInterface::class, [
+      'getProvider' => $provider,
+      'getModerationStatusByUuid' => 'duplicate',
+      'isOwnedByProvider' => TRUE,
+      'isTerminalModerationStatus' => TRUE,
+    ]);
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'PATCH',
+      'getContent' => json_encode(['theme' => [4596]]),
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(422, $response->getStatusCode());
+    $this->assertStringContainsString(
+      PostApiResponseMessage::TerminalCannotUpdate->format(['@status' => 'duplicate']),
+      $response->getContent()
+    );
+  }
+
+  /**
+   * Test PATCH returns No changes when the hash matches.
+   */
+  public function testPostContentPatchNoChanges(): void {
+    $provider = $this->getTestProvider();
+    $plugin = $this->createMock(ContentProcessorPluginInterface::class);
+    $plugin->method('getProvider')->willReturn($provider);
+    $plugin->method('getBundle')->willReturn('report');
+    $plugin->method('getModerationStatusByUuid')->willReturn('pending');
+    $plugin->method('isOwnedByProvider')->willReturn(TRUE);
+    $plugin->method('isTerminalModerationStatus')->willReturn(FALSE);
+    $plugin->method('isUnchangedSubmission')->willReturn(TRUE);
+    $plugin->expects($this->once())->method('validate');
+
+    $plugin_manager = $this->createConfiguredMock(ContentProcessorPluginManagerInterface::class, [
+      'getPluginByResource' => $plugin,
+    ]);
+
+    $request = $this->createMockRequest(methods: [
+      'getMethod' => 'PATCH',
+      'getContent' => json_encode([
+        'uuid' => $this->getTestUuid(),
+        'theme' => [4596],
+      ]),
+    ]);
+    $request_stack = $this->createMockRequestStack($request);
+
+    $controller = $this->createTestController([
+      'request_stack' => $request_stack,
+      'plugin.manager.reliefweb_post_api.content_processor' => $plugin_manager,
+    ]);
+
+    $response = $controller->postContent('reports', $this->getTestUuid());
+    $this->assertSame(200, $response->getStatusCode());
+    $this->assertStringContainsString(PostApiResponseMessage::NoChanges->value, $response->getContent());
+  }
+
+  /**
    * Test post content with trusted user.
    */
   public function testPostContentTrustedUser(): void {

@@ -29,14 +29,14 @@ class Report extends ContentProcessorPluginBase {
    * {@inheritdoc}
    */
   public function validateFiles(array $data): void {
-    parent::validateUrls($data);
-
-    if (!empty($data['image'])) {
+    if (isset($data['image']) && is_array($data['image'])) {
       $this->validateFileData($data, $data['image'], 'image');
     }
 
-    foreach ($data['file'] ?? [] as $file) {
-      $this->validateFileData($data, $file, 'file');
+    if (isset($data['file']) && is_array($data['file'])) {
+      foreach ($data['file'] as $file) {
+        $this->validateFileData($data, $file, 'file');
+      }
     }
   }
 
@@ -133,24 +133,10 @@ class Report extends ContentProcessorPluginBase {
     // Ensure the data is valid.
     $this->validate($data);
 
-    $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
     $user_id = $data['user'] ?? $provider->getUserId();
 
-    // Generate the UUID corresponding to the document URL.
-    $uuid = $this->generateUuid($data['url']);
-
-    // Load or create a new node.
-    $node = $this->entityRepository->loadEntityByUuid('node', $uuid) ??
-            $this->entityTypeManager->getStorage('node')->create([
-              'uuid' => $uuid,
-              'type' => $bundle,
-              'langcode' => $this->getDefaultLangcode(),
-              'uid' => $user_id,
-              // This is important to avoid content imported in the same batch
-              // to have the exact same timestamp.
-              'created' => time(),
-            ]);
+    $node = $this->loadEntityForProcessing($data, (int) $user_id);
 
     // Verify the bundle if the entity already exists.
     $this->validateEntityBundle($node);
@@ -168,29 +154,29 @@ class Report extends ContentProcessorPluginBase {
 
     // Set the mandatory fields.
     if (!$partial || array_key_exists('title', $data)) {
-      $this->setStringField($node, 'title', $data['title']);
+      $this->setStringField($node, 'title', (string) ($data['title'] ?? ''));
     }
     if (!$partial || array_key_exists('body', $data)) {
-      $this->setTextField($node, 'body', $data['body'], format: 'markdown');
+      $this->setTextField($node, 'body', (string) ($data['body'] ?? ''), format: 'markdown');
     }
     if (!$partial || array_key_exists('published', $data)) {
-      $this->setDateField($node, 'field_original_publication_date', $data['published']);
+      $this->setDateField($node, 'field_original_publication_date', (string) ($data['published'] ?? ''));
     }
     if (!$partial || array_key_exists('format', $data)) {
-      $this->setTermField($node, 'field_content_format', 'content_format', $data['format']);
+      $this->setTermField($node, 'field_content_format', 'content_format', $data['format'] ?? []);
     }
     if (!$partial || array_key_exists('language', $data)) {
-      $this->setTermField($node, 'field_language', 'language', $data['language']);
+      $this->setTermField($node, 'field_language', 'language', $data['language'] ?? []);
     }
     if (!$partial || array_key_exists('source', $data)) {
-      $this->setTermField($node, 'field_source', 'source', $data['source']);
+      $this->setTermField($node, 'field_source', 'source', $data['source'] ?? []);
     }
     if (!$partial || array_key_exists('country', $data)) {
-      $this->setTermField($node, 'field_country', 'country', $data['country']);
+      $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
       $this->setField($node, 'field_primary_country', $node->field_country?->first()?->getValue());
     }
 
-    // Set the optional fields.
+    // Set the optional fields. Null clears (coerced via ?? empty defaults).
     if (!$partial || array_key_exists('origin', $data)) {
       $this->setUrlField($node, 'field_origin_notes', $data['origin'] ?? '', $provider->getUrlPattern());
     }
@@ -229,8 +215,14 @@ class Report extends ContentProcessorPluginBase {
     }
 
     // Emails to notify when the document is published.
-    $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
-    $this->setField($node, 'field_notify', $emails ?: NULL);
+    if (!$partial) {
+      $emails = implode(',', $data['notify'] ?? $provider->getEmailsToNotify() ?? []);
+      $this->setField($node, 'field_notify', $emails ?: NULL);
+    }
+    elseif (array_key_exists('notify', $data)) {
+      $emails = implode(',', $data['notify'] ?? []);
+      $this->setField($node, 'field_notify', $emails ?: NULL);
+    }
 
     // Set the origin to "API".
     $this->setField($node, 'field_origin', 3);

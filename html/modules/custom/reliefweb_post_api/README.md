@@ -21,16 +21,16 @@ Creates and updates set moderation status differently:
 Importers can pass an explicit `status`, bypassing provider default and
 posting rights.
 
-**Provider ownership:** PUT and DELETE on an existing document are allowed only
-when the authenticated provider matches `field_post_api_provider` on that
-document. An empty provider field is denied (`403` / "Not allowed to modify
-this document."). Ownership is resolved with an entity query on UUID + provider
-(no full entity load), before terminal-status short-circuits. Creates (unknown
-UUID) skip this check. Importers call `process()` directly and are not subject
-to this HTTP gate.
+**Provider ownership:** PUT, PATCH, and DELETE on an existing document are
+allowed only when the authenticated provider matches `field_post_api_provider`
+on that document. An empty provider field is denied (`403` / "Not allowed to
+modify this document."). Ownership is resolved with an entity query on UUID +
+provider (no full entity load), before terminal-status short-circuits. Creates
+(unknown UUID on PUT) skip this check. Importers call `process()` directly and
+are not subject to this HTTP gate.
 
-**Terminal locks:** PUT submissions for entities in statuses returned by the
-bundle moderation service's `getTerminalStatuses()` are rejected (`422` /
+**Terminal locks:** PUT/PATCH submissions for entities in statuses returned by
+the bundle moderation service's `getTerminalStatuses()` are rejected (`422` /
 not queued) with "Document is marked as @status (not publicly available) and cannot be updated."
 Today that is `refused` and `duplicate` for jobs/training, plus `archive` for
 reports. Editorial CMS edit access to those statuses uses
@@ -45,6 +45,35 @@ no revision, status unchanged). The controller checks this with an entity query
 is skipped when the current status is among the bundle's retired statuses
 (`withdrawn`, and `expired` for jobs/training) so an identical payload can
 reopen the document.
+
+
+PATCH (partial update)
+----------------------
+
+`PATCH` updates an **existing** document only (unknown UUID → `404`). It uses
+the same auth, rate limits, ownership, terminal locks, queue/skip-queue, and
+response messages as PUT. The controller sets `partial = TRUE` (clients cannot
+set this flag).
+
+**URL:** optional. If omitted, the path UUID identifies the document. If
+present, the URL pattern and UUID-from-URL checks still apply.
+
+**Root-field semantics (replace, not merge):**
+
+- Omitted key → leave the field unchanged.
+- Present key with a value → **full replace** of that root field. Nested
+  objects/arrays (`file`, `image`, `dates`, term lists, etc.) are not deep-
+  merged; send the complete value for that root field.
+- Present key with `null` → **clear** an optional field. Clearing a mandatory
+  field is rejected (`400`).
+
+**Editorial fields:** PATCH does **not** clear report headline / feature /
+ocha_product overlays. Use PUT for a full replace that resets those.
+
+**Hash:** the submission hash of the PATCH body is stored. An identical PATCH
+returns `200` "No changes." A later full PUT generally will not match that
+hash and will requeue/reprocess normally (accepted; no field-level change
+detection in v1). Revision log: "Automatic partial update from Post API."
 
 
 DELETE (withdraw)
@@ -75,3 +104,6 @@ TODO
 - [ ] Validate report original publication date so it cannot be in the future?
 - [ ] Review authorizing a different provider (or non–Post-API content) to
       alter documents owned by another provider.
+- [ ] Files sub-resource for single-attachment replace/remove, e.g.
+      `PATCH`/`DELETE` `/api/v2/{resource}/{uuid}/files/{fileUuid}` (form-like
+      replace), so clients need not resend the full `file` array.

@@ -474,11 +474,71 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
    */
   public function testValidateUuidMissingUrl(): void {
     $plugin = $this->createDummyPlugin();
-    $data = [];
+    $data = [
+      'uuid' => $plugin->generateUuid('https://test.test'),
+    ];
 
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUrl->value);
     $plugin->validateUuid($data);
+  }
+
+  /**
+   * Test validate uuid allows missing url for partial updates.
+   */
+  public function testValidateUuidPartialWithoutUrl(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = [
+      'partial' => TRUE,
+      'uuid' => $plugin->generateUuid('https://test.test'),
+    ];
+
+    $plugin->validateUuid($data);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * Test schema: allow partial without url, reject clearing required fields.
+   */
+  public function testValidateSchemaPartial(): void {
+    $data = $this->getPostApiData();
+    $partial = [
+      'partial' => TRUE,
+      'uuid' => $data['uuid'],
+      'theme' => [4596],
+    ];
+
+    $this->plugin->validateSchema($partial);
+    $this->assertTrue(TRUE);
+
+    $this->plugin->validateSchema([
+      'partial' => TRUE,
+      'uuid' => $data['uuid'],
+      'theme' => NULL,
+    ]);
+    $this->assertTrue(TRUE);
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::CannotClearMandatoryField->format([
+      '@field' => 'title',
+    ]));
+    $this->plugin->validateSchema([
+      'partial' => TRUE,
+      'uuid' => $data['uuid'],
+      'title' => NULL,
+    ]);
+  }
+
+  /**
+   * Test validate urls allows missing url for partial updates.
+   */
+  public function testValidateUrlsPartialWithoutUrl(): void {
+    $data = $this->getPostApiData();
+    unset($data['url']);
+    $data['partial'] = TRUE;
+
+    $this->plugin->validateUrls($data);
+    $this->assertTrue(TRUE);
   }
 
   /**

@@ -440,6 +440,69 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   }
 
   /**
+   * Resolve the document UUID for processing.
+   *
+   * Partial updates use the payload UUID. Full creates/updates derive it from
+   * the document URL.
+   *
+   * @param array $data
+   *   Post API data.
+   *
+   * @return string
+   *   Document UUID.
+   */
+  protected function resolveDocumentUuid(array $data): string {
+    if (!empty($data['partial'])) {
+      return (string) ($data['uuid'] ?? '');
+    }
+    return $this->generateUuid((string) ($data['url'] ?? ''));
+  }
+
+  /**
+   * Load an existing entity or create one for a full submission.
+   *
+   * Partial updates never create entities.
+   *
+   * @param array $data
+   *   Post API data.
+   * @param int $user_id
+   *   Owner user ID for new entities.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface
+   *   Entity to process.
+   *
+   * @throws \Drupal\reliefweb_post_api\Exception\DocumentNotFoundException
+   *   When a partial update targets a missing document.
+   */
+  protected function loadEntityForProcessing(array $data, int $user_id): ContentEntityInterface {
+    $uuid = $this->resolveDocumentUuid($data);
+    $bundle = $this->getBundle();
+    $entity = $this->entityRepository->loadEntityByUuid($this->getEntityType(), $uuid);
+
+    if (!empty($data['partial'])) {
+      if (empty($entity) || !($entity instanceof ContentEntityInterface)) {
+        throw new DocumentNotFoundException(ContentProcessorMessage::DocumentNotFound->value);
+      }
+      return $entity;
+    }
+
+    if ($entity instanceof ContentEntityInterface) {
+      return $entity;
+    }
+
+    // Create a new entity.
+    return $this->entityTypeManager->getStorage($this->getEntityType())->create([
+      'uuid' => $uuid,
+      'type' => $bundle,
+      'langcode' => $this->getDefaultLangcode(),
+      'uid' => $user_id,
+      // This is important to avoid content imported in the same batch
+      // to have the exact same timestamp.
+      'created' => time(),
+    ]);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function isUnchanged(ContentEntityInterface $entity, array $data): bool {
@@ -556,35 +619,62 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $partial = !empty($data['partial']);
     unset($data['partial']);
 
-    $data = Helper::toJSON($data);
     $schema = $this->getPluginSetting('schema', $this->getJsonSchema());
+    $decoded = Json::decode($schema) ?: [];
+    $mandatory_fields = $decoded['required'] ?? [];
 
-    // When doing a partial update, disable the check on the mandatory fields.
+    // When doing a partial update, only UUID is mandatory at the top level.
+    // URL is optional; if provided it is still validated separately.
     if ($partial) {
-      $decoded = Json::decode($schema);
-      if ($decoded) {
-        // Only preserve the URL and UUID as mandatory fields.
-        $decoded['required'] = ['url', 'uuid'];
-        $schema = Json::encode($decoded);
+      $decoded['required'] = ['uuid'];
+
+      // Allow null to clear optional fields; reject null on mandatory ones.
+      foreach ($data as $property => $value) {
+        if ($value !== NULL || !is_string($property)) {
+          continue;
+        }
+        if (in_array($property, $mandatory_fields, TRUE)) {
+          throw new ContentProcessorException(ContentProcessorMessage::CannotClearMandatoryField->format([
+            '@field' => $property,
+          ]));
+        }
+        if (isset($decoded['properties'][$property])) {
+          $decoded['properties'][$property] = ['type' => 'null'];
+        }
       }
     }
 
     // Add the file/image bytes property to pass validation.
     $allow_raw_bytes = $this->getPluginSetting('allow_raw_bytes', FALSE);
     if ($allow_raw_bytes) {
-      if (isset($schema['file']['properties'])) {
-        $schema['file']['properties']['bytes'] = [
+      if (isset($decoded['file']['properties'])) {
+        $decoded['file']['properties']['bytes'] = [
           'description' => 'Raw bytes of the file content.',
           'type' => 'string',
         ];
       }
-      if (isset($schema['image']['properties'])) {
-        $schema['image']['properties']['bytes'] = [
+      if (isset($decoded['image']['properties'])) {
+        $decoded['image']['properties']['bytes'] = [
           'description' => 'Raw bytes of the image content.',
           'type' => 'string',
         ];
       }
     }
+
+    // Opis caches parsed schemas by root $id. Always derive $id from the
+    // schema content so file defaults, importer overrides, and in-method
+    // mutations (partial / allow_raw_bytes) never collide under a stale id,
+    // while identical schemas still share a cache entry.
+    unset($decoded['$id']);
+    $schema_hash = hash('sha256', Json::encode($decoded));
+    $decoded['$id'] = 'schema:///reliefweb-post-api/' . $schema_hash . '.json';
+
+    // Opis expects a string, not an array, for the schema.
+    $schema = Json::encode($decoded);
+
+    // Use Opis helper to ensure the data contains objects not associative
+    // arrays.
+    $data = Helper::toJSON($data);
 
     // Validate the schema.
     // @todo improve error handling. See the `ocha_reliefweb` module.
@@ -686,14 +776,22 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function validateUuid(array $data): void {
-    if (empty($data['url'])) {
-      throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUrl->value);
-    }
-    elseif (empty($data['uuid'])) {
+    $partial = !empty($data['partial']);
+
+    if (empty($data['uuid'])) {
       throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUuid->value);
     }
     elseif (!Uuid::isValid($data['uuid'])) {
       throw new ContentProcessorException(ContentProcessorMessage::InvalidDocumentUuid->value);
+    }
+
+    // Partial updates may omit the document URL and rely on the path UUID.
+    if ($partial && empty($data['url'])) {
+      return;
+    }
+
+    if (empty($data['url'])) {
+      throw new ContentProcessorException(ContentProcessorMessage::MissingDocumentUrl->value);
     }
     // @todo if we want to allow providers to edit existing ReliefWeb content
     // then we cannot do this comparison because the UUID is not generated this
@@ -708,7 +806,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    */
   public function validateSources(array $data): void {
     // In case of partial update, the source may not be present in which case
-    // we skip the validation.
+    // we skip the validation. Null means clear and is handled elsewhere.
     if (!empty($data['partial']) && empty($data['source'])) {
       return;
     }
@@ -734,6 +832,11 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function validateUrls(array $data): void {
+    // Partial updates may omit the document URL.
+    if (!empty($data['partial']) && empty($data['url'])) {
+      return;
+    }
+
     $provider = $this->getProvider($data['provider'] ?? '');
 
     $document_pattern = $provider->getUrlPattern('document');
@@ -989,12 +1092,18 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
    * {@inheritdoc}
    */
   public function setImageField(ContentEntityInterface $entity, string $field_name, array $image): void {
-    if (!$entity->hasField($field_name) || !isset($image['url'], $image['checksum'])) {
+    if (!$entity->hasField($field_name)) {
       return;
     }
 
     /** @var \Drupal\Core\Field\FieldItemListInterface $field **/
     $field = $entity->get($field_name);
+
+    // Empty payload clears the image (PATCH null → []).
+    if (!isset($image['url'], $image['checksum'])) {
+      $field->setValue(NULL);
+      return;
+    }
 
     $url = $image['url'];
     $checksum = $image['checksum'];
