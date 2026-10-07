@@ -1054,13 +1054,19 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $mimetypes = $this->getPluginSetting('attachments.allowed_mimetypes', ['application/pdf']);
     $max_size = $this->getPluginSetting('attachments.allowed_max_size', '20MB');
 
-    // Map the existing attached files from their field item UUID to their
-    // file UUID so that we can determine if they need to be updated.
+    // Index existing attachments by permanent UUID and managed-file UUID
+    // (legacy items used the managed UUID as the permanent UUID).
     $existing = [];
     foreach ($field as $item) {
-      $field_item_uuid = $item->getUuid();
-      if (!empty($field_item_uuid)) {
-        $existing[$field_item_uuid] = $item;
+      $item_uuid = $item->getUuid();
+      if (empty($item_uuid)) {
+        continue;
+      }
+      $existing[$item_uuid] = $item;
+      // Backward compatibility for legacy items / managed-file identity.
+      $item_file_uuid = $item->getFileUuid();
+      if (!empty($item_file_uuid)) {
+        $existing[$item_file_uuid] = $item;
       }
     }
 
@@ -1075,20 +1081,30 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       $file_name = $file['filename'];
       $checksum = $file['checksum'];
       $bytes = $file['bytes'] ?? NULL;
+      // Permanent field-item UUID (= PUT file.uuid): public URL identity.
       $uuid = $this->generateUuid($url, $entity->uuid());
+      // Managed file UUID: changes when content (checksum) changes.
       $file_uuid = $this->generateUuid($uuid . $checksum, $entity->uuid());
 
       try {
-        // Nothing to do if the file didn't change.
-        if (isset($existing[$uuid]) && $existing[$uuid]->getFileUuid() === $file_uuid) {
-          $item = $existing[$uuid];
+        $existing_item = $existing[$uuid] ?? $existing[$file_uuid] ?? NULL;
+        if ($existing_item !== NULL) {
+          unset($existing[$existing_item->getUuid()], $existing[$existing_item->getFileUuid()]);
         }
-        // If the file has changed or didn't exist, then download it.
+
+        // Nothing to do if the file content didn't change.
+        if ($existing_item !== NULL && $existing_item->getFileUuid() === $file_uuid) {
+          $item = $existing_item;
+        }
+        // New download or content change: create a managed file. Preserve the
+        // previous permanent UUID when replacing so published URLs stay stable
+        // (including legacy items that wrongly used the managed UUID).
         else {
           // We use the file name to guess the mimetype not the URL because it
           // may not have an extension.
           $mimetype = $this->guessFileMimeType($file_name, $mimetypes);
-          $item = $this->createReliefWebFileFieldItem($definition, $entity, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size, $bytes);
+          $permanent_uuid = $existing_item !== NULL ? $existing_item->getUuid() : $uuid;
+          $item = $this->createReliefWebFileFieldItem($definition, $entity, $permanent_uuid, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size, $bytes);
         }
 
         // Update the file description and language.
@@ -1180,7 +1196,16 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt, ?string $bytes = NULL): ?MediaInterface {
+  public function createImageMedia(
+    string $bundle,
+    string $uuid,
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size,
+    string $alt,
+    ?string $bytes = NULL,
+  ): ?MediaInterface {
     $file_info = pathinfo($url);
     $file_name = $file_info['basename'];
     $file_uuid = $this->generateUuid($uuid, $uuid);
@@ -1242,33 +1267,44 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): ?ReliefWebFile {
+  public function createReliefWebFileFieldItem(
+    DataDefinitionInterface $definition,
+    ContentEntityInterface $entity,
+    string $uuid,
+    string $file_uuid,
+    string $file_name,
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size = '',
+    ?string $bytes = NULL,
+  ): ?ReliefWebFile {
     // Create a new field item.
     $item = ReliefWebFile::createInstance($definition);
 
-    // Generate a private URI for the file. It will be changed to public
-    // when the entity the file is attached to is published.
+    // Temporary private URI uses the managed-file UUID (same as the form
+    // widget). It is moved to the permanent UUID URI when the entity is saved.
     $extension = ReliefWebFile::extractFileExtension($file_name);
-    $file_uri = ReliefWebFile::getFileUriFromUuid($uuid, $extension, TRUE);
+    $file_uri = ReliefWebFile::getFileUriFromUuid($file_uuid, $extension, TRUE);
 
     // Retrieve the upload validators to validate the created file as if
     // uploaded via the form.
     $validators = $item->getUploadValidators($entity, FALSE) ?? [];
 
     // Create the file entity with the content.
-    $file = $this->createFile($uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators, $bytes);
+    $file = $this->createFile($file_uuid, $file_uri, $file_name, $mimetype, $url, $checksum, $max_size, $validators, $bytes);
     if (empty($file)) {
       throw new \Exception(strtr('Unable to create the file entity for the uploaded file @url with UUID @uuid.', [
         '@url' => $url,
-        '@uuid' => $uuid,
+        '@uuid' => $file_uuid,
       ]));
     }
 
     // Set the properties of the ReliefWeb file field item so it's fully
     // constructed and can be added to the field item list.
     $item->setValue([
-      // Derive the UUID from the remote file URL so we can identify it, for
-      // example when receiving an update.
+      // Permanent UUID (public /attachments/{uuid}/… identity), typically
+      // derived from the remote file URL and document UUID.
       'uuid' => $uuid,
       // A revision of 0 is an easy way to determine new files.
       // This will be populated after a successful upload for remote files or
@@ -1315,7 +1351,17 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = [], ?string $bytes = NULL): ?FileInterface {
+  public function createFile(
+    string $uuid,
+    string $uri,
+    string $name,
+    string $mimetype,
+    string $url,
+    string $checksum,
+    string $max_size,
+    array $validators = [],
+    ?string $bytes = NULL,
+  ): ?FileInterface {
 
     // Attempt to load the file if already exists.
     $file = $this->entityRepository->loadEntityByUuid('file', $uuid);
@@ -1380,7 +1426,13 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   /**
    * {@inheritdoc}
    */
-  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): string {
+  public function getRemoteFileContent(
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size = '',
+    ?string $bytes = NULL,
+  ): string {
     $content = '';
     $max_size = !empty($max_size) ? Bytes::toNumber($max_size) : Environment::getUploadMaxSize();
 

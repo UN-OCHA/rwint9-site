@@ -956,7 +956,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $uuid2 = $plugin->generateUuid($data2['url'], $entity->uuid());
 
     $file_uuid1 = $plugin->generateUuid($uuid1 . $data1['checksum'], $entity->uuid());
-    $file_uuid2 = $plugin->generateUuid($uuid2 . $data1['checksum'], $entity->uuid());
+    $file_uuid2 = $plugin->generateUuid($uuid2 . $data2['checksum'], $entity->uuid());
 
     // No file URI on purpose to skip the ReliefWebFile::getFilePageCount() and
     // prevent a warning because the file doesn't exist.
@@ -1001,20 +1001,143 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     ]);
     $this->assertTrue($entity->field_file->isEmpty());
 
-    // Test existing file is removed if no file is provided.
+    // Unchanged content: reuse existing item and update description.
     $entity->field_file->setValue([$item1->getValue()]);
     $plugin->setReliefWebFileField($entity, 'field_file', [$data1]);
     $this->assertSame($data1['description'], $entity->field_file->first()->description);
+    $this->assertSame($uuid1, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid1, $entity->field_file->first()->getFileUuid());
 
-    // Test new file.
+    // New file: permanent UUID is URL-derived; managed UUID is
+    // checksum-derived.
     $entity->field_file->setValue(NULL);
     $plugin->setReliefWebFileField($entity, 'field_file', [$data1]);
     $this->assertSame($data1['description'], $entity->field_file->first()->description);
+    $this->assertSame($uuid1, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid1, $entity->field_file->first()->getFileUuid());
 
     // Test new file that cannot be retrieved.
     $entity->field_file->setValue(NULL);
     $plugin->setReliefWebFileField($entity, 'field_file', [$data2]);
     $this->assertTrue($entity->field_file->isEmpty());
+  }
+
+  /**
+   * Test legacy attachments (permanent UUID = managed UUID) are reused.
+   */
+  public function testSetReliefWebFieldLegacyUuidReuse(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-legacy');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $data = [
+      'url' => 'https://test.test/legacy.pdf',
+      'filename' => 'legacy.pdf',
+      'checksum' => hash('sha256', 'legacy'),
+      'description' => 'updated description',
+    ];
+    $permanent_uuid = $plugin->generateUuid($data['url'], $entity->uuid());
+    $file_uuid = $plugin->generateUuid($permanent_uuid . $data['checksum'], $entity->uuid());
+
+    $file = $this->createEntity('file', 'file');
+    $file->uuid = $file_uuid;
+    $file->setFilename('legacy.pdf');
+    $file->setMimeType('application/pdf');
+    $file->setSize(6);
+
+    // Legacy bug: field-item uuid was set to the checksum-derived managed id.
+    $legacy_item = ReliefWebFile::createInstance($item_definition);
+    $legacy_item->setValue([
+      'uuid' => $file_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid,
+      'file_name' => 'legacy.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 6,
+      'page_count' => 1,
+      'description' => 'old',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $file_uuid, $file],
+      ]);
+
+    $entity->field_file->setValue([$legacy_item->getValue()]);
+    $plugin->setReliefWebFileField($entity, 'field_file', [$data]);
+
+    $this->assertSame($file_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('updated description', $entity->field_file->first()->description);
+  }
+
+  /**
+   * Test checksum change preserves the permanent UUID.
+   */
+  public function testSetReliefWebFieldChecksumChangePreservesPermanentUuid(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-replace');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $url = 'https://test.test/replace.pdf';
+    $old_checksum = hash('sha256', 'old-content');
+    $new_checksum = hash('sha256', 'new-content');
+
+    $permanent_uuid = $plugin->generateUuid($url, $entity->uuid());
+    $old_file_uuid = $plugin->generateUuid($permanent_uuid . $old_checksum, $entity->uuid());
+    $new_file_uuid = $plugin->generateUuid($permanent_uuid . $new_checksum, $entity->uuid());
+
+    $new_file = $this->createEntity('file', 'file');
+    $new_file->uuid = $new_file_uuid;
+    $new_file->setFilename('replace.pdf');
+    $new_file->setMimeType('application/pdf');
+    $new_file->setSize(11);
+
+    $existing = ReliefWebFile::createInstance($item_definition);
+    $existing->setValue([
+      'uuid' => $permanent_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $old_file_uuid,
+      'file_name' => 'replace.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 11,
+      'page_count' => 1,
+      'description' => 'before',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $new_file_uuid, $new_file],
+      ]);
+
+    $entity->field_file->setValue([$existing->getValue()]);
+    $plugin->setReliefWebFileField($entity, 'field_file', [
+      [
+        'url' => $url,
+        'filename' => 'replace.pdf',
+        'checksum' => $new_checksum,
+        'description' => 'after',
+      ],
+    ]);
+
+    $this->assertFalse($entity->field_file->isEmpty());
+    $this->assertSame($permanent_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($new_file_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('after', $entity->field_file->first()->description);
   }
 
   /**
@@ -1281,10 +1404,13 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $entity = $this->createEntity('node', 'report');
     $definition = $entity->get('field_file')->getItemDefinition();
 
+    $permanent_uuid = 'bda0e2da-4229-53aa-9206-db72dfdac519';
+    $file_uuid = 'da5b8893-d6ca-5c1c-9a9c-91f40a2a3649';
     $item = $plugin->createReliefWebFileFieldItem(
       definition: $definition,
       entity: $entity,
-      uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
+      uuid: $permanent_uuid,
+      file_uuid: $file_uuid,
       file_name: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),
@@ -1292,6 +1418,8 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       max_size: '8B',
     );
     $this->assertInstanceOf(ReliefWebFile::class, $item);
+    $this->assertSame($permanent_uuid, $item->getUuid());
+    $this->assertSame($file_uuid, $item->getFileUuid());
   }
 
   /**
@@ -1335,6 +1463,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       definition: $definition,
       entity: $entity,
       uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
+      file_uuid: 'da5b8893-d6ca-5c1c-9a9c-91f40a2a3649',
       file_name: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),

@@ -502,7 +502,16 @@ interface ContentProcessorPluginInterface {
    * @throws \Exception
    *   Exception if the image could not be retrieved or the media created.
    */
-  public function createImageMedia(string $bundle, string $uuid, string $url, string $checksum, string $mimetype, string $max_size, string $alt, ?string $bytes = NULL): ?MediaInterface;
+  public function createImageMedia(
+    string $bundle,
+    string $uuid,
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size,
+    string $alt,
+    ?string $bytes = NULL,
+  ): ?MediaInterface;
 
   /**
    * Create a ReliefWeb file field item from a remote file.
@@ -512,7 +521,9 @@ interface ContentProcessorPluginInterface {
    * @param \Drupal\Core\Entity\ContentEntityInterface $entity
    *   Entity the file field item will be attached to.
    * @param string $uuid
-   *   File UUID.
+   *   Permanent field-item UUID (public attachment URL identity).
+   * @param string $file_uuid
+   *   Managed file UUID (file_managed / field file_uuid).
    * @param string $file_name
    *   File name.
    * @param string $url
@@ -529,7 +540,18 @@ interface ContentProcessorPluginInterface {
    * @return \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile|null
    *   ReliefWeb file field item.
    */
-  public function createReliefWebFileFieldItem(DataDefinitionInterface $definition, ContentEntityInterface $entity, string $uuid, string $file_name, string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): ?ReliefWebFile;
+  public function createReliefWebFileFieldItem(
+    DataDefinitionInterface $definition,
+    ContentEntityInterface $entity,
+    string $uuid,
+    string $file_uuid,
+    string $file_name,
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size = '',
+    ?string $bytes = NULL,
+  ): ?ReliefWebFile;
 
   /**
    * Create and validate a file.
@@ -559,7 +581,17 @@ interface ContentProcessorPluginInterface {
    * @throws \Exception
    *   An exception of the file could not be saved.
    */
-  public function createFile(string $uuid, string $uri, string $name, string $mimetype, string $url, string $checksum, string $max_size, array $validators = [], ?string $bytes = NULL): ?FileInterface;
+  public function createFile(
+    string $uuid,
+    string $uri,
+    string $name,
+    string $mimetype,
+    string $url,
+    string $checksum,
+    string $max_size,
+    array $validators = [],
+    ?string $bytes = NULL,
+  ): ?FileInterface;
 
   /**
    * Get the content of remote file.
@@ -578,7 +610,13 @@ interface ContentProcessorPluginInterface {
    * @return string
    *   Downloaded content.
    */
-  public function getRemoteFileContent(string $url, string $checksum, string $mimetype, string $max_size = '', ?string $bytes = NULL): string;
+  public function getRemoteFileContent(
+    string $url,
+    string $checksum,
+    string $mimetype,
+    string $max_size = '',
+    ?string $bytes = NULL,
+  ): string;
 
   /**
    * Validate a file against a list of validators.
