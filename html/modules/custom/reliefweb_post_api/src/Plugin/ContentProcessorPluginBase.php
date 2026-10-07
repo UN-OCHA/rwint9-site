@@ -602,6 +602,29 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $this->validateSources($data);
     $this->validateUrls($data);
     $this->validateFiles($data);
+    $this->validatePartialConditionals($data);
+  }
+
+  /**
+   * Validate cross-field rules for partial updates against stored state.
+   *
+   * Schemas may contain conditionals (e.g. a field required when another
+   * field has a given value). Those can fail on a partial update when only
+   * one of the related fields are in the payload for example.
+   *
+   * For partial updates, ::validateSchema() removes those conditionals from
+   * the schema. Bundle plugins that need them should override this method and
+   * re-check the rules in PHP (using the current entity values for fields not
+   * present in the patch).
+   *
+   * @param array $data
+   *   Post API data (includes partial flag when applicable).
+   *
+   * @throws \Drupal\reliefweb_post_api\Plugin\ContentProcessorException
+   *   When the effective document would violate a conditional rule.
+   */
+  protected function validatePartialConditionals(array $data): void {
+    // No cross-field conditionals for this bundle.
   }
 
   /**
@@ -627,6 +650,11 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // URL is optional; if provided it is still validated separately.
     if ($partial) {
       $decoded['required'] = ['uuid'];
+      // Root if/then/else cannot be evaluated on a partial payload alone
+      // (missing fields make some ifs succeed incorrectly). Bundle plugins
+      // enforce those rules in validatePartialConditionals() against the stored
+      // entity values.
+      unset($decoded['allOf']);
 
       // Allow null to clear optional fields; reject null on mandatory ones.
       foreach ($data as $property => $value) {

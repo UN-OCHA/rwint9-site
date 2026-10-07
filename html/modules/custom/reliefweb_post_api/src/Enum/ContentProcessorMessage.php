@@ -22,6 +22,10 @@ enum ContentProcessorMessage: string {
   case InvalidDocumentUuid = 'Invalid document UUID.';
   case UuidUrlMismatch = 'The UUID does not match the one generated from the URL.';
   case CannotClearMandatoryField = 'Cannot clear mandatory field: @field.';
+  case CountryMandatoryForOnSite = 'The country field is mandatory.';
+  case CountryNotAllowed = 'The country field is not allowed.';
+  case FeeInformationMandatory = 'The fee information field is mandatory.';
+  case FeeInformationNotAllowed = 'The fee information field is not allowed.';
   case UnallowedSources = 'Unallowed source(s)';
   case UnallowedDocumentUrl = 'Unallowed document URL: @url';
   case UnsupportedMimetype = 'Unsupported @mimetype mimetype for @path.';

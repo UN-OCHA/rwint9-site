@@ -70,10 +70,17 @@ present, the URL pattern and UUID-from-URL checks still apply.
 **Editorial fields:** PATCH does **not** clear report headline / feature /
 ocha_product overlays. Use PUT for a full replace that resets those.
 
+**Training conditionals:** JSON Schema `allOf` rules (country ↔ on-site format,
+fee_information ↔ fee-based cost) are not applied to the partial payload alone.
+When a PATCH touches those fields, the processor checks the effective result
+against stored field values (narrow DB lookups, no full entity load) and
+rejects inconsistent clears/updates before queueing.
+
 **Hash:** the submission hash of the PATCH body is stored. An identical PATCH
 returns `200` "No changes." A later full PUT generally will not match that
-hash and will requeue/reprocess normally (accepted; no field-level change
-detection in v1). Revision log: "Automatic partial update from Post API."
+hash and will requeue/reprocess normally. 
+
+**Revision log:** "Automatic partial update from Post API."
 
 
 DELETE (withdraw)
