@@ -16,6 +16,7 @@ enum PostApiResponseMessage: string {
   case UnknownEndpoint = 'Unknown endpoint.';
   case InvalidProvider = 'Invalid provider.';
   case InvalidApiKey = 'Invalid API key.';
+  case ProviderMismatch = 'Not allowed to modify this document.';
   case NotAllowedToPost = 'Not allowed to post content.';
   case RateLimitTooSoon = 'Not enough time elapsed since last request.';
   case DailyQuotaExceeded = 'Daily quota exceeded.';
@@ -24,6 +25,7 @@ enum PostApiResponseMessage: string {
   case InvalidRequestBody = 'Invalid request body.';
   case InvalidJsonBody = 'Invalid JSON body.';
   case DocumentUuidMismatch = 'Document UUID mismatch.';
+  case DocumentNotFound = 'Document not found.';
   case InvalidData = "Invalid data:\n\n@message";
   case TerminalCannotUpdate = 'Document is marked as @status (publicly unavailable) and cannot be updated.';
   case TerminalNotPubliclyAvailable = 'Document is already publicly unavailable (marked as @status).';

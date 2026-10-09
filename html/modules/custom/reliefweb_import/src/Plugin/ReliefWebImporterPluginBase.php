@@ -796,7 +796,7 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    * Normalize import file payloads to sorted checksums.
    *
    * @param mixed $value
-   *   File list from import data.
+   *   File map (UUID-keyed) or legacy list from import data.
    *
    * @return list<string>
    *   Sorted checksums.
@@ -856,10 +856,10 @@ abstract class ReliefWebImporterPluginBase extends PluginBase implements ReliefW
    *   Expected media UUID, or empty string.
    */
   protected function normalizeComparableImageValue(mixed $value, EntityInterface $entity): string {
-    if (!is_array($value) || empty($value['url']) || empty($value['checksum'])) {
+    if (!is_array($value) || empty($value['download_url']) || empty($value['checksum'])) {
       return '';
     }
-    return $this->generateUuid($value['checksum'] . $value['url'], $entity->uuid());
+    return $this->generateUuid($value['checksum'] . $value['download_url'], $entity->uuid());
   }
 
   /**

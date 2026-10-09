@@ -23,15 +23,21 @@ final class HashHelperTest extends TestCase {
     $data_one = [
       'title' => 'something',
       'file' => [
-        'mimetype' => 'bla',
-        'url' => 'https://example.com/file',
+        'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' => [
+          'mimetype' => 'bla',
+          'url' => 'https://example.com/file',
+          'download_url' => 'https://example.com/file',
+        ],
       ],
       'source' => [456, 123.0],
     ];
     $data_two = [
       'file' => [
-        'url' => 'https://example.com/file',
-        'mimetype' => 'bla',
+        'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' => [
+          'download_url' => 'https://example.com/file',
+          'url' => 'https://example.com/file',
+          'mimetype' => 'bla',
+        ],
       ],
       'source' => [123.0, 456],
       'title' => 'something',
