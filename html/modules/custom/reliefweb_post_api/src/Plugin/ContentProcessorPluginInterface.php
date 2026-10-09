@@ -457,11 +457,23 @@ interface ContentProcessorPluginInterface {
    *   The entity to which set the field.
    * @param string $field_name
    *   Field name.
-   * @param array $files
-   *   List of file data from the Post API with URL, description, language and
-   *   checksum.
+   * @param array|null $files
+   *   UUID-keyed map of file data from the Post API. NULL clears all
+   *   attachments. On partial updates, an empty map is a no-op unless
+   *   $file_order is provided; on full updates, an empty map clears. Null
+   *   map values delete that key on partial updates. Objects upsert
+   *   (download_url, filename, checksum, optional url/description/language).
+   *   On partial updates, omitted description/language are preserved and null
+   *   clears them; on full updates, omit defaults to empty.
+   * @param bool $partial
+   *   TRUE for PATCH merge-by-key; FALSE for PUT exact-set.
+   * @param array|null $file_order
+   *   Optional ordered list of permanent attachment UUIDs. Matching IDs are
+   *   ordered as listed; unlisted attachments keep their relative order at
+   *   the end; unknown IDs are ignored. If omitted, existing order is
+   *   preserved and new attachments are appended.
    */
-  public function setReliefWebFileField(ContentEntityInterface $entity, string $field_name, array $files): void;
+  public function setReliefWebFileField(ContentEntityInterface $entity, string $field_name, ?array $files, bool $partial = FALSE, ?array $file_order = NULL): void;
 
   /**
    * Set the value of an entity's ReliefWeb file field.
@@ -471,8 +483,8 @@ interface ContentProcessorPluginInterface {
    * @param string $field_name
    *   Field name.
    * @param array $image
-   *   Image data from the Post API with URL, caption, copyright and
-   *   checksum.
+   *   Image data from the Post API with download_url, description, copyright
+   *   and checksum.
    */
   public function setImageField(ContentEntityInterface $entity, string $field_name, array $image): void;
 
@@ -527,7 +539,7 @@ interface ContentProcessorPluginInterface {
    * @param string $file_name
    *   File name.
    * @param string $url
-   *   Remote file URL.
+   *   Remote download URL used to fetch the file bytes.
    * @param string $checksum
    *   Checksum of the file.
    * @param string $mimetype

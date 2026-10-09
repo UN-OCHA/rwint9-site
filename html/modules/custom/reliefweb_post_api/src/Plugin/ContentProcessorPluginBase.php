@@ -77,6 +77,16 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   protected string $jsonSchema;
 
   /**
+   * Whether the current schema validation is a partial (PATCH) update.
+   *
+   * Set only for the duration of ::validateSchema() so the error formatter
+   * can distinguish mandatory field clears from generic type errors.
+   *
+   * @var bool
+   */
+  protected bool $schemaValidationPartial = FALSE;
+
+  /**
    * Static cache for the providers.
    *
    * @var array
@@ -646,47 +656,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $decoded = Json::decode($schema) ?: [];
     $mandatory_fields = $decoded['required'] ?? [];
 
-    // When doing a partial update, only UUID is mandatory at the top level.
-    // URL is optional; if provided it is still validated separately.
+    $this->applySchemaMutations($decoded);
     if ($partial) {
-      $decoded['required'] = ['uuid'];
-      // Root if/then/else cannot be evaluated on a partial payload alone
-      // (missing fields make some ifs succeed incorrectly). Bundle plugins
-      // enforce those rules in validatePartialConditionals() against the stored
-      // entity values.
-      unset($decoded['allOf']);
-
-      // Allow null to clear optional fields; reject null on mandatory ones.
-      foreach ($data as $property => $value) {
-        if ($value !== NULL || !is_string($property)) {
-          continue;
-        }
-        if (in_array($property, $mandatory_fields, TRUE)) {
-          throw new ContentProcessorException(ContentProcessorMessage::CannotClearMandatoryField->format([
-            '@field' => $property,
-          ]));
-        }
-        if (isset($decoded['properties'][$property])) {
-          $decoded['properties'][$property] = ['type' => 'null'];
-        }
-      }
-    }
-
-    // Add the file/image bytes property to pass validation.
-    $allow_raw_bytes = $this->getPluginSetting('allow_raw_bytes', FALSE);
-    if ($allow_raw_bytes) {
-      if (isset($decoded['file']['properties'])) {
-        $decoded['file']['properties']['bytes'] = [
-          'description' => 'Raw bytes of the file content.',
-          'type' => 'string',
-        ];
-      }
-      if (isset($decoded['image']['properties'])) {
-        $decoded['image']['properties']['bytes'] = [
-          'description' => 'Raw bytes of the image content.',
-          'type' => 'string',
-        ];
-      }
+      $this->applyPartialSchemaMutations($decoded, $mandatory_fields);
     }
 
     // Opis caches parsed schemas by root $id. Always derive $id from the
@@ -704,25 +676,31 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // arrays.
     $data = Helper::toJSON($data);
 
-    // Validate the schema.
-    // @todo improve error handling. See the `ocha_reliefweb` module.
-    $result = $this->getSchemaValidator()->validate($data, $schema);
-    if (!$result->isValid()) {
-      $formatter = new ErrorFormatter();
-      $errors = $formatter->formatKeyed(
-        error: $result->error(),
-        formatter: [$this, 'schemaErrorFormatter'],
-      );
-      $message = json_encode($errors, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
-      throw new ContentProcessorException($message);
+    $this->schemaValidationPartial = $partial;
+    try {
+      $result = $this->getSchemaValidator()->validate($data, $schema);
+      if (!$result->isValid()) {
+        $formatter = new ErrorFormatter();
+        $errors = $formatter->formatKeyed(
+          error: $result->error(),
+          formatter: [$this, 'schemaErrorFormatter'],
+        );
+        $errors = $this->filterNullableOneOfNoise($errors);
+        $message = json_encode($errors, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
+        throw new ContentProcessorException($message);
+      }
+    }
+    finally {
+      $this->schemaValidationPartial = FALSE;
     }
   }
 
   /**
    * Custom JSON schema error formatter.
    *
-   * This mixes the code from ErrorFormatter::formatErrorMessage() and
-   * ErrorFormatter::getDefaultArgs().
+   * Prefers schema descriptions for opaque keywords (pattern/not/allOf/anyOf),
+   * then keyword-specific friendly messages, then Opis placeholder
+   * substitution.
    *
    * @param \Opis\JsonSchema\Errors\ValidationError $error
    *   Validation error.
@@ -740,21 +718,27 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $data = $error->data();
     $info = $error->schema()->info();
-
+    $info_data = $info->data();
     $keyword = $error->keyword();
-    if (in_array($keyword, ['not', 'allOf', 'anyOf', 'pattern'])) {
-      $info_data = $info->data();
+    $error_args = $error->args();
+
+    if (in_array($keyword, ['not', 'allOf', 'anyOf', 'pattern'], TRUE)) {
       $keyword_data = $info_data?->{$keyword};
 
       // The ReliefWeb POST API specifications contain descriptions that are
       // more useful indications of what to do than the obscure regex pattern
-      // etc. so we use them are error messages.
+      // etc. so we use them as error messages.
       if (isset($keyword_data->description)) {
         return $keyword_data->description;
       }
       elseif (isset($info_data->description)) {
         return $info_data->description;
       }
+    }
+
+    $friendly = $this->formatSchemaKeywordError($keyword, $error, $info_data, $error_args);
+    if ($friendly !== NULL) {
+      return $friendly;
     }
 
     // Code from ErrorFormatter::getDefaultArgs().
@@ -772,9 +756,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       'schema:draft' => $info->draft(),
       'schema:keyword' => $error->keyword(),
       'schema:path' => JsonPointer::pathToString($path),
-    ] + $error->args();
-
-    $args += $error->args();
+    ] + $error_args;
 
     // Code from ErrorFormatter::formatErrorMessage().
     if (!$args) {
@@ -798,6 +780,188 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       },
       $message
     );
+  }
+
+  /**
+   * Format a friendly message for a known JSON Schema keyword error.
+   *
+   * @param string $keyword
+   *   Opis validation keyword.
+   * @param \Opis\JsonSchema\Errors\ValidationError $error
+   *   Validation error.
+   * @param object|string|null $info_data
+   *   Schema node data from the error's schema info.
+   * @param array $error_args
+   *   Opis error args.
+   *
+   * @return string|null
+   *   Friendly message, or NULL to fall back to Opis formatting.
+   */
+  protected function formatSchemaKeywordError(string $keyword, ValidationError $error, object|string|null $info_data, array $error_args): ?string {
+    $data = $error->data();
+    $data_path = $data->fullPath();
+
+    switch ($keyword) {
+      case 'type':
+        $expected = (string) ($error_args['expected'] ?? '');
+        $actual = (string) ($error_args['type'] ?? $data->type());
+        if ($this->schemaValidationPartial && $actual === 'null' && $expected !== 'null') {
+          $field = $data_path === [] ? '/' : (string) end($data_path);
+          return ContentProcessorMessage::CannotClearMandatoryField->format([
+            '@field' => $field,
+          ]);
+        }
+        // Marker for null-branch oneOf failures; removed by
+        // filterNullableOneOfNoise().
+        if ($expected === 'null') {
+          return ContentProcessorMessage::SchemaInvalidType->format([
+            '@expected' => 'null',
+            '@actual' => $actual,
+          ]);
+        }
+        return ContentProcessorMessage::SchemaInvalidType->format([
+          '@expected' => $expected !== '' ? $expected : 'unknown',
+          '@actual' => $actual,
+        ]);
+
+      case 'required':
+        $missing = $error_args['missing'] ?? [];
+        return ContentProcessorMessage::SchemaMissingRequired->format([
+          '@missing' => is_array($missing) ? implode(', ', $missing) : (string) $missing,
+        ]);
+
+      case 'format':
+        $format = (string) ($error_args['format'] ?? '');
+        return match ($format) {
+          // phpcs:ignore Drupal.WhiteSpace.ScopeIndent.IncorrectExact
+          'iri' => ContentProcessorMessage::SchemaInvalidUrl->value,
+          'uuid' => $this->isFileMapKeyFormatError($data_path)
+            ? ContentProcessorMessage::SchemaInvalidFileMapKey->value
+            : ContentProcessorMessage::SchemaInvalidUuid->value,
+          'date-time' => ContentProcessorMessage::SchemaInvalidDateTime->value,
+          'idn-email' => ContentProcessorMessage::SchemaInvalidEmail->value,
+          default => ContentProcessorMessage::SchemaInvalidFormat->format([
+            '@format' => $format,
+          ]),
+        };
+
+      case 'enum':
+        $values = [];
+        if (is_object($info_data) && isset($info_data->enum) && is_array($info_data->enum)) {
+          foreach ($info_data->enum as $value) {
+            if (is_scalar($value) || $value === NULL) {
+              $values[] = (string) $value;
+            }
+          }
+        }
+        if ($values === []) {
+          return ContentProcessorMessage::SchemaInvalidEnum->format([
+            '@values' => '(see schema)',
+          ]);
+        }
+        return ContentProcessorMessage::SchemaInvalidEnum->format([
+          '@values' => implode(', ', $values),
+        ]);
+
+      case 'unevaluatedProperties':
+        $properties = $error_args['properties'] ?? [];
+        return ContentProcessorMessage::SchemaUnknownProperties->format([
+          '@properties' => is_array($properties) ? implode(', ', $properties) : (string) $properties,
+        ]);
+
+      case 'minItems':
+        return ContentProcessorMessage::SchemaMinItems->format([
+          '@min' => (string) ($error_args['min'] ?? ''),
+          '@count' => (string) ($error_args['count'] ?? ''),
+        ]);
+
+      case 'maxItems':
+        return ContentProcessorMessage::SchemaMaxItems->format([
+          '@max' => (string) ($error_args['max'] ?? ''),
+          '@count' => (string) ($error_args['count'] ?? ''),
+        ]);
+
+      case 'minLength':
+        return ContentProcessorMessage::SchemaMinLength->format([
+          '@min' => (string) ($error_args['min'] ?? ''),
+          '@length' => (string) ($error_args['length'] ?? ''),
+        ]);
+
+      case 'maxLength':
+        return ContentProcessorMessage::SchemaMaxLength->format([
+          '@max' => (string) ($error_args['max'] ?? ''),
+          '@length' => (string) ($error_args['length'] ?? ''),
+        ]);
+
+      case 'minimum':
+        return ContentProcessorMessage::SchemaMinimum->format([
+          '@min' => (string) ($error_args['min'] ?? ''),
+        ]);
+
+      case 'uniqueItems':
+        return ContentProcessorMessage::SchemaUniqueItems->value;
+
+      case 'maxProperties':
+        return ContentProcessorMessage::SchemaMaxProperties->format([
+          '@max' => (string) ($error_args['max'] ?? ''),
+          '@count' => (string) ($error_args['count'] ?? ''),
+        ]);
+    }
+
+    return NULL;
+  }
+
+  /**
+   * Whether a uuid format error is for a file attachment map key.
+   *
+   * @param array $data_path
+   *   JSON pointer path segments of the failing data.
+   *
+   * @return bool
+   *   TRUE when the failure is on the report file map property names.
+   */
+  protected function isFileMapKeyFormatError(array $data_path): bool {
+    // PropertyNames failures report the object path (e.g. ['file']).
+    return $data_path === ['file'];
+  }
+
+  /**
+   * Remove oneOf null-branch type failures that obscure real errors.
+   *
+   * Partial schemas wrap optional fields in oneOf[null, schema]. Opis then
+   * reports leaf errors for both branches; "expected null" is never useful.
+   *
+   * @param array<string, list<string>> $errors
+   *   Keyed errors from ErrorFormatter::formatKeyed().
+   *
+   * @return array<string, list<string>>
+   *   Filtered errors.
+   */
+  protected function filterNullableOneOfNoise(array $errors): array {
+    $null_type_message = ContentProcessorMessage::SchemaInvalidType->format([
+      '@expected' => 'null',
+      '@actual' => '__placeholder__',
+    ]);
+    // Match any "Invalid type: expected null, got X." message.
+    $null_type_prefix = strstr($null_type_message, '__placeholder__', TRUE);
+    if ($null_type_prefix === FALSE) {
+      $null_type_prefix = 'Invalid type: expected null, got ';
+    }
+
+    foreach ($errors as $path => $messages) {
+      $filtered = array_values(array_filter(
+        $messages,
+        static fn(string $message): bool => !str_starts_with($message, $null_type_prefix),
+      ));
+      if ($filtered === []) {
+        unset($errors[$path]);
+      }
+      else {
+        $errors[$path] = $filtered;
+      }
+    }
+
+    return $errors;
   }
 
   /**
@@ -1040,9 +1204,121 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
   }
 
   /**
+   * Mutate the decoded JSON schema for every validate (PUT and PATCH).
+   *
+   * Default: when allow_raw_bytes is enabled, add a bytes property on file map
+   * value objects and on image. Bundle plugins may override. Runs before
+   * applyPartialSchemaMutations() so bytes land on the object branch before
+   * nullable oneOf wraps.
+   *
+   * @param array &$decoded
+   *   Decoded JSON schema (mutated in place).
+   */
+  protected function applySchemaMutations(array &$decoded): void {
+    if (!$this->getPluginSetting('allow_raw_bytes', FALSE)) {
+      return;
+    }
+    // Must run before applyPartialSchemaMutations() wraps schemas in oneOf.
+    if (isset($decoded['properties']['file']['patternProperties']) && is_array($decoded['properties']['file']['patternProperties'])) {
+      foreach ($decoded['properties']['file']['patternProperties'] as &$value_schema) {
+        if (is_array($value_schema)) {
+          $this->addRawBytesToSchema($value_schema, 'Raw bytes of the file content.');
+        }
+      }
+      unset($value_schema);
+    }
+    if (isset($decoded['properties']['image']) && is_array($decoded['properties']['image'])) {
+      $this->addRawBytesToSchema($decoded['properties']['image'], 'Raw bytes of the image content.');
+    }
+  }
+
+  /**
+   * Mutate the decoded JSON schema for a partial (PATCH) payload.
+   *
+   * Data-independent: loosens top-level required to uuid, drops root allOf
+   * (enforced later via validatePartialConditionals()), and wraps every
+   * non-mandatory root property in oneOf null|current so optional fields can
+   * be cleared. Bundle plugins may override (e.g. Report wraps file map values
+   * first, then calls parent). The schema $id is hashed after this runs in
+   * validateSchema().
+   *
+   * @param array &$decoded
+   *   Decoded JSON schema (mutated in place).
+   * @param array $mandatory_fields
+   *   Original schema required list (before this mutation).
+   */
+  protected function applyPartialSchemaMutations(array &$decoded, array $mandatory_fields): void {
+    // Only UUID is mandatory at the top level on PATCH. URL is optional; if
+    // provided it is still validated separately.
+    $decoded['required'] = ['uuid'];
+    // Root if/then/else cannot be evaluated on a partial payload alone
+    // (missing fields make some ifs succeed incorrectly).
+    unset($decoded['allOf']);
+
+    // Wrap every non-mandatory property in oneOf null|current so optional
+    // fields can be cleared.
+    if (!empty($decoded['properties']) && is_array($decoded['properties'])) {
+      foreach ($decoded['properties'] as $property => &$schema) {
+        if (!is_array($schema) || in_array($property, $mandatory_fields, TRUE)) {
+          continue;
+        }
+        $this->wrapSchemaWithNullableOneOf($schema);
+      }
+      unset($schema);
+    }
+  }
+
+  /**
+   * Ensure a schema accepts null via oneOf (idempotent).
+   *
+   * If $schema already has a oneOf with a null branch, leave it unchanged.
+   * If it has a oneOf without null, prepend ['type' => 'null'].
+   * Otherwise replace $schema with oneOf [null, original].
+   *
+   * @param array &$schema
+   *   A JSON Schema subschema (mutated in place).
+   */
+  protected function wrapSchemaWithNullableOneOf(array &$schema): void {
+    if (isset($schema['oneOf']) && is_array($schema['oneOf'])) {
+      foreach ($schema['oneOf'] as $branch) {
+        // Skip if there is already a null branch.
+        if (is_array($branch) && ($branch['type'] ?? NULL) === 'null') {
+          return;
+        }
+      }
+      // Prepend a null branch to the oneOf.
+      array_unshift($schema['oneOf'], ['type' => 'null']);
+    }
+    // Otherwise wrap the schema in a new oneOf with a null branch.
+    else {
+      $schema = [
+        'oneOf' => [
+          ['type' => 'null'],
+          $schema,
+        ],
+      ];
+    }
+  }
+
+  /**
+   * Add a raw bytes property to an object schema.
+   *
+   * @param array &$schema
+   *   Object schema (mutated in place). Must not be wrapped in oneOf yet.
+   * @param string $description
+   *   Description for the bytes property.
+   */
+  protected function addRawBytesToSchema(array &$schema, string $description): void {
+    $schema['properties']['bytes'] = [
+      'description' => $description,
+      'type' => 'string',
+    ];
+  }
+
+  /**
    * {@inheritdoc}
    */
-  public function setReliefWebFileField(ContentEntityInterface $entity, string $field_name, array $files): void {
+  public function setReliefWebFileField(ContentEntityInterface $entity, string $field_name, ?array $files, bool $partial = FALSE, ?array $file_order = NULL): void {
     if (!$entity->hasField($field_name)) {
       return;
     }
@@ -1053,43 +1329,81 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
     $mimetypes = $this->getPluginSetting('attachments.allowed_mimetypes', ['application/pdf']);
     $max_size = $this->getPluginSetting('attachments.allowed_max_size', '20MB');
+    $max_files = 10;
+
+    // NULL clears all attachments; ignore file_order.
+    if ($files === NULL) {
+      $field->setValue([]);
+      return;
+    }
+
+    // PUT + empty map clears. PATCH + empty map is a no-op unless reordering.
+    if ($files === [] && !$partial) {
+      $field->setValue([]);
+      return;
+    }
+    if ($files === [] && $partial && $file_order === NULL) {
+      return;
+    }
 
     // Index existing attachments by permanent UUID and managed-file UUID
-    // (legacy items used the managed UUID as the permanent UUID).
-    $existing = [];
+    // (legacy items used the managed UUID as the permanent UUID). On PATCH,
+    // seed $attachments in current field order (keep/append when file_order
+    // is omitted). On PUT, start empty (exact-set).
+    $existing_by_uuid = [];
+    $attachments = [];
     foreach ($field as $item) {
       $item_uuid = $item->getUuid();
       if (empty($item_uuid)) {
         continue;
       }
-      $existing[$item_uuid] = $item;
-      // Backward compatibility for legacy items / managed-file identity.
+      $existing_by_uuid[$item_uuid] = $item;
+      if ($partial) {
+        $attachments[$item_uuid] = $item;
+      }
       $item_file_uuid = $item->getFileUuid();
       if (!empty($item_file_uuid)) {
-        $existing[$item_file_uuid] = $item;
+        $existing_by_uuid[$item_file_uuid] = $item;
       }
     }
 
-    // Process the attachments.
-    $values = [];
-    foreach ($files as $file) {
-      if (!isset($file['url'], $file['checksum'])) {
+    foreach ($files as $key => $file) {
+      $key = (string) $key;
+
+      // PATCH delete.
+      if ($file === NULL) {
+        if ($partial) {
+          $resolved = $this->resolveAttachmentMapKey($key, $attachments, $existing_by_uuid, $entity->uuid());
+          if ($resolved !== NULL) {
+            unset($attachments[$resolved]);
+          }
+        }
+        continue;
+      }
+      if (!is_array($file) || empty($file['checksum']) || empty($file['download_url']) || empty($file['filename'])) {
         continue;
       }
 
-      $url = $file['url'];
+      $download_url = $file['download_url'];
       $file_name = $file['filename'];
       $checksum = $file['checksum'];
       $bytes = $file['bytes'] ?? NULL;
-      // Permanent field-item UUID (= PUT file.uuid): public URL identity.
-      $uuid = $this->generateUuid($url, $entity->uuid());
-      // Managed file UUID: changes when content (checksum) changes.
+      // Map key (validated against url when present). May differ from the
+      // stored permanent UUID for legacy items.
+      $uuid = $key;
+      // Managed file UUID: changes when content (checksum) changes. Derived
+      // from the map key so URL-derived keys still match legacy items whose
+      // permanent UUID was wrongly set to the managed id.
       $file_uuid = $this->generateUuid($uuid . $checksum, $entity->uuid());
 
       try {
-        $existing_item = $existing[$uuid] ?? $existing[$file_uuid] ?? NULL;
+        $existing_item = $existing_by_uuid[$uuid] ?? $existing_by_uuid[$file_uuid] ?? NULL;
+        // Always index $attachments by the stored permanent UUID so a request
+        // key that only matches via the managed-UUID alias does not leave the
+        // seeded permanent entry in place (duplicate field items on PATCH).
+        $permanent_uuid = $existing_item !== NULL ? $existing_item->getUuid() : $uuid;
         if ($existing_item !== NULL) {
-          unset($existing[$existing_item->getUuid()], $existing[$existing_item->getFileUuid()]);
+          unset($existing_by_uuid[$permanent_uuid], $existing_by_uuid[$existing_item->getFileUuid()]);
         }
 
         // Nothing to do if the file content didn't change.
@@ -1103,15 +1417,32 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
           // We use the file name to guess the mimetype not the URL because it
           // may not have an extension.
           $mimetype = $this->guessFileMimeType($file_name, $mimetypes);
-          $permanent_uuid = $existing_item !== NULL ? $existing_item->getUuid() : $uuid;
-          $item = $this->createReliefWebFileFieldItem($definition, $entity, $permanent_uuid, $file_uuid, $file_name, $url, $checksum, $mimetype, $max_size, $bytes);
+          $item = $this->createReliefWebFileFieldItem($definition, $entity, $permanent_uuid, $file_uuid, $file_name, $download_url, $checksum, $mimetype, $max_size, $bytes);
+          // Carry optional metadata across content replace; payload may
+          // override below.
+          if ($existing_item !== NULL) {
+            $item->get('description')->setValue($existing_item->get('description')->getValue());
+            $item->get('language')->setValue($existing_item->get('language')->getValue());
+          }
         }
 
-        // Update the file description and language.
-        $item->get('description')->setValue($file['description'] ?? '');
-        $item->get('language')->setValue($this->resolveFileLanguageCode($file['language'] ?? ''));
+        // Set/unset description and language.
+        // PATCH: omit preserves, null clears, value sets.
+        // PUT: omit defaults to empty.
+        if (array_key_exists('description', $file)) {
+          $item->get('description')->setValue($file['description'] ?? '');
+        }
+        elseif (!$partial || $existing_item === NULL) {
+          $item->get('description')->setValue('');
+        }
+        if (array_key_exists('language', $file)) {
+          $item->get('language')->setValue($this->resolveFileLanguageCode($file['language'] ?: ''));
+        }
+        elseif (!$partial || $existing_item === NULL) {
+          $item->get('language')->setValue('');
+        }
 
-        $values[] = $item->getValue();
+        $attachments[$permanent_uuid] = $item;
       }
       catch (DuplicateException $exception) {
         $message = $exception->getMessage();
@@ -1128,8 +1459,62 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
       }
     }
 
-    // Relace the field values.
+    if (count($attachments) > $max_files) {
+      throw new ContentProcessorException(ContentProcessorMessage::TooManyFiles->format([
+        '@max' => (string) $max_files,
+      ]));
+    }
+
+    // Prefer attachments listed in file_order (unrecognized UUIDs ignored),
+    // then remaining attachments in their current relative order.
+    $values = [];
+    if ($file_order !== NULL) {
+      foreach ($file_order as $uuid) {
+        if (isset($attachments[$uuid])) {
+          $values[] = $attachments[$uuid]->getValue();
+          unset($attachments[$uuid]);
+        }
+      }
+    }
+    foreach ($attachments as $item) {
+      $values[] = $item->getValue();
+    }
+
     $field->setValue($values);
+  }
+
+  /**
+   * Resolve a file map key to the stored permanent UUID in $attachments.
+   *
+   * Direct hit, managed-UUID alias via $existing_by_uuid, or legacy match:
+   * URL-derived map key + stored file_hash yields the managed file UUID.
+   *
+   * @param string $key
+   *   Map key from the payload.
+   * @param array<string, \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile> $attachments
+   *   Working attachment set keyed by stored permanent UUID.
+   * @param array<string, \Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile> $existing_by_uuid
+   *   Existing items keyed by permanent and managed-file UUID.
+   * @param string $document_uuid
+   *   Document UUID used as UUID v5 namespace.
+   *
+   * @return string|null
+   *   Stored permanent UUID to use in $attachments, or NULL if unknown.
+   */
+  protected function resolveAttachmentMapKey(string $key, array $attachments, array $existing_by_uuid, string $document_uuid): ?string {
+    if (isset($attachments[$key])) {
+      return $key;
+    }
+    if (isset($existing_by_uuid[$key])) {
+      return $existing_by_uuid[$key]->getUuid();
+    }
+    foreach ($attachments as $stored_key => $item) {
+      $hash = (string) ($item->getFileHash() ?? '');
+      if ($hash !== '' && $this->generateUuid($key . $hash, $document_uuid) === $item->getFileUuid()) {
+        return $stored_key;
+      }
+    }
+    return NULL;
   }
 
   /**
@@ -1144,15 +1529,15 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     $field = $entity->get($field_name);
 
     // Empty payload clears the image (PATCH null → []).
-    if (!isset($image['url'], $image['checksum'])) {
+    if (!isset($image['download_url'], $image['checksum'])) {
       $field->setValue(NULL);
       return;
     }
 
-    $url = $image['url'];
+    $download_url = $image['download_url'];
     $checksum = $image['checksum'];
     $bytes = $image['bytes'] ?? NULL;
-    $uuid = $this->generateUuid($checksum . $url, $entity->uuid());
+    $uuid = $this->generateUuid($checksum . $download_url, $entity->uuid());
 
     // Attempt to load the media for the given image.
     $media = $this->entityRepository->loadEntityByUuid('media', $uuid);
@@ -1169,9 +1554,9 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
 
       try {
         $bundle = 'image_' . $entity->bundle();
-        $mimetype = $this->guessFileMimeType($url, $mimetypes);
+        $mimetype = $this->guessFileMimeType($download_url, $mimetypes);
         $alt = $image['description'] ?? '';
-        $media = $this->createImageMedia($bundle, $uuid, $url, $checksum, $mimetype, $max_size, $alt, $bytes);
+        $media = $this->createImageMedia($bundle, $uuid, $download_url, $checksum, $mimetype, $max_size, $alt, $bytes);
       }
       catch (\Exception $exception) {
         $this->getLogger()->error($exception->getMessage());
@@ -1304,7 +1689,7 @@ abstract class ContentProcessorPluginBase extends CorePluginBase implements Cont
     // constructed and can be added to the field item list.
     $item->setValue([
       // Permanent UUID (public /attachments/{uuid}/… identity), typically
-      // derived from the remote file URL and document UUID.
+      // derived from the immutable file url and document UUID.
       'uuid' => $uuid,
       // A revision of 0 is an easy way to determine new files.
       // This will be populated after a successful upload for remote files or
