@@ -143,17 +143,17 @@ report_duplicate_matching:
   automation_enabled_imported: true
   skip_with_attachments: false
   filter_by_source: true
-  lookback_days: 7
-  lookforward_days: 2
+  lookback_days: 4
+  lookforward_days: 1
   candidate_limit: 50
   minimum_body_length: 200
   minimum_length_ratio: 0.85
   similarity_threshold: 0.92
   tfidf_similarity_threshold: 0.7
-  embedding_similarity_threshold: 0.9
+  embedding_similarity_threshold: 0.92
   embedding_topk: 50
-  embedding_lookback_days: 1095
-  embedding_lookforward_days: 2
+  embedding_lookback_days: 4
+  embedding_lookforward_days: 1
   target_status: duplicate
   candidate_moderation_statuses:
     - draft
