@@ -352,13 +352,13 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
   }
 
   /**
-   * Test validate files with unallowed image url.
+   * Test validate files with unallowed image download url.
    */
   public function testValidateFilesUnallowedImageUrl(): void {
     $data = $this->getPostApiData();
-    $data['image']['url'] = 'https://wrong.test/test.jpg';
+    $data['image']['download_url'] = 'https://wrong.test/test.jpg';
 
-    // Unallowed image URL.
+    // Unallowed image download URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
       '@type' => 'image',
@@ -368,13 +368,56 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
   }
 
   /**
+   * Test validate files rejects body uuid that does not match the map key.
+   */
+  public function testValidateFilesFileUuidKeyMismatch(): void {
+    $data = $this->getPostApiData();
+    $file_uuid = array_key_first($data['file']);
+    $file = $data['file'][$file_uuid];
+    $wrong_uuid = '22222222-2222-4222-8222-222222222222';
+    $data['file'] = [$file_uuid => ['uuid' => $wrong_uuid] + $file];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::FileUuidKeyMismatch->format([
+      '@uuid' => $wrong_uuid,
+      '@key' => $file_uuid,
+    ]));
+    $this->plugin->validateFiles($data);
+  }
+
+  /**
+   * Test validate files rejects unknown attachment uuid without url on update.
+   */
+  public function testValidateFilesUnknownFileUuid(): void {
+    $data = $this->getPostApiData();
+    $unknown_uuid = '33333333-3333-4333-8333-333333333333';
+    $data['uuid'] = '44444444-4444-4444-8444-444444444444';
+    unset($data['file']);
+    $data['file'] = [
+      $unknown_uuid => [
+        'uuid' => $unknown_uuid,
+        'download_url' => 'https://test.test/unknown.pdf',
+        'filename' => 'unknown.pdf',
+        'checksum' => hash('sha256', 'unknown'),
+      ],
+    ];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::UnknownFileUuid->format([
+      '@uuid' => $unknown_uuid,
+    ]));
+    $this->plugin->validateFiles($data);
+  }
+
+  /**
    * Test validate files with unallowed file url.
    */
   public function testValidateFilesUnallowedFileUrl(): void {
     $data = $this->getPostApiData();
-    $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
+    $file_uuid = array_key_first($data['file']);
+    $data['file'][$file_uuid]['download_url'] = 'https://wrong.test/test.pdf';
 
-    // Unallowed file URL.
+    // Unallowed file download URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
       '@type' => 'file',

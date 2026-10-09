@@ -58,14 +58,16 @@ set this flag).
 **URL:** optional. If omitted, the path UUID identifies the document. If
 present, the URL pattern and UUID-from-URL checks still apply.
 
-**Root-field semantics (replace, not merge):**
+**Root-field semantics (replace, not merge — except report `file`):**
 
 - Omitted key → leave the field unchanged.
-- Present key with a value → **full replace** of that root field. Nested
-  objects/arrays (`file`, `image`, `dates`, term lists, etc.) are not deep-
-  merged; send the complete value for that root field.
+- Present key with a value → **full replace** of that root field for nested
+  objects/arrays other than report `file` (`image`, `dates`, term lists, etc.);
+  send the complete value for that root field.
 - Present key with `null` → **clear** an optional field. Clearing a mandatory
   field is rejected (`400`).
+- Report **`file`** is a UUID-keyed map with merge-by-key on PATCH (see
+  Report file attachments below).
 
 **Editorial fields:** PATCH does **not** clear report headline / feature /
 ocha_product overlays. Use PUT for a full replace that resets those.
@@ -78,7 +80,7 @@ rejects inconsistent clears/updates before queueing.
 
 **Hash:** the submission hash of the PATCH body is stored. An identical PATCH
 returns `200` "No changes." A later full PUT generally will not match that
-hash and will requeue/reprocess normally. 
+hash and will requeue/reprocess normally.
 
 **Revision log:** "Automatic partial update from Post API."
 
@@ -102,6 +104,54 @@ short-circuits (see Provider ownership above).
 the CMS and Post API DELETE use `withdrawn`.
 
 
+Report file attachments
+-----------------------
+
+Report `file` is a **map keyed by permanent file UUID** (not an array).
+
+**Breaking change:** payloads that sent `file` as an array must use the map
+shape. There are no external partners on this contract yet; in-repo importers
+were updated.
+
+| Intent | Payload |
+|--------|---------|
+| PUT exact set | `"file": { "<uuid>": { … }, … }` — only these attachments remain |
+| PUT / PATCH wipe all | `"file": null` (PUT empty `{}` also clears) |
+| PATCH no-op | `"file": {}` |
+| PATCH upsert one/several | `"file": { "<uuid>": { … } }` — other attachments kept |
+| PATCH delete one | `"file": { "<uuid>": null }` |
+| Set / reorder | `"file_order": ["<uuid>", …]` — matching IDs first as listed; rest keep relative order |
+| PATCH reorder only | `"file_order": […]` without `file` |
+
+The published JSON schema describes **object** map values (PUT shape). Nested
+`null` to delete an attachment is a **PATCH** rule (same idea as clearing other
+optional root fields with `null`); the processor allows it at validation time.
+
+Each non-null value must include `uuid` (equal to the map key),
+`download_url`, `filename`, and `checksum`. Optional: `description`,
+`language`. On PATCH, omitting `description` or `language` preserves the
+current value; `null` clears it. On PUT, omitting either defaults to empty.
+
+- **`url`:** immutable attachment identifier (like the document `url`). Required
+  when **creating** an attachment; optional on **update**. If present, must
+  satisfy `uuid5(document_uuid, url) ===` map key / body `uuid`. Does not need
+  to resolve and is not used to download.
+- **`download_url`:** fetch location (provider file URL pattern). No path-
+  extension requirement. Always required for create/update. May equal `url`.
+  Changing it does not change the permanent UUID.
+- **`filename`:** must end in lowercase `.pdf` (public API). Importers may relax
+  this for non-PDF field_file types.
+- **`file_order`:** optional ordered list of attachment UUIDs. Matching IDs are
+  ordered as listed; unlisted attachments keep their relative order at the end;
+  unknown IDs are ignored. If omitted, existing order is preserved and new
+  attachments are appended. Ignored when `file` is `null`.
+
+Image is a single object with full replace semantics (null clears). Required:
+`download_url` (must end in `.jpg` / `.png` / `.webp`), `checksum`,
+`description`, `copyright`. No client `uuid`, the media UUID is derived
+server-side from checksum and `download_url`.
+
+
 TODO
 ----
 
@@ -111,6 +161,3 @@ TODO
 - [ ] Validate report original publication date so it cannot be in the future?
 - [ ] Review authorizing a different provider (or non–Post-API content) to
       alter documents owned by another provider.
-- [ ] Files sub-resource for single-attachment replace/remove, e.g.
-      `PATCH`/`DELETE` `/api/v2/{resource}/{uuid}/files/{fileUuid}` (form-like
-      replace), so clients need not resend the full `file` array.

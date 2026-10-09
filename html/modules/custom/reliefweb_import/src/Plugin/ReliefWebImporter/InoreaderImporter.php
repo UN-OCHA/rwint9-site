@@ -496,16 +496,17 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
       $info = $this->getRemoteFileInfo($pdf, 'pdf', $pdf_bytes);
       if (!empty($info)) {
         $file_uuid = $this->generateUuid($pdf, $uuid);
-        $files[] = [
+        $files[$file_uuid] = [
           'url' => $pdf,
           'uuid' => $file_uuid,
+          'download_url' => $pdf,
         ] + $info;
       }
 
       unset($data['file_data']);
 
       $data += array_filter([
-        'file' => array_values($files),
+        'file' => $files,
       ]);
 
       if (empty($data['file'])) {
@@ -540,8 +541,15 @@ class InoreaderImporter extends ReliefWebImporterPluginBase {
     $schema = parent::getJsonSchema($bundle);
     $decoded = Json::decode($schema);
     if ($decoded) {
-      // Allow attachment URLs without a PDF extension.
-      unset($decoded['properties']['file']['items']['properties']['url']['pattern']);
+      // Allow non-PDF attachment filenames for import.
+      if (isset($decoded['properties']['file']['patternProperties']) && is_array($decoded['properties']['file']['patternProperties'])) {
+        foreach ($decoded['properties']['file']['patternProperties'] as &$file_value_schema) {
+          if (($file_value_schema['type'] ?? NULL) === 'object') {
+            unset($file_value_schema['properties']['filename']['pattern']);
+          }
+        }
+        unset($file_value_schema);
+      }
       // Allow empty strings as body.
       unset($decoded['properties']['body']['minLength']);
       unset($decoded['properties']['body']['allOf']);
