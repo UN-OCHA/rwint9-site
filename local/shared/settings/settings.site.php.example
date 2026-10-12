@@ -27,17 +27,27 @@ $config['social_auth_hid.settings']['base_url'] = 'REPLACE_WITH_LOCAL_HID_URL';
 // RW API settings.
 // Use the API site container name defined in the RW API local setup to avoid
 // certificate issues.
-// This can be replaced with `https://api.reliefweb.int/v1`, for example to test
+// This can be replaced with `https://api.reliefweb.int/v2`, for example to test
 // the subscriptions with the latest content.
-$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v1';
-// Use the local API site local defined in the RW API local setup. This is used
-// client side (browser) so there is no certificate problem.
-$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v1';
+$config['reliefweb_api.settings']['api_url'] = 'http://rwint-api-local-site/v2';
+// External API URL for client-facing non-suggest links (e.g. Search Converter).
+// River autocomplete uses the nginx /api-suggest proxy instead (RELIEFWEB_API_URL /
+// RELIEFWEB_API_APPNAME in .env).
+$config['reliefweb_api.settings']['api_url_external'] = 'https://rwint-api-local.test/v2';
 // Use the local RW site host name to identify the origin of the API requests.
 $config['reliefweb_api.settings']['appname'] = 'rwint-local.test';
 // Use the API elasticsearch container name defined in the RW API local setup
 // to avoid certificate issues.
 $config['reliefweb_api.settings']['elasticsearch'] = 'http://rwint-api-local-elasticsearch:9200';
+// Optional Elasticsearch authentication and TLS (defaults: none / verify TLS).
+// $config['reliefweb_api.settings']['elasticsearch_auth_type'] = 'basic';
+// $config['reliefweb_api.settings']['elasticsearch_username'] = 'REPLACE_WITH_ELASTICSEARCH_USERNAME';
+// $config['reliefweb_api.settings']['elasticsearch_password'] = 'REPLACE_WITH_ELASTICSEARCH_PASSWORD';
+// $config['reliefweb_api.settings']['elasticsearch_auth_type'] = 'apikey';
+// $config['reliefweb_api.settings']['elasticsearch_api_key'] = 'REPLACE_WITH_ELASTICSEARCH_API_KEY';
+// $config['reliefweb_api.settings']['elasticsearch_verify_tls'] = TRUE;
+// $config['reliefweb_api.settings']['elasticsearch_ca_file'] = '/path/to/ca.pem';
+// $config['reliefweb_api.settings']['elasticsearch_retry'] = 2;
 // Use the local site URL to that all the links exposed in the API point at
 // the local RW site.
 $config['reliefweb_api.settings']['website'] = 'https://rwint-local.test';

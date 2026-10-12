@@ -47,7 +47,7 @@ services:
       - default
 
   mysql:
-    image: public.ecr.aws/unocha/mysql:11.4
+    image: public.ecr.aws/unocha/mysql:11.8
     hostname: $PROJECT_NAME-mysql
     container_name: $PROJECT_NAME-mysql
     environment:
@@ -121,6 +121,10 @@ services:
       HTTPS_METHOD: noredirect
       # Specific to the site.
       MAPBOX_TOKEN:
+      RELIEFWEB_API_URL:
+      RELIEFWEB_API_APPNAME:
+      AWS_BEARER_TOKEN_BEDROCK:
+      GOOGLE_APPLICATION_CREDENTIALS:
     labels:
       caddy: $SITE_DOMAIN
       caddy.reverse_proxy: "{{upstreams}}"

@@ -335,7 +335,7 @@ class SearchConverter extends ControllerBase {
       $parameters['query']['operator'] = 'AND';
     }
 
-    return $this->reliefWebApiClient->buildApiUrl($resource, $parameters, FALSE);
+    return $this->reliefWebApiClient->buildExternalApiUrl($resource, $parameters);
   }
 
   /**

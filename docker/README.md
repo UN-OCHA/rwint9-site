@@ -37,3 +37,9 @@ The [03_disaster_map.conf](etc/nginx/custom/03_disaster_map.conf) handles the ro
 
 The [03_mapbox.conf](etc/nginx/custom/03_mapbox.conf) and [02_mapbox_proxy_cache.conf](etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf) are used to proxy and cache queries to mapbox tiles.
 
+### Suggest (ReliefWeb API autocomplete)
+
+The [05_api_suggest.conf](etc/nginx/custom/05_api_suggest.conf) proxies river filter autocomplete requests from `/api-suggest/{resource}` to the ReliefWeb API. It injects `appname`, `preset`, `profile`, and `slim` so the browser never sees the API appname.
+
+Requires the `RELIEFWEB_API_URL` (full base including protocol and version, e.g. `https://api.reliefweb.int/v2`) and `RELIEFWEB_API_APPNAME` environment variables.
+
