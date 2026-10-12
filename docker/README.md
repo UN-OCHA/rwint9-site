@@ -37,3 +37,7 @@ The [03_disaster_map.conf](etc/nginx/custom/03_disaster_map.conf) handles the ro
 
 The [03_mapbox.conf](etc/nginx/custom/03_mapbox.conf) and [02_mapbox_proxy_cache.conf](etc/nginx/sites-enabled/02_mapbox_proxy_cache.conf) are used to proxy and cache queries to mapbox tiles.
 
+### Post API
+
+The [04_post_api.conf](etc/nginx/custom/04_post_api.conf) limits request body size for `/api/v2/` to 2m. Post API payloads are JSON only (attachments are fetched by URL); oversized requests receive a JSON 413 (`"Request body too large."`) before reaching PHP, without using the CMS HTML 413 error page.
+
