@@ -7,6 +7,7 @@ namespace Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\reliefweb_post_api
 use Drupal\Core\Entity\EntityRepositoryInterface;
 use Drupal\Tests\reliefweb_post_api\ExistingSite\Plugin\ContentProcessorPluginBaseTestCase;
 use Drupal\reliefweb_post_api\Enum\ContentProcessorMessage;
+use Drupal\reliefweb_post_api\Exception\DocumentNotFoundException;
 use Drupal\reliefweb_post_api\Helpers\HashHelper;
 use Drupal\reliefweb_post_api\Plugin\ContentProcessorException;
 use Drupal\reliefweb_post_api\Plugin\reliefweb_post_api\ContentProcessor\Report;
@@ -273,13 +274,91 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
   }
 
   /**
-   * Test validate files with unallowed image url.
+   * Test partial process updates only provided fields.
+   */
+  public function testProcessPartial(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin($this->plugin->getPluginDefinition(), [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $base = $this->getPostApiData();
+    $provider = $this->getTestProvider();
+    $uuid = $plugin->generateUuid($base['url']);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->nid = 126;
+    $entity->uuid = $uuid;
+    $entity->title = 'Original title';
+    $entity->set('field_theme', []);
+    $entity->set('field_headline', 1);
+    $entity->set('field_headline_title', 'Keep me');
+    $entity->moderation_status = 'published';
+    $entity->enforceIsNew(FALSE);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['node', $uuid, $entity],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
+      ]);
+
+    $data = [
+      'partial' => TRUE,
+      'uuid' => $uuid,
+      'provider' => $provider->uuid(),
+      'user' => $provider->getUserId(),
+      'theme' => [4596],
+    ];
+
+    $result = $plugin->process($data);
+    $this->assertSame($entity, $result);
+    $this->assertSame('Original title', $entity->label());
+    $this->assertSame('1', (string) $entity->field_headline->value);
+    $this->assertSame('Keep me', $entity->field_headline_title->value);
+  }
+
+  /**
+   * Test partial process fails when the document is missing.
+   */
+  public function testProcessPartialNotFound(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin($this->plugin->getPluginDefinition(), [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $provider = $this->getTestProvider();
+    $uuid = '00000000-0000-4000-8000-000000000099';
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['node', $uuid, NULL],
+        ['reliefweb_post_api_provider', $provider->uuid(), $provider],
+      ]);
+
+    $this->expectException(DocumentNotFoundException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::DocumentNotFound->value);
+
+    $plugin->process([
+      'partial' => TRUE,
+      'uuid' => $uuid,
+      'provider' => $provider->uuid(),
+      'user' => $provider->getUserId(),
+      'theme' => [4596],
+    ]);
+  }
+
+  /**
+   * Test validate files with unallowed image download url.
    */
   public function testValidateFilesUnallowedImageUrl(): void {
     $data = $this->getPostApiData();
-    $data['image']['url'] = 'https://wrong.test/test.jpg';
+    $data['image']['download_url'] = 'https://wrong.test/test.jpg';
 
-    // Unallowed image URL.
+    // Unallowed image download URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
       '@type' => 'image',
@@ -289,13 +368,56 @@ class ReportTest extends ContentProcessorPluginBaseTestCase {
   }
 
   /**
+   * Test validate files rejects body uuid that does not match the map key.
+   */
+  public function testValidateFilesFileUuidKeyMismatch(): void {
+    $data = $this->getPostApiData();
+    $file_uuid = array_key_first($data['file']);
+    $file = $data['file'][$file_uuid];
+    $wrong_uuid = '22222222-2222-4222-8222-222222222222';
+    $data['file'] = [$file_uuid => ['uuid' => $wrong_uuid] + $file];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::FileUuidKeyMismatch->format([
+      '@uuid' => $wrong_uuid,
+      '@key' => $file_uuid,
+    ]));
+    $this->plugin->validateFiles($data);
+  }
+
+  /**
+   * Test validate files rejects unknown attachment uuid without url on update.
+   */
+  public function testValidateFilesUnknownFileUuid(): void {
+    $data = $this->getPostApiData();
+    $unknown_uuid = '33333333-3333-4333-8333-333333333333';
+    $data['uuid'] = '44444444-4444-4444-8444-444444444444';
+    unset($data['file']);
+    $data['file'] = [
+      $unknown_uuid => [
+        'uuid' => $unknown_uuid,
+        'download_url' => 'https://test.test/unknown.pdf',
+        'filename' => 'unknown.pdf',
+        'checksum' => hash('sha256', 'unknown'),
+      ],
+    ];
+
+    $this->expectException(ContentProcessorException::class);
+    $this->expectExceptionMessage(ContentProcessorMessage::UnknownFileUuid->format([
+      '@uuid' => $unknown_uuid,
+    ]));
+    $this->plugin->validateFiles($data);
+  }
+
+  /**
    * Test validate files with unallowed file url.
    */
   public function testValidateFilesUnallowedFileUrl(): void {
     $data = $this->getPostApiData();
-    $data['file'][0]['url'] = 'https://wrong.test/test.pdf';
+    $file_uuid = array_key_first($data['file']);
+    $data['file'][$file_uuid]['download_url'] = 'https://wrong.test/test.pdf';
 
-    // Unallowed file URL.
+    // Unallowed file download URL.
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::UnallowedTypeUrl->format([
       '@type' => 'file',

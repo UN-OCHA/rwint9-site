@@ -337,6 +337,45 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
+   * Test isOwnedByProvider uses an entity query without loading the entity.
+   */
+  public function testIsOwnedByProvider(): void {
+    $uuid = 'a07b9b6c-0374-11ef-90f5-325096b39f47';
+    $provider = $this->createConfiguredMock(ProviderInterface::class, [
+      'id' => 42,
+    ]);
+
+    $entity_type = $this->createConfiguredMock(EntityTypeInterface::class, [
+      'getKey' => 'uuid',
+    ]);
+
+    $query = $this->createMock(QueryInterface::class);
+    $query->method('accessCheck')->willReturnSelf();
+    $query->method('condition')->willReturnSelf();
+    $query->method('range')->willReturnSelf();
+    $query->method('execute')->willReturnOnConsecutiveCalls(
+      ['12345'],
+      [],
+    );
+
+    $storage = $this->createConfiguredMock(EntityStorageInterface::class, [
+      'getEntityType' => $entity_type,
+      'getQuery' => $query,
+    ]);
+
+    $entity_type_manager = $this->createConfiguredMock(EntityTypeManagerInterface::class, [
+      'getStorage' => $storage,
+    ]);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity_type.manager' => $entity_type_manager,
+    ]);
+
+    $this->assertTrue($plugin->isOwnedByProvider($uuid, $provider));
+    $this->assertFalse($plugin->isOwnedByProvider($uuid, $provider));
+  }
+
+  /**
    * Test validate.
    */
   public function testValidate(): void {
@@ -413,7 +452,10 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Invalid data.
     $this->expectException(ContentProcessorException::class);
-    $this->expectExceptionMessage('must match the type: string');
+    $this->expectExceptionMessage(ContentProcessorMessage::SchemaInvalidType->format([
+      '@expected' => 'string',
+      '@actual' => 'boolean',
+    ]));
     $this->plugin->validateSchema(['url' => FALSE] + $data);
   }
 
@@ -435,11 +477,231 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
    */
   public function testValidateUuidMissingUrl(): void {
     $plugin = $this->createDummyPlugin();
-    $data = [];
+    $data = [
+      'uuid' => $plugin->generateUuid('https://test.test'),
+    ];
 
     $this->expectException(ContentProcessorException::class);
     $this->expectExceptionMessage(ContentProcessorMessage::MissingDocumentUrl->value);
     $plugin->validateUuid($data);
+  }
+
+  /**
+   * Test validate uuid allows missing url for partial updates.
+   */
+  public function testValidateUuidPartialWithoutUrl(): void {
+    $plugin = $this->createDummyPlugin();
+    $data = [
+      'partial' => TRUE,
+      'uuid' => $plugin->generateUuid('https://test.test'),
+    ];
+
+    $plugin->validateUuid($data);
+    $this->assertTrue(TRUE);
+  }
+
+  /**
+   * Test schema: allow partial without url, reject clearing required fields.
+   */
+  public function testValidateSchemaPartial(): void {
+    $data = $this->getPostApiData();
+    $partial = [
+      'partial' => TRUE,
+      'uuid' => $data['uuid'],
+      'theme' => [4596],
+    ];
+
+    $this->plugin->validateSchema($partial);
+    $this->assertTrue(TRUE);
+
+    $this->plugin->validateSchema([
+      'partial' => TRUE,
+      'uuid' => $data['uuid'],
+      'theme' => NULL,
+    ]);
+    $this->assertTrue(TRUE);
+
+    // Mandatory fields are not wrapped as nullable; clearing is rejected.
+    try {
+      $this->plugin->validateSchema([
+        'partial' => TRUE,
+        'uuid' => $data['uuid'],
+        'title' => NULL,
+      ]);
+      $this->fail('Expected ContentProcessorException was not thrown.');
+    }
+    catch (ContentProcessorException $exception) {
+      $this->assertStringContainsString(
+        ContentProcessorMessage::CannotClearMandatoryField->format(['@field' => 'title']),
+        $exception->getMessage(),
+      );
+    }
+  }
+
+  /**
+   * Test schema error messages for formats, enums, unknown properties, etc.
+   */
+  public function testValidateSchemaErrorMessages(): void {
+    $data = $this->getPostApiData();
+    $bundle = $this->plugin->getBundle();
+
+    try {
+      $this->plugin->validateSchema(['url' => 'not a url'] + $data);
+      $this->fail('Expected ContentProcessorException was not thrown.');
+    }
+    catch (ContentProcessorException $exception) {
+      $this->assertStringContainsString(
+        ContentProcessorMessage::SchemaInvalidUrl->value,
+        $exception->getMessage(),
+      );
+    }
+
+    $date_field = match ($bundle) {
+      'report' => 'published',
+      'job' => 'closing_date',
+      default => NULL,
+    };
+    if ($date_field !== NULL) {
+      try {
+        $this->plugin->validateSchema([$date_field => 'not-a-date'] + $data);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $this->assertStringContainsString(
+          ContentProcessorMessage::SchemaInvalidDateTime->value,
+          $exception->getMessage(),
+        );
+      }
+    }
+
+    try {
+      $this->plugin->validateSchema(['unknown_field' => 'x'] + $data);
+      $this->fail('Expected ContentProcessorException was not thrown.');
+    }
+    catch (ContentProcessorException $exception) {
+      $this->assertStringContainsString(
+        ContentProcessorMessage::SchemaUnknownProperties->format([
+          '@properties' => 'unknown_field',
+        ]),
+        $exception->getMessage(),
+      );
+    }
+
+    if ($bundle === 'training') {
+      try {
+        $this->plugin->validateSchema(['cost' => 'expensive'] + $data);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $this->assertStringContainsString('Must be one of:', $exception->getMessage());
+        $this->assertStringContainsString('free', $exception->getMessage());
+      }
+    }
+
+    // File map key / notify / oneOf noise coverage is report-specific.
+    if ($bundle === 'report') {
+      try {
+        $this->plugin->validateSchema(['notify' => ['not-an-email']] + $data);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $this->assertStringContainsString(
+          ContentProcessorMessage::SchemaInvalidEmail->value,
+          $exception->getMessage(),
+        );
+      }
+
+      $file_uuid = '11111111-1111-4111-8111-111111111111';
+      $file = [
+        'url' => 'https://example.org/attachments/att-1',
+        'uuid' => $file_uuid,
+        'download_url' => 'https://example.org/files/a.pdf',
+        'filename' => 'document.pdf',
+        'checksum' => str_repeat('a', 64),
+      ];
+
+      try {
+        $this->plugin->validateSchema(['file' => ['not-a-uuid' => $file]] + $data);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $this->assertStringContainsString(
+          ContentProcessorMessage::SchemaInvalidFileMapKey->value,
+          $exception->getMessage(),
+        );
+      }
+
+      try {
+        $this->plugin->validateSchema([
+          'file' => [$file_uuid => ['language' => 'zz'] + $file],
+        ] + $data);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $this->assertStringContainsString('Must be one of:', $exception->getMessage());
+      }
+
+      // Partial: oneOf null-branch noise must not appear next to a real error.
+      try {
+        $this->plugin->validateSchema([
+          'partial' => TRUE,
+          'uuid' => $data['uuid'],
+          'file' => [
+            $file_uuid => ['checksum' => 'bad'] + $file,
+          ],
+        ]);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $message = $exception->getMessage();
+        $this->assertStringContainsString('Lowercase SHA-256 checksum of the file.', $message);
+        $this->assertStringNotContainsString('expected null', $message);
+      }
+
+      // Partial: nested description/language may be cleared with null.
+      $this->plugin->validateSchema([
+        'partial' => TRUE,
+        'uuid' => $data['uuid'],
+        'file' => [
+          $file_uuid => [
+            'description' => NULL,
+            'language' => NULL,
+          ] + $file,
+        ],
+      ]);
+
+      try {
+        $this->plugin->validateSchema([
+          'partial' => TRUE,
+          'uuid' => $data['uuid'],
+          'image' => 'not-an-object',
+        ]);
+        $this->fail('Expected ContentProcessorException was not thrown.');
+      }
+      catch (ContentProcessorException $exception) {
+        $message = $exception->getMessage();
+        $this->assertStringContainsString(
+          ContentProcessorMessage::SchemaInvalidType->format([
+            '@expected' => 'object',
+            '@actual' => 'string',
+          ]),
+          $message,
+        );
+        $this->assertStringNotContainsString('expected null', $message);
+      }
+    }
+  }
+
+  /**
+   * Test validate urls allows missing url for partial updates.
+   */
+  public function testValidateUrlsPartialWithoutUrl(): void {
+    $data = $this->getPostApiData();
+    unset($data['url']);
+    $data['partial'] = TRUE;
+
+    $this->plugin->validateUrls($data);
+    $this->assertTrue(TRUE);
   }
 
   /**
@@ -824,6 +1086,22 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
   }
 
   /**
+   * Build a UUID-keyed file map entry for tests.
+   */
+  protected function buildFileMapEntry(object $plugin, object $entity, array $data): array {
+    $uuid = $data['uuid'] ?? $plugin->generateUuid($data['url'], $entity->uuid());
+    $entry = $data + [
+      'uuid' => $uuid,
+      'download_url' => $data['download_url'] ?? $data['url'],
+    ];
+    $entry['uuid'] = $uuid;
+    if (empty($entry['download_url']) && !empty($data['url'])) {
+      $entry['download_url'] = $data['url'];
+    }
+    return [$uuid => $entry];
+  }
+
+  /**
    * Test set relief web file field.
    */
   public function testSetReliefWebField(): void {
@@ -857,7 +1135,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $uuid2 = $plugin->generateUuid($data2['url'], $entity->uuid());
 
     $file_uuid1 = $plugin->generateUuid($uuid1 . $data1['checksum'], $entity->uuid());
-    $file_uuid2 = $plugin->generateUuid($uuid2 . $data1['checksum'], $entity->uuid());
+    $file_uuid2 = $plugin->generateUuid($uuid2 . $data2['checksum'], $entity->uuid());
 
     // No file URI on purpose to skip the ReliefWebFile::getFilePageCount() and
     // prevent a warning because the file doesn't exist.
@@ -890,7 +1168,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       ->method('get')
       ->willThrowException(new \Exception('test'));
 
-    // Test existing file is removed if no file is provided.
+    // Test existing file is removed if no file is provided (PUT empty map).
     $entity->field_file->setValue([$item1->getValue()]);
     $plugin->setReliefWebFileField($entity, 'field_file', []);
     $this->assertTrue($entity->field_file->isEmpty());
@@ -898,24 +1176,696 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     // Test existing file is removed if no valid file is provided.
     $entity->field_file->setValue([$item1->getValue()]);
     $plugin->setReliefWebFileField($entity, 'field_file', [
-      ['url' => 'missing-checksum-test', 'filename' => 'test.pdf'],
+      $uuid1 => ['url' => 'missing-checksum-test', 'filename' => 'test.pdf', 'uuid' => $uuid1],
     ]);
     $this->assertTrue($entity->field_file->isEmpty());
 
-    // Test existing file is removed if no file is provided.
+    // Unchanged content: reuse existing item and update description.
     $entity->field_file->setValue([$item1->getValue()]);
-    $plugin->setReliefWebFileField($entity, 'field_file', [$data1]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $data1));
     $this->assertSame($data1['description'], $entity->field_file->first()->description);
+    $this->assertSame($uuid1, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid1, $entity->field_file->first()->getFileUuid());
 
-    // Test new file.
+    // New file: permanent UUID is URL-derived; managed UUID is
+    // checksum-derived.
     $entity->field_file->setValue(NULL);
-    $plugin->setReliefWebFileField($entity, 'field_file', [$data1]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $data1));
     $this->assertSame($data1['description'], $entity->field_file->first()->description);
+    $this->assertSame($uuid1, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid1, $entity->field_file->first()->getFileUuid());
 
     // Test new file that cannot be retrieved.
     $entity->field_file->setValue(NULL);
-    $plugin->setReliefWebFileField($entity, 'field_file', [$data2]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $data2));
     $this->assertTrue($entity->field_file->isEmpty());
+  }
+
+  /**
+   * Test legacy attachments (permanent UUID = managed UUID) are reused.
+   */
+  public function testSetReliefWebFieldLegacyUuidReuse(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-legacy');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $data = [
+      'url' => 'https://test.test/legacy.pdf',
+      'filename' => 'legacy.pdf',
+      'checksum' => hash('sha256', 'legacy'),
+      'description' => 'updated description',
+    ];
+    $permanent_uuid = $plugin->generateUuid($data['url'], $entity->uuid());
+    $file_uuid = $plugin->generateUuid($permanent_uuid . $data['checksum'], $entity->uuid());
+
+    $file = $this->createEntity('file', 'file');
+    $file->uuid = $file_uuid;
+    $file->setFilename('legacy.pdf');
+    $file->setMimeType('application/pdf');
+    $file->setSize(6);
+
+    // Legacy bug: field-item uuid was set to the checksum-derived managed id.
+    $legacy_item = ReliefWebFile::createInstance($item_definition);
+    $legacy_item->setValue([
+      'uuid' => $file_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid,
+      'file_name' => 'legacy.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 6,
+      'page_count' => 1,
+      'description' => 'old',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $file_uuid, $file],
+      ]);
+
+    $entity->field_file->setValue([$legacy_item->getValue()]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $data));
+
+    $this->assertSame($file_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($file_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('updated description', $entity->field_file->first()->description);
+  }
+
+  /**
+   * Test PATCH with a URL-derived key against a legacy item does not duplicate.
+   *
+   * Legacy items store the managed UUID as the permanent UUID. A PATCH keyed
+   * by the URL-derived permanent UUID must update in place, not leave both
+   * the seeded legacy key and the request key in the field.
+   */
+  public function testSetReliefWebFieldLegacyPatchUrlDerivedKeyNoDuplicate(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-legacy-patch');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $data = [
+      'url' => 'https://test.test/legacy-patch.pdf',
+      'filename' => 'legacy-patch.pdf',
+      'checksum' => hash('sha256', 'legacy-patch'),
+      'description' => 'patched description',
+    ];
+    $url_derived_uuid = $plugin->generateUuid($data['url'], $entity->uuid());
+    $managed_uuid = $plugin->generateUuid($url_derived_uuid . $data['checksum'], $entity->uuid());
+
+    $file = $this->createEntity('file', 'file');
+    $file->uuid = $managed_uuid;
+    $file->setFilename('legacy-patch.pdf');
+    $file->setMimeType('application/pdf');
+    $file->setSize(12);
+
+    $legacy_item = ReliefWebFile::createInstance($item_definition);
+    $legacy_item->setValue([
+      'uuid' => $managed_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $managed_uuid,
+      'file_name' => 'legacy-patch.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 12,
+      'page_count' => 1,
+      'description' => 'old',
+      'file_hash' => $data['checksum'],
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $managed_uuid, $file],
+      ]);
+
+    $entity->field_file->setValue([$legacy_item->getValue()]);
+    $plugin->setReliefWebFileField(
+      $entity,
+      'field_file',
+      $this->buildFileMapEntry($plugin, $entity, $data),
+      TRUE,
+    );
+
+    $this->assertCount(1, $entity->field_file);
+    $this->assertSame($managed_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($managed_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('patched description', $entity->field_file->first()->description);
+    $this->assertNotSame($url_derived_uuid, $entity->field_file->first()->getUuid());
+  }
+
+  /**
+   * Test PATCH delete with a URL-derived key removes a legacy attachment.
+   */
+  public function testSetReliefWebFieldLegacyPatchUrlDerivedKeyDelete(): void {
+    $plugin = $this->createDummyPlugin();
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-legacy-patch-delete');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $url = 'https://test.test/legacy-delete.pdf';
+    $checksum = hash('sha256', 'legacy-delete');
+    $url_derived_uuid = $plugin->generateUuid($url, $entity->uuid());
+    $managed_uuid = $plugin->generateUuid($url_derived_uuid . $checksum, $entity->uuid());
+
+    $legacy_item = ReliefWebFile::createInstance($item_definition);
+    $legacy_item->setValue([
+      'uuid' => $managed_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $managed_uuid,
+      'file_name' => 'legacy-delete.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 12,
+      'page_count' => 1,
+      'file_hash' => $checksum,
+    ]);
+
+    $entity->field_file->setValue([$legacy_item->getValue()]);
+    $plugin->setReliefWebFileField($entity, 'field_file', [
+      $url_derived_uuid => NULL,
+    ], TRUE);
+
+    $this->assertTrue($entity->field_file->isEmpty());
+  }
+
+  /**
+   * Test PATCH merge rejects more than the maximum attachment count.
+   */
+  public function testSetReliefWebFieldTooManyFilesAfterPatchMerge(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-too-many-files');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $values = [];
+    for ($i = 0; $i < 10; $i++) {
+      $permanent = $plugin->generateUuid('https://test.test/many-' . $i . '.pdf', $entity->uuid());
+      $checksum = hash('sha256', 'many-' . $i);
+      $managed = $plugin->generateUuid($permanent . $checksum, $entity->uuid());
+      $item = ReliefWebFile::createInstance($item_definition);
+      $item->setValue([
+        'uuid' => $permanent,
+        'revision_id' => 1,
+        'file_uuid' => $managed,
+        'file_name' => 'many-' . $i . '.pdf',
+        'file_mime' => 'application/pdf',
+        'file_size' => 4,
+        'page_count' => 1,
+        'file_hash' => $checksum,
+      ]);
+      $values[] = $item->getValue();
+    }
+    $entity->field_file->setValue($values);
+
+    $extra = [
+      'url' => 'https://test.test/many-extra.pdf',
+      'filename' => 'many-extra.pdf',
+      'checksum' => hash('sha256', 'many-extra'),
+      'bytes' => 'extra',
+    ];
+    $extra_managed = $plugin->generateUuid(
+      $plugin->generateUuid($extra['url'], $entity->uuid()) . $extra['checksum'],
+      $entity->uuid(),
+    );
+    $extra_file = $this->createEntity('file', 'file');
+    $extra_file->uuid = $extra_managed;
+    $extra_file->setFilename('many-extra.pdf');
+    $extra_file->setMimeType('application/pdf');
+    $extra_file->setSize(5);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $extra_managed, $extra_file],
+      ]);
+
+    try {
+      $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $extra), TRUE);
+      $this->fail('Expected ContentProcessorException was not thrown.');
+    }
+    catch (ContentProcessorException $exception) {
+      $this->assertSame(
+        ContentProcessorMessage::TooManyFiles->format(['@max' => '10']),
+        $exception->getMessage(),
+      );
+    }
+  }
+
+  /**
+   * Test checksum change preserves the permanent UUID.
+   */
+  public function testSetReliefWebFieldChecksumChangePreservesPermanentUuid(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-replace');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $url = 'https://test.test/replace.pdf';
+    $old_checksum = hash('sha256', 'old-content');
+    $new_checksum = hash('sha256', 'new-content');
+
+    $permanent_uuid = $plugin->generateUuid($url, $entity->uuid());
+    $old_file_uuid = $plugin->generateUuid($permanent_uuid . $old_checksum, $entity->uuid());
+    $new_file_uuid = $plugin->generateUuid($permanent_uuid . $new_checksum, $entity->uuid());
+
+    $new_file = $this->createEntity('file', 'file');
+    $new_file->uuid = $new_file_uuid;
+    $new_file->setFilename('replace.pdf');
+    $new_file->setMimeType('application/pdf');
+    $new_file->setSize(11);
+
+    $existing = ReliefWebFile::createInstance($item_definition);
+    $existing->setValue([
+      'uuid' => $permanent_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $old_file_uuid,
+      'file_name' => 'replace.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 11,
+      'page_count' => 1,
+      'description' => 'before',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $new_file_uuid, $new_file],
+      ]);
+
+    $entity->field_file->setValue([$existing->getValue()]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $url,
+      'download_url' => 'https://test.test/replace-v2.pdf',
+      'filename' => 'replace.pdf',
+      'checksum' => $new_checksum,
+      'description' => 'after',
+    ]));
+
+    $this->assertFalse($entity->field_file->isEmpty());
+    $this->assertSame($permanent_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($new_file_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('after', $entity->field_file->first()->description);
+  }
+
+  /**
+   * Test PATCH merge, delete, and empty-map no-op for file attachments.
+   */
+  public function testSetReliefWebFieldPartialMerge(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+    $http_client = $this->createMock(Client::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+      'http_client' => $http_client,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-partial-files');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $data1 = [
+      'url' => 'https://test.test/partial1.pdf',
+      'filename' => 'partial1.pdf',
+      'checksum' => hash('sha256', 'partial1'),
+      'description' => 'file1',
+    ];
+    $data2 = [
+      'url' => 'https://test.test/partial2.pdf',
+      'filename' => 'partial2.pdf',
+      'checksum' => hash('sha256', 'partial2'),
+      'description' => 'file2',
+    ];
+
+    $uuid1 = $plugin->generateUuid($data1['url'], $entity->uuid());
+    $uuid2 = $plugin->generateUuid($data2['url'], $entity->uuid());
+    $file_uuid1 = $plugin->generateUuid($uuid1 . $data1['checksum'], $entity->uuid());
+    $file_uuid2 = $plugin->generateUuid($uuid2 . $data2['checksum'], $entity->uuid());
+
+    $file1 = $this->createEntity('file', 'file');
+    $file1->uuid = $file_uuid1;
+    $file1->setFilename('partial1.pdf');
+    $file1->setMimeType('application/pdf');
+    $file1->setSize(8);
+
+    $file2 = $this->createEntity('file', 'file');
+    $file2->uuid = $file_uuid2;
+    $file2->setFilename('partial2.pdf');
+    $file2->setMimeType('application/pdf');
+    $file2->setSize(8);
+
+    $item1 = ReliefWebFile::createInstance($item_definition);
+    $item1->setValue([
+      'uuid' => $uuid1,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid1,
+      'file_name' => 'partial1.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 8,
+      'page_count' => 1,
+      'description' => 'file1',
+    ]);
+    $item2 = ReliefWebFile::createInstance($item_definition);
+    $item2->setValue([
+      'uuid' => $uuid2,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid2,
+      'file_name' => 'partial2.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 8,
+      'page_count' => 1,
+      'description' => 'file2',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $file_uuid1, $file1],
+        ['file', $file_uuid2, $file2],
+      ]);
+
+    $entity->field_file->setValue([$item1->getValue(), $item2->getValue()]);
+
+    // Empty map on PATCH is a no-op.
+    $plugin->setReliefWebFileField($entity, 'field_file', [], TRUE);
+    $this->assertCount(2, $entity->field_file);
+
+    // Update one attachment description without touching the other.
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $data1['url'],
+      'filename' => $data1['filename'],
+      'checksum' => $data1['checksum'],
+      'description' => 'file1-updated',
+    ]), TRUE);
+    $this->assertCount(2, $entity->field_file);
+    $by_uuid = [];
+    foreach ($entity->field_file as $item) {
+      $by_uuid[$item->getUuid()] = $item->description;
+    }
+    $this->assertSame('file1-updated', $by_uuid[$uuid1]);
+    $this->assertSame('file2', $by_uuid[$uuid2]);
+
+    // Delete one attachment via null.
+    $plugin->setReliefWebFileField($entity, 'field_file', [
+      $uuid2 => NULL,
+    ], TRUE);
+    $this->assertCount(1, $entity->field_file);
+    $this->assertSame($uuid1, $entity->field_file->first()->getUuid());
+
+    // NULL clears all.
+    $plugin->setReliefWebFileField($entity, 'field_file', NULL, TRUE);
+    $this->assertTrue($entity->field_file->isEmpty());
+  }
+
+  /**
+   * Test PATCH preserve/clear and PUT default for file description/language.
+   */
+  public function testSetReliefWebFieldDescriptionLanguageSemantics(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    // Stub known attachment languages so resolveFileLanguageCode() does not
+    // depend on taxonomy terms present in the ExistingSite database.
+    $file_languages = [
+      'en' => 'English',
+      'fr' => 'French',
+    ];
+    $plugin = $this->createDummyPlugin(
+      services: ['entity.repository' => $entity_repository],
+      file_languages: $file_languages,
+    );
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-file-meta');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $url = 'https://test.test/meta.pdf';
+    $old_content = 'meta-old';
+    $new_content = 'meta-new';
+    $old_checksum = hash('sha256', $old_content);
+    $new_checksum = hash('sha256', $new_content);
+    $permanent_uuid = $plugin->generateUuid($url, $entity->uuid());
+    $old_file_uuid = $plugin->generateUuid($permanent_uuid . $old_checksum, $entity->uuid());
+    $new_file_uuid = $plugin->generateUuid($permanent_uuid . $new_checksum, $entity->uuid());
+
+    $old_file = $this->createEntity('file', 'file');
+    $old_file->uuid = $old_file_uuid;
+    $old_file->setFilename('meta.pdf');
+    $old_file->setMimeType('application/pdf');
+    $old_file->setSize(strlen($old_content));
+
+    $new_file = $this->createEntity('file', 'file');
+    $new_file->uuid = $new_file_uuid;
+    $new_file->setFilename('meta.pdf');
+    $new_file->setMimeType('application/pdf');
+    $new_file->setSize(strlen($new_content));
+
+    $existing = ReliefWebFile::createInstance($item_definition);
+    $existing->setValue([
+      'uuid' => $permanent_uuid,
+      'revision_id' => 0,
+      'file_uuid' => $old_file_uuid,
+      'file_name' => 'meta.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => strlen($old_content),
+      'page_count' => 1,
+      'description' => 'keep-me',
+      'language' => 'fr',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $old_file_uuid, $old_file],
+        ['file', $new_file_uuid, $new_file],
+      ]);
+
+    $entity->field_file->setValue([$existing->getValue()]);
+
+    // PATCH omit description/language: preserve.
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $url,
+      'filename' => 'meta.pdf',
+      'checksum' => $old_checksum,
+    ]), TRUE);
+    $this->assertSame('keep-me', $entity->field_file->first()->description);
+    $this->assertSame('fr', $entity->field_file->first()->language);
+
+    // PATCH null clears; string updates.
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $url,
+      'filename' => 'meta.pdf',
+      'checksum' => $old_checksum,
+      'description' => NULL,
+      'language' => 'en',
+    ]), TRUE);
+    $this->assertSame('', $entity->field_file->first()->description);
+    $this->assertSame('en', $entity->field_file->first()->language);
+
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $url,
+      'filename' => 'meta.pdf',
+      'checksum' => $old_checksum,
+      'description' => 'updated-meta',
+      'language' => NULL,
+    ]), TRUE);
+    $this->assertSame('updated-meta', $entity->field_file->first()->description);
+    $this->assertSame('', $entity->field_file->first()->language);
+
+    // Content replace omitting metadata: copy from previous item.
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $url,
+      'filename' => 'meta.pdf',
+      'checksum' => $new_checksum,
+      'bytes' => $new_content,
+    ]), TRUE);
+    $this->assertSame($permanent_uuid, $entity->field_file->first()->getUuid());
+    $this->assertSame($new_file_uuid, $entity->field_file->first()->getFileUuid());
+    $this->assertSame('updated-meta', $entity->field_file->first()->description);
+    $this->assertSame('', $entity->field_file->first()->language);
+
+    // PUT omit defaults to empty.
+    $put_content = 'put-omit-meta';
+    $put_checksum = hash('sha256', $put_content);
+    $put_url = 'https://test.test/put-omit.pdf';
+    $put_uuid = $plugin->generateUuid($put_url, $entity->uuid());
+    $put_file_uuid = $plugin->generateUuid($put_uuid . $put_checksum, $entity->uuid());
+    $put_file = $this->createEntity('file', 'file');
+    $put_file->uuid = $put_file_uuid;
+    $put_file->setFilename('put-omit.pdf');
+    $put_file->setMimeType('application/pdf');
+    $put_file->setSize(strlen($put_content));
+
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $put_file_uuid, $put_file],
+      ]);
+    $plugin = $this->createDummyPlugin(
+      services: ['entity.repository' => $entity_repository],
+      file_languages: $file_languages,
+    );
+    $entity->field_file->setValue([]);
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $put_url,
+      'filename' => 'put-omit.pdf',
+      'checksum' => $put_checksum,
+      'bytes' => $put_content,
+    ]), FALSE);
+    $this->assertSame('', $entity->field_file->first()->description);
+    $this->assertSame('', $entity->field_file->first()->language);
+  }
+
+  /**
+   * Test file_order keep/append, reorder, and lenient partial lists.
+   */
+  public function testSetReliefWebFieldOrder(): void {
+    $entity_repository = $this->createMock(EntityRepositoryInterface::class);
+
+    $plugin = $this->createDummyPlugin(services: [
+      'entity.repository' => $entity_repository,
+    ]);
+
+    $entity = $this->createEntity('node', 'report');
+    $entity->uuid = $plugin->generateUuid('test-node-file-order');
+    $item_definition = $entity->field_file->getItemDefinition();
+
+    $data1 = [
+      'url' => 'https://test.test/order1.pdf',
+      'filename' => 'order1.pdf',
+      'checksum' => hash('sha256', 'order1'),
+      'description' => 'file1',
+    ];
+    $data2 = [
+      'url' => 'https://test.test/order2.pdf',
+      'filename' => 'order2.pdf',
+      'checksum' => hash('sha256', 'order2'),
+      'description' => 'file2',
+    ];
+
+    $uuid1 = $plugin->generateUuid($data1['url'], $entity->uuid());
+    $uuid2 = $plugin->generateUuid($data2['url'], $entity->uuid());
+    $file_uuid1 = $plugin->generateUuid($uuid1 . $data1['checksum'], $entity->uuid());
+    $file_uuid2 = $plugin->generateUuid($uuid2 . $data2['checksum'], $entity->uuid());
+
+    $file1 = $this->createEntity('file', 'file');
+    $file1->uuid = $file_uuid1;
+    $file1->setFilename('order1.pdf');
+    $file1->setMimeType('application/pdf');
+    $file1->setSize(6);
+
+    $file2 = $this->createEntity('file', 'file');
+    $file2->uuid = $file_uuid2;
+    $file2->setFilename('order2.pdf');
+    $file2->setMimeType('application/pdf');
+    $file2->setSize(6);
+
+    $item1 = ReliefWebFile::createInstance($item_definition);
+    $item1->setValue([
+      'uuid' => $uuid1,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid1,
+      'file_name' => 'order1.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 6,
+      'page_count' => 1,
+      'description' => 'file1',
+    ]);
+    $item2 = ReliefWebFile::createInstance($item_definition);
+    $item2->setValue([
+      'uuid' => $uuid2,
+      'revision_id' => 0,
+      'file_uuid' => $file_uuid2,
+      'file_name' => 'order2.pdf',
+      'file_mime' => 'application/pdf',
+      'file_size' => 6,
+      'page_count' => 1,
+      'description' => 'file2',
+    ]);
+
+    $entity_repository->expects($this->any())
+      ->method('loadEntityByUuid')
+      ->willReturnMap([
+        ['file', $file_uuid1, $file1],
+        ['file', $file_uuid2, $file2],
+      ]);
+
+    $entity->field_file->setValue([$item1->getValue(), $item2->getValue()]);
+
+    // Omit file_order: keep current order when updating metadata.
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, [
+      'url' => $data1['url'],
+      'filename' => $data1['filename'],
+      'checksum' => $data1['checksum'],
+      'description' => 'file1-updated',
+    ]), TRUE);
+    $this->assertSame([$uuid1, $uuid2], array_map(
+      static fn($item) => $item->getUuid(),
+      iterator_to_array($entity->field_file),
+    ));
+    $this->assertSame('file1-updated', $entity->field_file->first()->description);
+
+    // Explicit file_order reorders.
+    $plugin->setReliefWebFileField(
+      $entity,
+      'field_file',
+      [],
+      TRUE,
+      [$uuid2, $uuid1],
+    );
+    $this->assertSame([$uuid2, $uuid1], array_map(
+      static fn($item) => $item->getUuid(),
+      iterator_to_array($entity->field_file),
+    ));
+
+    // Delete then re-add without file_order: new attachment is appended.
+    $plugin->setReliefWebFileField($entity, 'field_file', [
+      $uuid1 => NULL,
+    ], TRUE);
+    $this->assertSame([$uuid2], array_map(
+      static fn($item) => $item->getUuid(),
+      iterator_to_array($entity->field_file),
+    ));
+    $plugin->setReliefWebFileField($entity, 'field_file', $this->buildFileMapEntry($plugin, $entity, $data1), TRUE);
+    $this->assertSame([$uuid2, $uuid1], array_map(
+      static fn($item) => $item->getUuid(),
+      iterator_to_array($entity->field_file),
+    ));
+
+    // Partial file_order: listed UUID first; unlisted keep relative order;
+    // unrecognized UUIDs are ignored.
+    $unknown_uuid = $plugin->generateUuid('https://test.test/unknown.pdf', $entity->uuid());
+    $plugin->setReliefWebFileField(
+      $entity,
+      'field_file',
+      [],
+      TRUE,
+      [$uuid1, $unknown_uuid],
+    );
+    $this->assertSame([$uuid1, $uuid2], array_map(
+      static fn($item) => $item->getUuid(),
+      iterator_to_array($entity->field_file),
+    ));
   }
 
   /**
@@ -963,33 +1913,33 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $entity->uuid = $plugin->generateUuid('test-node');
 
     $data1 = [
-      'url' => 'https://test.test/test1.png',
+      'download_url' => 'https://test.test/test1.png',
       'checksum' => hash('sha256', 'test1'),
       'description' => 'test image1',
     ];
 
     $data2 = [
-      'url' => 'https://test.test/test2.png',
+      'download_url' => 'https://test.test/test2.png',
       'checksum' => hash('sha256', 'test2'),
       'description' => 'test image2',
     ];
 
     $data3 = [
-      'url' => 'https://test.test/test3.png',
+      'download_url' => 'https://test.test/test3.png',
       'checksum' => hash('sha256', 'test3'),
       'description' => 'test image3',
     ];
 
     $data4 = [
-      'url' => 'https://test.test/test4.png',
+      'download_url' => 'https://test.test/test4.png',
       'checksum' => hash('sha256', 'test4'),
       'description' => 'test image4',
     ];
 
-    $media_uuid1 = $plugin->generateUuid($data1['checksum'] . $data1['url'], $entity->uuid());
-    $media_uuid2 = $plugin->generateUuid($data2['checksum'] . $data2['url'], $entity->uuid());
-    $media_uuid3 = $plugin->generateUuid($data3['checksum'] . $data3['url'], $entity->uuid());
-    $media_uuid4 = $plugin->generateUuid($data4['checksum'] . $data4['url'], $entity->uuid());
+    $media_uuid1 = $plugin->generateUuid($data1['checksum'] . $data1['download_url'], $entity->uuid());
+    $media_uuid2 = $plugin->generateUuid($data2['checksum'] . $data2['download_url'], $entity->uuid());
+    $media_uuid3 = $plugin->generateUuid($data3['checksum'] . $data3['download_url'], $entity->uuid());
+    $media_uuid4 = $plugin->generateUuid($data4['checksum'] . $data4['download_url'], $entity->uuid());
 
     $media1 = $this->createEntity('media', 'image_report');
     $media1->mid = 12;
@@ -1096,7 +2046,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
 
     // Unknown field, nothing happens.
     $plugin->setImageField($entity, 'unknown_field', [
-      'url' => 'test',
+      'download_url' => 'test',
       'checksum' => 'test',
     ]);
     $this->assertTrue($entity->field_image->isEmpty());
@@ -1182,10 +2132,13 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
     $entity = $this->createEntity('node', 'report');
     $definition = $entity->get('field_file')->getItemDefinition();
 
+    $permanent_uuid = 'bda0e2da-4229-53aa-9206-db72dfdac519';
+    $file_uuid = 'da5b8893-d6ca-5c1c-9a9c-91f40a2a3649';
     $item = $plugin->createReliefWebFileFieldItem(
       definition: $definition,
       entity: $entity,
-      uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
+      uuid: $permanent_uuid,
+      file_uuid: $file_uuid,
       file_name: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),
@@ -1193,6 +2146,8 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       max_size: '8B',
     );
     $this->assertInstanceOf(ReliefWebFile::class, $item);
+    $this->assertSame($permanent_uuid, $item->getUuid());
+    $this->assertSame($file_uuid, $item->getFileUuid());
   }
 
   /**
@@ -1236,6 +2191,7 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
       definition: $definition,
       entity: $entity,
       uuid: 'bda0e2da-4229-53aa-9206-db72dfdac519',
+      file_uuid: 'da5b8893-d6ca-5c1c-9a9c-91f40a2a3649',
       file_name: 'test.pdf',
       url: 'https://test.test/test.pdf',
       checksum: hash('sha256', 'test'),
@@ -2087,13 +3043,52 @@ abstract class ContentProcessorPluginBaseTestCase extends ExistingSiteBase {
    * @param bool $use_plugin_class
    *   Whether to use the same class the `$this->plugin` or use an anymous
    *   class.
+   * @param array|null $file_languages
+   *   Optional stub for getFileLanguages(), keyed by ISO code. When set, an
+   *   anonymous plugin is used so language resolution does not depend on
+   *   taxonomy terms in the ExistingSite database.
    *
    * @return \Drupal\reliefweb_post_api\Plugin\ContentProcessorPluginInterface
    *   The dummy plugin.
    */
-  protected function createDummyPlugin(array $definition = [], array $services = [], bool $use_plugin_class = TRUE): ContentProcessorPluginInterface {
+  protected function createDummyPlugin(array $definition = [], array $services = [], bool $use_plugin_class = TRUE, ?array $file_languages = NULL): ContentProcessorPluginInterface {
     $definition = $this->getDummyPluginDefinition($definition);
     $services = $this->getDummyPluginServices($services);
+
+    if ($file_languages !== NULL) {
+      return new class([], $definition['id'], $definition, $file_languages, ...$services) extends ContentProcessorPluginBase {
+
+        /**
+         * Stubbed attachment languages keyed by ISO code.
+         *
+         * @var array<string, string>
+         */
+        protected array $stubFileLanguages;
+
+        /**
+         * Constructs the stub plugin.
+         */
+        public function __construct($configuration, $plugin_id, $plugin_definition, array $file_languages, ...$services) {
+          $this->stubFileLanguages = $file_languages;
+          parent::__construct($configuration, $plugin_id, $plugin_definition, ...$services);
+        }
+
+        /**
+         * {@inheritdoc}
+         */
+        public function process(array $data): ?ContentEntityInterface {
+          return NULL;
+        }
+
+        /**
+         * {@inheritdoc}
+         */
+        protected function getFileLanguages(): array {
+          return $this->stubFileLanguages;
+        }
+
+      };
+    }
 
     if ($use_plugin_class) {
       return new ($this->plugin::class)([], $definition['id'], $definition, ...$services);

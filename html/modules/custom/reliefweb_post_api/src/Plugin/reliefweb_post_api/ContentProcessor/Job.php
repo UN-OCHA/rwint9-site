@@ -24,28 +24,14 @@ class Job extends ContentProcessorPluginBase {
   /**
    * {@inheritdoc}
    */
-  public function process(array $data, ?string $schema = NULL): ?ContentEntityInterface {
+  public function process(array $data): ?ContentEntityInterface {
     // Ensure the data is valid.
-    $this->validate($data, $schema);
+    $this->validate($data);
 
-    $bundle = $this->getbundle();
     $provider = $this->getProvider($data['provider'] ?? '');
     $user_id = $data['user'] ?? $provider->getUserId();
 
-    // Generate the UUID corresponding to the document URL.
-    $uuid = $this->generateUuid($data['url']);
-
-    // Load or create a new node.
-    $node = $this->entityRepository->loadEntityByUuid('node', $uuid) ??
-            $this->entityTypeManager->getStorage('node')->create([
-              'uuid' => $uuid,
-              'type' => $bundle,
-              'langcode' => $this->getDefaultLangcode(),
-              'uid' => $user_id,
-              // This is important to avoid content imported in the same batch
-              // to have the exact same timestamp.
-              'created' => time(),
-            ]);
+    $node = $this->loadEntityForProcessing($data, (int) $user_id);
 
     // Verify the bundle if the entity already exists.
     $this->validateEntityBundle($node);
@@ -58,23 +44,45 @@ class Job extends ContentProcessorPluginBase {
       return $node;
     }
 
+    $partial = !$node->isNew() && !empty($data['partial']);
+
     // Set the mandatory fields.
-    $node->title = $this->sanitizeString($data['title']);
+    if (!$partial || array_key_exists('title', $data)) {
+      $node->title = $this->sanitizeString((string) ($data['title'] ?? ''));
+    }
 
-    $this->setTermField($node, 'field_source', 'source', $data['source']);
-    $this->setDateField($node, 'field_job_closing_date', $data['closing_date']);
+    if (!$partial || array_key_exists('source', $data)) {
+      $this->setTermField($node, 'field_source', 'source', $data['source'] ?? []);
+    }
+    if (!$partial || array_key_exists('closing_date', $data)) {
+      $this->setDateField($node, 'field_job_closing_date', (string) ($data['closing_date'] ?? ''));
+    }
 
-    $this->setTermField($node, 'field_job_type', 'job_type', $data['job_type']);
-    $this->setTermField($node, 'field_job_experience', 'job_experience', $data['job_experience']);
+    if (!$partial || array_key_exists('job_type', $data)) {
+      $this->setTermField($node, 'field_job_type', 'job_type', $data['job_type'] ?? []);
+    }
+    if (!$partial || array_key_exists('job_experience', $data)) {
+      $this->setTermField($node, 'field_job_experience', 'job_experience', $data['job_experience'] ?? []);
+    }
 
-    $this->setTextField($node, 'body', $data['body'], format: 'markdown');
-    $this->setTextField($node, 'field_how_to_apply', $data['how_to_apply'], format: 'markdown');
+    if (!$partial || array_key_exists('body', $data)) {
+      $this->setTextField($node, 'body', (string) ($data['body'] ?? ''), format: 'markdown');
+    }
+    if (!$partial || array_key_exists('how_to_apply', $data)) {
+      $this->setTextField($node, 'field_how_to_apply', (string) ($data['how_to_apply'] ?? ''), format: 'markdown');
+    }
 
-    // Set the optional fields.
-    $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
+    // Set the optional fields. Null clears.
+    if (!$partial || array_key_exists('country', $data)) {
+      $this->setTermField($node, 'field_country', 'country', $data['country'] ?? []);
+    }
 
-    $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_category'] ?? []);
-    $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
+    if (!$partial || array_key_exists('career_category', $data)) {
+      $this->setTermField($node, 'field_career_categories', 'career_category', $data['career_category'] ?? []);
+    }
+    if (!$partial || array_key_exists('theme', $data)) {
+      $this->setTermField($node, 'field_theme', 'theme', $data['theme'] ?? []);
+    }
 
     // Save the entity.
     $this->save($node, $provider, $data);

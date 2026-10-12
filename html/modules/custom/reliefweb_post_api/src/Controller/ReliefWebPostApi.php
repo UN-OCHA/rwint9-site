@@ -96,8 +96,9 @@ class ReliefWebPostApi extends ControllerBase {
         throw new BadRequestHttpException(PostApiResponseMessage::MissingAppname->value);
       }
 
-      if (!in_array($method, ['PUT', 'DELETE'], TRUE)) {
-        throw new MethodNotAllowedHttpException(['PUT', 'DELETE'], PostApiResponseMessage::UnsupportedMethod->value);
+      $methods = ['PUT', 'PATCH', 'DELETE'];
+      if (!in_array($method, $methods, TRUE)) {
+        throw new MethodNotAllowedHttpException($methods, PostApiResponseMessage::UnsupportedMethod->value);
       }
 
       // Validate the endpoint syntax.
@@ -153,6 +154,12 @@ class ReliefWebPostApi extends ControllerBase {
 
       $status = $plugin->getModerationStatusByUuid($uuid);
 
+      // Existing documents may only be modified by the same Post API provider.
+      // Unknown UUID skips this gate (PUT create; DELETE still 404s later).
+      if ($status !== NULL && !$plugin->isOwnedByProvider($uuid, $provider)) {
+        throw new AccessDeniedHttpException(PostApiResponseMessage::ProviderMismatch->value);
+      }
+
       if ($method === 'DELETE') {
         if ($status !== NULL && $plugin->isTerminalModerationStatus($status)) {
           $response = new JsonResponse(PostApiResponseMessage::TerminalNotPubliclyAvailable->format([
@@ -167,12 +174,16 @@ class ReliefWebPostApi extends ControllerBase {
         }
       }
       else {
+        // PATCH updates existing documents only.
+        if ($method === 'PATCH' && $status === NULL) {
+          throw new NotFoundHttpException(PostApiResponseMessage::DocumentNotFound->value);
+        }
         if ($status !== NULL && $plugin->isTerminalModerationStatus($status)) {
           throw new UnprocessableEntityHttpException(PostApiResponseMessage::TerminalCannotUpdate->format([
             '@status' => $status,
           ]));
         }
-        $response = $this->handlePut($request, $plugin, $provider, $uuid, (int) $user_id);
+        $response = $this->handleWrite($request, $plugin, $provider, $uuid, (int) $user_id, $method === 'PATCH');
       }
     }
     catch (HttpException $exception) {
@@ -216,7 +227,7 @@ class ReliefWebPostApi extends ControllerBase {
   }
 
   /**
-   * Handle a PUT request: create or update the document.
+   * Handle a PUT or PATCH request: create/update or partial update.
    *
    * @param \Symfony\Component\HttpFoundation\Request $request
    *   Current request.
@@ -228,11 +239,13 @@ class ReliefWebPostApi extends ControllerBase {
    *   Document UUID.
    * @param int $user_id
    *   Content owner / revision user ID.
+   * @param bool $partial
+   *   TRUE for PATCH (partial update of an existing document).
    *
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   Success response.
    */
-  protected function handlePut(Request $request, ContentProcessorPluginInterface $plugin, ProviderInterface $provider, string $uuid, int $user_id): JsonResponse {
+  protected function handleWrite(Request $request, ContentProcessorPluginInterface $plugin, ProviderInterface $provider, string $uuid, int $user_id, bool $partial = FALSE): JsonResponse {
     // Check if we received JSON data.
     if ($request->getContentTypeFormat() !== 'json') {
       throw new BadRequestHttpException(PostApiResponseMessage::InvalidContentFormat->value);
@@ -279,11 +292,14 @@ class ReliefWebPostApi extends ControllerBase {
     // set when saving the entity.
     unset($data['status']);
 
-    // Disallow partial update for now.
-    // @todo review if/when we allow PATCH requests since we need to modify
-    // the schema validation in that case as well as a clean way to handle
-    // removing a non mandatory field value (ex: report theme).
-    unset($data['partial']);
+    // Partial updates are only allowed for PATCH. Never trust a client-sent
+    // partial flag on PUT.
+    if ($partial) {
+      $data['partial'] = TRUE;
+    }
+    else {
+      unset($data['partial']);
+    }
 
     // Validate the content against the schema for the bundle.
     try {
@@ -303,6 +319,9 @@ class ReliefWebPostApi extends ControllerBase {
     if ($provider->skipQueue()) {
       try {
         $plugin->process($data);
+      }
+      catch (DocumentNotFoundException $exception) {
+        throw new NotFoundHttpException($exception->getMessage());
       }
       catch (ContentProcessorException $exception) {
         throw new BadRequestHttpException(PostApiResponseMessage::InvalidData->format([
