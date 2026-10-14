@@ -1,5 +1,5 @@
 {
-    "_hash": "9cdd23dac4764736fe1f96b9d96489634a356ebbddac970285b31fd5a2813d1b",
+    "_hash": "ced4b05e4e73e9d28756c4e792d88c969ccacbd78c18ca8cf6953eec9e8bb9a4",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -80,7 +80,7 @@
                 "package": "drupal/imageapi_optimize_webp",
                 "description": "Support imagemagick toolkit",
                 "url": "PATCHES/imageapi_optimize_webp-imagemagick-toolkit.patch",
-                "sha256": "a0275281c110ebc7c9909d3a68757ec67a0216e8127110e5712dffde773bb180",
+                "sha256": "a41d1efd457ba0414c39a64c2421890dbc99b7a4484c5dea3112fd64251f1b44",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
