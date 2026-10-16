@@ -132,4 +132,59 @@ class ReportDuplicateMatcherEmbeddingTest extends UnitTestCase {
     $this->assertSame(DuplicateMatchCandidate::SOURCE_EMBEDDING, $by_nid[2]);
   }
 
+  /**
+   * First-revision day window keeps in-range hits and drops others.
+   */
+  public function testFilterCandidatesByFirstRevisionWindow(): void {
+    $matcher = $this->getMockBuilder(ReportDuplicateMatcher::class)
+      ->disableOriginalConstructor()
+      ->onlyMethods(['loadFirstRevisionTimestamps'])
+      ->getMock();
+    $matcher->method('loadFirstRevisionTimestamps')->willReturn([
+      10 => 1000,
+      20 => 50,
+      // 30 omitted: missing first revision.
+      40 => 2000,
+    ]);
+
+    $rows = [
+      (object) [
+        'nid' => 10,
+        'title' => 'In window',
+        'created' => 1000,
+        'body_value' => 'body',
+        'candidate_source' => DuplicateMatchCandidate::SOURCE_EMBEDDING,
+      ],
+      (object) [
+        'nid' => 20,
+        'title' => 'Too old',
+        'created' => 50,
+        'body_value' => 'body',
+        'candidate_source' => DuplicateMatchCandidate::SOURCE_EMBEDDING,
+      ],
+      (object) [
+        'nid' => 30,
+        'title' => 'Missing first revision',
+        'created' => 1500,
+        'body_value' => 'body',
+        'candidate_source' => DuplicateMatchCandidate::SOURCE_EMBEDDING,
+      ],
+      (object) [
+        'nid' => 40,
+        'title' => 'Also in window',
+        'created' => 2000,
+        'body_value' => 'body',
+        'candidate_source' => DuplicateMatchCandidate::SOURCE_EMBEDDING,
+      ],
+    ];
+
+    $ref = new \ReflectionMethod(
+      ReportDuplicateMatcher::class,
+      'filterCandidatesByFirstRevisionWindow',
+    );
+    $filtered = $ref->invoke($matcher, $rows, 100, 3000);
+    $nids = array_map(static fn(object $row): int => (int) $row->nid, $filtered);
+    $this->assertSame([10, 40], $nids);
+  }
+
 }

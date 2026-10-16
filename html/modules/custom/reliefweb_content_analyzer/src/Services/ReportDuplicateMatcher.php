@@ -392,10 +392,17 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
       return [];
     }
 
-    $range = $this->idRangeForEmbeddingLookback($entity, $settings);
-    if ($range === NULL) {
+    $context = $this->embeddingLookbackAnchorAndWindow($entity, $settings);
+    if ($context === NULL) {
       return [];
     }
+
+    $range = $this->nidRangeFromEmbeddingWindow(
+      $context['anchor_nid'],
+      $context['window_start'],
+      $context['window_end'],
+      $settings,
+    );
     [$id_min, $id_max] = $range;
     $exclude = (int) $entity->id();
     if ($exclude <= 0) {
@@ -426,7 +433,51 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     }
 
     $nids = array_map(static fn($hit): int => $hit->entityId, $hits);
-    return $this->loadCandidateRowsByNids($nids, $settings, DuplicateMatchCandidate::SOURCE_EMBEDDING);
+    $rows = $this->loadCandidateRowsByNids($nids, $settings, DuplicateMatchCandidate::SOURCE_EMBEDDING);
+    return $this->filterCandidatesByFirstRevisionWindow(
+      $rows,
+      $context['window_start'],
+      $context['window_end'],
+    );
+  }
+
+  /**
+   * Resolve anchor nid and first-revision day window for embedding NN.
+   *
+   * @param \Drupal\Core\Entity\ContentEntityInterface $entity
+   *   Probe entity.
+   * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings $settings
+   *   Settings.
+   *
+   * @return array{anchor_nid: int, window_start: int, window_end: int}|null
+   *   Anchor and inclusive day window, or NULL when unavailable.
+   */
+  protected function embeddingLookbackAnchorAndWindow(
+    ContentEntityInterface $entity,
+    DuplicateMatchSettings $settings,
+  ): ?array {
+    $anchor_nid = (int) $entity->id();
+
+    // If the anchor nid is not set, use the max report nid (most recent report)
+    // from the database.
+    if ($anchor_nid <= 0) {
+      $max_nid = $this->minOrMaxReportNid(FALSE);
+      if ($max_nid === NULL) {
+        return NULL;
+      }
+      $anchor_nid = $max_nid;
+    }
+
+    $anchor_first_timestamp = $this->firstRevisionTimestamp($anchor_nid);
+    if ($anchor_first_timestamp === NULL) {
+      return NULL;
+    }
+
+    return [
+      'anchor_nid' => $anchor_nid,
+      'window_start' => $anchor_first_timestamp - ($settings->embeddingLookbackDays * 86400),
+      'window_end' => $anchor_first_timestamp + ($settings->embeddingLookforwardDays * 86400),
+    ];
   }
 
   /**
@@ -444,36 +495,57 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     ContentEntityInterface $entity,
     DuplicateMatchSettings $settings,
   ): ?array {
-    $anchor_nid = (int) $entity->id();
-
-    // If the anchor nid is not set, use the max report nid (most recent report)
-    // from the database.
-    if ($anchor_nid <= 0) {
-      $max_nid = $this->minOrMaxReportNid(FALSE);
-      if ($max_nid === NULL) {
-        return NULL;
-      }
-      $anchor_nid = $max_nid;
-    }
-
-    // Convert lookback/lookforward days into a first-revision time window, then
-    // approximate that window as an nid range (embedding NN filters by nid).
-    $anchor_first_timestamp = $this->firstRevisionTimestamp($anchor_nid);
-    if ($anchor_first_timestamp === NULL) {
+    $context = $this->embeddingLookbackAnchorAndWindow($entity, $settings);
+    if ($context === NULL) {
       return NULL;
     }
+    return $this->nidRangeFromEmbeddingWindow(
+      $context['anchor_nid'],
+      $context['window_start'],
+      $context['window_end'],
+      $settings,
+    );
+  }
 
-    $window_start = $anchor_first_timestamp - ($settings->embeddingLookbackDays * 86400);
-    $window_end = $anchor_first_timestamp + ($settings->embeddingLookforwardDays * 86400);
-
-    $min_nid = $this->nidNearFirstRevisionTimestamp($anchor_nid, $window_start, 'backward', 20000);
+  /**
+   * Approximate nid range for an embedding first-revision time window.
+   *
+   * @param int $anchor_nid
+   *   Probe (or fallback max) nid.
+   * @param int $window_start
+   *   Inclusive lower bound (unix timestamp).
+   * @param int $window_end
+   *   Inclusive upper bound (unix timestamp).
+   * @param \Drupal\reliefweb_content_analyzer\ReportDuplicateMatch\Dto\DuplicateMatchSettings $settings
+   *   Settings (nid walk steps and lookforward days).
+   *
+   * @return array{0: int, 1: int}
+   *   [min_nid, max_nid].
+   */
+  protected function nidRangeFromEmbeddingWindow(
+    int $anchor_nid,
+    int $window_start,
+    int $window_end,
+    DuplicateMatchSettings $settings,
+  ): array {
+    $min_nid = $this->nidNearFirstRevisionTimestamp(
+      $anchor_nid,
+      $window_start,
+      'backward',
+      $settings->embeddingNidLookbackStep,
+    );
 
     // No lookforward: upper bound is the anchor itself.
     if ($settings->embeddingLookforwardDays === 0) {
       $max_nid = $anchor_nid;
     }
     else {
-      $max_nid = $this->nidNearFirstRevisionTimestamp($anchor_nid, $window_end, 'forward', 2000);
+      $max_nid = $this->nidNearFirstRevisionTimestamp(
+        $anchor_nid,
+        $window_end,
+        'forward',
+        $settings->embeddingNidLookforwardStep,
+      );
     }
 
     if ($min_nid > $max_nid) {
@@ -481,6 +553,84 @@ class ReportDuplicateMatcher implements ReportDuplicateMatcherInterface {
     }
 
     return [$min_nid, $max_nid];
+  }
+
+  /**
+   * Keep candidates whose first revision falls inside the day window.
+   *
+   * Drops hits with a missing first-revision timestamp (fail closed). The nid
+   * range used for VECTOR search is only a coarse pre-filter and can overshoot.
+   *
+   * @param list<object{nid: int, title: string, created: int, body_value: string, candidate_source: string}> $rows
+   *   Candidate rows.
+   * @param int $window_start
+   *   Inclusive lower bound (unix timestamp).
+   * @param int $window_end
+   *   Inclusive upper bound (unix timestamp).
+   *
+   * @return list<object{nid: int, title: string, created: int, body_value: string, candidate_source: string}>
+   *   Filtered rows.
+   */
+  protected function filterCandidatesByFirstRevisionWindow(
+    array $rows,
+    int $window_start,
+    int $window_end,
+  ): array {
+    if ($rows === []) {
+      return [];
+    }
+
+    $nids = [];
+    foreach ($rows as $row) {
+      $nids[] = (int) $row->nid;
+    }
+    $timestamps = $this->loadFirstRevisionTimestamps($nids);
+
+    $filtered = [];
+    foreach ($rows as $row) {
+      $nid = (int) $row->nid;
+      if (!isset($timestamps[$nid])) {
+        continue;
+      }
+      $timestamp = $timestamps[$nid];
+      if ($timestamp < $window_start || $timestamp > $window_end) {
+        continue;
+      }
+      $filtered[] = $row;
+    }
+    return $filtered;
+  }
+
+  /**
+   * Load first-revision timestamps for nids in one query.
+   *
+   * @param int[] $nids
+   *   Node IDs.
+   *
+   * @return array<int, int>
+   *   Unix timestamp keyed by nid (missing nids omitted).
+   */
+  protected function loadFirstRevisionTimestamps(array $nids): array {
+    $nids = array_values(array_unique(array_filter(array_map('intval', $nids))));
+    if ($nids === []) {
+      return [];
+    }
+
+    $subquery = $this->database->select('node_revision', 'nr2');
+    $subquery->addExpression('MIN(vid)', 'min_vid');
+    $subquery->fields('nr2', ['nid']);
+    $subquery->condition('nid', $nids, 'IN');
+    $subquery->groupBy('nr2.nid');
+
+    $query = $this->database->select('node_revision', 'nr');
+    $query->fields('nr', ['nid', 'revision_timestamp']);
+    $query->join($subquery, 'min_vids', 'nr.nid = min_vids.nid AND nr.vid = min_vids.min_vid');
+
+    $timestamps = [];
+    foreach ($query->execute() as $record) {
+      $timestamps[(int) $record->nid] = (int) $record->revision_timestamp;
+    }
+    return $timestamps;
   }
 
   /**

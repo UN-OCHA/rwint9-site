@@ -11,7 +11,7 @@ Matching uses two gates, after building a candidate set from the short
 created-date/source window **unioned** with embedding nearest neighbors:
 
 1. **Hard (Jaccard):** word 3-gram Jaccard at or above the configured threshold (default **0.92**), after a length-ratio gate.
-2. **Soft (TF-IDF filter + embedding confirm):** if Jaccard does not pass, pairwise TF-IDF cosine with language stopwords must be at or above the filter threshold (default **0.70**). Those candidates are confirmed with **local cosine** on stored vectors (or freshly generated via the Content embeddings **`/embed`** endpoint). Soft matches skip the length-ratio gate. Default embedding threshold **0.90** (also used as the NN retrieval floor). If the probe cannot be embedded and no stored probe vector exists, soft confirmation is skipped (fail closed); Jaccard still works.
+2. **Soft (TF-IDF filter + embedding confirm):** if Jaccard does not pass, pairwise TF-IDF cosine with language stopwords must be at or above the filter threshold (default **0.70**). Those candidates are confirmed with **local cosine** on stored vectors (or freshly generated via the Content embeddings **`/embed`** endpoint). Soft matches skip the length-ratio gate. Default embedding threshold **0.92** (also used as the NN retrieval floor). If the probe cannot be embedded and no stored probe vector exists, soft confirmation is skipped (fail closed); Jaccard still works.
 
 Any production match (hard or soft) applies the configured **target status** (default **`duplicate`**) via demotion-only restrictiveness comparison. Series matching and OCHA classification are skipped. The inspection form lists linked near-duplicates first, then the full scored candidate set with gate/method details.
 
@@ -31,14 +31,14 @@ drush rwca:embed --ids=4212273,4212205 --skip-existing=no
 drush rwca:embed --dry-run --limit=20
 ```
 
-Skip modes: `id` (default, skip existing PKs), `hash` (re-embed when text/field profile changed), `no` (always upsert). Entity delete removes the corresponding row. Storage exposes `loadVector` / `findNearest`. The duplicate matcher unions window/source candidates with `findNearest` (configurable top-K, default **50**; embedding lookback default **1095** days and lookforward **2** days, mapped to an nid range from the first revision; no source filter on NN hits). If storage is empty/unavailable, only the window/source set is used.
+Skip modes: `id` (default, skip existing PKs), `hash` (re-embed when text/field profile changed), `no` (always upsert). Entity delete removes the corresponding row. Storage exposes `loadVector` / `findNearest`. The duplicate matcher unions window/source candidates with `findNearest` (configurable top-K, default **50**; embedding lookback default **4** days and lookforward **1** day, mapped to a coarse nid range from the first revision using configurable nid walk steps, default **2000** / **200**; NN hits are then post-filtered to the first-revision day window; no source filter on NN hits). If storage is empty/unavailable, only the window/source set is used.
 
 On **editorial form create**, a Messenger warning lists links to the matched reports (and which gate scored them). Import / Post API saves get status + revision log only (no messenger).
 
 ### How matching works (body strategy)
 
 1. Gates: new report; non-empty body; not in skip statuses (default `refused`, `duplicate`). When source filtering is on (default), requires `field_source`. Optionally skip when the report has `field_file` (setting **Skip reports that have file attachments**, default off).
-2. Candidates: (a) window/source SQL set as before (defaults lookback **7** / lookforward **1**, limit **50**); (b) embedding top-K above the embedding similarity threshold within the embedding lookback/lookforward nid range, post-filtered for moderation / body length / attachments / exclude self. Union by nid (`window` / `embedding` / `both`).
+2. Candidates: (a) window/source SQL set as before (defaults lookback **4** / lookforward **1**, limit **50**); (b) embedding top-K above the embedding similarity threshold within the embedding lookback/lookforward nid pre-filter, post-filtered for first-revision day window / moderation / body length / attachments / exclude self. Union by nid (`window` / `embedding` / `both`).
 3. Resolve probe vector: `loadVector` when the report already has an embedding; otherwise `/embed` (and upsert when `nid` is known).
 4. Normalize bodies; score length ratio, Jaccard, TF-IDF. Hard match when length ratio and Jaccard pass, unless series-sibling discarded. Otherwise TF-IDF gate → local embedding cosine (load or `/embed`+upsert missing candidate vectors) → soft match unless series-sibling discarded.
 5. Exact normalized hash → Jaccard 1.0. Hard matches sort above soft matches.
