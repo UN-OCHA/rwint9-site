@@ -120,6 +120,52 @@ interface ModerationServiceInterface {
   public function isEditableStatus($status, ?AccountInterface $account = NULL);
 
   /**
+   * Get statuses that are terminal for external resubmission (e.g. Post API).
+   *
+   * Entities in these statuses must not be updated via partner submissions.
+   * Editorial users may still edit them when they have the matching
+   * permission from ::getTerminalStatusPermission().
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getTerminalStatuses(): array;
+
+  /**
+   * Get statuses that mean the content has been retired from public life.
+   *
+   * Retired statuses (for example expired or withdrawn) are unpublished and
+   * editable/reopenable, unlike terminal statuses. Used for 410 Gone handling
+   * and Post API hash no-op skips.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getRetiredStatuses(): array;
+
+  /**
+   * Check if a status is a retired status.
+   *
+   * @param string $status
+   *   Entity moderation status.
+   *
+   * @return bool
+   *   TRUE if the status is retired.
+   */
+  public function isRetiredStatus($status): bool;
+
+  /**
+   * Get the permission name to edit content in a terminal status.
+   *
+   * @param string $status
+   *   Moderation status machine name.
+   *
+   * @return string
+   *   Permission name (edit {status} content).
+   */
+  public static function getTerminalStatusPermission(string $status): string;
+
+  /**
    * Check if an entity with the given status is deletable for the account.
    *
    * @param string $status
@@ -131,6 +177,14 @@ interface ModerationServiceInterface {
    *   TRUE if the entity is deletable.
    */
   public function isDeletableStatus(string $status, ?AccountInterface $account = NULL): bool;
+
+  /**
+   * Get statuses that are considered published.
+   *
+   * @return list<string>
+   *   Status machine names.
+   */
+  public function getPublishedStatuses(): array;
 
   /**
    * Check if an entity with the given status is considered published.

@@ -40,6 +40,14 @@ interface EntityModeratedInterface {
   public function isPublishedModerationStatus(): bool;
 
   /**
+   * Check if the document is in a retired moderation status.
+   *
+   * @return bool
+   *   TRUE if the current status is among the bundle's retired statuses.
+   */
+  public function isRetiredModerationStatus(): bool;
+
+  /**
    * Get the list of allowed statuses for the entity.
    *
    * @return array
@@ -83,5 +91,16 @@ interface EntityModeratedInterface {
    *   Moderation log message type.
    */
   public function getOriginalRevisionLogMessageType();
+
+  /**
+   * Whether any revision was ever in a published-equivalent status.
+   *
+   * Checks revision history for statuses from the bundle moderation service's
+   * getPublishedStatuses() (for example published or to-review).
+   *
+   * @return bool
+   *   TRUE if a prior or current revision was published-equivalent.
+   */
+  public function wasEverPublished(): bool;
 
 }

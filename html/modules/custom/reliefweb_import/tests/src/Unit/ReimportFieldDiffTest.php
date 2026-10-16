@@ -67,7 +67,7 @@ class ReimportFieldDiffTest extends UnitTestCase {
     $data = [
       'title' => 'New title',
       'file' => [
-        ['checksum' => 'checksum-new'],
+        'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' => ['checksum' => 'checksum-new'],
       ],
     ];
     $filtered_data = [
@@ -101,7 +101,7 @@ class ReimportFieldDiffTest extends UnitTestCase {
     $data = [
       'title' => 'Same title',
       'file' => [
-        ['checksum' => 'checksum-same'],
+        'aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee' => ['checksum' => 'checksum-same'],
       ],
     ];
     $filtered_data = [

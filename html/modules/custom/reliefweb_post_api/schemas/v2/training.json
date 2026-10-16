@@ -268,7 +268,10 @@
                             "const": 4606
                         }
                     }
-                }
+                },
+                "required": [
+                    "format"
+                ]
             },
             "then": {
                 "description": "The country field is mandatory.",
