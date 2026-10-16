@@ -72,4 +72,34 @@ class TrainingModerationTest extends NodeModerationServiceTestBase {
     ]);
   }
 
+  /**
+   * Test Close Training maps to withdrawn except when already expired.
+   */
+  public function testCloseTrainingButtonStatusMapping(): void {
+    $entity = $this->createNode([
+      'type' => 'training',
+      'title' => 'Close training button',
+      'moderation_status' => 'published',
+      'field_registration_deadline' => [
+        'value' => time() + 86400,
+      ],
+    ]);
+    $advertiser = $this->createUser(values: [
+      'roles' => ['advertiser'],
+    ]);
+    $account_switcher = \Drupal::service('account_switcher');
+    $account_switcher->switchTo($advertiser);
+    try {
+      $buttons = $this->getModerationService()->getEntityFormSubmitButtons('published', $entity);
+      $this->assertArrayHasKey('withdrawn', $buttons);
+      $this->assertArrayNotHasKey('expired', $buttons);
+
+      $buttons = $this->getModerationService()->getEntityFormSubmitButtons('expired', $entity);
+      $this->assertArrayHasKey('expired', $buttons);
+    }
+    finally {
+      $account_switcher->switchBack();
+    }
+  }
+
 }

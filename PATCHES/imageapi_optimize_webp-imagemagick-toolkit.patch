@@ -1,5 +1,5 @@
 diff --git a/src/Plugin/ImageAPIOptimizeProcessor/WebP.php b/src/Plugin/ImageAPIOptimizeProcessor/WebP.php
-index 070c6fe..20d8bd5 100644
+index 3b5fe5f..cc36ed4 100644
 --- a/src/Plugin/ImageAPIOptimizeProcessor/WebP.php
 +++ b/src/Plugin/ImageAPIOptimizeProcessor/WebP.php
 @@ -6,6 +6,8 @@ use Drupal\Core\Form\FormStateInterface;
@@ -24,7 +24,7 @@ index 070c6fe..20d8bd5 100644
      if ($source_image) {
        $destination = $image_uri . '.webp';
 -      // @todo: Add try/catch.
--      imagewebp($source_image->getToolkit()->getResource(), $destination, $this->configuration['quality']);
+-      imagewebp($source_image->getToolkit()->getImage(), $destination, $this->configuration['quality']);
 -      // Fix issue where sometimes image fails to generate.
 -      if (filesize($destination) % 2 == 1) {
 -        file_put_contents($destination, "\0", FILE_APPEND);
@@ -34,7 +34,7 @@ index 070c6fe..20d8bd5 100644
 +          $source_image->save($destination);
 +        }
 +        elseif ($toolkit_id == 'gd') {
-+          imagewebp($source_image->getToolkit()->getResource(), $destination, $this->configuration['quality']);
++          imagewebp($source_image->getToolkit()->getImage(), $destination, $this->configuration['quality']);
 +        }
 +        else {
 +          return FALSE;

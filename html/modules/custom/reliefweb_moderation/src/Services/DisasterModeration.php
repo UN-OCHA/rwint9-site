@@ -250,8 +250,8 @@ class DisasterModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status) {
-    return in_array($status, ['alert', 'current', 'ongoing', 'past']);
+  public function getPublishedStatuses(): array {
+    return ['alert', 'current', 'ongoing', 'past'];
   }
 
   /**
