@@ -7,7 +7,7 @@ reliefweb_api.settings:
       label: 'ReliefWeb API URL'
     api_url_external:
       type: string
-      label: 'ReliefWeb API URL external, for autocomplete calls from the frontend (JS).'
+      label: 'ReliefWeb API URL external, for client-facing non-suggest API URLs (e.g. Search Converter).'
     post_api_schema_url:
       type: string
       label: 'Base URL of the POST API schemas.'

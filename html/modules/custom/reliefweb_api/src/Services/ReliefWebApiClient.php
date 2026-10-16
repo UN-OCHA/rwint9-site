@@ -358,10 +358,37 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
   /**
    * {@inheritdoc}
    */
-  public function buildApiUrl(
+  public function buildSuggestApiUrl(
     string $resource,
     array $parameters = [],
-    bool $suggest_url = TRUE,
+  ): string {
+    // Nginx injects appname, preset, profile, and slim.
+    unset($parameters['appname'], $parameters['preset'], $parameters['profile'], $parameters['slim']);
+    // Remove the search query. We will add it back with `%QUERY` as value
+    // later so that it can be replaced with the appropriate query string
+    // in the river filter UI for example.
+    unset($parameters['query']['value']);
+    if (isset($parameters['query']) && $parameters['query'] === []) {
+      unset($parameters['query']);
+    }
+    if (empty($parameters['sort'])) {
+      $parameters['sort'] = ['score:desc', 'name.collation_en:asc'];
+    }
+
+    $api_query = '?' . http_build_query($parameters);
+    // '%QUERY' is added after the http_build_query so that it's not encoded
+    // and appears as the query string value.
+    $api_query .= '&' . rawurlencode('query[value]') . '=%QUERY';
+
+    return '/api-suggest/' . $resource . $api_query;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function buildExternalApiUrl(
+    string $resource,
+    array $parameters = [],
   ): string {
     // We use a potentially different api url for the facets because it's
     // called from javascript. This is notably useful for dev/stage as the
@@ -374,32 +401,16 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
       $parameters['appname'] = $this->getAppName();
     }
     if (empty($parameters['preset'])) {
-      $parameters['preset'] = $suggest_url ? 'suggest' : 'latest';
+      $parameters['preset'] = 'latest';
     }
     if (empty($parameters['profile'])) {
-      $parameters['profile'] = $suggest_url ? 'suggest' : 'list';
-    }
-
-    // Remove the search query. We will add it back with `%QUERY` as value
-    // later so that is can be replaced with the appropriate query string
-    // in the river filter UI for example.
-    if ($suggest_url) {
-      unset($parameters['query']['value']);
+      $parameters['profile'] = 'list';
     }
 
     // No need to return extra data.
     $parameters['slim'] = 1;
 
-    // Generate the API URL parameters.
-    $api_query = '?' . http_build_query($parameters);
-
-    // '%QUERY' is added after the http_build_query so that it's not encoded
-    // and appears as the query string value.
-    if ($suggest_url) {
-      $api_query .= '&' . rawurlencode('query[value]') . '=%QUERY';
-    }
-
-    return $api_url . '/' . $resource . $api_query;
+    return $api_url . '/' . $resource . '?' . http_build_query($parameters);
   }
 
   /**

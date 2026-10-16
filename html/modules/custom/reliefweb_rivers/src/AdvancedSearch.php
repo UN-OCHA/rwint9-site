@@ -4,6 +4,7 @@ namespace Drupal\reliefweb_rivers;
 
 use Drupal\Core\Render\Markup;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\reliefweb_api\Services\ReliefWebApiClientInterface;
 use Drupal\reliefweb_utility\Helpers\LocalizationHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
@@ -55,6 +56,13 @@ class AdvancedSearch {
   protected $filterSample;
 
   /**
+   * The ReliefWeb API client.
+   *
+   * @var \Drupal\reliefweb_api\Services\ReliefWebApiClientInterface
+   */
+  protected ReliefWebApiClientInterface $apiClient;
+
+  /**
    * Advanced search operator mapping.
    *
    * @var array
@@ -91,13 +99,23 @@ class AdvancedSearch {
    * @param string $filter_sample
    *   Text indicating the type of filters available for the river. This is
    *   used on mobile to make the filters more compact.
+   * @param \Drupal\reliefweb_api\Services\ReliefWebApiClientInterface $api_client
+   *   The ReliefWeb API client.
    */
-  public function __construct($bundle, $river, Parameters $parameters, array $filters, $filter_sample) {
+  public function __construct(
+    $bundle,
+    $river,
+    Parameters $parameters,
+    array $filters,
+    $filter_sample,
+    ReliefWebApiClientInterface $api_client,
+  ) {
     $this->bundle = $bundle;
     $this->river = $river;
     $this->parameters = $parameters;
     $this->filters = $filters;
     $this->filterSample = $filter_sample;
+    $this->apiClient = $api_client;
 
     // Compute the advanced search data.
     $this->computeAdvancedSearchData();
@@ -182,7 +200,10 @@ class AdvancedSearch {
       switch ($widget['type']) {
         case 'autocomplete':
           $filter['widget']['label'] = $widget['label'];
-          $filter['widget']['url'] = $this->getApiSuggestUrl($widget['resource'], $widget['parameters'] ?? []);
+          $filter['widget']['url'] = $this->apiClient->buildSuggestApiUrl(
+            $widget['resource'],
+            $widget['parameters'] ?? [],
+          );
           break;
 
         case 'options':
@@ -1100,23 +1121,6 @@ class AdvancedSearch {
     }
 
     return $terms;
-  }
-
-  /**
-   * Get the API suggest URL for the resource.
-   *
-   * @param string $resource
-   *   API resource.
-   * @param array $parameters
-   *   Extra parameters to pass to the API.
-   *
-   * @return string
-   *   API suggest URL.
-   */
-  public static function getApiSuggestUrl($resource, array $parameters = []) {
-    $parameters['sort'] = ['score:desc', 'name.collation_en:asc'];
-    return \Drupal::service('reliefweb_api.client')
-      ->buildApiUrl($resource, $parameters);
   }
 
 }

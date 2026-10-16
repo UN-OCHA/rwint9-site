@@ -53,7 +53,7 @@ RUN mkdir -p /etc/nginx/custom && \
     cp lua-resty-jit-uuid/lib/resty/jit-uuid.lua /usr/share/lua/common/resty/ && \
     rm -rf /tmp/lua-resty-jit-uuid && \
     # Permit nginx access to the X_DOCSTORE_PROVIDER_UUID env variable.
-    sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;\n\n## Mapbox access token.\nenv MAPBOX_TOKEN;/' /etc/nginx/nginx.conf
+    sed -i 's/env NGINX_OVERRIDE_PROTOCOL;/env NGINX_OVERRIDE_PROTOCOL;\n\n## Allow retrieval of a particular file version from the docstore.\nenv X_DOCSTORE_PROVIDER_UUID;\n\n## Mapbox access token.\nenv MAPBOX_TOKEN;\n\n## ReliefWeb API suggest proxy.\nenv RELIEFWEB_API_URL;\nenv RELIEFWEB_API_APPNAME;/' /etc/nginx/nginx.conf
 
 COPY --from=builder /srv/www/assets /srv/www/assets/
 COPY --from=builder /srv/www/config /srv/www/config/

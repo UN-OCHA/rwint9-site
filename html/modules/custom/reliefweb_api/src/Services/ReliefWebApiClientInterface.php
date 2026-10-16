@@ -96,24 +96,37 @@ interface ReliefWebApiClientInterface {
   ): array;
 
   /**
-   * Build an API URL.
+   * Build a same-origin /api-suggest URL for river autocomplete.
    *
-   * This is mostly used to build a suggestion API URL.
+   * Nginx injects appname, preset, profile, and slim.
+   *
+   * @param string $resource
+   *   API resource.
+   * @param array $parameters
+   *   Extra parameters to pass through (e.g. filter, custom sort).
+   *
+   * @return string
+   *   Suggest proxy URL with query[value]=%QUERY.
+   */
+  public function buildSuggestApiUrl(
+    string $resource,
+    array $parameters = [],
+  ): string;
+
+  /**
+   * Build an external ReliefWeb API URL (e.g. for Search Converter).
    *
    * @param string $resource
    *   API resource.
    * @param array $parameters
    *   Query parameters.
-   * @param bool $suggest_url
-   *   TRUE to create a suggestion URL (for example to use in the UI filters).
    *
    * @return string
-   *   API URL.
+   *   External API URL.
    */
-  public function buildApiUrl(
+  public function buildExternalApiUrl(
     string $resource,
     array $parameters = [],
-    bool $suggest_url = TRUE,
   ): string;
 
   /**

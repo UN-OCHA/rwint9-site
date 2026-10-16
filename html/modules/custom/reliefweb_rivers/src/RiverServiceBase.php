@@ -462,7 +462,8 @@ abstract class RiverServiceBase implements RiverServiceInterface {
         $this->getRiver(),
         $this->getParameters(),
         $this->getFilters(),
-        $this->getFilterSample()
+        $this->getFilterSample(),
+        $this->apiClient,
       );
     }
     return $this->advancedSearch;
