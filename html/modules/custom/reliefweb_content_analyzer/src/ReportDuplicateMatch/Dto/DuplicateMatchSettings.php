@@ -43,6 +43,10 @@ final class DuplicateMatchSettings {
    *   Days before the first revision for embedding NN search.
    * @param int $embeddingLookforwardDays
    *   Days after the first revision for embedding NN search.
+   * @param int $embeddingNidLookbackStep
+   *   Nid jump size when approximating the lookback boundary.
+   * @param int $embeddingNidLookforwardStep
+   *   Nid jump size when approximating the lookforward boundary.
    * @param string $targetStatus
    *   Moderation status target when any near-duplicate match exists.
    * @param string[] $candidateModerationStatuses
@@ -66,6 +70,8 @@ final class DuplicateMatchSettings {
     public readonly int $embeddingTopk,
     public readonly int $embeddingLookbackDays,
     public readonly int $embeddingLookforwardDays,
+    public readonly int $embeddingNidLookbackStep,
+    public readonly int $embeddingNidLookforwardStep,
     public readonly string $targetStatus,
     public readonly array $candidateModerationStatuses,
     public readonly array $skipModerationStatuses,
@@ -99,6 +105,8 @@ final class DuplicateMatchSettings {
       embeddingTopk: max(1, (int) ($config['embedding_topk'] ?? $defaults['embedding_topk'])),
       embeddingLookbackDays: max(1, (int) ($config['embedding_lookback_days'] ?? $defaults['embedding_lookback_days'])),
       embeddingLookforwardDays: max(0, (int) ($config['embedding_lookforward_days'] ?? $defaults['embedding_lookforward_days'])),
+      embeddingNidLookbackStep: max(1, (int) ($config['embedding_nid_lookback_step'] ?? $defaults['embedding_nid_lookback_step'])),
+      embeddingNidLookforwardStep: max(1, (int) ($config['embedding_nid_lookforward_step'] ?? $defaults['embedding_nid_lookforward_step'])),
       targetStatus: self::nonEmptyString(
         $config['target_status'] ?? NULL,
         (string) $defaults['target_status'],
@@ -126,17 +134,19 @@ final class DuplicateMatchSettings {
       'automation_enabled_imported' => TRUE,
       'skip_with_attachments' => FALSE,
       'filter_by_source' => TRUE,
-      'lookback_days' => 7,
+      'lookback_days' => 4,
       'lookforward_days' => 1,
       'candidate_limit' => 50,
       'minimum_body_length' => 200,
       'minimum_length_ratio' => 0.85,
       'similarity_threshold' => 0.92,
       'tfidf_similarity_threshold' => 0.70,
-      'embedding_similarity_threshold' => 0.90,
+      'embedding_similarity_threshold' => 0.92,
       'embedding_topk' => 50,
-      'embedding_lookback_days' => 1095,
-      'embedding_lookforward_days' => 2,
+      'embedding_lookback_days' => 4,
+      'embedding_lookforward_days' => 1,
+      'embedding_nid_lookback_step' => 2000,
+      'embedding_nid_lookforward_step' => 200,
       'target_status' => 'duplicate',
       'candidate_moderation_statuses' => [
         'draft',

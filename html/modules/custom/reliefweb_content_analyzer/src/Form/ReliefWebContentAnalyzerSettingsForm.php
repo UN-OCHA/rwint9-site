@@ -218,7 +218,7 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $form['report_duplicate_matching']['embedding_lookback_days'] = [
       '#type' => 'number',
       '#title' => $this->t('Embedding lookback days'),
-      '#description' => $this->t('Days before the report first revision for embedding nearest-neighbor search (no source filter). Converted to an nid range. Default 1095 (~3 years).'),
+      '#description' => $this->t('Days before the report first revision for embedding nearest-neighbor search (no source filter). Converted to an nid range, then post-filtered by the day window. Default 4.'),
       '#default_value' => $report_duplicate_matching['embedding_lookback_days'],
       '#min' => 1,
       '#required' => TRUE,
@@ -227,9 +227,27 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
     $form['report_duplicate_matching']['embedding_lookforward_days'] = [
       '#type' => 'number',
       '#title' => $this->t('Embedding lookforward days'),
-      '#description' => $this->t('Days after the report first revision for embedding nearest-neighbor search. Converted to an nid range. Default 2.'),
-      '#default_value' => $report_duplicate_matching['embedding_lookforward_days'] ?? 2,
+      '#description' => $this->t('Days after the report first revision for embedding nearest-neighbor search. Converted to an nid range, then post-filtered by the day window. Default 1.'),
+      '#default_value' => $report_duplicate_matching['embedding_lookforward_days'] ?? 1,
       '#min' => 0,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_nid_lookback_step'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding nid lookback step'),
+      '#description' => $this->t('Nid jump size when approximating the lookback boundary for the VECTOR pre-filter. Larger steps scan fewer first-revision timestamps but widen the coarse nid range; hits are still post-filtered by the embedding day window. Default 2000.'),
+      '#default_value' => $report_duplicate_matching['embedding_nid_lookback_step'] ?? 2000,
+      '#min' => 1,
+      '#required' => TRUE,
+    ];
+
+    $form['report_duplicate_matching']['embedding_nid_lookforward_step'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Embedding nid lookforward step'),
+      '#description' => $this->t('Nid jump size when approximating the lookforward boundary for the VECTOR pre-filter. Hits are still post-filtered by the embedding day window. Default 200.'),
+      '#default_value' => $report_duplicate_matching['embedding_nid_lookforward_step'] ?? 200,
+      '#min' => 1,
       '#required' => TRUE,
     ];
 
@@ -1280,6 +1298,26 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
         $this->t('Embedding lookforward days must be at least 0.'),
       );
     }
+    $embedding_nid_lookback_step = (int) $form_state->getValue([
+      'report_duplicate_matching',
+      'embedding_nid_lookback_step',
+    ]);
+    if ($embedding_nid_lookback_step < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_nid_lookback_step',
+        $this->t('Embedding nid lookback step must be at least 1.'),
+      );
+    }
+    $embedding_nid_lookforward_step = (int) $form_state->getValue([
+      'report_duplicate_matching',
+      'embedding_nid_lookforward_step',
+    ]);
+    if ($embedding_nid_lookforward_step < 1) {
+      $form_state->setErrorByName(
+        'report_duplicate_matching][embedding_nid_lookforward_step',
+        $this->t('Embedding nid lookforward step must be at least 1.'),
+      );
+    }
 
     $minimum_body_length = (int) $form_state->getValue(['report_duplicate_matching', 'minimum_body_length']);
     if ($minimum_body_length < 1) {
@@ -1381,6 +1419,8 @@ class ReliefWebContentAnalyzerSettingsForm extends ConfigFormBase {
       'embedding_topk' => (int) ($report_values['embedding_topk'] ?? $defaults['embedding_topk']),
       'embedding_lookback_days' => (int) ($report_values['embedding_lookback_days'] ?? $defaults['embedding_lookback_days']),
       'embedding_lookforward_days' => (int) ($report_values['embedding_lookforward_days'] ?? $defaults['embedding_lookforward_days']),
+      'embedding_nid_lookback_step' => (int) ($report_values['embedding_nid_lookback_step'] ?? $defaults['embedding_nid_lookback_step']),
+      'embedding_nid_lookforward_step' => (int) ($report_values['embedding_nid_lookforward_step'] ?? $defaults['embedding_nid_lookforward_step']),
       'target_status' => (string) ($report_values['target_status'] ?? $defaults['target_status']),
       'candidate_moderation_statuses' => $this->linesToSequence((string) ($report_values['candidate_moderation_statuses'] ?? '')),
       'skip_moderation_statuses' => $this->linesToSequence((string) ($report_values['skip_moderation_statuses'] ?? '')),

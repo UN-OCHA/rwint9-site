@@ -26,17 +26,19 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
     $this->assertTrue($settings->automationEnabledImported);
     $this->assertFalse($settings->skipWithAttachments);
     $this->assertTrue($settings->filterBySource);
-    $this->assertSame(7, $settings->lookbackDays);
+    $this->assertSame(4, $settings->lookbackDays);
     $this->assertSame(1, $settings->lookforwardDays);
     $this->assertSame(50, $settings->candidateLimit);
     $this->assertSame(200, $settings->minimumBodyLength);
     $this->assertSame(0.85, $settings->minimumLengthRatio);
     $this->assertSame(0.92, $settings->similarityThreshold);
     $this->assertSame(0.70, $settings->tfidfSimilarityThreshold);
-    $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
+    $this->assertSame(0.92, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
-    $this->assertSame(1095, $settings->embeddingLookbackDays);
-    $this->assertSame(2, $settings->embeddingLookforwardDays);
+    $this->assertSame(4, $settings->embeddingLookbackDays);
+    $this->assertSame(1, $settings->embeddingLookforwardDays);
+    $this->assertSame(2000, $settings->embeddingNidLookbackStep);
+    $this->assertSame(200, $settings->embeddingNidLookforwardStep);
     $this->assertSame('duplicate', $settings->targetStatus);
     $this->assertSame([
       'draft',
@@ -58,15 +60,17 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
    */
   public function testFromNullConfig(): void {
     $settings = DuplicateMatchSettings::fromConfigArray(NULL);
-    $this->assertSame(7, $settings->lookbackDays);
+    $this->assertSame(4, $settings->lookbackDays);
     $this->assertSame(1, $settings->lookforwardDays);
     $this->assertFalse($settings->skipWithAttachments);
     $this->assertTrue($settings->filterBySource);
     $this->assertSame(0.70, $settings->tfidfSimilarityThreshold);
-    $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
+    $this->assertSame(0.92, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
-    $this->assertSame(1095, $settings->embeddingLookbackDays);
-    $this->assertSame(2, $settings->embeddingLookforwardDays);
+    $this->assertSame(4, $settings->embeddingLookbackDays);
+    $this->assertSame(1, $settings->embeddingLookforwardDays);
+    $this->assertSame(2000, $settings->embeddingNidLookbackStep);
+    $this->assertSame(200, $settings->embeddingNidLookforwardStep);
     $this->assertSame('duplicate', $settings->targetStatus);
   }
 
@@ -84,10 +88,24 @@ class DuplicateMatchSettingsTest extends UnitTestCase {
     $this->assertSame(0.95, $settings->similarityThreshold);
     $this->assertTrue($settings->filterBySource);
     $this->assertSame(0.70, $settings->tfidfSimilarityThreshold);
-    $this->assertSame(0.90, $settings->embeddingSimilarityThreshold);
+    $this->assertSame(0.92, $settings->embeddingSimilarityThreshold);
     $this->assertSame(50, $settings->embeddingTopk);
     $this->assertSame('duplicate', $settings->targetStatus);
-    $this->assertSame(2, $settings->embeddingLookforwardDays);
+    $this->assertSame(1, $settings->embeddingLookforwardDays);
+    $this->assertSame(2000, $settings->embeddingNidLookbackStep);
+    $this->assertSame(200, $settings->embeddingNidLookforwardStep);
+  }
+
+  /**
+   * Explicit nid walk steps are honored.
+   */
+  public function testEmbeddingNidStepsCanBeOverridden(): void {
+    $settings = DuplicateMatchSettings::fromConfigArray([
+      'embedding_nid_lookback_step' => 500,
+      'embedding_nid_lookforward_step' => 100,
+    ]);
+    $this->assertSame(500, $settings->embeddingNidLookbackStep);
+    $this->assertSame(100, $settings->embeddingNidLookforwardStep);
   }
 
   /**

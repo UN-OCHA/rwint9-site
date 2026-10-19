@@ -439,3 +439,24 @@ function reliefweb_content_analyzer_update_10011(): void {
     $config->save();
   }
 }
+
+/**
+ * Add embedding nid walk steps for nearest-neighbor pre-filter range.
+ */
+function reliefweb_content_analyzer_update_10012(): void {
+  $config = \Drupal::configFactory()->getEditable('reliefweb_content_analyzer.settings');
+  $current = $config->get('report_duplicate_matching') ?? [];
+  if (!is_array($current)) {
+    $current = [];
+  }
+
+  $defaults = DuplicateMatchSettings::defaultConfig();
+  foreach (['embedding_nid_lookback_step', 'embedding_nid_lookforward_step'] as $key) {
+    if (!array_key_exists($key, $current)) {
+      $current[$key] = $defaults[$key];
+    }
+  }
+
+  $config->set('report_duplicate_matching', $current);
+  $config->save();
+}

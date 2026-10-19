@@ -342,6 +342,12 @@ reliefweb_content_analyzer.settings:
         embedding_lookforward_days:
           type: integer
           label: 'Days after the first revision for embedding nearest-neighbor search'
+        embedding_nid_lookback_step:
+          type: integer
+          label: 'Nid jump size when approximating the embedding lookback boundary'
+        embedding_nid_lookforward_step:
+          type: integer
+          label: 'Nid jump size when approximating the embedding lookforward boundary'
         target_status:
           type: string
           label: 'Moderation status target when any near-duplicate match exists'
