@@ -29,6 +29,49 @@ services:
   reliefweb_moderation.training.moderation:
     class: Drupal\reliefweb_moderation\Services\TrainingModeration
     arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights']
+  # Shared draft/published moderation for simple taxonomy vocabularies.
+  reliefweb_moderation.career_category.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'career_category', 'Career categories']
+  reliefweb_moderation.content_format.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'content_format', 'Content formats']
+  reliefweb_moderation.disaster_type.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'disaster_type', 'Disaster types']
+  reliefweb_moderation.feature.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'feature', 'Features']
+  reliefweb_moderation.job_experience.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'job_experience', 'Job experience']
+  reliefweb_moderation.job_type.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'job_type', 'Job types']
+  reliefweb_moderation.language.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'language', 'Languages']
+  reliefweb_moderation.ocha_product.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'ocha_product', 'OCHA products']
+  reliefweb_moderation.organization_type.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'organization_type', 'Organization types']
+  reliefweb_moderation.tag.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'tag', 'Tags']
+  reliefweb_moderation.theme.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'theme', 'Themes']
+  reliefweb_moderation.training_format.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'training_format', 'Training formats']
+  reliefweb_moderation.training_type.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'training_type', 'Training types']
+  reliefweb_moderation.vulnerable_group.moderation:
+    class: Drupal\reliefweb_moderation\Services\TaxonomyTermModeration
+    arguments: ['@current_user', '@database', '@date.formatter', '@entity_field.manager', '@entity_type.manager', '@pager.manager', '@pager.parameters', '@request_stack', '@string_translation', '@reliefweb_moderation.user_posting_rights', 'vulnerable_group', 'Vulnerable groups']
   reliefweb_moderation.service.param_converter:
     class: Drupal\reliefweb_moderation\ParamConverter\ModerationServiceConverter
     tags:
