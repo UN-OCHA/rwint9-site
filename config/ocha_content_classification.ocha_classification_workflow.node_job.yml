@@ -30,7 +30,7 @@ fields:
       hide: true
       force: false
 classifier:
-  id: inference
+  id: structured_inference
   settings:
     analyzable:
       fields:
@@ -43,46 +43,191 @@ classifier:
           processor: strip_and_trim
           file: false
     classifiable:
+      vocabularies:
+        career_category:
+          description: ''
+          value: custom
+          term_title_source: none
+          term_description_source: none
+          terms:
+            6864:
+              include: '1'
+              value: Administration/Finance
+              title: ''
+              description: "Manages the organization's own internal financial and administrative operations: budgeting, accounting, auditing, treasury, financial and fixed-asset control, payroll, and general office administration. The work serves the organization's own operational functioning."
+            52713:
+              include: '1'
+              value: Legal/Compliance
+              title: ''
+              description: "Manages the organization's own legal risk and regulatory conformity: contract review and negotiation, corporate and regulatory advisory, fraud and ethics investigations, data protection, and internal compliance systems. The work ensures that the organization's own activities and operations meet applicable legal and regulatory requirements."
+            52714:
+              include: '1'
+              value: Medical/Clinical
+              title: ''
+              description: 'Delivers clinical and public health services in health facilities or to affected populations: emergency medicine, nursing, surgery, midwifery, mental health care, community health outreach, and facility pharmacy (medicines storage, dispensing, and pharmaceutical quality assurance). The primary function is the provision of care or pharmaceutical practice, not the management of health programmes or general supply-chain logistics.'
+            6865:
+              include: '1'
+              value: Advocacy/Communications
+              title: ''
+              description: "Builds and delivers the organization's external voice and influence: public and media communications through campaigns, press, digital channels, audio-visual content, and translation services; and advocacy and policy development on behalf of the organization."
+            20966:
+              include: '1'
+              value: 'Donor Relations/Grants Management'
+              title: ''
+              description: "Manages the organization's relationships with external funders and the full grant cycle: funding opportunity identification, proposal and concept note writing, donor partnership cultivation, grant compliance, narrative and financial reporting to donors, and sub-grant management to implementing partners. The work centres on securing and stewarding relationships with external funders."
+            6863:
+              include: '1'
+              value: 'Human Resources'
+              title: ''
+              description: "Manages the organization's own staff across the full employment lifecycle: recruitment and onboarding, contracts, performance management, staff development, workforce planning, duty of care, staff welfare, and safeguarding and PSEA policy implementation. The primary client is the organization's own workforce."
+            6866:
+              include: '1'
+              value: 'Information and Communications Technology'
+              title: ''
+              description: "Builds, maintains, and operates the organization's technology infrastructure: networks, servers, hardware, telecommunications systems, cybersecurity, systems administration, and internal software or application development. The outputs are tools and systems used internally by the organization's own staff."
+            20971:
+              include: '1'
+              value: 'Information Management'
+              title: ''
+              description: 'Produces inter-agency knowledge about humanitarian crises and affected populations: conducting needs assessments, building shared databases and data standards, and delivering dashboards, maps, and data products that give the humanitarian community a common understanding of who needs what, where.'
+            36601:
+              include: '1'
+              value: Logistics/Procurement
+              title: ''
+              description: 'Manages the physical movement and sourcing of goods and assets: procurement and tendering, warehousing, transportation, fleet management, inventory control, and physical asset management. The work ensures that supplies and equipment reach where they are needed.'
+            6868:
+              include: '1'
+              value: 'Monitoring and Evaluation'
+              title: ''
+              description: "Assesses whether the organization's humanitarian programmes are achieving their intended results and identifies how they can improve: designing results frameworks, tracking indicators, conducting surveys and evaluations, and reporting on programme quality and accountability to affected populations. The primary output is evidence about the effectiveness of the organization's own interventions."
+            6867:
+              include: '1'
+              value: 'Program/Project Management'
+              title: ''
+              description: 'Oversees humanitarian programmes across the full project cycle: programme design, workplanning, implementation oversight, partner coordination, programme reporting, and quality assurance. The work is defined by programme delivery itself, spanning all stages from design through to completion.'
+            52579:
+              include: '1'
+              value: Other
+              title: ''
+              description: 'No other category captures what the person is fundamentally hired to do.'
+        theme:
+          description: ''
+          value: custom
+          term_title_source: none
+          term_description_source: none
+          terms:
+            4587:
+              include: '1'
+              value: Agriculture
+              title: ''
+              description: 'Supporting food production systems and rural economies in crisis settings: farming, fisheries, animal husbandry, veterinary services, and distribution of agricultural inputs such as seeds and tools. The focus is on how food is grown, raised, and produced, and on the capacity of farming communities to sustain themselves.'
+            49458:
+              include: '1'
+              value: 'Camp Coordination and Camp Management'
+              title: ''
+              description: 'Managing communal displacement settings - whether formal refugee camps or informal sites - to ensure equitable access to services, protection, community engagement, and durable solutions for residents.'
+            4588:
+              include: '1'
+              value: 'Climate Change and Environment'
+              title: ''
+              description: 'Long-term climate and environmental drivers of humanitarian vulnerability: the humanitarian impacts of climate change, environmental degradation, climate-induced displacement and migration, and the integration of climate risk into humanitarian programming.'
+            4589:
+              value: Contributions
+              title: ''
+              description: 'Financial and in-kind humanitarian aid as reported by donors, recipients, pooled funds, or media; covers tracking and reporting of aid flows distinct from operational grant management or humanitarian funding policy.'
+              include: 0
+            4590:
+              include: '1'
+              value: Coordination
+              title: ''
+              description: 'Collective humanitarian action across multiple organizations: cluster and sector leadership, inter-agency coordination platforms, civil-military liaison, and partnerships between humanitarian and non-humanitarian actors. The focus is on aligning and enabling multiple independent actors toward a common response.'
+            4591:
+              include: '1'
+              value: 'Disaster Management'
+              title: ''
+              description: 'Event-level preparedness and risk reduction for natural hazards: early warning systems, emergency preparedness planning, disaster risk reduction (DRR), prevention, and mitigation. The work focuses on a specific hazard event or category of hazard, not on long-term environmental trends.'
+            4592:
+              include: '1'
+              value: Education
+              title: ''
+              description: 'Access to and continuity of learning in crisis settings: temporary learning spaces, school rehabilitation, school supplies, teacher training and support, child-friendly spaces, and restoration of educational systems after disaster or conflict.'
+            4593:
+              include: '1'
+              value: 'Food and Nutrition'
+              title: ''
+              description: 'Ensuring that crisis-affected populations have access to sufficient, safe food and are protected from malnutrition: food assistance and distribution, market-based food programming, nutrition screening and surveillance, and treatment and prevention of malnutrition. The focus is on what people consume and their nutritional outcomes.'
+            4594:
+              include: '1'
+              value: Gender
+              title: ''
+              description: "Gender equality and the differentiated impact of crises on people of different genders: gender analysis, mainstreaming gender considerations across humanitarian programmes, and women's participation and empowerment."
+            4595:
+              include: '1'
+              value: Health
+              title: ''
+              description: 'Delivery or support of health services in humanitarian settings: emergency medical care, disease surveillance and outbreak response, reproductive health, medical supplies and equipment, and mental health and psychosocial support (MHPSS).'
+            4596:
+              include: '1'
+              value: HIV/Aids
+              title: ''
+              description: 'HIV/AIDS prevention, treatment, and care in humanitarian and emergency contexts: service delivery, harm reduction, and the specific vulnerabilities created by displacement or crisis for people living with or at risk of HIV.'
+            4597:
+              value: 'Humanitarian Financing'
+              title: ''
+              description: 'Humanitarian funding policy, pooled funds (CERF, CHF, ERF), good humanitarian donorship, financial accountability, and transparency; distinct from operational grant tracking or in-kind aid management.'
+              include: 0
+            4598:
+              value: 'Logistics and Telecommunications'
+              title: ''
+              description: 'Supply chain management, warehousing, transportation of aid materials, and provision of ICT and telecommunications services for humanitarian operations.'
+              include: 0
+            12033:
+              include: '1'
+              value: 'Mine Action'
+              title: ''
+              description: 'Addressing the humanitarian impact of landmines and explosive remnants of war: survey and clearance operations, explosive ordnance disposal (EOD), mine risk education, victim assistance, and advocacy for mine-free environments.'
+            4599:
+              include: '1'
+              value: 'Peacekeeping and Peacebuilding'
+              title: ''
+              description: 'Addressing the root causes and consequences of violent conflict: conflict resolution, ceasefire and peace negotiations, disarmament, demobilisation and reintegration (DDR), multilateral peacekeeping missions, rule of law, transitional justice, and electoral support.'
+            4600:
+              include: '1'
+              value: 'Protection and Human Rights'
+              title: ''
+              description: 'The legal rights, physical safety, and dignity of crisis-affected populations: protecting civilians, refugees, and displaced persons from harm and rights violations; prevention and response to gender-based violence; humanitarian access; child protection; and legal aid and case management for people at risk. The focus is on a rights-based and legal protection framework applied to individuals and groups in crisis.'
+            4601:
+              include: '1'
+              value: 'Recovery and Reconstruction'
+              title: ''
+              description: 'Rebuilding what was lost or damaged by disaster or conflict: restoring public infrastructure, housing, livelihoods restoration, basic services, and economic activity in post-crisis settings, including early recovery programming that bridges relief and longer-term rehabilitation.'
+            4602:
+              include: '1'
+              value: 'Safety and Security'
+              title: ''
+              description: 'The safety and security of humanitarian aid workers in field operations: organizational security risk management, safety protocols, incident response, and security analysis for staff operating in high-risk environments.'
+            4603:
+              include: '1'
+              value: 'Shelter and Non-Food Items'
+              title: ''
+              description: 'Emergency and transitional shelter and household essentials: emergency shelter kits, transitional shelter construction, distribution of non-food item (NFI) household kits, and core relief items in the acute phase of a crisis.'
+            4604:
+              include: '1'
+              value: 'Water Sanitation Hygiene'
+              title: ''
+              description: 'Safe water, sanitation, and hygiene in crisis settings: emergency water supply, water treatment and distribution systems, latrine construction and waste management, WASH engineering and infrastructure, and hygiene promotion campaigns.'
+            empty:
+              include: '1'
+              value: 'No Applicable Theme'
+              title: ''
+              description: 'The job has no meaningful humanitarian sector focus, or the sector it focuses on is not represented among the available themes.'
       fields:
         field_career_categories:
           placeholder: career_category
-          property: custom
-          terms:
-            6864: 'Administration, Financial Management, and Auditing'
-            6865: 'Advocacy, Communications, Public Relations, Social Media, and Translation Services'
-            20966: 'Donor Relations, Fundraising, and Grants Management'
-            6863: 'Human Resources Management and Capacity Building'
-            6866: 'Information and Communications Technology (ICT) Infrastructure and Systems Management'
-            20971: 'Information Management, Data Analysis, and Mapping/Visualization'
-            36601: 'Logistics, Procurement, Supply Chain, Asset Maintenance, and Operational Security'
-            6868: 'Project Monitoring, Evaluation, Best Practices, and Lessons Learned'
-            6867: 'Program/Project Management: Roles whose primary responsibility is managing or coordinating humanitarian programs or projects, not delivering technical services directly.'
-            52579: 'Other: Use only when no other listed category is a reasonable match.'
+          description: 'Select the category that most precisely matches the core organizational function of the role — what the person is fundamentally hired to do, not the individual tasks they perform day to day. When multiple categories feel like a partial match, choose the most specific and narrow fit over a broader one. If no category fits well, Other is a valid and correct choice — do not force a poor fit.'
         field_theme:
-          placeholder: focus_area
-          property: custom
-          terms:
-            4587: 'Agriculture: Fisheries, animal husbandry, food security, agricultural training.'
-            49458: 'Camp Coordination/Management: Displaced persons services, life quality, post-displacement preparation.'
-            4588: 'Climate Change and Environment: Climate-induced humanitarian impacts, vulnerability, displacement.'
-            4589: 'Contributions: Financial/in-kind aid reporting and announcements.'
-            4590: 'Coordination: Inter-cluster, civil-military, and private sector partnerships.'
-            4591: 'Disaster Management: Early warning, preparedness, prevention, risk reduction, mitigation.'
-            4592: 'Education: Temporary learning spaces, school supplies, teacher support, infrastructure rehabilitation.'
-            4593: 'Food and Nutrition: Food security, aid distribution, feeding programs.'
-            4594: 'Gender: Gender-specific emergency issues, women as change agents.'
-            4595: 'Health: Emergency medical services, disease control, reproductive health, psychosocial support.'
-            4596: 'HIV/AIDS: Emergency services, high prevalence consequences.'
-            4597: 'Humanitarian Financing: Donorship, funding mechanisms, accountability, partnerships.'
-            4598: 'Logistics and Telecommunications: Aid supply chain, transportation, ICT services.'
-            12033: 'Mine Action: Clearance of landmines/UXOs/ERWs; education on risks; victim assistance; advocacy for mine action policies.'
-            4599: 'Peacekeeping/Peacebuilding: Conflict resolution, social/political restoration, disarmament, electoral support.'
-            4600: 'Protection and Human Rights: Rights violations, gender-based violence, humanitarian law, access.'
-            4601: 'Recovery and Reconstruction: Asset/infrastructure restoration, early recovery, relief-to-development transition.'
-            4602: 'Safety and Security: Aid worker safety policies, field security measures.'
-            4603: 'Shelter and Non-Food Items: Shelter materials, household items, camp management.'
-            4604: 'Water Sanitation Hygiene: Emergency water provision, sanitation, hygiene promotion.'
-            empty: 'No Relevant Focus Areas Found: Use this code if the role does not operate within a specific thematic sector.'
+          placeholder: theme
+          description: "Select the theme that describes the humanitarian sector this role is exclusively and primarily focused on — not the organisation's broader mission, not sectors that appear only in passing, and not the context the role operates in. If the role spans multiple sectors equally, or if no theme precisely describes what this role is primarily hired to deliver, No Applicable Theme is a valid and correct choice."
     fillable:
       fields: {  }
     inference:
@@ -91,5 +236,5 @@ classifier:
       top_p: 0.2
       max_tokens: 512
       thinking_mode: none
-      system_prompt: ''
-      prompt: "You are tasked with analyzing humanitarian job offers and classifying them according to specific career categories and focus areas. Your analysis will be conducted in three steps and should be presented in a clear XML format.\r\n\r\nPlease analyze the following job offer:\r\n\r\n<job>\r\n<title>{job_title}</title>\r\n<description>{job_description}</description>\r\n</job>\r\n\r\nBefore you begin, understand these key distinctions:\r\n\r\nCareer Categories in Humanitarian Work represent functional roles and professional specializations within the humanitarian sector. These categories describe the types of jobs and skill sets needed to perform humanitarian work, regardless of the specific intervention area.\r\n\r\nHumanitarian Focus Areas describe the thematic sectors or domains in which humanitarian interventions take place. These areas represent the specific fields of action or issues addressed by humanitarian work, distinct from the job functions themselves.\r\n\r\nFor your analysis, follow these steps:\r\n\r\n1. Provide a concise summary capturing the essence and important context of the job offer.\r\n2. Select the SINGLE best matching category from the Career Categories list ({career_category:range}). Use the corresponding item number (e.g., A1, A2).\r\n3. Select the SINGLE most relevant focus area from the Humanitarian Focus Areas list ({focus_area:range}) ONLY if it is EXPLICITLY central to the job's main responsibilities. The focus area must be directly stated or strongly evident in the job description. If no focus area clearly stands out as core to the role, choose {focus_area:empty} rather than forcing a weak match.\r\n\r\n\r\nCareer Categories:\r\n{career_category:list}\r\n\r\nHumanitarian Focus Areas:\r\n{focus_area:list}\r\n\r\nPresent your analysis STRICTLY in this XML format:\r\n\r\n<job_analysis>\r\n  <summary>Concise summary of the job offer</summary>\r\n  <career_category>Single item number ({career_category:range})</career_category>\r\n  <focus_area>Single item number ({focus_area:range})</focus_area>\r\n</job_analysis>\r\n\r\nIMPORTANT:\r\n1. Use ONLY the XML structure above.\r\n2. Ensure valid XML with proper opening and closing tags.\r\n3. Do not include ANY text or explanations outside of the XML tags.\r\n4. Your entire response must be valid XML."
+      system_prompt: 'Classify the humanitarian job offer using the `structured_output` tool.'
+      prompt: "# {job_title}\r\n\r\n{job_description}"
