@@ -1,5 +1,7 @@
 # OCHA Common Design sub-theme for Drupal 9+
 
+> Archival upstream starterkit documentation. ReliefWeb no longer uses a local Node/npm or Sass build for this theme; see [README.md](README.md).
+
 A starterkit to use the [OCHA Common Design](https://github.com/UN-OCHA/common_design) base-theme in a way that allows for "upstream" changes such as security updates, new features, and so forth. The sub-theme is ready to help you implement the following types of customizations:
 
 - Customise your site colors

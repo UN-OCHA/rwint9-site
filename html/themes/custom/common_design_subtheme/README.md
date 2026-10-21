@@ -11,6 +11,12 @@ The customizations for the ReliefWeb site require the installation of the [compo
 
 The ReliefWeb site uses the common design subtheme as theme for many of the administrative pages, including the entity forms, moderation backend, people page etc.
 
+## Assets and linting
+
+CSS and JavaScript are edited directly under `css/`, `components/`, and `js/` — there is no local Node/npm build step. Committed files are what Drupal serves at runtime.
+
+ESLint and Stylelint config files in this theme (`.eslintrc`, `eslint.config.js`, `.stylelintrc.json`, `.stylelintrc.core.json`, `.stylelintignore`) are kept for external linters.
+
 ## Customizations
 
 The list below contains additions to the default common design subtheme.
@@ -59,41 +65,36 @@ Some hook implementations extend the logic for the display of the page title on 
 
 A `hook_page_attachments_alter` implementation is used to add `preconnect` and `preload` links in the `<head>` for some blocking resources like the google fonts, logos and icon sprite.
 
-## Original Common Design sub theme README
-
-## OCHA Common Design sub theme for Drupal 8
-
-A sub theme, extending [common_design](https://github.com/UN-OCHA/common_design) base theme.
-
-This can be used as a starting point for implementations. Add components, override and extend base theme as needed. Refer to [Drupal 8 Theming documentation](https://www.drupal.org/docs/8/theming) for more.
-
-Copy this directory to `/themes/custom/` and optionally rename the folder and associated theme files from
-`common_design_subtheme` to your theme name. Then rename the `common_design_subtheme.info.yml.example` to `common_design_subtheme.info.yml`.
+## Customising the theme
 
 ### Path of the libraries
+
 If the subtheme name changes, the path of the global style sheet in `common_design_subtheme.info.yml` needs to reflect the new sub theme name.
+
 ```
 libraries:
 - common_design_subtheme/global-styling
 ```
 
 ### Customise the logo
-- Set the logo `logo: 'img/logos/logo.svg'` in the `common_design_subtheme.info.yml` file, and in the `sass/cd-header/_cd-logo.scss` partial override file.
-- Adjust the grid column width in `sass/cd-header/_cd-header.scss` partial override file to accommodate the logo.
+
+- Set the logo `logo: 'img/logos/logo.svg'` in the `common_design_subtheme.info.yml` file.
+- Adjust logo-related styles in the relevant CSS under `components/cd/cd-header/` if needed.
 
 ### Customise the favicon and homescreen icons
-Replace the favicon in the theme's root, and the homescreen icons in `img/` with branded versions
+
+Replace the favicon in the theme's root, and the homescreen icons in `img/` with branded versions.
 
 ### Customise colours
-- Change colour-related variable names and values in `sass/cd/_cd_variables.scss` and replace in all references to in partial overrides in `common_design_subtheme/sass/cd/`
+
+Edit colour-related CSS variables and rules in `css/` and the relevant component CSS files under `components/`.
 
 ### Other customisations
-Override sass partials and extend twig templates from the base theme as needed, copying them into the sub theme and linking them using `@import` for sass and `extend` or `embed` for twig templates.
+
+Extend Twig templates from the base theme as needed, copying them into the sub theme and using `extend` or `embed`.
 
 Add new components by defining new libraries in `common_design_subtheme.libraries.yml` and attaching them to relevant templates. Or use existing components from `common_design.libraries.yml` base theme by attaching the libraries to twig template overrides in the sub theme.
 
-Override theme preprocess functions by copying from `common_design.theme` and editing as needed. For example, if new icons are added, a new icon sprite will need to be generated and the `common_design_preprocess_html` hook used to attach the icon sprite to the page will need a new path to reflect the sub theme's icon sprite location.
+Override theme preprocess functions by copying from `common_design.theme` and editing as needed. For example, if new RW icons are added, regenerate the sprite with the [rw-icons](components/rw-icons) PHP generator.
 
-Refer to [common_design README](https://github.com/UN-OCHA/common_design/#common-design-base-theme-for-drupal-8) for general details about base theme and instructions for compilation. There should be no need to compile the base theme, only the sub theme.
-
-Refer to [common_design README E2E testing](https://github.com/UN-OCHA/common_design/#e2e-testing) for information about running tests.
+Refer to [common_design README](https://github.com/UN-OCHA/common_design/#common-design-base-theme-for-drupal-8) for general details about the base theme.
