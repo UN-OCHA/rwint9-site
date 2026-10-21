@@ -68,9 +68,8 @@ indication of the original icons and any modifications made to them.
 ### Colors
 
 The script retrieves the CSS variables from the common_design_subtheme style
-file: `common_design_subtheme/css/styles.css` generated from the sass files in
-`common_design_subtheme/sass`, and substitute the variables for the actual
-colors.
+file: `common_design_subtheme/css/styles.css`, and substitutes the variables
+for the actual colors.
 
 So the format for the `colors` property in the `rw-icons.json` file is either
 `--css-variable-name` or any valid CSS color (ex: `#ffF` or `rgba(0,0,0,0.2)`.
