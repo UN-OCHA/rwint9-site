@@ -665,9 +665,10 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
       $info = $this->getRemoteFileInfo($file_url);
       if (!empty($info)) {
         $file_uuid = $this->generateUuid($file_url, $uuid);
-        $files[] = [
+        $files[$file_uuid] = [
           'url' => $file_url,
           'uuid' => $file_uuid,
+          'download_url' => $file_url,
         ] + $info;
       }
     }
@@ -696,7 +697,7 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
 
     // Add the optional fields.
     $data += array_filter([
-      'file' => array_values($files),
+      'file' => $files,
     ]);
 
     return $data;
@@ -709,8 +710,15 @@ class WfpLogClusterImporter extends ReliefWebImporterPluginBase {
     $schema = parent::getJsonSchema($bundle);
     $decoded = Json::decode($schema);
     if ($decoded) {
-      // Allow attachment URLs without a PDF extension.
-      unset($decoded['properties']['file']['items']['properties']['url']['pattern']);
+      // Allow non-PDF attachment filenames for import.
+      if (isset($decoded['properties']['file']['patternProperties']) && is_array($decoded['properties']['file']['patternProperties'])) {
+        foreach ($decoded['properties']['file']['patternProperties'] as &$file_value_schema) {
+          if (($file_value_schema['type'] ?? NULL) === 'object') {
+            unset($file_value_schema['properties']['filename']['pattern']);
+          }
+        }
+        unset($file_value_schema);
+      }
       // Allow empty strings as body.
       unset($decoded['properties']['body']['minLength']);
       unset($decoded['properties']['body']['allOf']);

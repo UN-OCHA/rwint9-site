@@ -130,6 +130,26 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
   }
 
   /**
+   * Get the expected terminal statuses for this bundle.
+   *
+   * @return list<string>
+   *   Status machine names locked for partner resubmission.
+   */
+  protected function getExpectedTerminalStatuses(): array {
+    return ['refused', 'duplicate'];
+  }
+
+  /**
+   * Test getTerminalStatuses.
+   */
+  public function testGetTerminalStatuses(): void {
+    $this->assertSame(
+      $this->getExpectedTerminalStatuses(),
+      $this->getModerationService()->getTerminalStatuses(),
+    );
+  }
+
+  /**
    * Get the viewable statuses for testing.
    *
    * @return array
@@ -336,7 +356,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
         'view any content',
         'edit any ' . $bundle . ' content',
         'delete any ' . $bundle . ' content',
-        'edit archived content',
+        'edit archive content',
       ],
       'edit_all_special' => [
         'access content',
@@ -344,7 +364,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
         'edit any ' . $bundle . ' content',
         'delete any ' . $bundle . ' content',
         'edit refused content',
-        'edit archived content',
+        'edit archive content',
         'edit duplicate content',
       ],
       'bypass_node_access' => [

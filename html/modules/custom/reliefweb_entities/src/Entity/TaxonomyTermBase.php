@@ -33,4 +33,11 @@ class TaxonomyTermBase extends Term implements BundleEntityInterface, EntityMode
     // No specific constraints.
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function getDefaultModerationStatus() {
+    return 'published';
+  }
+
 }

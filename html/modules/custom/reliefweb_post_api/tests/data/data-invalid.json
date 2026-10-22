@@ -8,19 +8,21 @@
   "published": "2024-06-06T01:00:00+00:00",
   "body": "This is the **body** text in markdown format.\n\nIt has some paragraphs  \nand a line break.",
   "embargoed": "2024-06-06T01:00:00+00:00",
-  "file": [
-    {
+  "file": {
+    "a08d95bd-d973-5b12-8d5b-81188cff7e37": {
       "url": "https://test.test/test-file1.pdf",
+      "uuid": "a08d95bd-d973-5b12-8d5b-81188cff7e37",
       "description": "First attachment",
       "language": "en"
     },
-    {
+    "9b8099dd-7e7e-5779-8dd6-719508e77377": {
       "url": "https://test.test/test-file2.pdf",
+      "uuid": "9b8099dd-7e7e-5779-8dd6-719508e77377",
       "description": "Second attachment. German Version."
     }
-  ],
+  },
   "image": {
-    "url": "https://test.test/test-image.jpg",
+    "download_url": "https://test.test/test-image.jpg",
     "caption": "First attachment",
     "copyright": "Test NGO"
   },

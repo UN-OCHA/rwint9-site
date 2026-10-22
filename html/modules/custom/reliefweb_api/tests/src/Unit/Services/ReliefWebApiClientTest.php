@@ -353,6 +353,77 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
+   * Suggest URLs use the same-origin /api-suggest proxy without appname.
+   */
+  public function testBuildSuggestApiUrlUsesProxyPath(): void {
+    $url = $this->apiClient->buildSuggestApiUrl('countries');
+    $this->assertStringStartsWith('/api-suggest/countries?', $url);
+    $this->assertStringContainsString('query%5Bvalue%5D=%QUERY', $url);
+    $this->assertStringContainsString('score', $url);
+    $this->assertStringContainsString('name.collation_en', $url);
+    $this->assertStringNotContainsString('appname=', $url);
+    $this->assertStringNotContainsString('preset=', $url);
+    $this->assertStringNotContainsString('profile=', $url);
+    $this->assertStringNotContainsString('slim=', $url);
+    $this->assertStringNotContainsString('api.example.com', $url);
+  }
+
+  /**
+   * Suggest URLs keep widget pass-through parameters such as filter.
+   */
+  public function testBuildSuggestApiUrlKeepsFilterParameters(): void {
+    $url = $this->apiClient->buildSuggestApiUrl('sources', [
+      'filter' => [
+        'field' => 'content_type',
+        'value' => 'report',
+      ],
+      // Should be stripped; nginx injects these.
+      'appname' => 'leaked-app',
+      'preset' => 'suggest',
+      'profile' => 'suggest',
+      'slim' => 1,
+    ]);
+
+    $this->assertStringStartsWith('/api-suggest/sources?', $url);
+    $this->assertStringContainsString('filter', $url);
+    $this->assertStringContainsString('content_type', $url);
+    $this->assertStringContainsString('report', $url);
+    $this->assertStringContainsString('query%5Bvalue%5D=%QUERY', $url);
+    $this->assertStringNotContainsString('appname=', $url);
+    $this->assertStringNotContainsString('leaked-app', $url);
+    $this->assertStringNotContainsString('preset=', $url);
+    $this->assertStringNotContainsString('profile=', $url);
+    $this->assertStringNotContainsString('slim=', $url);
+  }
+
+  /**
+   * Suggest URLs preserve a custom sort instead of forcing the default.
+   */
+  public function testBuildSuggestApiUrlPreservesCustomSort(): void {
+    $url = $this->apiClient->buildSuggestApiUrl('disasters', [
+      'sort' => 'date:desc',
+    ]);
+
+    $this->assertStringContainsString('date', $url);
+    $this->assertStringContainsString('desc', $url);
+    $this->assertStringNotContainsString('score', $url);
+    $this->assertStringNotContainsString('name.collation_en', $url);
+  }
+
+  /**
+   * External URLs keep the external API base and identification params.
+   */
+  public function testBuildExternalApiUrlUsesExternalApi(): void {
+    $url = $this->apiClient->buildExternalApiUrl('reports', ['limit' => 1]);
+    $this->assertStringStartsWith('https://api.example.com/v1/reports?', $url);
+    $this->assertStringContainsString('appname=test-app', $url);
+    $this->assertStringContainsString('preset=latest', $url);
+    $this->assertStringContainsString('profile=list', $url);
+    $this->assertStringContainsString('slim=1', $url);
+    $this->assertStringNotContainsString('%QUERY', $url);
+  }
+
+  /**
    * Failed requests log the request-id near the start of the message.
    */
   public function testFailureLogIncludesRequestId(): void {

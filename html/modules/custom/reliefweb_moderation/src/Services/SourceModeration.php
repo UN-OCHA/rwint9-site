@@ -3,7 +3,6 @@
 namespace Drupal\reliefweb_moderation\Services;
 
 use Drupal\Core\Link;
-use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Drupal\reliefweb_moderation\EntityModeratedInterface;
 use Drupal\reliefweb_moderation\Enum\PostingRight;
@@ -201,8 +200,8 @@ class SourceModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status, ?AccountInterface $account = NULL) {
-    return $status === 'active' || $status === 'inactive';
+  public function getPublishedStatuses(): array {
+    return ['active', 'inactive'];
   }
 
   /**

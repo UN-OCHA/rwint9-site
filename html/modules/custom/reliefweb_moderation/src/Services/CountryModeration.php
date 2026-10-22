@@ -123,8 +123,8 @@ class CountryModeration extends ModerationServiceBase {
   /**
    * {@inheritdoc}
    */
-  public function isPublishedStatus($status) {
-    return $status === 'normal' || $status === 'ongoing';
+  public function getPublishedStatuses(): array {
+    return ['normal', 'ongoing'];
   }
 
   /**

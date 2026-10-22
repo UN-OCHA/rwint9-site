@@ -207,6 +207,7 @@ rw-form:
   # add it as a dependency of the rw-form library which is added globally.
   dependencies:
     - common_design/cd-alert
+    - common_design_subtheme/rw-icons
 
 rw-guidelines:
   css:
