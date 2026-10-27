@@ -1,1 +1,17 @@
 services:
+  reliefweb_ai.report_language_detector:
+    class: Drupal\reliefweb_ai\Service\ReportLanguageDetector
+    arguments:
+      - '@config.factory'
+      - '@module_handler'
+      - '@database'
+
+  Drupal\reliefweb_ai\Service\ReportLanguageDetector:
+    alias: reliefweb_ai.report_language_detector
+
+  reliefweb_ai.content_entity_classifier_decorator:
+    class: Drupal\reliefweb_ai\Service\ContentEntityClassifierDecorator
+    decorates: ocha_content_classification.content_entity_classifier
+    arguments:
+      - '@reliefweb_ai.content_entity_classifier_decorator.inner'
+      - '@reliefweb_ai.report_language_detector'
