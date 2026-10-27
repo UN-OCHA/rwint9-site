@@ -6,54 +6,27 @@ reliefweb_ai.settings:
       type: mapping
       label: 'Settings for the language detection.'
       mapping:
-        tag:
+        min_chars:
+          type: integer
+          label: 'Minimum characters required before language detection.'
+        min_line_chars:
+          type: integer
+          label: 'Minimum characters for a line to keep when building detection samples.'
+        max_pages:
+          type: integer
+          label: 'Maximum number of attachment pages to extract for language detection.'
+        reliable_ratio:
+          type: float
+          label: 'Strict ELD isReliable average-score ratio (lower is less strict).'
+        reliable_ratio_soft:
+          type: float
+          label: 'Soft ELD isReliable average-score ratio used when no stage passes the strict ratio.'
+        title_min_chars:
+          type: integer
+          label: 'Minimum characters for the title stage on strict, soft, and score passes (title-lenient ignores this).'
+        score_margin_min:
+          type: float
+          label: 'Minimum (top - second) / top score margin for the cross-stage score tie-break.'
+        eld_database:
           type: string
-          label: 'XML tag in the LLM response from which to retrieve the text extracts.'
-        use_title:
-          type: boolean
-          label: 'Whether to also use the title for the language detection.'
-    text_extract_fix:
-      type: mapping
-      label: 'Settings for the text extraction fix.'
-      mapping:
-        enabled:
-          type: boolean
-          label: 'Enable text extraction fix step.'
-        tag:
-          type: string
-          label: 'XML tag in the LLM response from which to retrieve the extracted text.'
-        summary_tag:
-          type: string
-          label: 'XML tag in the LLM response from which to retrieve the summary, if any.'
-        line_matching:
-          type: mapping
-          label: 'Settings for the line matching between extracted text and original text.'
-          mapping:
-            endpoint:
-              type: string
-              label: 'OCHA AI helper to match lines.'
-            threshold:
-              type: integer
-              label: 'Similary threshold.'
-        inference:
-          type: mapping
-          label: 'Inference settings for the AI text fix.'
-          mapping:
-            plugin_id:
-              type: string
-              label: 'OCHA AI completion plugin ID.'
-            temperature:
-              type: float
-              label: 'Temperature.'
-            top_p:
-              type: float
-              label: 'Nucleus sampling (top_p).'
-            max_tokens:
-              type: integer
-              label: 'Max tokens.'
-            system_prompt:
-              type: text
-              label: 'System prompt.'
-            prompt:
-              type: text
-              label: 'Prompt.'
+          label: 'Eld ngram database size (small, medium, large, or extralarge).'

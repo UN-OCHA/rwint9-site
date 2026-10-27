@@ -4,6 +4,14 @@ services:
     arguments: ['@plugin.manager.mail', '@language_manager']
   Drupal\reliefweb_entities\Hook\PublicationNotificationHooks:
     arguments: ['@reliefweb_entities.publication_notification']
+  Drupal\reliefweb_entities\Hook\ClassificationHooks:
+    arguments:
+      - '@current_user'
+      - '@state'
+      - '@logger.factory'
+      - '@module_handler'
+      - '@reliefweb_moderation.user_posting_rights'
+      - '@?ocha_content_classification.content_entity_classifier'
   reliefweb_entities.route_subscriber:
     class: 'Drupal\reliefweb_entities\Routing\RouteSubscriber'
     tags:
