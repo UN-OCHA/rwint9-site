@@ -11,3 +11,8 @@ services:
   reliefweb_api.elasticsearch:
     class: Drupal\reliefweb_api\Services\ReliefWebElasticsearchClient
     arguments: ['@http_client', '@config.factory', '@database']
+  reliefweb_api.failure_cache_subscriber:
+    class: Drupal\reliefweb_api\EventSubscriber\ReliefWebApiFailureCacheSubscriber
+    arguments: ['@datetime.time', '@config.factory']
+    tags:
+      - { name: event_subscriber }

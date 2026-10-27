@@ -5,6 +5,7 @@ api_url_external: 'https://api.reliefweb.int/v2'
 appname: reliefweb.int
 request_id_prefix: rw
 cache_enabled: true
+failure_cache_lifetime: 60
 timeout: 5
 verify_ssl: true
 elasticsearch: 'http://elasticsearch:9200'

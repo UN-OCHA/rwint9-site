@@ -8,6 +8,8 @@ appname: reliefweb.int
 request_id_prefix: rw
 # Cache the query results.
 cache_enabled: true
+# How long to cache a failed API query before retrying (0 disables).
+failure_cache_lifetime: 60
 # Request timeout in seconds (connect + request).
 timeout: 5
 # Verify the SSL certificate of the API query performing requests.

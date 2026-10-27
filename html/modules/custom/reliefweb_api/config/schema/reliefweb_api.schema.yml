@@ -23,6 +23,9 @@ reliefweb_api.settings:
     cache_lifetime:
       type: integer
       label: 'Cache duration (in seconds) for the query results.'
+    failure_cache_lifetime:
+      type: integer
+      label: 'How long to cache a failed API query before retrying (0 disables).'
     cache_namespace:
       type: string
       label: 'Namespace for the API caching.'
