@@ -46,7 +46,8 @@ function reliefweb_ai_ocha_content_classification_classified_fields_alter(
   array &$context,
 ) {
   // Only the inference classifier is supported here.
-  if ($context['classifier']->getPluginId() !== 'inference') {
+  $supported_plugins = ['inference', 'structured_inference'];
+  if (!in_array($context['classifier']->getPluginId(), $supported_plugins, TRUE)) {
     return NULL;
   }
 
