@@ -83,6 +83,34 @@ class ReliefWebEntitiesSettingsForm extends ConfigFormBase {
       '#required' => TRUE,
     ];
 
+    $form['empty_content'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Empty content publication prevention'),
+      '#description' => $this->t('Prevent publishing reports that have neither a body nor an attachment.'),
+      '#open' => TRUE,
+      '#tree' => TRUE,
+    ];
+
+    $form['empty_content']['prevent_publication'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Prevent publication of empty reports'),
+      '#description' => $this->t('When enabled, reports with no body and no attachment cannot be published, put to review, or embargoed. They are moved to the fallback status instead.'),
+      '#default_value' => (bool) ($config->get('empty_content.prevent_publication') ?? TRUE),
+    ];
+
+    $form['empty_content']['fallback_status'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Fallback moderation status'),
+      '#description' => $this->t('Status applied when an empty report would otherwise be published.'),
+      '#options' => [
+        'on-hold' => $this->t('On-hold'),
+        'pending' => $this->t('Pending'),
+        'draft' => $this->t('Draft'),
+      ],
+      '#default_value' => $config->get('empty_content.fallback_status') ?? 'on-hold',
+      '#required' => TRUE,
+    ];
+
     $form['related_content'] = [
       '#type' => 'details',
       '#title' => $this->t('Related content'),
@@ -252,6 +280,13 @@ class ReliefWebEntitiesSettingsForm extends ConfigFormBase {
     $config = $this->config('reliefweb_entities.settings');
 
     $config->set('cron', $form_state->getValue('cron'));
+
+    $empty_content = $form_state->getValue('empty_content') ?? [];
+    // Unchecked checkboxes are omitted from form values; persist explicit
+    // booleans.
+    $empty_content['prevent_publication'] = !empty($empty_content['prevent_publication']);
+    $empty_content['fallback_status'] = $empty_content['fallback_status'] ?? 'on-hold';
+    $config->set('empty_content', $empty_content);
 
     $related_content = $form_state->getValue('related_content') ?? [];
     // Unchecked checkboxes are omitted from form values; persist explicit

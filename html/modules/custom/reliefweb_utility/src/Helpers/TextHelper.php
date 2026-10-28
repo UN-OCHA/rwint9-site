@@ -66,6 +66,19 @@ class TextHelper {
   }
 
   /**
+   * Whether HTML/markup has no meaningful text content.
+   *
+   * @param string $text
+   *   Raw text or HTML value.
+   *
+   * @return bool
+   *   TRUE when stripping tags leaves only empty/whitespace content.
+   */
+  public static function isEmptyHtml(string $text): bool {
+    return $text === '' || static::trimText(strip_tags($text)) === '';
+  }
+
+  /**
    * Sanitize a UTF-8 string.
    *
    * This method performs the following operations:

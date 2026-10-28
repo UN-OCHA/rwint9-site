@@ -370,6 +370,9 @@ class RwReportBase extends ExistingSiteBase {
     // Prepare the form fields.
     $fields = [];
     $fields['title[0][value]'] = $title;
+    // Do not set body[0][format]: contributors only have one allowed format
+    // (markdown_editor), so Drupal hides the format selector.
+    $fields['body[0][value]'] = 'Test report body content.';
     $fields['field_language[' . $term_language->id() . ']'] = $term_language->id();
     $fields['field_country[]'] = [$term_country->id()];
     $fields['field_primary_country'] = $term_country->id();
