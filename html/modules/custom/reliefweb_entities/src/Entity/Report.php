@@ -17,6 +17,7 @@ use Drupal\reliefweb_moderation\EntityWithPostingRightsTrait;
 use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_revisions\EntityRevisionedTrait;
 use Drupal\reliefweb_utility\Helpers\DateHelper;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -250,8 +251,7 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
     $this->updateModerationStatusFromPostingRights();
 
     // Change the status to `embargoed` if there is an embargo date.
-    $embargo_statuses = ['embargoed', 'to-review', 'published'];
-    if (!empty($this->field_embargo_date->value) && in_array($this->getModerationStatus(), $embargo_statuses)) {
+    if (!empty($this->field_embargo_date->value) && $this->isPublishedOrEmbargoed()) {
       $this->setModerationStatus('embargoed');
 
       $message = strtr('Embargoed (to be automatically published on @date).', [
@@ -261,10 +261,83 @@ class Report extends Node implements BundleEntityInterface, EntityModeratedInter
       $this->updateRevisionLogMessage($message, 'prepend', TRUE, "\n");
     }
 
+    // Prevent publication when the report has neither a body nor an attachment.
+    $this->updateModerationStatusFromEmptyContent();
+
     // Update the entity status based on the source(s) moderation status.
     $this->updateModerationStatusFromSourceStatus();
 
     parent::preSave($storage);
+  }
+
+  /**
+   * Whether a status is published-equivalent or embargoed.
+   *
+   * Published-equivalent matches getPublishedStatuses() from the report
+   * moderation service. Embargoed is included as deferred publication.
+   *
+   * @param string|null $status
+   *   Moderation status, or NULL to use the entity's current status.
+   *
+   * @return bool
+   *   TRUE when the status is published-equivalent or embargoed.
+   *
+   * @see \Drupal\reliefweb_moderation\Services\ReportModeration::getPublishedStatuses()
+   */
+  public function isPublishedOrEmbargoed(?string $status = NULL): bool {
+    $status ??= $this->getModerationStatus();
+    $published = $this->getModerationService()?->getPublishedStatuses() ?? [
+      'to-review',
+      'published',
+    ];
+    return in_array($status, $published, TRUE) || $status === 'embargoed';
+  }
+
+  /**
+   * Whether the report has a body or at least one attachment.
+   *
+   * @return bool
+   *   TRUE when the report has publishable content.
+   */
+  public function hasBodyOrAttachment(): bool {
+    $body = $this->hasField('body') ? ($this->get('body')->value ?? '') : '';
+    $has_file = $this->hasField('field_file') && !$this->get('field_file')->isEmpty();
+    return !TextHelper::isEmptyHtml($body) || $has_file;
+  }
+
+  /**
+   * Demote published-like status when the report has no body and no attachment.
+   */
+  protected function updateModerationStatusFromEmptyContent(): void {
+    $config = \Drupal::config('reliefweb_entities.settings');
+    if (!$config->get('empty_content.prevent_publication')) {
+      return;
+    }
+
+    // Skip for statuses that won't lead to the publication of the report.
+    $status = $this->getModerationStatus();
+    if (!$this->isPublishedOrEmbargoed($status)) {
+      return;
+    }
+
+    if ($this->hasBodyOrAttachment()) {
+      return;
+    }
+
+    $fallback = $config->get('empty_content.fallback_status') ?: 'on-hold';
+    $allowed_statuses = $this->getAllowedModerationStatuses();
+    if (!isset($allowed_statuses[$fallback])) {
+      $fallback = isset($allowed_statuses['on-hold']) ? 'on-hold' : $this->getDefaultModerationStatus();
+    }
+
+    if ($fallback === $status) {
+      return;
+    }
+
+    $this->setModerationStatus($fallback);
+    $this->updateRevisionLogMessage(strtr('No body or attachment: saved as **@status**.', [
+      '@status' => (string) ($allowed_statuses[$fallback] ?? $fallback),
+    ]));
   }
 
   /**

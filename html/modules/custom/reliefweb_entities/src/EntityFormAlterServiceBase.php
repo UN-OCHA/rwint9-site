@@ -957,10 +957,11 @@ abstract class EntityFormAlterServiceBase implements EntityFormAlterServiceInter
    *   Form state.
    *
    * @return string
-   *   Moderation status.
+   *   Moderation status, or an empty string when missing/invalid.
    */
-  protected function getEntityModerationStatus(FormStateInterface $form_state) {
-    return $form_state->getValue(['moderation_status', 0, 'value']);
+  protected function getEntityModerationStatus(FormStateInterface $form_state): string {
+    $status = $form_state->getValue(['moderation_status', 0, 'value']);
+    return is_string($status) ? $status : '';
   }
 
   /**

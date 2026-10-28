@@ -16,6 +16,9 @@ cron:
   embargoed_reports_limit: 20
   expired_jobs_limit: 20
   expired_training_limit: 20
+empty_content:
+  prevent_publication: true
+  fallback_status: on-hold
 related_content:
   enabled: false
   fallback: true
