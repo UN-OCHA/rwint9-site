@@ -247,7 +247,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     $this->assertTrue(ReliefWebApiIndexingSkipStore::consumeSkip($entity));
 
     $this->assertStringStartsWith('Import log.', $log);
-    $this->assertStringContainsString('Near-duplicate of: Matched report (nid 42, ' . $method . ' 95%)', $log);
+    $this->assertStringContainsString('Near-duplicate of: [#42](/node/42) (' . $method . ' 95%).', $log);
     $this->assertStringContainsString(
       'Moderation status: draft (original: published, reason: interim while applying duplicate status).',
       $log,
@@ -434,7 +434,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
 
     $this->assertNull(DuplicateMatchApplyContext::fromEntity($entity));
     $this->assertStringStartsWith('Import log.', $currentLog);
-    $this->assertStringContainsString('Near-duplicate of: Matched report (nid 42, jaccard 95%)', $currentLog);
+    $this->assertStringContainsString('Near-duplicate of: [#42](/node/42) (jaccard 95%).', $currentLog);
   }
 
   /**
@@ -506,7 +506,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
     ]);
     $entity->expects($this->once())->method('setModerationStatus')->with('duplicate');
 
-    $log = 'Near-duplicate of: Matched report (nid 42, jaccard 95%)';
+    $log = 'Near-duplicate of: [#42](/node/42) (jaccard 95%).';
     $this->wireRevisionLogMock($entity, $log);
 
     $hooks->entityPresaveModerationAfterPostingRights($entity);
@@ -536,7 +536,7 @@ class ReportDuplicateMatchHooksTest extends UnitTestCase {
       ),
     );
 
-    $log = 'Near-duplicate of: Matched report (nid 42, jaccard 95%)';
+    $log = 'Near-duplicate of: [#42](/node/42) (jaccard 95%).';
     $this->wireRevisionLogMock($entity, $log);
 
     $skip = FALSE;

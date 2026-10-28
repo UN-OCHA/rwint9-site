@@ -540,22 +540,22 @@ final class ReportDuplicateMatchHooks {
    *   Detection result.
    *
    * @return string
-   *   Plain-text revision log message.
+   *   Revision log message with markdown links to matched reports.
    */
   protected function buildRevisionLogMessage(DuplicateMatchResult $result): string {
     $parts = [];
     foreach ($result->matches as $match) {
       assert($match instanceof DuplicateMatch);
       $parts[] = sprintf(
-        '%s (nid %d, %s %s)',
-        $match->title,
+        '[#%d](/node/%d) (%s %s)',
+        $match->nid,
         $match->nid,
         $match->method,
         $match->similarityPercentage(),
       );
     }
 
-    return 'Near-duplicate of: ' . implode('; ', $parts);
+    return 'Near-duplicate of: ' . implode(', ', $parts) . '.';
   }
 
   /**
