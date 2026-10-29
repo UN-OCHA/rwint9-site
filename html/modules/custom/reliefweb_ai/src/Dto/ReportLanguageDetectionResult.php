@@ -50,4 +50,19 @@ final readonly class ReportLanguageDetectionResult {
     );
   }
 
+  /**
+   * Build a short editorial revision-log clause for this outcome.
+   *
+   * @return string
+   *   Plain English revision-log clause ending with a period.
+   */
+  public function formatRevisionLogMessage(): string {
+    return $this->source->revisionLogMessage(
+      $this->sampleSource === LanguageDetectionSample::None
+        ? NULL
+        : $this->sampleSource,
+      $this->detectedCode,
+    );
+  }
+
 }

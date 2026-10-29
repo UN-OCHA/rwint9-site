@@ -13,6 +13,7 @@ use Drupal\reliefweb_ai\Dto\ReportLanguageDetectionResult;
 use Drupal\reliefweb_ai\Enum\LanguageDetectionSample;
 use Drupal\reliefweb_ai\Enum\LanguageDetectionSource;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
 use Drupal\reliefweb_utility\Helpers\LanguageDetectionHelper;
 use Nitotm\Eld\LanguageResult;
 
@@ -95,6 +96,9 @@ class ReportLanguageDetector {
     $current_language_term_id = $entity->get('field_language')->target_id ?? NULL;
     if ($outcome->termId != $current_language_term_id) {
       $entity->set('field_language', $outcome->termId);
+      if ($entity instanceof EntityRevisionedInterface) {
+        $entity->updateRevisionLogMessage($outcome->formatRevisionLogMessage());
+      }
       return ['field_language'];
     }
 

@@ -9,11 +9,14 @@ use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityInterface;
 use Drupal\Core\Entity\FieldableEntityInterface;
+use Drupal\Core\Entity\RevisionLogInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\reliefweb_ai\Dto\ReportLanguageDetectionResult;
 use Drupal\reliefweb_ai\Enum\LanguageDetectionSample;
 use Drupal\reliefweb_ai\Enum\LanguageDetectionSource;
 use Drupal\reliefweb_ai\Service\ReportLanguageDetector;
+use Drupal\reliefweb_revisions\EntityRevisionedInterface;
+use Drupal\reliefweb_utility\Helpers\RevisionLogHelper;
 use Drupal\Tests\UnitTestCase;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Group;
@@ -544,6 +547,15 @@ class ReportLanguageDetectorTest extends UnitTestCase {
    * Simulation notes describe each resolution source.
    */
   public function testFormatSimulationNote(): void {
+    $forced = ReportLanguageDetector::formatSimulationNote(new ReportLanguageDetectionResult(
+      termId: 268,
+      code: NULL,
+      source: LanguageDetectionSource::Forced,
+      detectedCode: NULL,
+      sampleSource: LanguageDetectionSample::None,
+    ));
+    $this->assertSame('(override)', $forced->getUntranslatedString());
+
     $detected = ReportLanguageDetector::formatSimulationNote(new ReportLanguageDetectionResult(
       termId: 268,
       code: 'fr',
@@ -581,7 +593,7 @@ class ReportLanguageDetectorTest extends UnitTestCase {
       detectedCode: 'en',
       sampleSource: LanguageDetectionSample::Title,
     ));
-    $this->assertSame('(title)', $title->getUntranslatedString());
+    $this->assertSame('(inferred: title)', $title->getUntranslatedString());
 
     $none = ReportLanguageDetector::formatSimulationNote(new ReportLanguageDetectionResult(
       termId: 269,
@@ -590,7 +602,7 @@ class ReportLanguageDetectorTest extends UnitTestCase {
       detectedCode: NULL,
       sampleSource: LanguageDetectionSample::None,
     ));
-    $this->assertSame('(defaulted: other)', $none->getUntranslatedString());
+    $this->assertSame('(defaulted: Other)', $none->getUntranslatedString());
 
     $unmapped = ReportLanguageDetector::formatSimulationNote(new ReportLanguageDetectionResult(
       termId: 269,
@@ -599,8 +611,160 @@ class ReportLanguageDetectorTest extends UnitTestCase {
       detectedCode: 'es',
       sampleSource: LanguageDetectionSample::Body,
     ));
-    $this->assertSame('(defaulted: other; no term for @detected)', $unmapped->getUntranslatedString());
-    $this->assertSame('es', $unmapped->getArguments()['@detected']);
+    $this->assertSame('(defaulted: Other; @name from @sample)', $unmapped->getUntranslatedString());
+    $this->assertSame('Spanish', $unmapped->getArguments()['@name']);
+    $this->assertSame('body', $unmapped->getArguments()['@sample']);
+  }
+
+  /**
+   * Revision log messages describe each resolution source for editors.
+   */
+  public function testFormatRevisionLogMessage(): void {
+    $this->assertSame(
+      'Language set by override.',
+      (new ReportLanguageDetectionResult(
+        termId: 268,
+        code: NULL,
+        source: LanguageDetectionSource::Forced,
+        detectedCode: NULL,
+        sampleSource: LanguageDetectionSample::None,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language detected from body.',
+      (new ReportLanguageDetectionResult(
+        termId: 268,
+        code: 'fr',
+        source: LanguageDetectionSource::Detected,
+        detectedCode: 'fr',
+        sampleSource: LanguageDetectionSample::Body,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language detected from attachment.',
+      (new ReportLanguageDetectionResult(
+        termId: 268,
+        code: 'fr',
+        source: LanguageDetectionSource::DetectedSoft,
+        detectedCode: 'fr',
+        sampleSource: LanguageDetectionSample::Attachment,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language inferred from title.',
+      (new ReportLanguageDetectionResult(
+        termId: 267,
+        code: 'en',
+        source: LanguageDetectionSource::DetectedScore,
+        detectedCode: 'en',
+        sampleSource: LanguageDetectionSample::Title,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language inferred from title.',
+      (new ReportLanguageDetectionResult(
+        termId: 267,
+        code: 'en',
+        source: LanguageDetectionSource::DetectedTitle,
+        detectedCode: 'en',
+        sampleSource: LanguageDetectionSample::Title,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language defaulted to Other.',
+      (new ReportLanguageDetectionResult(
+        termId: 269,
+        code: 'ot',
+        source: LanguageDetectionSource::DefaultNone,
+        detectedCode: NULL,
+        sampleSource: LanguageDetectionSample::None,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language detected from body (Spanish); defaulted to Other.',
+      (new ReportLanguageDetectionResult(
+        termId: 269,
+        code: 'ot',
+        source: LanguageDetectionSource::DefaultUnmapped,
+        detectedCode: 'es',
+        sampleSource: LanguageDetectionSample::Body,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language detected from attachment (Greek); defaulted to Other.',
+      (new ReportLanguageDetectionResult(
+        termId: 269,
+        code: 'ot',
+        source: LanguageDetectionSource::DefaultUnmapped,
+        detectedCode: 'el',
+        sampleSource: LanguageDetectionSample::Attachment,
+      ))->formatRevisionLogMessage(),
+    );
+
+    $this->assertSame(
+      'Language inferred from title (Spanish); defaulted to Other.',
+      (new ReportLanguageDetectionResult(
+        termId: 269,
+        code: 'ot',
+        source: LanguageDetectionSource::DefaultUnmapped,
+        detectedCode: 'es',
+        sampleSource: LanguageDetectionSample::Title,
+      ))->formatRevisionLogMessage(),
+    );
+
+    // Unknown ISO codes fall back to the raw code when Locale has no name.
+    $this->assertSame(
+      'Language detected from body (zz); defaulted to Other.',
+      (new ReportLanguageDetectionResult(
+        termId: 269,
+        code: 'ot',
+        source: LanguageDetectionSource::DefaultUnmapped,
+        detectedCode: 'zz',
+        sampleSource: LanguageDetectionSample::Body,
+      ))->formatRevisionLogMessage(),
+    );
+  }
+
+  /**
+   * UpdateLanguage appends a revision log clause when the language changes.
+   */
+  public function testUpdateLanguageAppendsRevisionLog(): void {
+    $body = 'This situation report summarizes humanitarian needs across affected districts and outlines response priorities for the coming month ahead.';
+    $log = 'Import log.';
+    $entity = $this->createRevisionedReportEntity($body, NULL, $log);
+
+    $detector = $this->buildDetector(
+      language_detector: static fn(string $text): string => 'fr',
+    );
+
+    $this->assertSame(['field_language'], $detector->updateLanguage($entity));
+    $this->assertSame(268, $entity->get('field_language')->target_id);
+    $this->assertSame(
+      'Import log. Language detected from body.',
+      $entity->getRevisionLogMessage(),
+    );
+  }
+
+  /**
+   * UpdateLanguage does not touch the revision log when language is unchanged.
+   */
+  public function testNoRevisionLogWhenLanguageUnchanged(): void {
+    $log = 'Import log.';
+    $entity = $this->createRevisionedReportEntity('Legend North South km', 269, $log);
+
+    $detector = $this->buildDetector(
+      language_detector: static fn(string $text): string => 'und',
+    );
+
+    $this->assertNull($detector->updateLanguage($entity));
+    $this->assertSame('Import log.', $entity->getRevisionLogMessage());
   }
 
   /**
@@ -750,6 +914,92 @@ class ReportLanguageDetectorTest extends UnitTestCase {
     bool $has_file = FALSE,
     string $title = 'Test report title that is long enough for title stage',
   ): ContentEntityInterface {
+    return $this->buildReportEntityMock(
+      ContentEntityInterface::class,
+      $body,
+      $language_term_id,
+      $has_file,
+      $title,
+    );
+  }
+
+  /**
+   * Create a revisioned report entity mock with a mutable revision log.
+   *
+   * @param string $body
+   *   Body text.
+   * @param int|null $language_term_id
+   *   Current language term ID.
+   * @param string $revision_log
+   *   Mutable revision log storage (passed by reference).
+   * @param bool $has_file
+   *   Whether field_file is non-empty.
+   * @param string $title
+   *   Entity label used as the title detection sample.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface&\Drupal\reliefweb_revisions\EntityRevisionedInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Entity mock that accepts revision log updates.
+   */
+  private function createRevisionedReportEntity(
+    string $body,
+    ?int $language_term_id,
+    string &$revision_log,
+    bool $has_file = FALSE,
+    string $title = 'Test report title that is long enough for title stage',
+  ): ContentEntityInterface {
+    $entity = $this->buildReportEntityMock(
+      RevisionedContentEntityTestInterface::class,
+      $body,
+      $language_term_id,
+      $has_file,
+      $title,
+    );
+    $entity->method('getRevisionLogMessage')
+      ->willReturnCallback(static function () use (&$revision_log): string {
+        return $revision_log;
+      });
+    $entity->method('updateRevisionLogMessage')
+      ->willReturnCallback(static function (
+        string $message,
+        string $action = 'append',
+        bool $skip_if_present = TRUE,
+        string $separator = ' ',
+      ) use (&$revision_log): void {
+        $revision_log = RevisionLogHelper::updateMessage(
+          $revision_log,
+          $message,
+          $action,
+          $skip_if_present,
+          $separator,
+        );
+      });
+    return $entity;
+  }
+
+  /**
+   * Build a report entity mock with body, file, and language fields.
+   *
+   * @param class-string $interface
+   *   Interface to mock.
+   * @param string $body
+   *   Body text.
+   * @param int|null $language_term_id
+   *   Current language term ID.
+   * @param bool $has_file
+   *   Whether field_file is non-empty.
+   * @param string $title
+   *   Entity label used as the title detection sample.
+   *
+   * @return \Drupal\Core\Entity\ContentEntityInterface&\PHPUnit\Framework\MockObject\MockObject
+   *   Entity mock.
+   */
+  private function buildReportEntityMock(
+    string $interface,
+    string $body,
+    ?int $language_term_id,
+    bool $has_file,
+    string $title,
+  ): ContentEntityInterface {
     $language_field = new class($language_term_id) {
 
       /**
@@ -841,7 +1091,7 @@ class ReportLanguageDetectorTest extends UnitTestCase {
 
     };
 
-    $entity = $this->createMock(ContentEntityInterface::class);
+    $entity = $this->createMock($interface);
     $entity->method('hasField')->willReturnCallback(static function (string $field_name): bool {
       return in_array($field_name, ['field_language', 'body', 'field_file'], TRUE);
     });
@@ -864,4 +1114,13 @@ class ReportLanguageDetectorTest extends UnitTestCase {
     return $entity;
   }
 
+}
+
+/**
+ * Content entity that also supports revision log updates.
+ */
+interface RevisionedContentEntityTestInterface extends
+  ContentEntityInterface,
+  RevisionLogInterface,
+  EntityRevisionedInterface {
 }
