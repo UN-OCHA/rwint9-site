@@ -65,6 +65,13 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
   protected int $cacheLifetime;
 
   /**
+   * How long to remember failed queries before retrying.
+   *
+   * @var int
+   */
+  protected int $failureCacheLifetime;
+
+  /**
    * The cache namespace for the cache Ids and tags.
    *
    * @var string
@@ -165,6 +172,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
     $appname = $this->getAppName();
     $timeout ??= $this->getTimeout();
     $cache_enabled = $cache_enabled && $this->isCacheEnabled();
+    $failure_lifetime = $this->getFailureCacheLifetime();
     $verify_ssl = $this->verifySsl();
 
     // Initialize the result array and retrieve the data for the cached queries.
@@ -183,6 +191,8 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
       $queries[$index]['payload'] = $payload;
 
       // Attempt to get the data from the cache.
+      // FALSE marks a known failure (negative cache); strings are success
+      // bodies.
       $results[$index] = NULL;
       if ($cache_enabled) {
         // Retrieve the cache id for the query.
@@ -190,13 +200,20 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         $cache_ids[$index] = $cache_id;
         // Attempt to retrieve the cached data for the query.
         $cache = $this->cacheBackend->get($cache_id);
-        if (!$refresh && isset($cache->data) && is_string($cache->data)) {
-          if ($decode) {
-            // Leave NULL on invalid/corrupt entries so the query is refetched.
-            $results[$index] = $this->decodeApiJsonObject($cache->data);
+        if (!$refresh && $cache !== FALSE) {
+          if (is_string($cache->data)) {
+            if ($decode) {
+              // Leave NULL on invalid/corrupt entries so the query is
+              // refetched.
+              $results[$index] = $this->decodeApiJsonObject($cache->data);
+            }
+            else {
+              $results[$index] = $cache->data;
+            }
           }
-          else {
-            $results[$index] = $cache->data;
+          elseif ($cache->data === FALSE) {
+            // Known failure: skip HTTP until the negative-cache entry expires.
+            $results[$index] = FALSE;
           }
         }
       }
@@ -205,11 +222,13 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
     // Prepare the requests.
     $promises = [];
     foreach ($queries as $index => $query) {
-      // Skip queries with cached data.
+      // Skip queries with cached data (success string/array or failure FALSE).
       if (isset($results[$index])) {
         continue;
       }
 
+      $cache_id = $cache_ids[$index] ?? NULL;
+      $resource = $query['resource'] ?? '';
       $method = $query['method'] ?? 'POST';
       $payload = $query['payload'] ?? [];
 
@@ -233,10 +252,11 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
           // Skip the request if something is wrong with the payload.
           if ($payload === FALSE) {
-            $results[$index] = NULL;
+            $results[$index] = FALSE;
+            $this->cacheFailure($cache_id, $resource, $failure_lifetime);
             $this->getLogger()->error('[@request_id] Could not encode payload when requesting @url: @payload', [
               '@request_id' => $this->getQueryRequestId($query),
-              '@url' => $api_url . '/' . $query['resource'],
+              '@url' => $api_url . '/' . $resource,
               '@payload' => strtr(print_r($query['payload'], TRUE), "\n", " "),
             ]);
             continue;
@@ -251,7 +271,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         $parameters['request-id'] = $request_id;
       }
 
-      $url = $api_url . '/' . $query['resource'] . '?' . http_build_query($parameters);
+      $url = $api_url . '/' . $resource . '?' . http_build_query($parameters);
       $headers = $query['headers'] ?? [];
 
       try {
@@ -267,9 +287,11 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
         $promises[$index] = $this->httpClient->requestAsync($method, $url, $options);
       }
       catch (\Exception $exception) {
+        $results[$index] = FALSE;
+        $this->cacheFailure($cache_id, $resource, $failure_lifetime);
         $this->getLogger()->error('[@request_id] Exception while querying @url: @exception', [
           '@request_id' => $request_id,
-          '@url' => $api_url . '/' . $query['resource'],
+          '@url' => $api_url . '/' . $resource,
           '@exception' => $exception->getMessage(),
         ]);
       }
@@ -277,10 +299,13 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
 
     // Execute the requests in parallel and retrieve and cache the response's
     // data. Cache the undecoded JSON body so decode TRUE/FALSE share one entry;
-    // only store bodies that json_decode successfully.
+    // only store bodies that json_decode successfully. Failures may be stored
+    // briefly as FALSE (negative cache).
     $promise_results = Utils::settle($promises)->wait();
     foreach ($promise_results as $index => $result) {
       $raw = NULL;
+      $cache_id = $cache_ids[$index] ?? NULL;
+      $resource = $queries[$index]['resource'] ?? '';
       $request_id = $this->getQueryRequestId($queries[$index]);
 
       // Parse the response in case of success.
@@ -295,7 +320,7 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
           $this->getLogger()->notice('[@request_id] Unable to retrieve API data (code: @code) when requesting @url with payload @payload', [
             '@request_id' => $request_id,
             '@code' => $response->getStatusCode(),
-            '@url' => $api_url . '/' . $queries[$index]['resource'],
+            '@url' => $api_url . '/' . $resource,
             '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
           ]);
         }
@@ -306,13 +331,14 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
           '@request_id' => $request_id,
           '@code' => $result['reason']->getCode(),
           '@reason' => $result['reason']->getMessage(),
-          '@url' => $api_url . '/' . $queries[$index]['resource'],
+          '@url' => $api_url . '/' . $resource,
           '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
         ]);
       }
 
       if ($raw === NULL || $raw === '') {
-        $results[$index] = NULL;
+        $results[$index] = FALSE;
+        $this->cacheFailure($cache_id, $resource, $failure_lifetime);
         continue;
       }
 
@@ -320,35 +346,52 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
       if ($decoded === NULL) {
         $this->getLogger()->notice('[@request_id] Unable to decode ReliefWeb API data for request @url with payload @payload', [
           '@request_id' => $request_id,
-          '@url' => $api_url . '/' . $queries[$index]['resource'],
+          '@url' => $api_url . '/' . $resource,
           '@payload' => strtr(print_r($queries[$index]['payload'], TRUE), "\n", " "),
         ]);
-        $results[$index] = NULL;
+        $results[$index] = FALSE;
+        $this->cacheFailure($cache_id, $resource, $failure_lifetime);
         continue;
       }
 
-      // Cache valid JSON object bodies only. Failed or empty responses must not
-      // be stored, otherwise they can stick until tags invalidate (or forever
-      // when cache_lifetime is unset/0).
-      if (isset($cache_ids[$index])) {
-        $tags = $this->getCacheTags($queries[$index]['resource']);
-        $this->cacheBackend->set($cache_ids[$index], $raw, $this->getCacheExpiration(), $tags);
+      // Cache valid JSON object bodies only.
+      if ($cache_id !== NULL) {
+        $tags = $this->getCacheTags($resource);
+        $this->cacheBackend->set($cache_id, $raw, $this->getCacheExpiration(), $tags);
       }
 
       $results[$index] = $decode ? $decoded : $raw;
     }
 
-    // Merge resource cache tags and set max-age 0 when any request failed so
-    // callers can apply this to their render arrays without re-checking.
+    // Merge resource cache tags and max-age so callers can apply this to their
+    // render arrays without re-checking. Set max-age once after the loop so a
+    // later success cannot overwrite an earlier failure's max-age.
     if ($cacheability !== NULL) {
+      $failed = FALSE;
       foreach ($queries as $index => $query) {
         if (!empty($query['resource'])) {
           $cacheability->addCacheTags($this->getCacheTags($query['resource']));
         }
-        // Failures are stored as NULL (isset is false for null values).
-        if (!isset($results[$index])) {
+        // Failures are NULL (unset) or FALSE (negative-cache / just failed).
+        if (!isset($results[$index]) || $results[$index] === FALSE) {
+          $failed = TRUE;
+        }
+      }
+      if ($failed) {
+        if ($failure_lifetime > 0) {
+          $cacheability->addCacheTags([$this->getFailureCacheTag()]);
+          $cacheability->setCacheMaxAge($failure_lifetime);
+        }
+        else {
           $cacheability->setCacheMaxAge(0);
         }
+      }
+    }
+
+    // Callers expect NULL on failure, not the internal FALSE marker.
+    foreach ($results as $index => $result) {
+      if ($result === FALSE) {
+        $results[$index] = NULL;
       }
     }
 
@@ -917,27 +960,79 @@ class ReliefWebApiClient implements ReliefWebApiClientInterface {
   /**
    * Get the cache lifetime in seconds.
    *
-   * @var int
+   * @return int
    *   Cache lifetime.
    */
-  protected function getCacheLifetime(): ?int {
+  protected function getCacheLifetime(): int {
     if (!isset($this->cacheLifetime)) {
-      $this->cacheLifetime = $this->config()->get('cache_lifetime') ?? 0;
+      $this->cacheLifetime = (int) ($this->config()->get('cache_lifetime') ?? 0);
     }
     return $this->cacheLifetime;
   }
 
   /**
+   * Get how long to cache failed queries before retrying.
+   *
+   * @return int
+   *   Failure cache lifetime in seconds; 0 disables negative caching.
+   */
+  protected function getFailureCacheLifetime(): int {
+    if (!isset($this->failureCacheLifetime)) {
+      $this->failureCacheLifetime = (int) ($this->config()->get('failure_cache_lifetime') ?? 60);
+    }
+    return $this->failureCacheLifetime;
+  }
+
+  /**
    * Get the cache expiration date.
    *
-   * @var int
+   * @return int
    *   Cache expiration.
    */
-  protected function getCacheExpiration(): ?int {
+  protected function getCacheExpiration(): int {
     if ($this->getCacheLifetime() > 0) {
       return $this->time->getRequestTime() + $this->getCacheLifetime();
     }
     return CacheBackendInterface::CACHE_PERMANENT;
+  }
+
+  /**
+   * Mark a failed query to avoid immediate retries.
+   *
+   * @param string|null $cache_id
+   *   Cache ID for the query, or NULL when caching is disabled.
+   * @param string $resource
+   *   API resource for cache tags.
+   * @param int $failure_lifetime
+   *   How long to remember the failure; zero disables negative caching.
+   */
+  protected function cacheFailure(?string $cache_id, string $resource, int $failure_lifetime): void {
+    if ($cache_id === NULL || $failure_lifetime <= 0) {
+      return;
+    }
+    $tags = $resource !== '' ? $this->getCacheTags($resource) : [];
+    // Also tag with the failure marker so invalidating it clears both
+    // degraded pages and these API-bin negative-cache entries.
+    $tags[] = $this->getFailureCacheTag();
+    $this->cacheBackend->set(
+      $cache_id,
+      FALSE,
+      $this->time->getRequestTime() + $failure_lifetime,
+      $tags,
+    );
+  }
+
+  /**
+   * Cache tag for failed API queries and pages that embedded them.
+   *
+   * Used on API-bin negative-cache entries and bubbled page cacheability so
+   * invalidating it clears both layers.
+   *
+   * @return string
+   *   Failure cache tag.
+   */
+  protected function getFailureCacheTag(): string {
+    return $this->getCacheNamespace() . ':failure';
   }
 
   /**

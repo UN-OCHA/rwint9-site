@@ -5,3 +5,6 @@ package: reliefweb
 core_version_requirement: ^10 || ^11
 dependencies:
   - drupal:ocha_ai
+  - ocha_content_classification:ocha_content_classification
+  - reliefweb_files:reliefweb_files
+  - reliefweb_utility:reliefweb_utility

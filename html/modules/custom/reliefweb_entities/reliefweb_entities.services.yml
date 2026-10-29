@@ -4,6 +4,14 @@ services:
     arguments: ['@plugin.manager.mail', '@language_manager']
   Drupal\reliefweb_entities\Hook\PublicationNotificationHooks:
     arguments: ['@reliefweb_entities.publication_notification']
+  Drupal\reliefweb_entities\Hook\ClassificationHooks:
+    arguments:
+      - '@current_user'
+      - '@state'
+      - '@logger.factory'
+      - '@module_handler'
+      - '@reliefweb_moderation.user_posting_rights'
+      - '@?ocha_content_classification.content_entity_classifier'
   reliefweb_entities.route_subscriber:
     class: 'Drupal\reliefweb_entities\Routing\RouteSubscriber'
     tags:
@@ -38,7 +46,7 @@ services:
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights']
   reliefweb_entities.report.form_alter:
     class: Drupal\reliefweb_entities\Services\ReportFormAlter
-    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights','@reliefweb_files.file_duplication', '@request_stack', '@renderer', '@messenger']
+    arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights','@reliefweb_files.file_duplication', '@request_stack', '@renderer', '@messenger', '@config.factory']
   reliefweb_entities.source.form_alter:
     class: Drupal\reliefweb_entities\Services\SourceFormAlter
     arguments: ['@database', '@current_user', '@entity_field.manager', '@entity_type.manager', '@state', '@string_translation', '@reliefweb_moderation.user_posting_rights']

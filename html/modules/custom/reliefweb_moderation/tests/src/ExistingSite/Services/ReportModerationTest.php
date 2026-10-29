@@ -49,6 +49,10 @@ class ReportModerationTest extends NodeModerationServiceTestBase {
       'type' => 'report',
       'title' => 'Submitter unpublish button',
       'moderation_status' => 'published',
+      'body' => [
+        'value' => 'Test report body content.',
+        'format' => 'markdown',
+      ],
     ]);
     $submitter = $this->createUser(values: [
       'roles' => ['submitter'],

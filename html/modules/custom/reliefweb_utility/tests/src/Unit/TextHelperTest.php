@@ -76,6 +76,18 @@ class TextHelperTest extends UnitTestCase {
   }
 
   /**
+   * Test isEmptyHtml.
+   */
+  public function testIsEmptyHtml() {
+    $this->assertTrue(TextHelper::isEmptyHtml(''));
+    $this->assertTrue(TextHelper::isEmptyHtml("  \n\t "));
+    $this->assertTrue(TextHelper::isEmptyHtml('<p></p>'));
+    $this->assertTrue(TextHelper::isEmptyHtml("<p>  </p>\n"));
+    $this->assertFalse(TextHelper::isEmptyHtml('Hello'));
+    $this->assertFalse(TextHelper::isEmptyHtml('<p>Hello</p>'));
+  }
+
+  /**
    * Test sanitize text.
    */
   public function testSanitizeText() {

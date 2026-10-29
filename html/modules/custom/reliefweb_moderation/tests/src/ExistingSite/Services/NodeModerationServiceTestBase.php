@@ -499,6 +499,24 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
   }
 
   /**
+   * Body field values for report nodes so empty-content demotion does not fire.
+   *
+   * @return array
+   *   Body field values, or an empty array for non-report bundles.
+   */
+  protected function getReportBodyFieldValues(): array {
+    if ($this->getBundle() !== 'report') {
+      return [];
+    }
+    return [
+      'body' => [
+        'value' => 'Test report body content.',
+        'format' => 'markdown',
+      ],
+    ];
+  }
+
+  /**
    * Create test nodes with different moderation statuses.
    */
   protected function createTestNodes(): void {
@@ -513,7 +531,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
         'field_source' => [
           ['target_id' => $this->testSource->id()],
         ],
-      ]);
+      ] + $this->getReportBodyFieldValues());
     }
 
     $this->testNodes['affiliated_draft'] = $this->createNode([
@@ -533,7 +551,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
       'field_source' => [
         ['target_id' => $this->testSource->id()],
       ],
-    ]);
+    ] + $this->getReportBodyFieldValues());
   }
 
   /**
@@ -1011,7 +1029,7 @@ abstract class NodeModerationServiceTestBase extends ExistingSiteBase {
       'field_source' => [
         ['target_id' => $this->testSource->id()],
       ],
-    ]);
+    ] + $this->getReportBodyFieldValues());
 
     $this->setCurrentUser($affiliated_user);
 

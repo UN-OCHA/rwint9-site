@@ -35,8 +35,9 @@ interface ReliefWebApiClientInterface {
    *   If TRUE, skip the cached data and call the API to refresh it.
    * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
    *   Optional cacheability metadata to merge with. On success, resource cache
-   *   tags are added. On failure, max-age is set to 0 so upstream page builds
-   *   are not stored empty for anonymous users.
+   *   tags are added. On failure, max-age is set to failure_cache_lifetime and
+   *   a {cache_namespace}:failure tag is added so upstream page builds back
+   *   off briefly; when failure_cache_lifetime is 0, max-age is 0.
    * @param string|null $request_id
    *   Optional request ID suffix (e.g. country.maps-infographics). Prefixed
    *   with the configured request_id_prefix and sent as the request-id URL
@@ -78,8 +79,9 @@ interface ReliefWebApiClientInterface {
    *   Whether to cache the queries or not.
    * @param \Drupal\Core\Cache\CacheableMetadata|null $cacheability
    *   Optional cacheability metadata to merge with. On success, resource cache
-   *   tags are added. On failure, max-age is set to 0 so upstream page builds
-   *   are not stored empty for anonymous users.
+   *   tags are added. On failure, max-age is set to failure_cache_lifetime and
+   *   a {cache_namespace}:failure tag is added so upstream page builds back
+   *   off briefly; when failure_cache_lifetime is 0, max-age is 0.
    *
    * @return array
    *   Return array where each item contains the response to the corresponding

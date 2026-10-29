@@ -3,6 +3,7 @@
 namespace Drupal\reliefweb_entities\Services;
 
 use Drupal\Component\Utility\SortArray;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Datetime\DrupalDateTime;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Messenger\MessengerInterface;
@@ -17,6 +18,7 @@ use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile as ReliefWebFile
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
 use Drupal\reliefweb_form\Helpers\FormHelper;
 use Drupal\reliefweb_moderation\Services\UserPostingRightsManagerInterface;
+use Drupal\reliefweb_utility\Helpers\TextHelper;
 use Drupal\reliefweb_utility\Helpers\UrlHelper;
 
 /**
@@ -60,6 +62,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   protected $userPostingRightsManager;
 
   /**
+   * The config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected ConfigFactoryInterface $configFactory;
+
+  /**
    * Constructor.
    *
    * @param \Drupal\Core\Database\Connection $database
@@ -84,6 +93,8 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
    *   The renderer service.
    * @param \Drupal\Core\Messenger\MessengerInterface $messenger
    *   The messenger service.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The config factory.
    */
   public function __construct(
     $database,
@@ -97,6 +108,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     RequestStack $request_stack,
     RendererInterface $renderer,
     MessengerInterface $messenger,
+    ConfigFactoryInterface $config_factory,
   ) {
     parent::__construct(
       $database,
@@ -111,6 +123,7 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     $this->requestStack = $request_stack;
     $this->renderer = $renderer;
     $this->messenger = $messenger;
+    $this->configFactory = $config_factory;
   }
 
   /**
@@ -212,6 +225,9 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
 
     // Validate the attachments.
     $form['#validate'][] = [$this, 'validateAttachment'];
+
+    // Require a body or an attachment when publishing.
+    $form['#validate'][] = [$this, 'validateBodyOrAttachment'];
 
     // Validate the embargo date.
     $form['#validate'][] = [$this, 'validateEmbargoDate'];
@@ -816,6 +832,52 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
   }
 
   /**
+   * Ensure a body or attachment exists when publishing a report.
+   *
+   * @param array $form
+   *   Form to alter.
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   Form state.
+   */
+  public function validateBodyOrAttachment(array $form, FormStateInterface &$form_state) {
+    $config = $this->configFactory->get('reliefweb_entities.settings');
+    if (!$config->get('empty_content.prevent_publication')) {
+      return;
+    }
+
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!$entity instanceof Report) {
+      return;
+    }
+
+    $status = $this->getEntityModerationStatus($form_state);
+    if (!$this->statusRequiresBodyOrAttachment($entity, $status)) {
+      return;
+    }
+
+    $body = $form_state->getValue(['body', 0, 'value']);
+    $has_body = !TextHelper::isEmptyHtml(is_string($body) ? $body : '');
+
+    $has_file = FALSE;
+    $files = $form_state->getValue('field_file', []);
+    unset($files['add_more']);
+    foreach ($files as $file) {
+      if (!empty($file['uuid'])) {
+        $has_file = TRUE;
+        break;
+      }
+    }
+
+    if ($has_body || $has_file) {
+      return;
+    }
+
+    $message = $this->t('Enter body text or attach a file.');
+    $form_state->setErrorByName('body][0][value', $message);
+    $form_state->setErrorByName('field_file', $message);
+  }
+
+  /**
    * Validate the file field.
    *
    * Ensure there is a file attachment with "show preview" selected when the
@@ -830,6 +892,12 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
     if (!isset($form['field_file'])) {
       return;
     }
+
+    $entity = $form_state->getFormObject()?->getEntity();
+    if (!$entity instanceof Report) {
+      return;
+    }
+
     $visual_formats = [
       '12' => 'Map',
       '12570' => 'Infographic',
@@ -841,16 +909,19 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       return;
     }
 
+    $status = $this->getEntityModerationStatus($form_state);
+    $requires_file = $this->statusRequiresBodyOrAttachment($entity, $status);
+
     // Normally there is only 1 content format allowed.
     foreach ($formats as $item) {
       $format = $visual_formats[$item['target_id']] ?? NULL;
-      // File and its preview are mandatory for visual content when publishing.
+      // File and its preview are mandatory for visual content when publishing
+      // or submitting.
       if (isset($format)) {
         $files = $form_state->getValue(['field_file']);
         // #4L7i0wbW - File is mandatory.
         if (empty($files[0]['uuid'])) {
-          $status = $this->getEntityModerationStatus($form_state);
-          if (in_array($status, ['to-review', 'published'])) {
+          if ($requires_file) {
             $form_state->setErrorByName('field_file', $this->t('The content format is %format. You must attach a file.', [
               '%format' => $format,
             ]));
@@ -872,6 +943,24 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
       }
       break;
     }
+  }
+
+  /**
+   * Whether the moderation status requires a body or attachment.
+   *
+   * Applies to published-equivalent and embargoed statuses, and to pending
+   * (contributor/submitter Submit).
+   *
+   * @param \Drupal\reliefweb_entities\Entity\Report $entity
+   *   Report entity.
+   * @param string $status
+   *   Moderation status from the form.
+   *
+   * @return bool
+   *   TRUE when empty content should be rejected.
+   */
+  protected function statusRequiresBodyOrAttachment(Report $entity, string $status): bool {
+    return $entity->isPublishedOrEmbargoed($status) || $status === 'pending';
   }
 
   /**

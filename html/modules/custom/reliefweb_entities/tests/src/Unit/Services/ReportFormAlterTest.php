@@ -2,6 +2,8 @@
 
 namespace Drupal\Tests\reliefweb_entities\Unit\Services;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Database\Connection;
 use Drupal\Core\Entity\ContentEntityForm;
 use Drupal\Core\Entity\Display\EntityFormDisplayInterface;
@@ -113,6 +115,13 @@ class ReportFormAlterTest extends UnitTestCase {
   protected $userPostingRightsManager;
 
   /**
+   * The mocked config factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit\Framework\MockObject\MockObject
+   */
+  protected $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
@@ -129,9 +138,226 @@ class ReportFormAlterTest extends UnitTestCase {
     $this->renderer = $this->createMock(RendererInterface::class);
     $this->messenger = $this->createMock(MessengerInterface::class);
     $this->userPostingRightsManager = $this->createMock(UserPostingRightsManagerInterface::class);
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
 
     $container = new Container();
     \Drupal::setContainer($container);
+
+    $this->stringTranslation = $this->getStringTranslationStub();
+  }
+
+  /**
+   * Configure empty_content.prevent_publication on the mocked factory.
+   *
+   * @param bool $prevent_publication
+   *   Whether prevention is enabled.
+   */
+  protected function setEmptyContentConfig(bool $prevent_publication): void {
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')
+      ->with('empty_content.prevent_publication')
+      ->willReturn($prevent_publication);
+
+    $this->configFactory = $this->createMock(ConfigFactoryInterface::class);
+    $this->configFactory->method('get')
+      ->with('reliefweb_entities.settings')
+      ->willReturn($config);
+  }
+
+  /**
+   * Create a ReportFormAlter service for tests.
+   *
+   * @return \Drupal\reliefweb_entities\Services\ReportFormAlter
+   *   The service.
+   */
+  protected function createReportFormAlter(): ReportFormAlter {
+    return new ReportFormAlter(
+      $this->database,
+      $this->currentUser,
+      $this->entityFieldManager,
+      $this->entityTypeManager,
+      $this->state,
+      $this->stringTranslation,
+      $this->userPostingRightsManager,
+      $this->fileDuplication,
+      $this->requestStack,
+      $this->renderer,
+      $this->messenger,
+      $this->configFactory,
+    );
+  }
+
+  /**
+   * Attach a report entity mock to the form state.
+   *
+   * @param \Drupal\Core\Form\FormStateInterface|\PHPUnit\Framework\MockObject\MockObject $form_state
+   *   Form state mock.
+   * @param \Drupal\reliefweb_entities\Entity\Report|\PHPUnit\Framework\MockObject\MockObject|null $report
+   *   Optional report mock.
+   *
+   * @return \Drupal\reliefweb_entities\Entity\Report|\PHPUnit\Framework\MockObject\MockObject
+   *   Report mock.
+   */
+  protected function attachReportEntityToFormState($form_state, $report = NULL) {
+    $report ??= $this->createMock(Report::class);
+    $report->method('isPublishedOrEmbargoed')
+      ->willReturnCallback(static function (?string $status = NULL): bool {
+        return in_array($status, ['published', 'to-review', 'embargoed'], TRUE);
+      });
+
+    $form_object = $this->createMock(ContentEntityForm::class);
+    $form_object->method('getEntity')->willReturn($report);
+    $form_state->method('getFormObject')->willReturn($form_object);
+
+    return $report;
+  }
+
+  /**
+   * Tests validateBodyOrAttachment rejects empty publish attempts.
+   */
+  public function testValidateBodyOrAttachmentRejectsEmptyPublish(): void {
+    $this->assertValidateBodyOrAttachmentRejectsEmptyStatus('published');
+  }
+
+  /**
+   * Tests validateBodyOrAttachment rejects empty submit (pending) attempts.
+   */
+  public function testValidateBodyOrAttachmentRejectsEmptyPending(): void {
+    $this->assertValidateBodyOrAttachmentRejectsEmptyStatus('pending');
+  }
+
+  /**
+   * Assert empty body/file is rejected for the given status.
+   *
+   * @param string $status
+   *   Moderation status.
+   */
+  protected function assertValidateBodyOrAttachmentRejectsEmptyStatus(string $status): void {
+    $this->setEmptyContentConfig(TRUE);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $this->attachReportEntityToFormState($form_state);
+    $form_state->expects($this->any())
+      ->method('getValue')
+      ->willReturnCallback(function ($key, $default = NULL) use ($status) {
+        return match (TRUE) {
+          $key === ['moderation_status', 0, 'value'] => $status,
+          $key === ['body', 0, 'value'] => '',
+          $key === 'field_file' => ['add_more' => []],
+          default => $default,
+        };
+      });
+    $form_state->expects($this->exactly(2))
+      ->method('setErrorByName')
+      ->with(
+        $this->logicalOr('body][0][value', 'field_file'),
+        $this->callback(function ($message) {
+          return (string) $message === 'Enter body text or attach a file.';
+        }),
+      );
+
+    $form = [
+      'body' => [],
+      'field_file' => [],
+    ];
+    $this->createReportFormAlter()->validateBodyOrAttachment($form, $form_state);
+  }
+
+  /**
+   * Tests validateBodyOrAttachment allows body-only publish.
+   */
+  public function testValidateBodyOrAttachmentAllowsBody(): void {
+    $this->setEmptyContentConfig(TRUE);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $this->attachReportEntityToFormState($form_state);
+    $form_state->expects($this->any())
+      ->method('getValue')
+      ->willReturnCallback(function ($key, $default = NULL) {
+        return match (TRUE) {
+          $key === ['moderation_status', 0, 'value'] => 'published',
+          $key === ['body', 0, 'value'] => 'Report body text',
+          $key === 'field_file' => [],
+          default => $default,
+        };
+      });
+    $form_state->expects($this->never())
+      ->method('setErrorByName');
+
+    $form = [
+      'body' => [],
+      'field_file' => [],
+    ];
+    $this->createReportFormAlter()->validateBodyOrAttachment($form, $form_state);
+  }
+
+  /**
+   * Tests validateBodyOrAttachment allows attachment-only publish.
+   */
+  public function testValidateBodyOrAttachmentAllowsAttachment(): void {
+    $this->setEmptyContentConfig(TRUE);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $this->attachReportEntityToFormState($form_state);
+    $form_state->expects($this->any())
+      ->method('getValue')
+      ->willReturnCallback(function ($key, $default = NULL) {
+        return match (TRUE) {
+          $key === ['moderation_status', 0, 'value'] => 'to-review',
+          $key === ['body', 0, 'value'] => '',
+          $key === 'field_file' => [
+            0 => ['uuid' => 'file-uuid'],
+            'add_more' => [],
+          ],
+          default => $default,
+        };
+      });
+    $form_state->expects($this->never())
+      ->method('setErrorByName');
+
+    $form = [
+      'body' => [],
+      'field_file' => [],
+    ];
+    $this->createReportFormAlter()->validateBodyOrAttachment($form, $form_state);
+  }
+
+  /**
+   * Tests validateBodyOrAttachment is skipped when prevention is disabled.
+   */
+  public function testValidateBodyOrAttachmentSkippedWhenDisabled(): void {
+    $this->setEmptyContentConfig(FALSE);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $form_state->expects($this->never())
+      ->method('getValue');
+    $form_state->expects($this->never())
+      ->method('getFormObject');
+    $form_state->expects($this->never())
+      ->method('setErrorByName');
+
+    $this->createReportFormAlter()->validateBodyOrAttachment([], $form_state);
+  }
+
+  /**
+   * Tests validateBodyOrAttachment ignores non-published statuses.
+   */
+  public function testValidateBodyOrAttachmentIgnoresDraft(): void {
+    $this->setEmptyContentConfig(TRUE);
+
+    $form_state = $this->createMock(FormStateInterface::class);
+    $this->attachReportEntityToFormState($form_state);
+    $form_state->expects($this->once())
+      ->method('getValue')
+      ->with(['moderation_status', 0, 'value'])
+      ->willReturn('draft');
+    $form_state->expects($this->never())
+      ->method('setErrorByName');
+
+    $this->createReportFormAlter()->validateBodyOrAttachment([
+      'body' => [],
+      'field_file' => [],
+    ], $form_state);
   }
 
   /**
@@ -158,19 +384,7 @@ class ReportFormAlterTest extends UnitTestCase {
       ->with('check for duplicate files')
       ->willReturn(TRUE);
 
-    $service = new ReportFormAlter(
-      $this->database,
-      $this->currentUser,
-      $this->entityFieldManager,
-      $this->entityTypeManager,
-      $this->state,
-      $this->stringTranslation,
-      $this->userPostingRightsManager,
-      $this->fileDuplication,
-      $this->requestStack,
-      $this->renderer,
-      $this->messenger
-    );
+    $service = $this->createReportFormAlter();
 
     $form = [];
     $formState = $this->createMock(FormStateInterface::class);
@@ -194,19 +408,7 @@ class ReportFormAlterTest extends UnitTestCase {
       ->with('check for duplicate files')
       ->willReturn(FALSE);
 
-    $service = new ReportFormAlter(
-      $this->database,
-      $this->currentUser,
-      $this->entityFieldManager,
-      $this->entityTypeManager,
-      $this->state,
-      $this->stringTranslation,
-      $this->userPostingRightsManager,
-      $this->fileDuplication,
-      $this->requestStack,
-      $this->renderer,
-      $this->messenger
-    );
+    $service = $this->createReportFormAlter();
 
     $form = [];
     $formState = $this->createMock(FormStateInterface::class);
@@ -259,19 +461,7 @@ class ReportFormAlterTest extends UnitTestCase {
       ->method('getFormObject')
       ->willReturn($formObject);
 
-    $service = new ReportFormAlter(
-      $this->database,
-      $this->currentUser,
-      $this->entityFieldManager,
-      $this->entityTypeManager,
-      $this->state,
-      $this->stringTranslation,
-      $this->userPostingRightsManager,
-      $this->fileDuplication,
-      $this->requestStack,
-      $this->renderer,
-      $this->messenger
-    );
+    $service = $this->createReportFormAlter();
 
     $form = [];
 
@@ -304,19 +494,7 @@ class ReportFormAlterTest extends UnitTestCase {
       ->method('getCurrentRequest')
       ->willReturn($request);
 
-    $service = new ReportFormAlter(
-      $this->database,
-      $this->currentUser,
-      $this->entityFieldManager,
-      $this->entityTypeManager,
-      $this->state,
-      $this->stringTranslation,
-      $this->userPostingRightsManager,
-      $this->fileDuplication,
-      $this->requestStack,
-      $this->renderer,
-      $this->messenger
-    );
+    $service = $this->createReportFormAlter();
 
     $form = [];
     $formState = $this->createMock(FormStateInterface::class);
@@ -480,19 +658,7 @@ class ReportFormAlterTest extends UnitTestCase {
       ->method('addWarning')
       ->with('Rendered duplicate message');
 
-    $service = new ReportFormAlter(
-      $this->database,
-      $this->currentUser,
-      $this->entityFieldManager,
-      $this->entityTypeManager,
-      $this->state,
-      $this->stringTranslation,
-      $this->userPostingRightsManager,
-      $this->fileDuplication,
-      $this->requestStack,
-      $this->renderer,
-      $this->messenger
-    );
+    $service = $this->createReportFormAlter();
 
     $form = [];
 

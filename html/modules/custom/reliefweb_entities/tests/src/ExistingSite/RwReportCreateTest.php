@@ -235,6 +235,10 @@ class RwReportCreateTest extends RwReportBase {
       'type' => 'report',
       'title' => $title,
       'moderation_status' => $moderation_status,
+      'body' => [
+        'value' => 'Test report body content.',
+        'format' => 'markdown',
+      ],
       'field_origin' => 0,
       'field_origin_notes' => 'https://www.example.com/my-report',
       'field_language' => $term_language->id(),

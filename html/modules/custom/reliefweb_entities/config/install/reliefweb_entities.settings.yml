@@ -20,6 +20,11 @@ cron:
   expired_jobs_limit: 20
   expired_training_limit: 20
 
+# Prevent publishing reports with neither a body nor an attachment.
+empty_content:
+  prevent_publication: true
+  fallback_status: on-hold
+
 # Related content block settings.
 related_content:
   enabled: false

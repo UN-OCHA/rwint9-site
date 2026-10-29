@@ -241,6 +241,10 @@ class NodeReportEntityTest extends ExistingSiteBase {
       'type' => 'report',
       'title' => 'Applicable Report',
       'moderation_status' => 'published',
+      'body' => [
+        'value' => 'Test report body content.',
+        'format' => 'markdown',
+      ],
     ]);
 
     $plugin = $this->getPlugin('rw_node_report');

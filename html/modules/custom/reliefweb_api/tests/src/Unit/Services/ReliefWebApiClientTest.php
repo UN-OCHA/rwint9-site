@@ -69,6 +69,7 @@ class ReliefWebApiClientTest extends UnitTestCase {
         'verify_ssl' => TRUE,
         'cache_enabled' => TRUE,
         'cache_lifetime' => 60,
+        'failure_cache_lifetime' => 60,
         'cache_namespace' => 'reliefweb:api',
         'timeout' => 5,
         default => NULL,
@@ -132,15 +133,25 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
-   * Non-200 responses are not written to the API cache bin.
+   * Non-200 responses are written as a short-lived failure marker.
    */
   public function testNonSuccessResponseIsNotCached(): void {
     $this->cacheBackend->expects($this->once())
       ->method('get')
       ->willReturn(FALSE);
 
-    $this->cacheBackend->expects($this->never())
-      ->method('set');
+    $this->cacheBackend->expects($this->once())
+      ->method('set')
+      ->with(
+        $this->stringContains('reliefweb:api:queries:reports:'),
+        FALSE,
+        1_700_000_060,
+        $this->callback(static function (array $tags): bool {
+          return in_array('node_list:report', $tags, TRUE)
+            && in_array('reliefweb:api:reports', $tags, TRUE)
+            && in_array('reliefweb:api:failure', $tags, TRUE);
+        }),
+      );
 
     $this->httpClient->expects($this->once())
       ->method('requestAsync')
@@ -151,15 +162,21 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
-   * Rejected promises (timeouts etc.) are not written to the API cache bin.
+   * Rejected promises are written as a short-lived failure marker.
    */
   public function testRejectedRequestIsNotCached(): void {
     $this->cacheBackend->expects($this->once())
       ->method('get')
       ->willReturn(FALSE);
 
-    $this->cacheBackend->expects($this->never())
-      ->method('set');
+    $this->cacheBackend->expects($this->once())
+      ->method('set')
+      ->with(
+        $this->stringContains('reliefweb:api:queries:reports:'),
+        FALSE,
+        1_700_000_060,
+        $this->anything(),
+      );
 
     $this->httpClient->expects($this->once())
       ->method('requestAsync')
@@ -209,11 +226,12 @@ class ReliefWebApiClientTest extends UnitTestCase {
 
     $this->assertContains('node_list:report', $cacheability->getCacheTags());
     $this->assertContains('taxonomy_term_list', $cacheability->getCacheTags());
+    $this->assertNotContains('reliefweb:api:failure', $cacheability->getCacheTags());
     $this->assertSame(Cache::PERMANENT, $cacheability->getCacheMaxAge());
   }
 
   /**
-   * Failed requests set max-age 0 on the provided cacheability metadata.
+   * Failed requests set failure-lifetime max-age and failure tag.
    */
   public function testCacheabilitySetsMaxAgeZeroOnFailure(): void {
     $this->cacheBackend->method('get')->willReturn(FALSE);
@@ -224,7 +242,8 @@ class ReliefWebApiClientTest extends UnitTestCase {
     $this->apiClient->request('reports', ['limit' => 1], cacheability: $cacheability);
 
     $this->assertContains('node_list:report', $cacheability->getCacheTags());
-    $this->assertSame(0, $cacheability->getCacheMaxAge());
+    $this->assertContains('reliefweb:api:failure', $cacheability->getCacheTags());
+    $this->assertSame(60, $cacheability->getCacheMaxAge());
   }
 
   /**
@@ -244,15 +263,21 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
-   * Empty 200 bodies are not written to the API cache bin.
+   * Empty 200 bodies are written as a short-lived failure marker.
    */
   public function testEmptyBodyIsNotCached(): void {
     $this->cacheBackend->expects($this->once())
       ->method('get')
       ->willReturn(FALSE);
 
-    $this->cacheBackend->expects($this->never())
-      ->method('set');
+    $this->cacheBackend->expects($this->once())
+      ->method('set')
+      ->with(
+        $this->stringContains('reliefweb:api:queries:reports:'),
+        FALSE,
+        1_700_000_060,
+        $this->anything(),
+      );
 
     $this->httpClient->expects($this->once())
       ->method('requestAsync')
@@ -263,15 +288,21 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
-   * Non-JSON 200 bodies are not written to the API cache bin.
+   * Non-JSON 200 bodies are written as a short-lived failure marker.
    */
   public function testNonJsonBodyIsNotCached(): void {
     $this->cacheBackend->expects($this->once())
       ->method('get')
       ->willReturn(FALSE);
 
-    $this->cacheBackend->expects($this->never())
-      ->method('set');
+    $this->cacheBackend->expects($this->once())
+      ->method('set')
+      ->with(
+        $this->stringContains('reliefweb:api:queries:reports:'),
+        FALSE,
+        1_700_000_060,
+        $this->anything(),
+      );
 
     $this->httpClient->expects($this->once())
       ->method('requestAsync')
@@ -282,9 +313,97 @@ class ReliefWebApiClientTest extends UnitTestCase {
   }
 
   /**
-   * JSON array 200 bodies are not written to the API cache bin.
+   * JSON array 200 bodies are written as a short-lived failure marker.
    */
   public function testJsonArrayBodyIsNotCached(): void {
+    $this->cacheBackend->expects($this->once())
+      ->method('get')
+      ->willReturn(FALSE);
+
+    $this->cacheBackend->expects($this->once())
+      ->method('set')
+      ->with(
+        $this->stringContains('reliefweb:api:queries:reports:'),
+        FALSE,
+        1_700_000_060,
+        $this->anything(),
+      );
+
+    $this->httpClient->expects($this->once())
+      ->method('requestAsync')
+      ->willReturn(Create::promiseFor(new Response(200, [], '[{"id":1}]')));
+
+    $result = $this->apiClient->request('reports', ['limit' => 1]);
+    $this->assertNull($result);
+  }
+
+  /**
+   * Cached failures return NULL and skip the HTTP client.
+   */
+  public function testCachedFailureMarkerSkipsHttp(): void {
+    $cache_item = (object) [
+      'data' => FALSE,
+    ];
+
+    $this->cacheBackend->expects($this->once())
+      ->method('get')
+      ->willReturn($cache_item);
+
+    $this->cacheBackend->expects($this->never())
+      ->method('set');
+
+    $this->httpClient->expects($this->never())
+      ->method('requestAsync');
+
+    $cacheability = new CacheableMetadata();
+    $result = $this->apiClient->request('reports', ['limit' => 1], cacheability: $cacheability);
+    $this->assertNull($result);
+    $this->assertContains('reliefweb:api:failure', $cacheability->getCacheTags());
+    $this->assertSame(60, $cacheability->getCacheMaxAge());
+  }
+
+  /**
+   * Failure lifetime 0 disables negative caching and sets max-age 0.
+   */
+  public function testFailureLifetimeZeroDoesNotCacheFailures(): void {
+    $config = $this->createMock(ImmutableConfig::class);
+    $config->method('get')->willReturnCallback(static function (string $key) {
+      return match ($key) {
+        'api_url' => 'https://api.example.com/v1',
+        'api_url_external' => 'https://api.example.com/v1',
+        'appname' => 'test-app',
+        'request_id_prefix' => 'rw',
+        'verify_ssl' => TRUE,
+        'cache_enabled' => TRUE,
+        'cache_lifetime' => 60,
+        'failure_cache_lifetime' => 0,
+        'cache_namespace' => 'reliefweb:api',
+        'timeout' => 5,
+        default => NULL,
+      };
+    });
+
+    $config_factory = $this->createMock(ConfigFactoryInterface::class);
+    $config_factory->method('get')->with('reliefweb_api.settings')->willReturn($config);
+
+    $time = $this->createMock(TimeInterface::class);
+    $time->method('getRequestTime')->willReturn(1_700_000_000);
+
+    $logger_factory = $this->createMock(LoggerChannelFactoryInterface::class);
+    $logger_factory->method('get')->willReturn($this->logger);
+
+    $request_stack = new RequestStack();
+    $request_stack->push(Request::create('https://example.com/'));
+
+    $api_client = new ReliefWebApiClient(
+      $this->cacheBackend,
+      $config_factory,
+      $time,
+      $this->httpClient,
+      $logger_factory,
+      $request_stack,
+    );
+
     $this->cacheBackend->expects($this->once())
       ->method('get')
       ->willReturn(FALSE);
@@ -294,10 +413,13 @@ class ReliefWebApiClientTest extends UnitTestCase {
 
     $this->httpClient->expects($this->once())
       ->method('requestAsync')
-      ->willReturn(Create::promiseFor(new Response(200, [], '[{"id":1}]')));
+      ->willReturn(Create::promiseFor(new Response(500, [], 'error')));
 
-    $result = $this->apiClient->request('reports', ['limit' => 1]);
+    $cacheability = new CacheableMetadata();
+    $result = $api_client->request('reports', ['limit' => 1], cacheability: $cacheability);
     $this->assertNull($result);
+    $this->assertNotContains('reliefweb:api:failure', $cacheability->getCacheTags());
+    $this->assertSame(0, $cacheability->getCacheMaxAge());
   }
 
   /**

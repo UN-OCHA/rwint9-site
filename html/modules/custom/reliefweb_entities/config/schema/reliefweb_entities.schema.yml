@@ -20,6 +20,16 @@ reliefweb_entities.settings:
         expired_training_limit:
           type: integer
           label: 'Maximum number of published training to expire at once'
+    empty_content:
+      type: mapping
+      label: 'Empty content publication prevention'
+      mapping:
+        prevent_publication:
+          type: boolean
+          label: 'Prevent publication of reports with no body and no attachment'
+        fallback_status:
+          type: string
+          label: 'Moderation status to use instead of publishing'
     related_content:
       type: mapping
       label: 'Related content block settings'
