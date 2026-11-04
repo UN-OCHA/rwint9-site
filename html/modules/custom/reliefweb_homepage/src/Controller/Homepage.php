@@ -368,21 +368,27 @@ class Homepage extends ControllerBase {
   }
 
   /**
-   * Get the API payload to get the latest blog post.
+   * Get the API payload to get the latest blog posts.
+   *
+   * @param int $limit
+   *   Number of blog posts to return.
    *
    * @return array
    *   API Payload.
    */
-  public function getBlogPostApiPayload() {
+  public function getBlogPostApiPayload($limit = 2) {
     $payload = RiverServiceBase::getRiverApiPayload('blog_post');
-    $payload['limit'] = 1;
+    $payload['fields']['exclude'][] = 'body-html';
+    $payload['fields']['exclude'][] = 'author';
+    $payload['limit'] = $limit;
 
     return [
       'resource' => 'blog',
       'bundle' => 'blog_post',
       'entity_type' => 'node',
       'payload' => $payload,
-      'title' => $this->t('Latest Blog'),
+      'exclude' => ['author', 'summary'],
+      'title' => $this->t('Latest Blog Posts'),
       'callback' => [$this, 'parseBlogPostApiData'],
       'request_id' => 'homepage.blog',
       // Link to the blog river for the entity.
