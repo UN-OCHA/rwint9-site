@@ -262,3 +262,18 @@ reliefweb_import.plugin.importer.unep:
     timeout:
       type: integer
       label: 'Connection and request timeout.'
+
+# IOM Crisis Response importer plugin settings.
+reliefweb_import.plugin.importer.iom_crisis_response:
+  type: reliefweb_import.plugin.importer
+  label: 'IOM Crisis Response importer plugin settings.'
+  mapping:
+    api_urls:
+      type: string
+      label: 'API URLs (one per line).'
+    max_age:
+      type: integer
+      label: 'Max age in days.'
+    timeout:
+      type: integer
+      label: 'Connection and request timeout.'
