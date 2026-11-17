@@ -1,5 +1,5 @@
 {
-    "_hash": "ced4b05e4e73e9d28756c4e792d88c969ccacbd78c18ca8cf6953eec9e8bb9a4",
+    "_hash": "7cf6331462aca688edd79907f678aecb1dc6c326daa50d1edc5bd6dfba3a0d53",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -105,18 +105,6 @@
                 "description": "Drupal 11 compatibility",
                 "url": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch",
                 "sha256": "10e7faee8f6ba7673206fa74dfcda703b2c28546bacf742d138c9fa16d774ffe",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/pathauto": [
-            {
-                "package": "drupal/pathauto",
-                "description": "PHP 8.5 null array offset compatibility",
-                "url": "PATCHES/pathauto--php85-null-array-offset.patch",
-                "sha256": "1b886fe901ca93ad94b43860728e8258daf57c4d01ebcb48135ab526f60cdff8",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
