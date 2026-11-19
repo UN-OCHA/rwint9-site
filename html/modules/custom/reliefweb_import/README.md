@@ -35,6 +35,15 @@ Imports ECHO Flash updates from [their API](https://erccportal.jrc.ec.europa.eu/
 
 Imports ECHO Maps from [their API](https://erccportal.jrc.ec.europa.eu/API/ERCC/Maps/GetPagedItems)
 
+## IOM Crisis Response importer
+
+Imports PDF reports from the IOM Crisis Response JSON feeds:
+
+- https://crisisresponse.iom.int/iom-publications/format/json
+- https://crisisresponse.iom.int/appeal-documents/format/json
+
+Both feeds are fetched, merged, and deduplicated by PDF URL before import. Items without a PDF link are skipped. Language is taken from an optional `[EN]` / `[ES]` / `[FR]` title suffix (default English). Country defaults to World and format to Other; classification is enabled to refine country, format, and theme.
+
 ## Inoreader importer
 
 Imports tagged items from the [automation_production](https://www.inoreader.com/folder/automation_production)
