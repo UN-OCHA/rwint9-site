@@ -1861,22 +1861,40 @@ class ReliefWebFile extends WidgetBase {
       $duplicates = json_decode($duplicates, TRUE) ?? [];
     }
     else {
-      // Extract text from the file.
-      $extracted_text = $item->extractText();
-      if (empty($extracted_text)) {
+      $file = $item->loadFile();
+      if (!$file) {
         return;
       }
 
-      // Check for duplicates.
-      $duplicates = $this->fileDuplication->findSimilarDocuments(
-        $extracted_text,
-        $bundle,
-        !empty($entity_id) ? [$entity_id] : [],
-        $this->getDuplicateMaxDocumentsSetting(),
-        $this->getDuplicateMinimumShouldMatchSetting(),
-        $this->getDuplicateMaxFilesSetting(),
-        $this->getDuplicateSkipAccessCheckSetting(),
-      );
+      $exclude_ids = !empty($entity_id) ? [$entity_id] : [];
+      // Permanent files can reuse/repair the indexed fingerprint (MLT by id).
+      // New temporary uploads use capped text extraction instead.
+      if ($file->isPermanent() && $file->id()) {
+        $duplicates = $this->fileDuplication->findSimilarDocumentsForFile(
+          $file,
+          $bundle,
+          $exclude_ids,
+          $this->getDuplicateMaxDocumentsSetting(),
+          $this->getDuplicateMinimumShouldMatchSetting(),
+          $this->getDuplicateMaxFilesSetting(),
+          $this->getDuplicateSkipAccessCheckSetting(),
+        );
+      }
+      else {
+        $extracted_text = $this->fileDuplication->extractFingerprintText($file);
+        if ($extracted_text === '') {
+          return;
+        }
+        $duplicates = $this->fileDuplication->findSimilarDocuments(
+          $extracted_text,
+          $bundle,
+          $exclude_ids,
+          $this->getDuplicateMaxDocumentsSetting(),
+          $this->getDuplicateMinimumShouldMatchSetting(),
+          $this->getDuplicateMaxFilesSetting(),
+          $this->getDuplicateSkipAccessCheckSetting(),
+        );
+      }
     }
 
     // Store the duplicates in a hidden field.

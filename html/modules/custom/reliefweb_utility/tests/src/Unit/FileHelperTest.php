@@ -69,10 +69,23 @@ class FileHelperTest extends UnitTestCase {
   protected $loggerChannel;
 
   /**
+   * Temporary executable used as a text extraction command in unit tests.
+   *
+   * @var string|null
+   */
+  protected $extractorBinary;
+
+  /**
    * {@inheritdoc}
    */
   protected function setUp(): void {
     parent::setUp();
+    FileHelper::clearTextExtractionCommandsCache();
+
+    // Use a local executable so tests do not depend on mutool/pandoc paths.
+    $this->extractorBinary = tempnam(sys_get_temp_dir(), 'rw_extract_');
+    file_put_contents($this->extractorBinary, "#!/bin/sh\necho extracted\n");
+    chmod($this->extractorBinary, 0755);
 
     // Mock the file system service.
     $this->fileSystem = $this->prophesize(FileSystemInterface::class);
@@ -84,17 +97,17 @@ class FileHelperTest extends UnitTestCase {
 
     // Set up default text extraction commands configuration.
     $default_commands = [
-      'application/pdf' => [
+      [
         'mimetype' => 'application/pdf',
-        'command' => '/usr/bin/mutool',
+        'command' => $this->extractorBinary,
         'args' => 'draw -F txt',
         'options' => '',
         'page' => TRUE,
         'ignore_errors_if_output' => TRUE,
       ],
-      'application/msword' => [
+      [
         'mimetype' => 'application/msword',
-        'command' => '/usr/bin/pandoc',
+        'command' => $this->extractorBinary,
         'args' => '--to=plain',
         'options' => '',
         'page' => FALSE,
@@ -114,6 +127,17 @@ class FileHelperTest extends UnitTestCase {
     $container->set('config.factory', $this->configFactory->reveal());
     $container->set('logger.factory', $this->loggerChannelFactory->reveal());
     \Drupal::setContainer($container);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function tearDown(): void {
+    FileHelper::clearTextExtractionCommandsCache();
+    if (!empty($this->extractorBinary) && file_exists($this->extractorBinary)) {
+      unlink($this->extractorBinary);
+    }
+    parent::tearDown();
   }
 
   /**
@@ -611,6 +635,50 @@ XML;
       [],
       FileHelper::extractStructuredTextSpans($file->reveal(), 2, 1),
     );
+  }
+
+  /**
+   * Page ranges are appended for page-capable extractors.
+   */
+  public function testBuildTextExtractionCommandWithPageRange(): void {
+    $config = [
+      'command' => '/usr/bin/mutool',
+      'args' => 'draw -F txt',
+      'options' => '',
+      'page' => TRUE,
+    ];
+    $command = FileHelper::buildTextExtractionCommand($config, '/tmp/doc.pdf', '1-30');
+    $this->assertSame(
+      ['/usr/bin/mutool', 'draw', '-F', 'txt', '/tmp/doc.pdf', '1-30'],
+      $command,
+    );
+  }
+
+  /**
+   * Page argument is omitted when the extractor does not support pages.
+   */
+  public function testBuildTextExtractionCommandIgnoresPageWhenUnsupported(): void {
+    $config = [
+      'command' => '/usr/bin/pandoc',
+      'args' => '--to=plain',
+      'options' => '',
+      'page' => FALSE,
+    ];
+    $command = FileHelper::buildTextExtractionCommand($config, '/tmp/doc.doc', '1-30');
+    $this->assertSame(
+      ['/usr/bin/pandoc', '--to=plain', '/tmp/doc.doc'],
+      $command,
+    );
+  }
+
+  /**
+   * Truncate extracted text by character count.
+   */
+  public function testTruncateExtractedText(): void {
+    $this->assertSame('abcdef', FileHelper::truncateExtractedText('abcdef', 0));
+    $this->assertSame('abcdef', FileHelper::truncateExtractedText('abcdef', 10));
+    $this->assertSame('abc', FileHelper::truncateExtractedText('abcdef', 3));
+    $this->assertSame('café', FileHelper::truncateExtractedText('café au lait', 4));
   }
 
 }

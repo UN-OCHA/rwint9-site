@@ -56,16 +56,23 @@ class FileHelper {
    *
    * @param \Drupal\file\Entity\File $file
    *   The Drupal File object from which to extract text.
-   * @param ?int $page
-   *   Specific page to extract text from (if not provided extracts all pages).
-   *   Note: Page parameter is only supported for PDF files.
+   * @param int|string|null $page
+   *   Page number, mutool page range (e.g. "1-30"), or NULL for all pages.
+   *   Only used when the mimetype command supports pages (PDFs).
    * @param ?\Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
+   * @param int|null $timeout
+   *   Process timeout in seconds, or NULL for the Symfony default.
    *
    * @return string
    *   The extracted text content or empty string in case of failure.
    */
-  public static function extractText(File $file, ?int $page = NULL, ?FileSystemInterface $file_system = NULL): string {
+  public static function extractText(
+    File $file,
+    int|string|null $page = NULL,
+    ?FileSystemInterface $file_system = NULL,
+    ?int $timeout = NULL,
+  ): string {
     $source_uri = $file->getFileUri();
     $mimetype = $file->getMimeType();
     if (empty($source_uri) || empty($mimetype)) {
@@ -88,33 +95,57 @@ class FileHelper {
     }
 
     $config = $base_commands[$mimetype];
-
-    // Build command for this specific mimetype.
-    $command = [$config['command']];
-
-    // Add base arguments if configured.
-    if (!empty($config['args'])) {
-      $command = array_merge($command, explode(' ', $config['args']));
-    }
-
-    // Add options if configured.
-    if (!empty($config['options'])) {
-      $command = array_merge($command, explode(' ', $config['options']));
-    }
-
-    // Add file path.
-    $command[] = $source_path;
-
-    // Add page parameter if the command supports it.
-    if ($config['page'] && $page !== NULL) {
-      $command[] = (string) $page;
-    }
+    $command = static::buildTextExtractionCommand($config, $source_path, $page);
 
     // Execute command.
     $process = new Process($command);
+    if ($timeout !== NULL) {
+      $process->setTimeout($timeout);
+    }
     $process->run();
 
     return static::getProcessResult($process, $config, $file->id());
+  }
+
+  /**
+   * Extract text for MinHash fingerprinting with page and character caps.
+   *
+   * For PDFs, extracts the first $max_pages pages in one mutool call. For other
+   * supported types, extracts the full document. Result is truncated to
+   * $max_chars characters.
+   *
+   * @param \Drupal\file\Entity\File $file
+   *   The file to extract text from.
+   * @param int $max_pages
+   *   Maximum number of PDF pages to extract (first N). Ignored for non-PDF.
+   * @param int $max_chars
+   *   Maximum characters to keep after extraction (0 = no char limit).
+   * @param ?\Drupal\Core\File\FileSystemInterface $file_system
+   *   The file system service.
+   * @param int $timeout
+   *   Process timeout in seconds.
+   *
+   * @return string
+   *   Capped extracted text, or empty string on failure.
+   */
+  public static function extractTextForFingerprint(
+    File $file,
+    int $max_pages = 30,
+    int $max_chars = 300000,
+    ?FileSystemInterface $file_system = NULL,
+    int $timeout = 60,
+  ): string {
+    $mimetype = $file->getMimeType();
+    $base_commands = static::getTextExtractionCommands();
+    $config = $base_commands[$mimetype] ?? NULL;
+
+    $page = NULL;
+    if ($config && !empty($config['page']) && $max_pages > 0) {
+      $page = $max_pages <= 1 ? '1' : ('1-' . $max_pages);
+    }
+
+    $text = static::extractText($file, $page, $file_system, $timeout);
+    return static::truncateExtractedText($text, $max_chars);
   }
 
   /**
@@ -131,6 +162,10 @@ class FileHelper {
    *   Timeout in seconds for each process (default: 60).
    * @param ?\Drupal\Core\File\FileSystemInterface $file_system
    *   The file system service.
+   * @param int|null $max_pages
+   *   When set, limit PDF extraction to the first N pages (fingerprint mode).
+   * @param int|null $max_chars
+   *   When set, truncate each result to this many characters.
    *
    * @return array
    *   Array with file IDs as keys and extracted text as values.
@@ -142,6 +177,8 @@ class FileHelper {
     int $processes = 4,
     int $timeout = 60,
     ?FileSystemInterface $file_system = NULL,
+    ?int $max_pages = NULL,
+    ?int $max_chars = NULL,
   ): array {
     if (empty($files)) {
       return [];
@@ -191,20 +228,11 @@ class FileHelper {
 
       // Build command for this specific mimetype.
       $config = $base_commands[$mimetype];
-      $command = [$config['command']];
-
-      // Add base arguments if configured.
-      if (!empty($config['args'])) {
-        $command = array_merge($command, explode(' ', $config['args']));
+      $page = NULL;
+      if ($max_pages !== NULL && $max_pages > 0 && !empty($config['page'])) {
+        $page = $max_pages <= 1 ? '1' : ('1-' . $max_pages);
       }
-
-      // Add options if configured.
-      if (!empty($config['options'])) {
-        $command = array_merge($command, explode(' ', $config['options']));
-      }
-
-      // Add file path as the last argument.
-      $command[] = $source_path;
+      $command = static::buildTextExtractionCommand($config, $source_path, $page);
 
       // Create a new process to run the text extraction command.
       $process = new Process($command);
@@ -238,7 +266,11 @@ class FileHelper {
 
         if (!$process->isRunning()) {
           // Process completed - collect result.
-          $results[$file_id] = static::getProcessResult($process, $config, $file_id);
+          $text = static::getProcessResult($process, $config, $file_id);
+          if ($max_chars !== NULL) {
+            $text = static::truncateExtractedText($text, $max_chars);
+          }
+          $results[$file_id] = $text;
 
           // Remove completed process from running pool.
           unset($running_processes[$file_id]);
@@ -261,6 +293,64 @@ class FileHelper {
     }
 
     return $results;
+  }
+
+  /**
+   * Build a text extraction command line.
+   *
+   * @param array $config
+   *   Command configuration for a mimetype.
+   * @param string $source_path
+   *   Absolute path to the source file.
+   * @param int|string|null $page
+   *   Optional page number or range for page-capable extractors.
+   *
+   * @return list<string>
+   *   Process command arguments.
+   */
+  public static function buildTextExtractionCommand(
+    array $config,
+    string $source_path,
+    int|string|null $page = NULL,
+  ): array {
+    $command = [$config['command']];
+
+    if (!empty($config['args'])) {
+      $command = array_merge($command, explode(' ', (string) $config['args']));
+    }
+
+    if (!empty($config['options'])) {
+      $command = array_merge($command, explode(' ', (string) $config['options']));
+    }
+
+    $command[] = $source_path;
+
+    if (!empty($config['page']) && $page !== NULL && $page !== '') {
+      $command[] = (string) $page;
+    }
+
+    return $command;
+  }
+
+  /**
+   * Truncate extracted text to a maximum number of characters.
+   *
+   * @param string $text
+   *   Extracted text.
+   * @param int $max_chars
+   *   Maximum characters (0 or less = no truncation).
+   *
+   * @return string
+   *   Truncated text.
+   */
+  public static function truncateExtractedText(string $text, int $max_chars): string {
+    if ($max_chars <= 0 || $text === '') {
+      return $text;
+    }
+    if (mb_strlen($text) <= $max_chars) {
+      return $text;
+    }
+    return mb_substr($text, 0, $max_chars);
   }
 
   /**
