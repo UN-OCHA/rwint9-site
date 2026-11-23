@@ -1042,14 +1042,13 @@ class ReportFormAlter extends EntityFormAlterServiceBase {
         continue;
       }
 
-      // Extract text from the file.
-      $extracted_text = $field_item->extractText();
-      if (empty($extracted_text)) {
+      $file = $field_item->loadFile();
+      if (!$file) {
         continue;
       }
 
-      $duplicates = $this->fileDuplication->findSimilarDocuments(
-        $extracted_text,
+      $duplicates = $this->fileDuplication->findSimilarDocumentsForFile(
+        $file,
         $bundle,
         !empty($entity_id) ? [$entity_id] : [],
         $widget->getDuplicateMaxDocumentsSetting(),

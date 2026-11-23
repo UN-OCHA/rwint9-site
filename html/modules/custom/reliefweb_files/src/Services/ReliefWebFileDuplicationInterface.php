@@ -1,6 +1,6 @@
 <?php
 
-declare (strict_types=1);
+declare(strict_types=1);
 
 namespace Drupal\reliefweb_files\Services;
 
@@ -13,6 +13,11 @@ use Psr\Log\LoggerInterface;
 interface ReliefWebFileDuplicationInterface {
 
   /**
+   * MinHash analyzer bucket_count (unique tokens per fingerprint).
+   */
+  public const MINHASH_BUCKET_COUNT = 512;
+
+  /**
    * Find documents with similar content to the input text.
    *
    * @param string $input_text
@@ -21,13 +26,13 @@ interface ReliefWebFileDuplicationInterface {
    *   The content type bundle (e.g., 'report', 'job', etc.).
    * @param array $exclude_document_ids
    *   Array of document IDs to exclude from the search results.
-   * @param int $max_documents
+   * @param int|null $max_documents
    *   Maximum number of documents to return.
-   * @param string $minimum_should_match
+   * @param string|null $minimum_should_match
    *   Minimum should match percentage for Elasticsearch query.
-   * @param int $max_files
+   * @param int|null $max_files
    *   Maximum number of files to search for similarity.
-   * @param bool $skip_access_check
+   * @param bool|null $skip_access_check
    *   Whether to skip access checks.
    *
    * @return array
@@ -51,6 +56,40 @@ interface ReliefWebFileDuplicationInterface {
   ): array;
 
   /**
+   * Find documents similar to a file via its fingerprint.
+   *
+   * Uses an existing Elasticsearch fingerprint when present (MLT by _id).
+   * When missing, extracts capped text, indexes the fingerprint, then searches.
+   *
+   * @param \Drupal\file\Entity\File $file
+   *   The file entity.
+   * @param string $bundle
+   *   The content type bundle (e.g., 'report').
+   * @param array $exclude_document_ids
+   *   Document IDs to exclude from results.
+   * @param int|null $max_documents
+   *   Maximum number of documents to return.
+   * @param string|null $minimum_should_match
+   *   Minimum should match percentage.
+   * @param int|null $max_files
+   *   Maximum number of similar files to search.
+   * @param bool|null $skip_access_check
+   *   Whether to skip access checks.
+   *
+   * @return array
+   *   Matching documents (same shape as findSimilarDocuments()).
+   */
+  public function findSimilarDocumentsForFile(
+    File $file,
+    string $bundle = 'report',
+    array $exclude_document_ids = [],
+    ?int $max_documents = NULL,
+    ?string $minimum_should_match = NULL,
+    ?int $max_files = NULL,
+    ?bool $skip_access_check = NULL,
+  ): array;
+
+  /**
    * Find similar file fingerprints.
    *
    * @param string $input_text
@@ -71,6 +110,39 @@ interface ReliefWebFileDuplicationInterface {
     string $minimum_should_match = '80%',
     array $exclude_file_ids = [],
   ): array;
+
+  /**
+   * Find similar file fingerprints using an indexed document id.
+   *
+   * @param int|string $file_id
+   *   Fingerprint document id (file id).
+   * @param int $max_files
+   *   Maximum number of files to return.
+   * @param string $minimum_should_match
+   *   Minimum should match percentage.
+   * @param array $exclude_file_ids
+   *   File IDs to exclude (the source file id is always excluded).
+   *
+   * @return array
+   *   Matching file fingerprints with similarity scores.
+   */
+  public function findSimilarFileFingerprintsById(
+    int|string $file_id,
+    int $max_files = 50,
+    string $minimum_should_match = '80%',
+    array $exclude_file_ids = [],
+  ): array;
+
+  /**
+   * Whether a file fingerprint document exists in Elasticsearch.
+   *
+   * @param int|string $file_id
+   *   File id / fingerprint document id.
+   *
+   * @return bool
+   *   TRUE if the document exists.
+   */
+  public function hasFileFingerprint(int|string $file_id): bool;
 
   /**
    * Find files with exact hash match.
@@ -151,7 +223,7 @@ interface ReliefWebFileDuplicationInterface {
   public function deleteFileFingerprint(File $file): bool;
 
   /**
-   * Get the total number of files to index with optional ID range conditions.
+   * Get the total number of files to index with optional filters.
    *
    * @param int $start_id
    *   Optional start file ID (inclusive).
@@ -159,11 +231,43 @@ interface ReliefWebFileDuplicationInterface {
    *   Optional end file ID (inclusive).
    * @param int $limit
    *   Optional limit on the count.
+   * @param int $min_pages
+   *   Only include files with page_count greater than this (0 = off).
    *
    * @return int
    *   The total number of files to process.
    */
-  public function getFileCountForIndexing(int $start_id = 0, int $end_id = 0, int $limit = 0): int;
+  public function getFileCountForIndexing(
+    int $start_id = 0,
+    int $end_id = 0,
+    int $limit = 0,
+    int $min_pages = 0,
+  ): int;
+
+  /**
+   * Count fingerprint index coverage for candidate files.
+   *
+   * @param int $start_id
+   *   Optional start file ID (inclusive).
+   * @param int $end_id
+   *   Optional end file ID (inclusive).
+   * @param int $limit
+   *   Optional limit on candidates.
+   * @param int $min_pages
+   *   Only include files with page_count greater than this (0 = off).
+   * @param int $chunk_size
+   *   Chunk size for Elasticsearch _mget checks.
+   *
+   * @return array{total: int, indexed: int, missing: int}
+   *   Coverage counts.
+   */
+  public function countFingerprintIndexStatus(
+    int $start_id = 0,
+    int $end_id = 0,
+    int $limit = 0,
+    int $min_pages = 0,
+    int $chunk_size = 500,
+  ): array;
 
   /**
    * Optimized file indexing with chunked processing and file ID tracking.
@@ -180,6 +284,10 @@ interface ReliefWebFileDuplicationInterface {
    *   Number of parallel processes to use for text extraction.
    * @param callable|null $progress_callback
    *   Optional callback function for progress updates.
+   * @param int $min_pages
+   *   Only index files with page_count greater than this (0 = off).
+   * @param bool $skip_existing
+   *   Skip files that already have a fingerprint document.
    *
    * @return array
    *   Array with 'success' and 'failed' counts.
@@ -191,6 +299,8 @@ interface ReliefWebFileDuplicationInterface {
     int $limit = 0,
     int $processes = 4,
     ?callable $progress_callback = NULL,
+    int $min_pages = 0,
+    bool $skip_existing = FALSE,
   ): array;
 
   /**

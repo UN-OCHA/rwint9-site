@@ -229,6 +229,10 @@ class ReliefWebFilesCommands extends DrushCommands {
    * @option remove Removes a file fingerprint if id is provided.
    * @option count-only Get the number of indexable files for the options,
    *   defaults to FALSE.
+   * @option count-status Report SQL candidates vs indexed vs missing in ES.
+   * @option min-pages Only files with field_file_page_count greater than this
+   *   (0 = no filter). Use 30 to reindex the long-tail after extract caps.
+   * @option skip-existing Skip files that already have a fingerprint document.
    * @option memory_limit PHP memory limit, defaults to 512M.
    * @option replicas Number of Elasticsearch replicas for the index,
    *   defaults to NULL which means use the reliefweb_api.settings.replicas
@@ -242,6 +246,9 @@ class ReliefWebFilesCommands extends DrushCommands {
    * @usage rw-files:index-file-fingerprints --limit=100
    * @usage rw-files:index-file-fingerprints --id=123
    * @usage rw-files:index-file-fingerprints --count-only
+   * @usage rw-files:index-file-fingerprints --count-status --min-pages=30
+   * @usage rw-files:index-file-fingerprints --min-pages=30
+   * @usage rw-files:index-file-fingerprints --skip-existing
    * @usage rw-files:index-file-fingerprints --remove --id=123
    * @usage rw-files:index-file-fingerprints --start=2000 --end=1000
    * @usage rw-files:index-file-fingerprints --start=2000
@@ -256,6 +263,9 @@ class ReliefWebFilesCommands extends DrushCommands {
       'id' => 0,
       'remove' => FALSE,
       'count-only' => FALSE,
+      'count-status' => FALSE,
+      'min-pages' => 0,
+      'skip-existing' => FALSE,
       'memory_limit' => '512M',
       'replicas' => NULL,
       'shards' => NULL,
@@ -265,29 +275,49 @@ class ReliefWebFilesCommands extends DrushCommands {
     $logger = $this->logger();
     $file_duplication = $this->fileDuplication;
 
-    $limit = $options['limit'] ?? 0;
-    $start = $options['start'] ?? 0;
-    $end = $options['end'] ?? 0;
-    $chunk_size = $options['chunk-size'] ?? 500;
-    $file_id = $options['id'] ?? 0;
-    $remove = $options['remove'] ?? FALSE;
-    $count_only = $options['count-only'] ?? FALSE;
+    $limit = (int) ($options['limit'] ?? 0);
+    $start = (int) ($options['start'] ?? 0);
+    $end = (int) ($options['end'] ?? 0);
+    $chunk_size = (int) ($options['chunk-size'] ?? 500);
+    $file_id = (int) ($options['id'] ?? 0);
+    $remove = !empty($options['remove']);
+    $count_only = !empty($options['count-only']);
+    $count_status = !empty($options['count-status']);
+    $min_pages = (int) ($options['min-pages'] ?? 0);
+    $skip_existing = !empty($options['skip-existing']);
     $shards = $options['shards'] ?? NULL;
     $replicas = $options['replicas'] ?? NULL;
-    $processes = $options['processes'] ?? 4;
+    $processes = (int) ($options['processes'] ?? 4);
 
     // Set memory limit if provided.
     if (!empty($options['memory_limit'])) {
       ini_set('memory_limit', $options['memory_limit']);
     }
 
+    $filter_suffix = ($start > 0 ? " (starting from ID $start)" : "") .
+      ($end > 0 ? " (ending at ID $end)" : "") .
+      ($limit > 0 ? " (limited to $limit)" : "") .
+      ($min_pages > 0 ? " (page_count > $min_pages)" : "");
+
+    if ($count_status) {
+      $status = $file_duplication->countFingerprintIndexStatus(
+        $start,
+        $end,
+        $limit,
+        $min_pages,
+        $chunk_size,
+      );
+      $logger->info(
+        "Fingerprint status: total={$status['total']}, indexed={$status['indexed']}, missing={$status['missing']}"
+        . $filter_suffix
+      );
+      return;
+    }
+
     // Use the optimized indexing method for all cases.
     if ($count_only) {
-      $total_files = $file_duplication->getFileCountForIndexing($start, $end, $limit);
-      $logger->info("Found $total_files files to index" .
-        ($start > 0 ? " (starting from ID $start)" : "") .
-        ($end > 0 ? " (ending at ID $end)" : "") .
-        ($limit > 0 ? " (limited to $limit)" : ""));
+      $total_files = $file_duplication->getFileCountForIndexing($start, $end, $limit, $min_pages);
+      $logger->info("Found $total_files files to index" . $filter_suffix);
       return;
     }
 
@@ -326,7 +356,9 @@ class ReliefWebFilesCommands extends DrushCommands {
         if ($indexed % 100 === 0) {
           $logger->info("Total indexed so far: $indexed files...");
         }
-      }
+      },
+      $min_pages,
+      $skip_existing,
     );
 
     $logger->success("Indexing completed. Indexed: {$results['success']}, Errors: {$results['failed']}");
@@ -387,16 +419,9 @@ class ReliefWebFilesCommands extends DrushCommands {
         continue;
       }
 
-      // Extract text from the file.
-      $text = $field_item->extractText();
-      if (empty($text)) {
-        $this->logger()->warning("Node $node_id: File $file_count ({$file->getFilename()}) has no extractable text.");
-        continue;
-      }
-
-      // Use the file duplication service to find similar documents.
-      $similar_documents = $this->fileDuplication->findSimilarDocuments(
-        $text,
+      // Prefer indexed fingerprint MLT; repair/index if missing.
+      $similar_documents = $this->fileDuplication->findSimilarDocumentsForFile(
+        $file,
         $bundle,
         // Exclude current document.
         [$node_id],
@@ -561,10 +586,12 @@ class ReliefWebFilesCommands extends DrushCommands {
             break;
 
           case 'failed':
+          case 'rate_limited':
             $failed++;
             break;
 
           case 'skipped':
+          case 'not_found':
             $skipped++;
             break;
         }
