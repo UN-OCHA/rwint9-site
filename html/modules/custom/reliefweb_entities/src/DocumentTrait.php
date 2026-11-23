@@ -289,14 +289,14 @@ trait DocumentTrait {
       return;
     }
 
-    // Make the inactive or archive sources active when the node is published.
+    // Make the inactive sources active when the node is published.
     foreach ($this->field_source as $item) {
       $source = $item->entity;
       if (empty($source) || !($source instanceof Source)) {
         continue;
       }
 
-      if (in_array($source->getModerationStatus(), ['inactive', 'archive'])) {
+      if ($source->getModerationStatus() === 'inactive') {
         $source->notifications_content_disable = TRUE;
         $source->setModerationStatus('active');
         $source->setNewRevision(TRUE);
