@@ -1,0 +1,10 @@
+services:
+  # Make sure an AppName is passed in the request.
+  mcp_server_oauth.tool_scope_middleware:
+    class: Drupal\reliefweb_mcp\Middleware\ToolScopeMiddleware
+    arguments:
+      - '@entity_type.manager'
+      - '@mcp_server.psr17_factory'
+      - '@mcp_server.psr17_factory'
+    tags:
+      - { name: mcp_server.transport_middleware, priority: 50 }

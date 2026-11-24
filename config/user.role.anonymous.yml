@@ -3,6 +3,7 @@ langcode: en
 status: true
 dependencies:
   module:
+    - mcp_server
     - media
     - ocha_entraid
     - system
@@ -14,5 +15,7 @@ weight: 0
 is_admin: false
 permissions:
   - 'access content'
+  - 'access mcp server'
+  - 'access mcp server prompts'
   - 'access ocha entraid direct login'
   - 'view media'
