@@ -89,119 +89,111 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       return [];
     }
 
-    // Get config values for fallback when parameters are NULL.
-    $config = $this->getConfigFactory()->get('reliefweb_files.settings');
-    $duplicate_config = $config->get('duplicate_detection') ?? [];
+    [
+      'max_documents' => $max_documents,
+      'minimum_should_match' => $minimum_should_match,
+      'max_files' => $max_files,
+      'skip_access_check' => $skip_access_check,
+    ] = $this->resolveDuplicateDetectionOptions(
+      $max_documents,
+      $minimum_should_match,
+      $max_files,
+      $skip_access_check,
+    );
 
-    // Use config values as fallback when parameters are NULL.
-    $max_documents ??= $duplicate_config['max_documents'] ?? 10;
-    $minimum_should_match ??= $duplicate_config['minimum_should_match'] ?? '80%';
-    $max_files ??= $duplicate_config['max_files'] ?? 20;
-    $skip_access_check ??= $duplicate_config['skip_access_check'] ?? FALSE;
-
-    // 1. Get file IDs to exclude from the search results from the documents
-    // to exclude.
-    $exclude_file_ids = [];
-    if (!empty($exclude_document_ids)) {
-      $exclude_file_query = $this->createNodeFieldFileQuery($bundle);
-      $exclude_file_query->condition('nff.entity_id', $exclude_document_ids, 'IN');
-      $exclude_file_ids = $exclude_file_query->execute()->fetchCol();
-    }
-
-    // 2. Find similar file fingerprints using the dedicated file fingerprints
-    // index.
-    $similar_files = $this->findSimilarFileFingerprints($input_text, $max_files, $minimum_should_match, $exclude_file_ids);
+    $exclude_file_ids = $this->getExcludeFileIds($bundle, $exclude_document_ids);
+    $similar_files = $this->findSimilarFileFingerprints(
+      $input_text,
+      $max_files,
+      $minimum_should_match,
+      $exclude_file_ids,
+    );
     if (empty($similar_files)) {
       $logger->notice('No similar files found.');
       return [];
     }
 
-    // 3. Extract file IDs from similar files.
-    $file_ids = array_column($similar_files, 'id');
+    return $this->mapSimilarFilesToDocuments(
+      $similar_files,
+      $bundle,
+      $exclude_document_ids,
+      $max_documents,
+      $minimum_should_match,
+      $skip_access_check,
+    );
+  }
 
-    // 4. Find reports that contain these files by querying the database.
-    // Start with base query and customize for this specific use case
-    $query = $this->createNodeFieldFileQuery($bundle);
-    $query->fields('nff', ['entity_id']);
-    $query->condition('fm.fid', $file_ids, 'IN');
-
-    // Add filter to exclude specific document IDs if provided.
-    if (!empty($exclude_document_ids)) {
-      $query->condition('nff.entity_id', $exclude_document_ids, 'NOT IN');
-    }
-
-    // Retrieve a mapping of file IDs to report IDs.
-    $id_mapping = $query->execute()->fetchAllKeyed();
-    if (empty($id_mapping)) {
-      $logger->notice('No reports found with similar files.');
+  /**
+   * {@inheritdoc}
+   */
+  public function findSimilarDocumentsForFile(
+    File $file,
+    string $bundle = 'report',
+    array $exclude_document_ids = [],
+    ?int $max_documents = NULL,
+    ?string $minimum_should_match = NULL,
+    ?int $max_files = NULL,
+    ?bool $skip_access_check = NULL,
+  ): array {
+    $logger = $this->getLogger();
+    $file_id = $file->id();
+    if (empty($file_id) || empty($bundle)) {
       return [];
     }
 
-    // Convert minimum_should_match percentage to decimal for comparison.
-    $minimum_similarity_threshold = floatval($minimum_should_match) / 100;
+    [
+      'max_documents' => $max_documents,
+      'minimum_should_match' => $minimum_should_match,
+      'max_files' => $max_files,
+      'skip_access_check' => $skip_access_check,
+    ] = $this->resolveDuplicateDetectionOptions(
+      $max_documents,
+      $minimum_should_match,
+      $max_files,
+      $skip_access_check,
+    );
 
-    // Create a mapping of report IDs to file information.
-    $report_data = [];
-    foreach ($similar_files as $similar_file) {
-      if (!isset($id_mapping[$similar_file['id']])) {
-        continue;
-      }
-
-      $file_id = $similar_file['id'];
-      $report_id = $id_mapping[$file_id];
-      $similarity = $similar_file['similarity'];
-
-      // Skip reports below the minimum similarity threshold.
-      if ($similarity < $minimum_similarity_threshold) {
-        continue;
-      }
-
-      // Store the file information for the file with the highest similarity.
-      if (isset($report_data[$report_id])) {
-        if ($similarity > $report_data[$report_id]['similarity']) {
-          $report_data[$report_id] = $similar_file;
+    if (!$this->hasFileFingerprint($file_id)) {
+      if (!$this->indexFileFingerprint($file)) {
+        $logger->warning('Unable to index fingerprint for file @id; falling back to text search.', [
+          '@id' => $file_id,
+        ]);
+        $text = $this->extractFingerprintText($file);
+        if ($text === '') {
+          return [];
         }
+        return $this->findSimilarDocuments(
+          $text,
+          $bundle,
+          $exclude_document_ids,
+          $max_documents,
+          $minimum_should_match,
+          $max_files,
+          $skip_access_check,
+        );
       }
-      else {
-        $report_data[$report_id] = $similar_file;
-      }
     }
 
-    // Sort the report data by similarity score (descending).
-    uasort($report_data, function ($a, $b) {
-      return $b['similarity'] <=> $a['similarity'];
-    });
-
-    // Load the reports.
-    $report_ids = array_keys($report_data);
-    $reports = $this->getEntityTypeManager()->getStorage('node')->loadMultiple($report_ids);
-
-    // If skip_access_check is not TRUE, filter out reports that the current
-    // user does not have access to.
-    if ($skip_access_check !== TRUE) {
-      $reports = array_filter($reports, function ($report) {
-        return $report->access('view', $this->getCurrentUser());
-      });
+    $exclude_file_ids = $this->getExcludeFileIds($bundle, $exclude_document_ids);
+    $similar_files = $this->findSimilarFileFingerprintsById(
+      $file_id,
+      $max_files,
+      $minimum_should_match,
+      $exclude_file_ids,
+    );
+    if (empty($similar_files)) {
+      $logger->notice('No similar files found.');
+      return [];
     }
 
-    // Limit to max_documents.
-    $reports = array_slice($reports, 0, $max_documents, TRUE);
-
-    // 5. Build results with similarity scores.
-    $results = [];
-    foreach ($reports as $id => $report) {
-      $file_data = $report_data[$id];
-      $results[] = [
-        'id' => $id,
-        'title' => $report->label(),
-        'url' => $report->toUrl('canonical', ['absolute' => TRUE])->toString(),
-        'similarity' => $file_data['similarity'],
-        'similarity_percentage' => sprintf('%.1f%%', $file_data['similarity'] * 100),
-        'score' => $file_data['score'],
-      ];
-    }
-
-    return $results;
+    return $this->mapSimilarFilesToDocuments(
+      $similar_files,
+      $bundle,
+      $exclude_document_ids,
+      $max_documents,
+      $minimum_should_match,
+      $skip_access_check,
+    );
   }
 
   /**
@@ -393,128 +385,62 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       }
     }
     catch (\Exception $exception) {
-      $logger->error('Error analyzing text: ' . $exception->getMessage());
-      return [];
-    }
-
-    // 2. Search for similar file fingerprints.
-    try {
-      $query = [
-        'size' => $max_files,
-        '_source' => ['id', 'uuid', 'minhash'],
-        'query' => [
-          'bool' => [
-            'must' => [
-              [
-                'more_like_this' => [
-                  'fields' => ['minhash'],
-                  'like' => [
-                    '_index' => $this->getFileFingerprintsIndexName(),
-                    'doc' => [
-                      'minhash' => $input_text,
-                    ],
-                  ],
-                  'analyzer' => 'minhash_analyzer',
-                  // Use a term and doc frequency of 1 so that all minhash
-                  // tokens from the input text are considered.
-                  'min_term_freq' => 1,
-                  'min_doc_freq' => 1,
-                  // Make sure we check all the tokens for accuracy.
-                  'max_query_terms' => $num_query_tokens,
-                  'minimum_should_match' => $minimum_should_match,
-                ],
-              ],
-            ],
-          ],
-        ],
-      ];
-
-      // Add filter to exclude specific file IDs if provided.
-      if (!empty($exclude_file_ids)) {
-        $query['query']['bool']['filter'] = [
-          [
-            'bool' => [
-              'must_not' => [
-                ['terms' => ['_id' => $exclude_file_ids]],
-              ],
-            ],
-          ],
-        ];
-      }
-
-      $search_response = $this->executeFileFingerprintsRequest('POST', '_search', [
-        'json' => $query,
+      $logger->error('Error analyzing text: @error', [
+        '@error' => $this->formatRequestExceptionMessage($exception),
       ]);
-
-      if (!$search_response) {
-        $logger->error('Failed to search for similar file fingerprints.');
-        return [];
-      }
-
-      $search_body = $search_response->getBody()->getContents();
-      $search_data = json_decode($search_body, TRUE);
-    }
-    catch (RequestException $exception) {
-      $logger->error('Error searching for similar file fingerprints: ' . $exception->getMessage());
       return [];
     }
 
-    $hits = $search_data['hits']['hits'] ?? [];
-    if (empty($hits)) {
-      return [];
-    }
+    $like = [
+      '_index' => $this->getFileFingerprintsIndexName(),
+      'doc' => [
+        'minhash' => $input_text,
+      ],
+    ];
 
-    // 3. Calculate similarity scores.
-    $results = [];
-    foreach ($hits as $hit) {
-      $file_id = $hit['_id'];
+    return $this->searchSimilarFileFingerprints(
+      $like,
+      $num_query_tokens,
+      $num_query_unique_tokens,
+      $max_files,
+      $minimum_should_match,
+      $exclude_file_ids,
+    );
+  }
 
-      // Use the Elasticsearch explain API with the same MLT query to retrieve
-      // the number of matching tokens. The explain result contains the list
-      // of terms (the minhash tokens) that contributed to the search query
-      // score. In our case, since we have a fixed number of tokens we can
-      // calculate the Jaccard similarity which the number of matching tokens.
-      try {
-        $explain_response = $this->executeFileFingerprintsRequest('POST', '_explain/' . $file_id, [
-          'json' => [
-            'query' => $query['query'],
-          ],
-        ]);
+  /**
+   * {@inheritdoc}
+   */
+  public function findSimilarFileFingerprintsById(
+    int|string $file_id,
+    int $max_files = 50,
+    string $minimum_should_match = '80%',
+    array $exclude_file_ids = [],
+  ): array {
+    $exclude_file_ids[] = $file_id;
+    $exclude_file_ids = array_values(array_unique($exclude_file_ids));
 
-        if (!$explain_response) {
-          $logger->error('Failed to explain match for file @id', ['@id' => $file_id]);
-          continue;
-        }
+    $like = [
+      '_index' => $this->getFileFingerprintsIndexName(),
+      '_id' => (string) $file_id,
+    ];
 
-        $explain_body = $explain_response->getBody()->getContents();
+    return $this->searchSimilarFileFingerprints(
+      $like,
+      self::MINHASH_BUCKET_COUNT,
+      self::MINHASH_BUCKET_COUNT,
+      $max_files,
+      $minimum_should_match,
+      $exclude_file_ids,
+    );
+  }
 
-        // Count the number of matching MinHash tokens. We can use a simple
-        // substring count.
-        $matched_tokens = substr_count($explain_body, 'weight(minhash:');
-      }
-      catch (\Exception $exception) {
-        $logger->error('Error explaining match for file @id: @error', [
-          '@id' => $file_id,
-          '@error' => $exception->getMessage(),
-        ]);
-        continue;
-      }
-
-      // Calculate the Jaccard similarity score (number of matching tokens /
-      // total unique tokens).
-      $similarity = $num_query_unique_tokens > 0 ? ($matched_tokens / $num_query_unique_tokens) : 0;
-      $source = $hit['_source'] ?? [];
-
-      $results[] = [
-        'id' => (int) $source['id'],
-        'uuid' => $source['uuid'] ?? '',
-        'similarity' => $similarity,
-        'similarity_percentage' => sprintf('%.1f%%', $similarity * 100),
-        'score' => $hit['_score'] ?? 0,
-      ];
-    }
-
-    return $results;
+  /**
+   * {@inheritdoc}
+   */
+  public function hasFileFingerprint(int|string $file_id): bool {
+    $existing = $this->filterExistingFingerprintIds([(string) $file_id]);
+    return in_array((string) $file_id, $existing, TRUE);
   }
 
   /**
@@ -603,6 +529,141 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
   }
 
   /**
+   * Search similar fingerprints with a More Like This like clause.
+   *
+   * @param array $like
+   *   MLT `like` clause (artificial doc or existing `_id`).
+   * @param int $num_query_tokens
+   *   Token count for max_query_terms.
+   * @param int $num_query_unique_tokens
+   *   Unique token count for Jaccard denominator.
+   * @param int $max_files
+   *   Maximum hits.
+   * @param string $minimum_should_match
+   *   MLT minimum_should_match.
+   * @param array $exclude_file_ids
+   *   File ids to exclude.
+   *
+   * @return array
+   *   Matching fingerprints with similarity scores.
+   */
+  protected function searchSimilarFileFingerprints(
+    array $like,
+    int $num_query_tokens,
+    int $num_query_unique_tokens,
+    int $max_files,
+    string $minimum_should_match,
+    array $exclude_file_ids = [],
+  ): array {
+    $logger = $this->getLogger();
+
+    try {
+      $query = [
+        'size' => $max_files,
+        '_source' => ['id', 'uuid', 'minhash'],
+        'query' => [
+          'bool' => [
+            'must' => [
+              [
+                'more_like_this' => [
+                  'fields' => ['minhash'],
+                  'like' => [$like],
+                  'analyzer' => 'minhash_analyzer',
+                  // Use a term and doc frequency of 1 so that all minhash
+                  // tokens from the input text are considered.
+                  'min_term_freq' => 1,
+                  'min_doc_freq' => 1,
+                  // Make sure we check all the tokens for accuracy.
+                  'max_query_terms' => $num_query_tokens,
+                  'minimum_should_match' => $minimum_should_match,
+                ],
+              ],
+            ],
+          ],
+        ],
+      ];
+
+      // Add filter to exclude specific file IDs if provided.
+      if (!empty($exclude_file_ids)) {
+        $query['query']['bool']['filter'] = [
+          [
+            'bool' => [
+              'must_not' => [
+                ['terms' => ['_id' => $exclude_file_ids]],
+              ],
+            ],
+          ],
+        ];
+      }
+
+      $search_response = $this->executeFileFingerprintsRequest('POST', '_search', [
+        'json' => $query,
+      ]);
+
+      if (!$search_response) {
+        $logger->error('Failed to search for similar file fingerprints.');
+        return [];
+      }
+
+      $search_body = $search_response->getBody()->getContents();
+      $search_data = json_decode($search_body, TRUE);
+    }
+    catch (RequestException $exception) {
+      $logger->error('Error searching for similar file fingerprints: @error', [
+        '@error' => $this->formatRequestExceptionMessage($exception),
+      ]);
+      return [];
+    }
+
+    $hits = $search_data['hits']['hits'] ?? [];
+    if (empty($hits)) {
+      return [];
+    }
+
+    // Calculate similarity scores via explain (matching MinHash token count).
+    $results = [];
+    foreach ($hits as $hit) {
+      $file_id = $hit['_id'];
+
+      try {
+        $explain_response = $this->executeFileFingerprintsRequest('POST', '_explain/' . $file_id, [
+          'json' => [
+            'query' => $query['query'],
+          ],
+        ]);
+
+        if (!$explain_response) {
+          $logger->error('Failed to explain match for file @id', ['@id' => $file_id]);
+          continue;
+        }
+
+        $explain_body = $explain_response->getBody()->getContents();
+        $matched_tokens = substr_count($explain_body, 'weight(minhash:');
+      }
+      catch (\Exception $exception) {
+        $logger->error('Error explaining match for file @id: @error', [
+          '@id' => $file_id,
+          '@error' => $this->formatRequestExceptionMessage($exception),
+        ]);
+        continue;
+      }
+
+      $similarity = $num_query_unique_tokens > 0 ? ($matched_tokens / $num_query_unique_tokens) : 0;
+      $source = $hit['_source'] ?? [];
+
+      $results[] = [
+        'id' => (int) ($source['id'] ?? $file_id),
+        'uuid' => $source['uuid'] ?? '',
+        'similarity' => $similarity,
+        'similarity_percentage' => sprintf('%.1f%%', $similarity * 100),
+        'score' => $hit['_score'] ?? 0,
+      ];
+    }
+
+    return $results;
+  }
+
+  /**
    * Generate document data for file fingerprinting.
    *
    * @param \Drupal\file\Entity\File $file
@@ -625,9 +686,9 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       return NULL;
     }
 
-    // Extract text content for minhash (optional - files without text are still
+    // Extract capped text for minhash (optional - files without text are still
     // indexed).
-    $file_text = FileHelper::extractText($file, file_system: $file_system);
+    $file_text = $this->extractFingerprintText($file);
 
     return [
       'id' => $file->id(),
@@ -686,9 +747,17 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     foreach ($files as $file) {
       if ($file instanceof File && $file->isPermanent()) {
         $valid_files[] = $file;
+        continue;
+      }
+
+      $results['failed']++;
+      if ($file instanceof File) {
+        $logger->warning('Skipping non-permanent file @id during fingerprint bulk index.', [
+          '@id' => $file->id(),
+        ]);
       }
       else {
-        $results['failed']++;
+        $logger->warning('Skipping non-file value during fingerprint bulk index.');
       }
     }
 
@@ -696,8 +765,16 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       return $results;
     }
 
-    // Extract text from all files in parallel.
-    $extracted_texts = FileHelper::extractTextParallel($valid_files, $processes, file_system: $file_system);
+    // Extract capped text from all files in parallel.
+    $extract_limits = $this->getExtractLimits();
+    $extracted_texts = FileHelper::extractTextParallel(
+      $valid_files,
+      $processes,
+      60,
+      $file_system,
+      $extract_limits['max_pages'],
+      $extract_limits['max_chars'],
+    );
 
     // Prepare bulk request body.
     $bulk_body = '';
@@ -712,6 +789,10 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       $file_hash = FileHelper::generateFileHash($file, file_system: $file_system);
       if (empty($file_hash)) {
         $results['failed']++;
+        $logger->warning('Failed to generate hash for file @id (@uri); skipping fingerprint index.', [
+          '@id' => $file_id,
+          '@uri' => $file->getFileUri() ?: '(empty uri)',
+        ]);
         continue;
       }
 
@@ -759,8 +840,9 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
             }
             else {
               $results['failed']++;
-              $logger->warning('Failed to index file fingerprint in bulk operation: @error', [
-                '@error' => $item['index']['error']['reason'] ?? 'Unknown error',
+              $logger->warning('Failed to index file fingerprint @id in bulk operation: @error', [
+                '@id' => $item['index']['_id'] ?? 'unknown',
+                '@error' => $item['index']['error']['reason'] ?? $item['index']['error']['type'] ?? 'Unknown error',
               ]);
             }
           }
@@ -776,7 +858,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     catch (RequestException $exception) {
       $results['failed'] += count($documents);
       $logger->error('Error in bulk indexing file fingerprints: @error', [
-        '@error' => $exception->getMessage(),
+        '@error' => $this->formatRequestExceptionMessage($exception),
       ]);
     }
 
@@ -884,22 +966,20 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    *   Optional end file ID (inclusive).
    * @param int $limit
    *   Optional limit on the count.
+   * @param int $min_pages
+   *   Optional minimum pages filter.
    *
    * @return int
    *   The total number of files to process.
    */
-  public function getFileCountForIndexing(int $start_id = 0, int $end_id = 0, int $limit = 0): int {
-    $query = $this->createNodeFieldFileQuery();
-
-    // Add ID range conditions if provided.
-    if ($start_id > 0 || $end_id > 0) {
-      if ($start_id > 0) {
-        $query->condition('fm.fid', $start_id, '>=');
-      }
-      if ($end_id > 0) {
-        $query->condition('fm.fid', $end_id, '<=');
-      }
-    }
+  public function getFileCountForIndexing(
+    int $start_id = 0,
+    int $end_id = 0,
+    int $limit = 0,
+    int $min_pages = 0,
+  ): int {
+    $query = $this->createNodeFieldFileQuery(min_pages: $min_pages);
+    $this->applyFileIdRange($query, $start_id, $end_id);
 
     $count = (int) $query->countQuery()->execute()->fetchField();
 
@@ -908,23 +988,57 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
   }
 
   /**
-   * Optimized file indexing with chunked processing and file ID tracking.
-   *
-   * @param int $chunk_size
-   *   Number of files to process in each chunk.
-   * @param int $start_id
-   *   Optional start file ID (inclusive).
-   * @param int $end_id
-   *   Optional end file ID (inclusive).
-   * @param int $limit
-   *   Maximum number of files to process (0 for no limit).
-   * @param int $processes
-   *   Number of parallel processes to use for text extraction.
-   * @param callable|null $progress_callback
-   *   Optional callback function for progress updates.
-   *
-   * @return array
-   *   Array with 'success' and 'failed' counts.
+   * {@inheritdoc}
+   */
+  public function countFingerprintIndexStatus(
+    int $start_id = 0,
+    int $end_id = 0,
+    int $limit = 0,
+    int $min_pages = 0,
+    int $chunk_size = 500,
+  ): array {
+    $total = $this->getFileCountForIndexing($start_id, $end_id, $limit, $min_pages);
+    if ($total === 0) {
+      return ['total' => 0, 'indexed' => 0, 'missing' => 0];
+    }
+
+    $indexed = 0;
+    $processed = 0;
+    $current_max_id = $start_id > 0 ? $start_id : $this->getMaxFileId($min_pages);
+    $chunk_size = max(1, $chunk_size);
+
+    while ($processed < $total && $current_max_id > 0) {
+      $remaining = $total - $processed;
+      $chunk_limit = min($chunk_size, $remaining);
+
+      $chunk_file_query = $this->createNodeFieldFileQuery(min_pages: $min_pages)
+        ->condition('fm.fid', $current_max_id, '<=')
+        ->orderBy('fm.fid', 'DESC')
+        ->range(0, $chunk_limit);
+      if ($end_id > 0) {
+        $chunk_file_query->condition('fm.fid', $end_id, '>=');
+      }
+
+      $chunk_file_ids = $chunk_file_query->execute()->fetchCol();
+      if (empty($chunk_file_ids)) {
+        break;
+      }
+
+      $existing = $this->filterExistingFingerprintIds($chunk_file_ids);
+      $indexed += count($existing);
+      $processed += count($chunk_file_ids);
+      $current_max_id = min($chunk_file_ids) - 1;
+    }
+
+    return [
+      'total' => $total,
+      'indexed' => $indexed,
+      'missing' => max(0, $total - $indexed),
+    ];
+  }
+
+  /**
+   * {@inheritdoc}
    */
   public function indexFiles(
     int $chunk_size,
@@ -933,12 +1047,14 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     int $limit = 0,
     int $processes = 4,
     ?callable $progress_callback = NULL,
+    int $min_pages = 0,
+    bool $skip_existing = FALSE,
   ): array {
     $logger = $this->getLogger();
     $file_storage = $this->getEntityTypeManager()->getStorage('file');
 
     // Get the total number of files to process.
-    $total_files = $this->getFileCountForIndexing($start_id, $end_id, $limit);
+    $total_files = $this->getFileCountForIndexing($start_id, $end_id, $limit, $min_pages);
     if ($total_files === 0) {
       $logger->warning('No files found to index.');
       return ['success' => 0, 'failed' => 0];
@@ -949,9 +1065,10 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
     $indexed = 0;
     $errors = 0;
     $processed = 0;
+    $skipped = 0;
 
     // Start with the highest file ID (or start_id if provided).
-    $current_max_id = $start_id > 0 ? $start_id : $this->getMaxFileId();
+    $current_max_id = $start_id > 0 ? $start_id : $this->getMaxFileId($min_pages);
 
     // Process files in chunks using file ID tracking.
     while ($processed < $total_files && $current_max_id > 0) {
@@ -962,7 +1079,7 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       $logger->info("Processing chunk starting from file ID $current_max_id (up to $chunk_limit files)");
 
       // Get file IDs for this chunk (descending order).
-      $chunk_file_query = $this->createNodeFieldFileQuery()
+      $chunk_file_query = $this->createNodeFieldFileQuery(min_pages: $min_pages)
         ->condition('fm.fid', $current_max_id, '<=')
         ->orderBy('fm.fid', 'DESC')
         ->range(0, $chunk_limit);
@@ -977,26 +1094,30 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
         break;
       }
 
-      // Load all files in this chunk at once for better performance.
-      $files = $file_storage->loadMultiple($chunk_file_ids);
-      if (empty($files)) {
-        $logger->warning("No files found in chunk starting from file ID $current_max_id");
-        $errors += count($chunk_file_ids);
-        $processed += count($chunk_file_ids);
-        // Move to next chunk by setting current_max_id to the smallest ID
-        // minus 1.
-        $current_max_id = min($chunk_file_ids) - 1;
-        continue;
+      $ids_to_index = $chunk_file_ids;
+      if ($skip_existing) {
+        $existing = $this->filterExistingFingerprintIds($chunk_file_ids);
+        $ids_to_index = array_values(array_diff($chunk_file_ids, $existing));
+        $skipped += count($existing);
       }
 
-      // Use bulk indexing for better performance.
-      $bulk_results = $this->bulkIndexFileFingerprints($files, $processes);
-      $indexed += $bulk_results['success'];
-      $errors += $bulk_results['failed'];
-      $processed += count($chunk_file_ids);
+      if (!empty($ids_to_index)) {
+        // Load all files in this chunk at once for better performance.
+        $files = $file_storage->loadMultiple($ids_to_index);
+        if (empty($files)) {
+          $logger->warning("No files found in chunk starting from file ID $current_max_id");
+          $errors += count($ids_to_index);
+        }
+        else {
+          // Use bulk indexing for better performance.
+          $bulk_results = $this->bulkIndexFileFingerprints($files, $processes);
+          $indexed += $bulk_results['success'];
+          $errors += $bulk_results['failed'];
+          $logger->info("Bulk indexed " . $bulk_results['success'] . " files, " . $bulk_results['failed'] . " failed in this chunk");
+        }
+      }
 
-      // Log progress.
-      $logger->info("Bulk indexed " . $bulk_results['success'] . " files, " . $bulk_results['failed'] . " failed in this chunk");
+      $processed += count($chunk_file_ids);
 
       // Call progress callback if provided.
       if ($progress_callback) {
@@ -1011,6 +1132,12 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
       $file_storage->resetCache();
     }
 
+    if ($skip_existing && $skipped > 0) {
+      $logger->info('Skipped @count already-indexed files.', [
+        '@count' => $skipped,
+      ]);
+    }
+
     return ['success' => $indexed, 'failed' => $errors];
   }
 
@@ -1019,12 +1146,15 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    *
    * @param string $bundle
    *   The bundle to filter by.
+   * @param int $min_pages
+   *   Only include files with field_file_page_count greater than this.
    *
    * @return \Drupal\Core\Database\Query\SelectInterface
    *   The configured query object returning distinct file IDs by default.
    */
   protected function createNodeFieldFileQuery(
     string $bundle = 'report',
+    int $min_pages = 0,
   ): SelectInterface {
     $query = $this->getDatabase()->select('node__field_file', 'nff')
       ->fields('fm', ['fid'])
@@ -1033,17 +1163,25 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
 
     // Join with file_managed table to get file IDs from UUIDs.
     $query->join('file_managed', 'fm', 'nff.field_file_file_uuid = fm.uuid');
+
+    if ($min_pages > 0) {
+      $query->condition('nff.field_file_page_count', $min_pages, '>');
+    }
+
     return $query;
   }
 
   /**
    * Get the maximum file ID from the database.
    *
+   * @param int $min_pages
+   *   Optional page-count filter.
+   *
    * @return int
    *   The maximum file ID, or 0 if no files exist.
    */
-  protected function getMaxFileId(): int {
-    $query = $this->createNodeFieldFileQuery()
+  protected function getMaxFileId(int $min_pages = 0): int {
+    $query = $this->createNodeFieldFileQuery(min_pages: $min_pages)
       ->orderBy('fm.fid', 'DESC')
       ->range(0, 1);
 
@@ -1194,6 +1332,256 @@ class ReliefWebFileDuplication implements ReliefWebFileDuplicationInterface {
    */
   public function setLogger(LoggerInterface $logger): void {
     $this->logger = $logger;
+  }
+
+  /**
+   * Resolve duplicate-detection options with config fallbacks.
+   *
+   * @return array{
+   *   max_documents: int,
+   *   minimum_should_match: string,
+   *   max_files: int,
+   *   skip_access_check: bool
+   *   }
+   *   Resolved options.
+   */
+  protected function resolveDuplicateDetectionOptions(
+    ?int $max_documents,
+    ?string $minimum_should_match,
+    ?int $max_files,
+    ?bool $skip_access_check,
+  ): array {
+    $duplicate_config = $this->getConfigFactory()
+      ->get('reliefweb_files.settings')
+      ->get('duplicate_detection') ?? [];
+
+    return [
+      'max_documents' => $max_documents ?? $duplicate_config['max_documents'] ?? 10,
+      'minimum_should_match' => $minimum_should_match ?? $duplicate_config['minimum_should_match'] ?? '80%',
+      'max_files' => $max_files ?? $duplicate_config['max_files'] ?? 20,
+      'skip_access_check' => $skip_access_check ?? $duplicate_config['skip_access_check'] ?? FALSE,
+    ];
+  }
+
+  /**
+   * Get page/char extract limits from config.
+   *
+   * @return array{max_pages: int, max_chars: int}
+   *   Extract limits.
+   */
+  protected function getExtractLimits(): array {
+    $duplicate_config = $this->getConfigFactory()
+      ->get('reliefweb_files.settings')
+      ->get('duplicate_detection') ?? [];
+
+    return [
+      'max_pages' => (int) ($duplicate_config['max_extract_pages'] ?? 30),
+      'max_chars' => (int) ($duplicate_config['max_extract_chars'] ?? 300000),
+    ];
+  }
+
+  /**
+   * Extract capped text for fingerprinting.
+   *
+   * @param \Drupal\file\Entity\File $file
+   *   File entity.
+   *
+   * @return string
+   *   Capped extracted text.
+   */
+  public function extractFingerprintText(File $file): string {
+    $limits = $this->getExtractLimits();
+    return FileHelper::extractTextForFingerprint(
+      $file,
+      $limits['max_pages'],
+      $limits['max_chars'],
+      $this->getFileSystem(),
+    );
+  }
+
+  /**
+   * File IDs attached to documents that should be excluded from search.
+   *
+   * @param string $bundle
+   *   Node bundle.
+   * @param array $exclude_document_ids
+   *   Document ids to exclude.
+   *
+   * @return array
+   *   File ids.
+   */
+  protected function getExcludeFileIds(string $bundle, array $exclude_document_ids): array {
+    if (empty($exclude_document_ids)) {
+      return [];
+    }
+    $exclude_file_query = $this->createNodeFieldFileQuery($bundle);
+    $exclude_file_query->condition('nff.entity_id', $exclude_document_ids, 'IN');
+    return $exclude_file_query->execute()->fetchCol();
+  }
+
+  /**
+   * Map similar file fingerprints to accessible documents.
+   *
+   * @param array $similar_files
+   *   Similar fingerprint hits.
+   * @param string $bundle
+   *   Node bundle.
+   * @param array $exclude_document_ids
+   *   Document ids to exclude.
+   * @param int $max_documents
+   *   Max documents to return.
+   * @param string $minimum_should_match
+   *   Similarity threshold percentage string.
+   * @param bool $skip_access_check
+   *   Whether to skip access checks.
+   *
+   * @return array
+   *   Document result rows.
+   */
+  protected function mapSimilarFilesToDocuments(
+    array $similar_files,
+    string $bundle,
+    array $exclude_document_ids,
+    int $max_documents,
+    string $minimum_should_match,
+    bool $skip_access_check,
+  ): array {
+    $logger = $this->getLogger();
+    $file_ids = array_column($similar_files, 'id');
+
+    $query = $this->createNodeFieldFileQuery($bundle);
+    $query->fields('nff', ['entity_id']);
+    $query->condition('fm.fid', $file_ids, 'IN');
+
+    if (!empty($exclude_document_ids)) {
+      $query->condition('nff.entity_id', $exclude_document_ids, 'NOT IN');
+    }
+
+    $id_mapping = $query->execute()->fetchAllKeyed();
+    if (empty($id_mapping)) {
+      $logger->notice('No reports found with similar files.');
+      return [];
+    }
+
+    $minimum_similarity_threshold = floatval($minimum_should_match) / 100;
+    $report_data = [];
+    foreach ($similar_files as $similar_file) {
+      if (!isset($id_mapping[$similar_file['id']])) {
+        continue;
+      }
+
+      $report_id = $id_mapping[$similar_file['id']];
+      $similarity = $similar_file['similarity'];
+      if ($similarity < $minimum_similarity_threshold) {
+        continue;
+      }
+
+      if (!isset($report_data[$report_id]) || $similarity > $report_data[$report_id]['similarity']) {
+        $report_data[$report_id] = $similar_file;
+      }
+    }
+
+    uasort($report_data, static function ($a, $b) {
+      return $b['similarity'] <=> $a['similarity'];
+    });
+
+    $reports = $this->getEntityTypeManager()->getStorage('node')->loadMultiple(array_keys($report_data));
+    if ($skip_access_check !== TRUE) {
+      $reports = array_filter($reports, function ($report) {
+        return $report->access('view', $this->getCurrentUser());
+      });
+    }
+
+    $reports = array_slice($reports, 0, $max_documents, TRUE);
+
+    $results = [];
+    foreach ($reports as $id => $report) {
+      $file_data = $report_data[$id];
+      $results[] = [
+        'id' => $id,
+        'title' => $report->label(),
+        'url' => $report->toUrl('canonical', ['absolute' => TRUE])->toString(),
+        'similarity' => $file_data['similarity'],
+        'similarity_percentage' => sprintf('%.1f%%', $file_data['similarity'] * 100),
+        'score' => $file_data['score'],
+      ];
+    }
+
+    return $results;
+  }
+
+  /**
+   * Apply optional file ID range conditions to a query.
+   */
+  protected function applyFileIdRange(SelectInterface $query, int $start_id, int $end_id): void {
+    if ($start_id > 0) {
+      $query->condition('fm.fid', $start_id, '>=');
+    }
+    if ($end_id > 0) {
+      $query->condition('fm.fid', $end_id, '<=');
+    }
+  }
+
+  /**
+   * Return the subset of file IDs that already exist in the fingerprints index.
+   *
+   * @param array $file_ids
+   *   Candidate file ids.
+   *
+   * @return array
+   *   Existing fingerprint document ids.
+   */
+  protected function filterExistingFingerprintIds(array $file_ids): array {
+    if (empty($file_ids)) {
+      return [];
+    }
+
+    try {
+      $response = $this->executeFileFingerprintsRequest('POST', '_mget', [
+        'json' => [
+          'ids' => array_map('strval', $file_ids),
+        ],
+      ], FALSE);
+      if (!$response) {
+        return [];
+      }
+      $data = json_decode($response->getBody()->getContents(), TRUE);
+      $existing = [];
+      foreach ($data['docs'] ?? [] as $doc) {
+        if (!empty($doc['found']) && isset($doc['_id'])) {
+          $existing[] = $doc['_id'];
+        }
+      }
+      return $existing;
+    }
+    catch (RequestException $exception) {
+      $this->getLogger()->error('Error checking existing fingerprints: @error', [
+        '@error' => $this->formatRequestExceptionMessage($exception),
+      ]);
+      return [];
+    }
+  }
+
+  /**
+   * Format an exception message including HTTP response body when present.
+   */
+  protected function formatRequestExceptionMessage(\Throwable $exception): string {
+    $message = $exception->getMessage();
+    if ($exception instanceof RequestException) {
+      $response = $exception->getResponse();
+      if ($response) {
+        try {
+          $body = $response->getBody()->getContents();
+          if ($body !== '') {
+            $message .= ' | response: ' . $body;
+          }
+        }
+        catch (\Throwable) {
+          // Ignore body read failures; keep the original message.
+        }
+      }
+    }
+    return $message;
   }
 
 }

@@ -20,6 +20,7 @@ use Drupal\Core\StringTranslation\TranslationInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 use Drupal\reliefweb_entities\Entity\Report;
 use Drupal\reliefweb_entities\Services\ReportFormAlter;
+use Drupal\file\Entity\File;
 use Drupal\reliefweb_files\Plugin\Field\FieldType\ReliefWebFile;
 use Drupal\reliefweb_files\Plugin\Field\FieldWidget\ReliefWebFile as ReliefWebFileWidget;
 use Drupal\reliefweb_files\Services\ReliefWebFileDuplicationInterface;
@@ -392,6 +393,7 @@ class ReportFormAlterTest extends UnitTestCase {
     // The method should return early for AJAX requests, so no other methods
     // should be called.
     $this->fileDuplication->expects($this->never())->method('findSimilarDocuments');
+    $this->fileDuplication->expects($this->never())->method('findSimilarDocumentsForFile');
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
@@ -416,6 +418,7 @@ class ReportFormAlterTest extends UnitTestCase {
     // The method should return early for users without permission, so no other
     // methods should be called.
     $this->fileDuplication->expects($this->never())->method('findSimilarDocuments');
+    $this->fileDuplication->expects($this->never())->method('findSimilarDocumentsForFile');
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
@@ -468,6 +471,7 @@ class ReportFormAlterTest extends UnitTestCase {
     // The method should return early for new entities, so no other methods
     // should be called.
     $this->fileDuplication->expects($this->never())->method('findSimilarDocuments');
+    $this->fileDuplication->expects($this->never())->method('findSimilarDocumentsForFile');
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
@@ -502,6 +506,7 @@ class ReportFormAlterTest extends UnitTestCase {
     // The method should return early for non-GET requests, so no other methods
     // should be called.
     $this->fileDuplication->expects($this->never())->method('findSimilarDocuments');
+    $this->fileDuplication->expects($this->never())->method('findSimilarDocumentsForFile');
 
     $reflection = new \ReflectionClass($service);
     $method = $reflection->getMethod('checkForDuplicateFiles');
@@ -547,16 +552,21 @@ class ReportFormAlterTest extends UnitTestCase {
       ->with('field_file')
       ->willReturn(TRUE);
 
-    // Mock field file items.
+    // Mock field file items with permanent file entities.
+    $file1 = $this->createMock(File::class);
+    $file1->method('id')->willReturn(11);
+    $file2 = $this->createMock(File::class);
+    $file2->method('id')->willReturn(22);
+
     $fieldItem1 = $this->createMock(ReliefWebFile::class);
     $fieldItem1->expects($this->once())
-      ->method('extractText')
-      ->willReturn('Sample text content from file 1');
+      ->method('loadFile')
+      ->willReturn($file1);
 
     $fieldItem2 = $this->createMock(ReliefWebFile::class);
     $fieldItem2->expects($this->once())
-      ->method('extractText')
-      ->willReturn('Sample text content from file 2');
+      ->method('loadFile')
+      ->willReturn($file2);
 
     // Create a mock field list that extends the actual base class.
     $fieldList = $this->createMock(FieldItemList::class);
@@ -636,9 +646,9 @@ class ReportFormAlterTest extends UnitTestCase {
       ->willReturn($formDisplay);
 
     $this->fileDuplication->expects($this->exactly(2))
-      ->method('findSimilarDocuments')
+      ->method('findSimilarDocumentsForFile')
       ->with(
-        $this->logicalOr('Sample text content from file 1', 'Sample text content from file 2'),
+        $this->logicalOr($file1, $file2),
         'report',
         [123],
         5,

@@ -23,3 +23,7 @@ duplicate_detection:
   minimum_should_match: 80%
   # Whether to skip report access checks.
   skip_access_check: false
+  # Maximum PDF pages to extract for MinHash fingerprints (first N pages).
+  max_extract_pages: 30
+  # Maximum characters of extracted text to keep for MinHash fingerprints.
+  max_extract_chars: 300000

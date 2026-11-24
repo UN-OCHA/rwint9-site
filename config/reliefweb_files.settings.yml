@@ -12,3 +12,5 @@ duplicate_detection:
   max_files: 20
   minimum_should_match: 80%
   skip_access_check: false
+  max_extract_pages: 30
+  max_extract_chars: 300000

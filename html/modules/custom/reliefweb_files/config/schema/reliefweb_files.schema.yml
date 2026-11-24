@@ -39,6 +39,12 @@ reliefweb_files.settings:
         skip_access_check:
           type: boolean
           label: 'Whether to skip report access checks.'
+        max_extract_pages:
+          type: integer
+          label: 'Maximum PDF pages to extract for MinHash fingerprints.'
+        max_extract_chars:
+          type: integer
+          label: 'Maximum characters of extracted text for MinHash fingerprints.'
 
 field.field_settings.reliefweb_file:
   type: mapping
