@@ -140,7 +140,7 @@ final class SkillProvider extends ResourceProviderBase {
       ]);
     }
 
-    if (!preg_match('#^skill://reliefweb_(.+)$#', $uri, $matches)) {
+    if (!preg_match('#^skill://reliefweb_([a-zA-Z0-9_-]+)$#', $uri, $matches)) {
       return NULL;
     }
 
