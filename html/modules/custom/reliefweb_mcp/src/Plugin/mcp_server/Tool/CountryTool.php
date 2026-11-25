@@ -165,6 +165,7 @@ final class CountryTool extends ToolPluginBase {
         }
 
         $data[] = [
+          'id' => (string) $term->id(),
           'name' => $term->label(),
           'iso3' => $term->get('field_iso3')->value ?? '',
           'short_name' => $term->get('field_shortname')->value ?? '',
