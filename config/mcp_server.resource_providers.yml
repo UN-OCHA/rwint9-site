@@ -1,0 +1,6 @@
+plugins:
+  -
+    id: rw_skills
+    enabled: true
+    configuration:
+      enabled: false
