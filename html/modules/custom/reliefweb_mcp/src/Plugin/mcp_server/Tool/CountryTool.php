@@ -131,7 +131,7 @@ final class CountryTool extends ToolPluginBase {
     $iso3 = $arguments['iso3'] ?? '';
 
     // Sanitize input values.
-    $name = $this->sanitizeInput($name);
+    $name = trim($name);
     $iso3 = $this->sanitizeInput($iso3);
 
     $vocabulary_id = 'country';
