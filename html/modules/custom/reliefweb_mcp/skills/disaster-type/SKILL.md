@@ -49,7 +49,7 @@ Insect infestation is defined as the pervasive influx and development of insects
 
 Land Slide is defined as the usually rapid downward movement of a mass of rock, earth, or artificial fill on a slope. Covers all mass movements other than Mudslide (MS) and Avalanche (AV). (CRED EM-DAT)
 
-## Mud Slide (GLIDE hazard code: LS)
+## Mud Slide (GLIDE hazard code: MS)
 
 Mud slide is defined as a type of landslide, which occurs when the slope is saturated with water. This more destructive flow can pick up rocks, trees, houses and cars. As the debris moves into river and stream beds, bridges can become blocked or even collapse, making a temporary dam that can flood neighbouring areas. (GLIDE)
 
