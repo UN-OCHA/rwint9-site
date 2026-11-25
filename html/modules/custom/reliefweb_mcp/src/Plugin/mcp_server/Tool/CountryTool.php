@@ -4,13 +4,9 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_mcp\Plugin\mcp_server\Tool;
 
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mcp_server\Attribute\Tool;
-use Drupal\mcp_server\Plugin\ToolPluginBase;
 use Mcp\Server\ClientGateway;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Get a list of ReliefWeb countries based on name or ISO3 code.
@@ -29,6 +25,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
       'iso3' => [
         'type' => 'string',
         'description' => 'The ISO3 code of the country.',
+      ],
+      'offset' => [
+        'type' => 'integer',
+        'description' => 'The number of items to skip before starting to collect the result set.',
+      ],
+      'limit' => [
+        'type' => 'integer',
+        'description' => 'The maximum number of items to return.',
       ],
     ],
     'required' => [],
@@ -81,52 +85,15 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
   idempotent: TRUE,
   openWorld: FALSE,
 )]
-final class CountryTool extends ToolPluginBase {
-
-  /**
-   * Constructs a ContentLookupTool object.
-   */
-  public function __construct(
-    array $configuration,
-    string $plugin_id,
-    mixed $plugin_definition,
-    AccountProxyInterface $currentUser,
-    private readonly EntityTypeManagerInterface $entityTypeManager,
-  ) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $currentUser);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public static function create(
-    ContainerInterface $container,
-    array $configuration,
-    $plugin_id,
-    $plugin_definition,
-  ): static {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('current_user'),
-      $container->get('entity_type.manager'),
-    );
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  protected function defaultConfiguration(): array {
-    return [
-      'enabled' => TRUE,
-    ];
-  }
+final class CountryTool extends BaseTool {
 
   /**
    * {@inheritdoc}
    */
   public function execute(array $arguments, ClientGateway $gateway): array {
+    $offset = max(0, $arguments['offset'] ?? 0);
+    $limit = min(1000, $arguments['limit'] ?? 10);
+
     $name = $arguments['name'] ?? '';
     $iso3 = $arguments['iso3'] ?? '';
 
@@ -153,6 +120,7 @@ final class CountryTool extends ToolPluginBase {
       $query->condition('field_iso3', $iso3);
     }
 
+    $query->range($offset, $limit);
     $result = $query->execute();
     $data = [];
 
@@ -183,14 +151,6 @@ final class CountryTool extends ToolPluginBase {
       },
       'data' => $data,
     ];
-  }
-
-  /**
-   * Make sure input only contains letters and numbers.
-   */
-  protected function sanitizeInput(string $input): string {
-    $input = trim($input);
-    return preg_replace('/[^a-zA-Z0-9\(\)]/', '', $input);
   }
 
 }
