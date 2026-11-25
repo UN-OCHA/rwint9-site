@@ -6,6 +6,7 @@ namespace Drupal\reliefweb_mcp\Plugin\mcp_server\Tool;
 
 use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\mcp_server\Attribute\Tool;
+use Drupal\reliefweb_rivers\RiverServiceBase;
 use Mcp\Server\ClientGateway;
 
 /**
@@ -133,6 +134,7 @@ final class ReportTool extends BaseTool {
     $content_format = $arguments['content_format'] ?? '';
     $language = $arguments['language'] ?? '';
     $publication_date = $arguments['publication_date'] ?? '';
+    $search = $arguments['search'] ?? '';
 
     // Sanitize input values.
     $name = trim($name);
@@ -146,18 +148,14 @@ final class ReportTool extends BaseTool {
     $content_format = $this->sanitizeInput($content_format);
     $language = $this->sanitizeInput($language);
     $publication_date = $this->sanitizeInput($publication_date);
+    $search = $this->sanitizeInput($search);
 
-    $content_type = 'report';
-    $query = $this->entityTypeManager->getStorage('node')->getQuery();
-    $query
-      ->accessCheck(TRUE)
-      ->condition('type', $content_type);
-
-    // Do a partial match on name, shortname and longname when searching.
-    if ($name !== '') {
-      $names = $query->orConditionGroup()
-        ->condition('title', $name, 'CONTAINS');
-      $query->condition($names);
+    $payload = $this->buildApiPayload((int) $limit, (int) $offset);
+    $payload['query']['value'] = $search;
+    $payload['sort'] = ['score:desc', 'date.original:desc'];
+    if (!isset($payload['filter']['conditions'])) {
+      $payload['filter']['conditions'] = [];
+      $payload['filter']['operator'] = 'AND';
     }
 
     if ($primary_country !== '') {
@@ -169,132 +167,21 @@ final class ReportTool extends BaseTool {
           'data' => [],
         ];
       }
-      $query->condition('field_primary_country', $country_term->id());
+
+      $payload['filter']['conditions'][] = [
+        'field' => 'primary_country.id',
+        'value' => $country_term->id(),
+        'operator' => 'EQ',
+      ];
     }
 
-    if ($country !== '') {
-      $country_term = $this->getTerm($country, 'country', 'field_iso3');
-      if (!$country_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid country.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_country', $country_term->id());
-    }
+    $data = $this->apiClient->request('reports', $payload, request_id: 'mcp.report');
+    $reports = RiverServiceBase::getRiverData('report', $data);
 
-    if ($organization !== '') {
-      $organization_term = $this->getTerm($organization, 'source');
-      if (!$organization_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid organization.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_organization', $organization_term->id());
-    }
-
-    if ($organization_type !== '') {
-      $organization_type_term = $this->getTerm($organization_type, 'organization_type');
-      if (!$organization_type_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid organization type.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_organization_type', $organization_type_term->id());
-    }
-
-    if ($disaster !== '') {
-      $disaster_term = $this->getTerm($disaster, 'disaster');
-      if (!$disaster_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid disaster.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_disaster', $disaster_term->id());
-    }
-
-    if ($disaster_type !== '') {
-      $disaster_type_term = $this->getTerm($disaster_type, 'disaster_type');
-      if (!$disaster_type_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid disaster type.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_disaster_type', $disaster_type_term->id());
-    }
-
-    if ($theme !== '') {
-      $theme_term = $this->getTerm($theme, 'theme');
-      if (!$theme_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid theme.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_theme', $theme_term->id());
-    }
-
-    if ($content_format !== '') {
-      $content_format_term = $this->getTerm($content_format, 'content_format');
-      if (!$content_format_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid content format.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_content_format', $content_format_term->id());
-    }
-
-    if ($language !== '') {
-      $language_term = $this->getTerm($language, 'language');
-      if (!$language_term) {
-        return [
-          'success' => FALSE,
-          'message' => 'Invalid language.',
-          'data' => [],
-        ];
-      }
-      $query->condition('field_language', $language_term->id());
-    }
-
-    if ($publication_date !== '') {
-      // Check if the publication date contains a range (start and end dates).
-      if (strpos($publication_date, ' to ') !== FALSE) {
-        [$start_date, $end_date] = explode(' to ', $publication_date);
-        $query->condition('field_original_publication_date', $start_date, '>=');
-        $query->condition('field_original_publication_date', $end_date, '<=');
-      }
-      else {
-        $query->condition('field_original_publication_date', $publication_date);
-      }
-    }
-
-    $query->range($offset, $limit);
-    $query->sort('created', 'DESC');
-
-    $result = $query->execute();
-    $data = [];
-
-    if (!empty($result)) {
-      $reports = $this->entityTypeManager->getStorage('node')->loadMultiple($result);
-      /** @var \Drupal\node\NodeInterface $report */
+    $output = [];
+    if (!empty($reports)) {
       foreach ($reports as $report) {
-        if (!$report->access('view', $this->currentUser)) {
-          continue;
-        }
-
-        $data[] = [
+        $output[] = [
           'id' => (string) $report->id(),
           'name' => $report->label(),
           'created' => date('c', (int) $report->get('created')->value ?? 0),
@@ -307,13 +194,46 @@ final class ReportTool extends BaseTool {
 
     return [
       'success' => TRUE,
-      'message' => match(count($data)) {
+      'message' => match(count($output)) {
         0 => 'No reports found.',
         1 => 'One report found.',
-        default => count($data) . ' reports found.',
+        default => count($output) . ' reports found.',
       },
-      'data' => $data,
+      'data' => $output,
     ];
+  }
+
+  /**
+   * Build the API payload for related content / fallback requests.
+   *
+   * @param int $limit
+   *   Result limit.
+   * @param int $offset
+   *   Result offset.
+   *
+   * @return array
+   *   API payload.
+   */
+  protected function buildApiPayload(int $limit, int $offset = 0): array {
+    $payload = $this->getReportRiverApiPayload();
+    $payload['limit'] = $limit;
+    $payload['offset'] = $offset;
+    $payload['fields']['include'][] = 'disaster.id';
+    $payload['fields']['include'][] = 'theme.id';
+    $payload['fields']['include'][] = 'format.id';
+    $payload['fields']['include'][] = 'disaster_type.id';
+
+    return $payload;
+  }
+
+  /**
+   * Get the base report river API payload.
+   *
+   * @return array
+   *   Base API payload from the report river service.
+   */
+  protected function getReportRiverApiPayload(): array {
+    return RiverServiceBase::getRiverApiPayload('report', 'report');
   }
 
 }
