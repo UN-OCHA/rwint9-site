@@ -125,11 +125,27 @@ final class ReportTool extends BaseTool {
     $name = $arguments['name'] ?? '';
     $primary_country = $arguments['primary_country'] ?? '';
     $country = $arguments['country'] ?? '';
+    $organization = $arguments['organization'] ?? '';
+    $organization_type = $arguments['organization_type'] ?? '';
+    $disaster = $arguments['disaster'] ?? '';
+    $disaster_type = $arguments['disaster_type'] ?? '';
+    $theme = $arguments['theme'] ?? '';
+    $content_format = $arguments['content_format'] ?? '';
+    $language = $arguments['language'] ?? '';
+    $publication_date = $arguments['publication_date'] ?? '';
 
     // Sanitize input values.
     $name = trim($name);
     $primary_country = $this->sanitizeInput($primary_country);
     $country = $this->sanitizeInput($country);
+    $organization = $this->sanitizeInput($organization);
+    $organization_type = $this->sanitizeInput($organization_type);
+    $disaster = $this->sanitizeInput($disaster);
+    $disaster_type = $this->sanitizeInput($disaster_type);
+    $theme = $this->sanitizeInput($theme);
+    $content_format = $this->sanitizeInput($content_format);
+    $language = $this->sanitizeInput($language);
+    $publication_date = $this->sanitizeInput($publication_date);
 
     $content_type = 'report';
     $query = $this->entityTypeManager->getStorage('node')->getQuery();
@@ -166,6 +182,102 @@ final class ReportTool extends BaseTool {
         ];
       }
       $query->condition('field_country', $country_term->id());
+    }
+
+    if ($organization !== '') {
+      $organization_term = $this->getTerm($organization, 'source');
+      if (!$organization_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid organization.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_organization', $organization_term->id());
+    }
+
+    if ($organization_type !== '') {
+      $organization_type_term = $this->getTerm($organization_type, 'organization_type');
+      if (!$organization_type_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid organization type.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_organization_type', $organization_type_term->id());
+    }
+
+    if ($disaster !== '') {
+      $disaster_term = $this->getTerm($disaster, 'disaster');
+      if (!$disaster_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid disaster.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_disaster', $disaster_term->id());
+    }
+
+    if ($disaster_type !== '') {
+      $disaster_type_term = $this->getTerm($disaster_type, 'disaster_type');
+      if (!$disaster_type_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid disaster type.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_disaster_type', $disaster_type_term->id());
+    }
+
+    if ($theme !== '') {
+      $theme_term = $this->getTerm($theme, 'theme');
+      if (!$theme_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid theme.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_theme', $theme_term->id());
+    }
+
+    if ($content_format !== '') {
+      $content_format_term = $this->getTerm($content_format, 'content_format');
+      if (!$content_format_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid content format.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_content_format', $content_format_term->id());
+    }
+
+    if ($language !== '') {
+      $language_term = $this->getTerm($language, 'language');
+      if (!$language_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid language.',
+          'data' => [],
+        ];
+      }
+      $query->condition('field_language', $language_term->id());
+    }
+
+    if ($publication_date !== '') {
+      // Check if the publication date contains a range (start and end dates).
+      if (strpos($publication_date, ' to ') !== FALSE) {
+        [$start_date, $end_date] = explode(' to ', $publication_date);
+        $query->condition('field_original_publication_date', $start_date, '>=');
+        $query->condition('field_original_publication_date', $end_date, '<=');
+      }
+      else {
+        $query->condition('field_original_publication_date', $publication_date);
+      }
     }
 
     $query->range($offset, $limit);
