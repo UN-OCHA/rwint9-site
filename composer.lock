@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "fd15a02f25c49c990a67d63539dcc622",
+    "content-hash": "3c02f555ff356357c23b1196dd56ff7d",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -3594,7 +3594,8 @@
             "support": {
                 "source": "https://drupal.org/project/mcp_server",
                 "issues": "https://drupal.org/project/issues/mcp_server"
-            }
+            },
+            "published-time": "2026-10-29T16:20:36+00:00"
         },
         {
             "name": "drupal/mcp_server_oauth",
@@ -21715,5 +21716,5 @@
         "php": ">=8.5"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
