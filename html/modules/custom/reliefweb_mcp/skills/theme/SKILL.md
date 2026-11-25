@@ -1,3 +1,8 @@
+---
+name: theme
+description: A list of ReliefWeb themes and their definitions.
+---
+
 # Reliefweb themes
 
 ## Agriculture

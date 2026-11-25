@@ -1,3 +1,8 @@
+---
+name: disaster-type
+description: A list of ReliefWeb disaster types and their definitions including GLIDE hazard codes.
+---
+
 # ReliefWeb disaster types
 
 ## Cold Wave (GLIDE hazard code: CW)

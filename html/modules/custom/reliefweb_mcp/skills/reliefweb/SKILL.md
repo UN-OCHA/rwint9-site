@@ -1,3 +1,8 @@
+---
+name: reliefweb
+description: Information about ReliefWeb, the leading humanitarian information service.
+---
+
 # Reliefweb
 
 ## About ReliefWeb
@@ -15,4 +20,4 @@ Stay informed. Stay connected. Use ReliefWeb to power your humanitarian decision
 ## Humanitarian Terms
 
 - [Theme](skill://reliefweb_theme)
-
+- [Disaster Type](skill://reliefweb_disaster-type)

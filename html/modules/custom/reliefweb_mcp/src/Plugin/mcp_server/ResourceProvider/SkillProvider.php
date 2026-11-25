@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Drupal\reliefweb_mcp\Plugin\mcp_server\ResourceProvider;
 
+use Drupal\Component\FrontMatter\FrontMatter;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Access\AccessResultInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
@@ -100,27 +101,20 @@ final class SkillProvider extends ResourceProviderBase {
    * {@inheritdoc}
    */
   public function getResources(): array {
+    $output = [];
+
     // Get a list of directories from html/modules/custom/reliefweb_mcp/skills.
     $skillsDir = $this->moduleExtensionList->getPath('reliefweb_mcp') . '/skills';
-    $directories = array_filter(glob($skillsDir . '/*'), 'is_dir');
-    $skills = array_map(fn($dir) => basename($dir), $directories);
+    $frontMatter = FrontMatter::create(file_get_contents($skillsDir . '/reliefweb/SKILL.md'));
+    $data = $frontMatter->getData();
 
-    $output = [];
     $output[] = [
       'uri' => self::SKILL_URI,
       'name' => 'Skills',
-      'description' => 'Provides a list of ReliefWeb skills.',
-      'mimeType' => 'application/json',
+      'description' => $data['description'] ?? 'Provides a list of ReliefWeb skills.',
     ];
 
-    // Exclude reliefweb itself from the list of skills.
-    $skills = array_filter($skills, fn($skill) => $skill !== 'reliefweb');
-    foreach ($skills as $skill) {
-      $output[] = [
-        'name' => ucfirst($skill),
-        'uri' => 'skill://reliefweb_' . $skill,
-      ];
-    }
+    $output = array_merge($output, $this->returnListOfSkills());
 
     return $output;
   }
@@ -133,10 +127,11 @@ final class SkillProvider extends ResourceProviderBase {
    */
   public function getResourceContent(string $uri): ?CacheableResourceContent {
     if ($uri == self::SKILL_URI) {
+      $skillsDir = $this->moduleExtensionList->getPath('reliefweb_mcp') . '/skills';
+      $frontMatter = FrontMatter::create(file_get_contents($skillsDir . '/reliefweb/SKILL.md'));
       return CacheableResourceContent::fromArray([
         'uri' => $uri,
-        'mimeType' => 'application/json',
-        'text' => json_encode($this->returnListOfSkills(), JSON_THROW_ON_ERROR),
+        'text' => $frontMatter->getContent(),
       ]);
     }
 
@@ -155,12 +150,11 @@ final class SkillProvider extends ResourceProviderBase {
       return NULL;
     }
 
-    $skillContent = file_get_contents($skillFile);
+    $skillContent = FrontMatter::create(file_get_contents($skillFile))->getContent();
 
     return CacheableResourceContent::fromArray([
       'uri' => $uri,
-      'mimeType' => 'application/json',
-      'text' => json_encode(['content' => $skillContent], JSON_THROW_ON_ERROR),
+      'text' => $skillContent,
     ]);
   }
 
@@ -174,9 +168,11 @@ final class SkillProvider extends ResourceProviderBase {
     $skills = array_filter($skills, fn($skill) => $skill !== 'reliefweb');
     $output = [];
     foreach ($skills as $skill) {
+      $frontMatter = FrontMatter::create(file_get_contents($skillsDir . '/' . $skill . '/SKILL.md'));
       $output[] = [
         'name' => ucfirst($skill),
         'uri' => 'skill://reliefweb_' . $skill,
+        'description' => $frontMatter->getData()['description'] ?? '',
       ];
     }
     return $output;
