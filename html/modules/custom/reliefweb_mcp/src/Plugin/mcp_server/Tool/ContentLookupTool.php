@@ -131,7 +131,7 @@ final class ContentLookupTool extends ToolPluginBase {
       return [
         'success' => FALSE,
         'message' => (string) $this->t('Node not found.'),
-        'data' => [],
+        'data' => new \stdClass(),
       ];
     }
 
@@ -139,7 +139,7 @@ final class ContentLookupTool extends ToolPluginBase {
       return [
         'success' => FALSE,
         'message' => (string) $this->t('Access denied.'),
-        'data' => [],
+        'data' => new \stdClass(),
       ];
     }
 
