@@ -160,6 +160,10 @@ final class CountryTool extends ToolPluginBase {
       $terms = $this->entityTypeManager->getStorage('taxonomy_term')->loadMultiple($result);
       /** @var \Drupal\taxonomy\TermInterface $term */
       foreach ($terms as $term) {
+        if (!$term->access('view', $this->currentUser)) {
+          continue;
+        }
+
         $data[] = [
           'name' => $term->label(),
           'iso3' => $term->get('field_iso3')->value ?? '',
