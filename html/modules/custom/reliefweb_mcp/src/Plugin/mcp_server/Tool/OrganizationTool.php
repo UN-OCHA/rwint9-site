@@ -22,10 +22,6 @@ use Mcp\Server\ClientGateway;
         'type' => 'string',
         'description' => 'The name of the country or part of the name.',
       ],
-      'iso3' => [
-        'type' => 'string',
-        'description' => 'The ISO3 code of the country.',
-      ],
       'offset' => [
         'type' => 'integer',
         'description' => 'The number of items to skip before starting to collect the result set.',

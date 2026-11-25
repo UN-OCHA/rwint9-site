@@ -7,6 +7,7 @@ namespace Drupal\reliefweb_mcp\Plugin\mcp_server\Tool;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Session\AccountProxyInterface;
 use Drupal\mcp_server\Plugin\ToolPluginBase;
+use Drupal\reliefweb_api\Services\ReliefWebApiClient;
 use Drupal\taxonomy\Entity\Term;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -24,6 +25,7 @@ abstract class BaseTool extends ToolPluginBase {
     mixed $plugin_definition,
     AccountProxyInterface $currentUser,
     protected readonly EntityTypeManagerInterface $entityTypeManager,
+    protected readonly ReliefWebApiClient $apiClient,
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $currentUser);
   }
@@ -43,6 +45,7 @@ abstract class BaseTool extends ToolPluginBase {
       $plugin_definition,
       $container->get('current_user'),
       $container->get('entity_type.manager'),
+      $container->get('reliefweb_api.client'),
     );
   }
 
