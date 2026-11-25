@@ -47,6 +47,8 @@
         "drupal/mailsystem": "^4.4",
         "drupal/maintenance200": "^2",
         "drupal/masquerade": "^2.0",
+        "drupal/mcp_server_oauth": "^1.0@alpha",
+        "drupal/mcp_server_ui": "^1.0@beta",
         "drupal/memcache": "^2.5",
         "drupal/metatag": "^2",
         "drupal/mimemail": "^2.0.3",

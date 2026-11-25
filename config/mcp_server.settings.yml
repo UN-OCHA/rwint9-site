@@ -1,0 +1,11 @@
+_core:
+  default_config_hash: X-5E5ttrkcyeCk7ua_-ucBAscwA1cKMj-srqqDDMBX4
+langcode: en
+server_name: 'ReliefWeb MCP Server'
+server_version: 0.0.1
+server_instructions: ''
+pagination_limit: 50
+pending:
+  poll_interval_ms: 300
+  sampling_timeout: 25
+  elicitation_timeout: 600

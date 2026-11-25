@@ -8,6 +8,7 @@ dependencies:
   module:
     - content_entity_clone
     - filter
+    - mcp_server
     - media
     - node
     - reliefweb_bookmarks
@@ -23,6 +24,8 @@ weight: 1
 is_admin: false
 permissions:
   - 'access content'
+  - 'access mcp server'
+  - 'access mcp server prompts'
   - 'bookmark content'
   - 'clone content entities'
   - 'manage own subscriptions'
