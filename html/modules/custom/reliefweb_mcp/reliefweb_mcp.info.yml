@@ -3,3 +3,5 @@ name: ReliefWeb MCP
 description: 'MCP Server.'
 package: reliefweb
 core_version_requirement: ^11
+dependencies:
+  - mcp_server:mcp_server
