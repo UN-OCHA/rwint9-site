@@ -136,13 +136,13 @@ final class DisasterTool extends BaseTool {
 
     if ($country_id !== '') {
       if (is_numeric($country_id)) {
-        $query->condition('field_primary_country', $country_id);
+        $query->condition('field_country', $country_id);
       }
       else {
         $country_id = $this->getTerm($country_id, 'country', 'field_iso3');
         if ($country_id) {
           $country_id = $country_id->id();
-          $query->condition('field_primary_country', $country_id);
+          $query->condition('field_country', $country_id);
         }
         else {
           return [
@@ -159,11 +159,16 @@ final class DisasterTool extends BaseTool {
     }
 
     if ($disaster_type !== '') {
-      $disaster_type_term = $this->getTerm($disaster_type, 'disaster');
-      if ($disaster_type_term) {
-        $disaster_type = $disaster_type_term->id();
-        $query->condition('field_disaster_type', $disaster_type);
+      $disaster_type_term = $this->getTerm($disaster_type, 'disaster_type');
+      if (!$disaster_type_term) {
+        return [
+          'success' => FALSE,
+          'message' => 'Invalid disaster type.',
+          'data' => [],
+        ];
       }
+      $disaster_type = $disaster_type_term->id();
+      $query->condition('field_disaster_type', $disaster_type);
     }
 
     if ($disaster_date !== '') {
