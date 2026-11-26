@@ -1,5 +1,5 @@
 {
-    "_hash": "7cf6331462aca688edd79907f678aecb1dc6c326daa50d1edc5bd6dfba3a0d53",
+    "_hash": "480c331f23b745cec4b5853fff3f86823a84129832b0900ef172b83e6a3e03e4",
     "patches": {
         "drupal/amazon_ses": [
             {
@@ -105,18 +105,6 @@
                 "description": "Drupal 11 compatibility",
                 "url": "PATCHES/maintenance200--3431791-drupal-11-compatibility.patch",
                 "sha256": "10e7faee8f6ba7673206fa74dfcda703b2c28546bacf742d138c9fa16d774ffe",
-                "depth": 1,
-                "extra": {
-                    "provenance": "patches-file:composer.patches.json"
-                }
-            }
-        ],
-        "drupal/openid_connect": [
-            {
-                "package": "drupal/openid_connect",
-                "description": "Handle case if user is in blocked state after SSO Authorization",
-                "url": "PATCHES/openid_connect-3390668-6.patch",
-                "sha256": "3dfdaf6593f62c629db9d4a8701ebb7bf8a6ae9f479c4d5d89e1799d37a5a422",
                 "depth": 1,
                 "extra": {
                     "provenance": "patches-file:composer.patches.json"
